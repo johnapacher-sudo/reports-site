@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agency Swarm 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 OpenAI Agents SDK 的多智能体编排框架</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 发展历程</a></li>
+<li><a href="#14" class="toc-h3">1.4 核心定位</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心功能详解</a></li>
+<li><a href="#221-agent" class="toc-h4">2.2.1 自定义智能体 (Agent)</a></li>
+<li><a href="#222-communication-flows" class="toc-h4">2.2.2 通信流编排 (Communication Flows)</a></li>
+<li><a href="#223-type-safe-tools" class="toc-h4">2.2.3 类型安全工具 (Type-Safe Tools)</a></li>
+<li><a href="#224" class="toc-h4">2.2.4 状态持久化</a></li>
+<li><a href="#225" class="toc-h4">2.2.5 多模型支持</a></li>
+<li><a href="#_3" class="toc-h2">三、安装配置</a></li>
+<li><a href="#31" class="toc-h3">3.1 环境要求</a></li>
+<li><a href="#32" class="toc-h3">3.2 安装方式</a></li>
+<li><a href="#33" class="toc-h3">3.3 环境配置</a></li>
+<li><a href="#34" class="toc-h3">3.4 验证安装</a></li>
+<li><a href="#_4" class="toc-h2">四、架构设计</a></li>
+<li><a href="#41" class="toc-h3">4.1 整体架构</a></li>
+<li><a href="#42" class="toc-h3">4.2 核心模块</a></li>
+<li><a href="#43" class="toc-h3">4.3 通信流程</a></li>
+<li><a href="#44-openai-agents-sdk" class="toc-h3">4.4 与 OpenAI Agents SDK 的关系</a></li>
+<li><a href="#_5" class="toc-h2">五、使用场景</a></li>
+<li><a href="#51" class="toc-h3">5.1 适用场景</a></li>
+<li><a href="#52" class="toc-h3">5.2 典型用例</a></li>
+<li><a href="#1" class="toc-h4">用例 1: 软件开发团队</a></li>
+<li><a href="#2" class="toc-h4">用例 2: 内容创作团队</a></li>
+<li><a href="#53" class="toc-h3">5.3 不适用场景</a></li>
+<li><a href="#_6" class="toc-h2">六、最佳实践</a></li>
+<li><a href="#61" class="toc-h3">6.1 智能体设计原则</a></li>
+<li><a href="#62" class="toc-h3">6.2 通信流设计</a></li>
+<li><a href="#63" class="toc-h3">6.3 工具设计</a></li>
+<li><a href="#64" class="toc-h3">6.4 成本优化</a></li>
+<li><a href="#65" class="toc-h3">6.5 错误处理</a></li>
+<li><a href="#_7" class="toc-h2">七、对比分析</a></li>
+<li><a href="#71" class="toc-h3">7.1 功能对比矩阵</a></li>
+<li><a href="#72" class="toc-h3">7.2 架构对比</a></li>
+<li><a href="#73" class="toc-h3">7.3 选型建议</a></li>
+<li><a href="#_8" class="toc-h2">八、总结</a></li>
+<li><a href="#81" class="toc-h3">8.1 优势</a></li>
+<li><a href="#82" class="toc-h3">8.2 劣势</a></li>
+<li><a href="#83" class="toc-h3">8.3 最终评价</a></li>
+<li><a href="#84" class="toc-h3">8.4 适用人群</a></li>
+<li><a href="#_9" class="toc-h2">九、参考资料</a></li>
+<li><a href="#91" class="toc-h3">9.1 官方资源</a></li>
+<li><a href="#92" class="toc-h3">9.2 相关文章</a></li>
+<li><a href="#93" class="toc-h3">9.3 学习路径</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Agency Swarm 调研报告</h1>
+                        <div class="article-meta">基于 OpenAI Agents SDK 的多智能体编排框架</div>
+                    </header>
+                    <h1 id="agency-swarm">Agency Swarm 调研报告</h1>
+<blockquote>
+<p>基于 OpenAI Agents SDK 的多智能体编排框架</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>Agency Swarm</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/VRSEN/agency-swarm</td>
+</tr>
+<tr>
+<td><strong>作者</strong></td>
+<td>Arsenii Shatokhin (VRSEN)</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>3.2k+</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>编程语言</strong></td>
+<td>Python</td>
+</tr>
+<tr>
+<td><strong>Python 版本</strong></td>
+<td>3.12+</td>
+</tr>
+<tr>
+<td><strong>当前版本</strong></td>
+<td>0.4.x</td>
+</tr>
+<tr>
+<td><strong>官方文档</strong></td>
+<td>https://agency-swarm.ai</td>
+</tr>
+<tr>
+<td><strong>维护状态</strong></td>
+<td>活跃（2025年持续更新）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>Agency Swarm 是一个基于 OpenAI Agents SDK 构建的多智能体编排框架，提供可定制的智能体角色、完全的提示词控制、类型安全的工具定义和编排化的通信机制。</p>
+<h3 id="13">1.3 发展历程</h3>
+<pre><code>2024年初  → 项目启动，基于 OpenAI Assistants API
+2024年中  → 迁移至 OpenAI Agents SDK
+2025年    → 支持 GPT-5、多模型路由、生产级稳定性
+现在      → 持续迭代，社区活跃
+</code></pre>
+<h3 id="14">1.4 核心定位</h3>
+<pre><code>Agency Swarm 的定位是：
+  &quot;Production-ready multi-agent framework built on OpenAI Agents SDK&quot;
+
+与传统框架的区别：
+  - CrewAI: 强调角色扮演和任务协作，但控制粒度较粗
+  - LangGraph: 基于状态图，适合复杂工作流但学习曲线陡峭
+  - Agency Swarm: 基于 OpenAI 原生 SDK，提示词完全可控，通信编排化
+</code></pre>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 功能概览</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>描述</th>
+<th style="text-align: center;">成熟度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自定义智能体</strong></td>
+<td>完全可控的角色定义</td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>通信流编排</strong></td>
+<td>方向性的智能体间通信</td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>类型安全工具</strong></td>
+<td>基于 Pydantic 的工具定义</td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>状态持久化</strong></td>
+<td>线程状态的保存与恢复</td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>多模型支持</strong></td>
+<td>OpenAI + LiteLLM 路由</td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>流式响应</strong></td>
+<td>实时输出流</td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>共享指令</strong></td>
+<td>全局指令文件支持</td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 核心功能详解</h3>
+<h4 id="221-agent">2.2.1 自定义智能体 (Agent)</h4>
+<pre><code class="language-python">from agency_swarm import Agent, ModelSettings
+
+ceo = Agent(
+    name=&quot;CEO&quot;,
+    description=&quot;负责客户沟通、任务规划和管理。&quot;,
+    instructions=&quot;你必须与其他智能体协作确保任务完整执行。&quot;,
+    tools=[my_custom_tool],
+    model=&quot;gpt-5.2&quot;,
+    model_settings=ModelSettings(
+        temperature=0.7,
+        max_tokens=4096
+    )
+)
+</code></pre>
+<p><strong>关键属性</strong>：
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| <code>name</code> | str | 智能体名称（唯一标识） |
+| <code>description</code> | str | 角色描述 |
+| <code>instructions</code> | str | 详细指令 |
+| <code>tools</code> | list | 可用工具列表 |
+| <code>model</code> | str | 使用的模型 |
+| <code>model_settings</code> | ModelSettings | 模型参数配置 |</p>
+<h4 id="222-communication-flows">2.2.2 通信流编排 (Communication Flows)</h4>
+<pre><code class="language-python">from agency_swarm import Agency
+
+agency = Agency(
+    ceo,  # 入口智能体
+    communication_flows=[
+        ceo &gt; dev,      # CEO 可以发给 Developer
+        ceo &gt; va,       # CEO 可以发给 Virtual Assistant
+        dev &gt; va        # Developer 可以发给 Virtual Assistant
+    ],
+    shared_instructions='agency_manifesto.md'
+)
+</code></pre>
+<p><strong>通信规则</strong>：
+- 使用 <code>&gt;</code> 运算符定义方向性通信
+- 只能单向发送消息（A &gt; B 表示 A 可以发消息给 B）
+- 入口智能体接收用户的初始请求</p>
+<h4 id="223-type-safe-tools">2.2.3 类型安全工具 (Type-Safe Tools)</h4>
+<pre><code class="language-python">from agency_swarm import function_tool
+from pydantic import Field
+
+@function_tool
+def search_database(
+    query: str = Field(..., description=&quot;SQL 查询语句&quot;),
+    limit: int = Field(10, description=&quot;返回结果数量限制&quot;)
+) -&gt; str:
+    &quot;&quot;&quot;
+    在数据库中执行搜索查询。
+
+    Args:
+        query: SQL 格式的查询语句
+        limit: 返回的最大结果数量
+
+    Returns:
+        查询结果的 JSON 字符串
+    &quot;&quot;&quot;
+    # 实现逻辑
+    return json.dumps(results)
+</code></pre>
+<p><strong>优势</strong>：
+- 自动生成 JSON Schema
+- 参数验证自动化
+- 类型提示完整
+- 文档字符串用于智能体理解</p>
+<h4 id="224">2.2.4 状态持久化</h4>
+<pre><code class="language-python">def load_threads_callback():
+    &quot;&quot;&quot;加载保存的线程状态&quot;&quot;&quot;
+    with open('threads.json', 'r') as f:
+        return json.load(f)
+
+def save_threads_callback(threads):
+    &quot;&quot;&quot;保存线程状态&quot;&quot;&quot;
+    with open('threads.json', 'w') as f:
+        json.dump(threads, f)
+
+agency = Agency(
+    ceo,
+    communication_flows=[ceo &gt; dev],
+    load_threads_callback=load_threads_callback,
+    save_threads_callback=save_threads_callback
+)
+</code></pre>
+<h4 id="225">2.2.5 多模型支持</h4>
+<p><strong>原生支持</strong>：
+- GPT-5 系列 (gpt-5, gpt-5-mini, gpt-5.2)
+- GPT-4o 系列
+- O 系列推理模型 (o1, o3)</p>
+<p><strong>通过 LiteLLM 路由</strong>：
+- Anthropic Claude
+- Google Gemini
+- Grok (xAI)
+- Azure OpenAI
+- 本地模型</p>
+<hr />
+<h2 id="_3">三、安装配置</h2>
+<h3 id="31">3.1 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python</td>
+<td>&gt;= 3.12</td>
+</tr>
+<tr>
+<td>OpenAI API Key</td>
+<td>必需</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 安装方式</h3>
+<pre><code class="language-bash"># 基础安装
+pip install -U agency-swarm
+
+# 开发安装
+pip install -U &quot;agency-swarm[dev]&quot;
+</code></pre>
+<h3 id="33">3.3 环境配置</h3>
+<pre><code class="language-bash"># 设置 OpenAI API Key
+export OPENAI_API_KEY=&quot;sk-...&quot;
+
+# 或使用 .env 文件
+echo &quot;OPENAI_API_KEY=sk-...&quot; &gt; .env
+</code></pre>
+<h3 id="34">3.4 验证安装</h3>
+<pre><code class="language-python">from agency_swarm import Agent, Agency
+
+agent = Agent(name=&quot;Test&quot;)
+print(f&quot;Agency Swarm 安装成功！版本: {agent.__class__.__module__}&quot;)
+</code></pre>
+<hr />
+<h2 id="_4">四、架构设计</h2>
+<h3 id="41">4.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      Agency Swarm 架构                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  用户请求                                                        │
+│      │                                                          │
+│      ↓                                                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Agency (编排器)                        │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐                 │   │
+│  │  │  CEO    │→ │  Dev    │→ │   VA    │                 │   │
+│  │  └─────────┘  └─────────┘  └─────────┘                 │   │
+│  │       ↓            ↓            ↓                       │   │
+│  │  ┌─────────────────────────────────────────────────┐   │   │
+│  │  │              Shared Instructions                 │   │   │
+│  │  └─────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│      │                                                          │
+│      ↓                                                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                 OpenAI Agents SDK                        │   │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │   │
+│  │  │ SendMessage  │  │   RunContext │  │  ModelRunner │  │   │
+│  │  └──────────────┘  └──────────────┘  └──────────────┘  │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│      │                                                          │
+│      ↓                                                          │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    LLM Provider                           │   │
+│  │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐   │   │
+│  │  │ OpenAI  │  │ LiteLLM │  │ Azure   │  │  Local  │   │   │
+│  │  └─────────┘  └─────────┘  └─────────┘  └─────────┘   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="42">4.2 核心模块</h3>
+<table>
+<thead>
+<tr>
+<th>模块</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Agent</strong></td>
+<td>智能体定义，包含角色、指令、工具</td>
+</tr>
+<tr>
+<td><strong>Agency</strong></td>
+<td>编排器，管理智能体间的通信流</td>
+</tr>
+<tr>
+<td><strong>Tool</strong></td>
+<td>类型安全的工具定义机制</td>
+</tr>
+<tr>
+<td><strong>SendMessage</strong></td>
+<td>智能体间通信的内置工具</td>
+</tr>
+<tr>
+<td><strong>RunContext</strong></td>
+<td>运行时上下文管理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43">4.3 通信流程</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│                    智能体通信流程                                  │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  用户: &quot;帮我创建一个项目骨架&quot;                                      │
+│      │                                                           │
+│      ↓                                                           │
+│  CEO 收到请求                                                     │
+│      │                                                           │
+│      ├── 分析任务需求                                             │
+│      │                                                           │
+│      ├── 决定委托给 Dev                                          │
+│      │                                                           │
+│      ↓                                                           │
+│  SendMessage(CEO → Dev)                                          │
+│      │                                                           │
+│      ↓                                                           │
+│  Dev 收到消息                                                     │
+│      │                                                           │
+│      ├── 执行开发任务                                             │
+│      │                                                           │
+│      ├── 可能需要 VA 协助                                         │
+│      │                                                           │
+│      ↓                                                           │
+│  SendMessage(Dev → VA)                                           │
+│      │                                                           │
+│      ↓                                                           │
+│  VA 执行辅助任务                                                  │
+│      │                                                           │
+│      ↓                                                           │
+│  结果逐层返回                                                     │
+│      │                                                           │
+│      ↓                                                           │
+│  用户收到最终结果                                                 │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="44-openai-agents-sdk">4.4 与 OpenAI Agents SDK 的关系</h3>
+<pre><code>┌────────────────────────────────────────────────────────────────┐
+│                                                                │
+│  Agency Swarm (高级抽象)                                       │
+│  ├── 智能体角色系统                                             │
+│  ├── 通信流编排                                                 │
+│  ├── 共享指令                                                   │
+│  └── 状态持久化回调                                             │
+│          │                                                     │
+│          ↓                                                     │
+│  OpenAI Agents SDK (核心引擎)                                  │
+│  ├── Agent 基类                                                │
+│  ├── RunContext 上下文管理                                     │
+│  ├── Runner 执行引擎                                           │
+│  └── Tool 系统                                                 │
+│          │                                                     │
+│          ↓                                                     │
+│  OpenAI API                                                    │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_5">五、使用场景</h2>
+<h3 id="51">5.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">适用度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>多智能体协作</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>核心设计目标</td>
+</tr>
+<tr>
+<td><strong>复杂任务分解</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>编排式通信流</td>
+</tr>
+<tr>
+<td><strong>企业工作流</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>角色分工明确</td>
+</tr>
+<tr>
+<td><strong>客服系统</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>多角色协作</td>
+</tr>
+<tr>
+<td><strong>内容创作</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>策划-写作-审核流程</td>
+</tr>
+<tr>
+<td><strong>代码生成</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>架构师-开发-测试</td>
+</tr>
+<tr>
+<td><strong>数据分析</strong></td>
+<td style="text-align: center;">⭐⭐⭐</td>
+<td>需配合数据工具</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 典型用例</h3>
+<h4 id="1">用例 1: 软件开发团队</h4>
+<pre><code class="language-python">from agency_swarm import Agent, Agency, function_tool
+
+# 定义工具
+@function_tool
+def create_file(filename: str, content: str) -&gt; str:
+    &quot;&quot;&quot;创建文件并写入内容&quot;&quot;&quot;
+    with open(filename, 'w') as f:
+        f.write(content)
+    return f&quot;文件 {filename} 创建成功&quot;
+
+# 定义角色
+architect = Agent(
+    name=&quot;Architect&quot;,
+    description=&quot;负责系统架构设计和技术决策&quot;,
+    instructions=&quot;你是一位资深架构师，负责设计系统架构...&quot;
+)
+
+developer = Agent(
+    name=&quot;Developer&quot;,
+    description=&quot;负责代码实现&quot;,
+    instructions=&quot;你是一位全栈开发者...&quot;,
+    tools=[create_file]
+)
+
+tester = Agent(
+    name=&quot;Tester&quot;,
+    description=&quot;负责测试和质量保证&quot;,
+    instructions=&quot;你是一位测试工程师...&quot;
+)
+
+# 创建编排
+agency = Agency(
+    architect,
+    communication_flows=[
+        architect &gt; developer,
+        developer &gt; tester
+    ]
+)
+
+# 执行任务
+response = await agency.get_response(&quot;创建一个待办事项 API&quot;)
+</code></pre>
+<h4 id="2">用例 2: 内容创作团队</h4>
+<pre><code class="language-python">editor = Agent(name=&quot;Editor&quot;, description=&quot;内容策划和编辑&quot;)
+writer = Agent(name=&quot;Writer&quot;, description=&quot;内容撰写&quot;)
+reviewer = Agent(name=&quot;Reviewer&quot;, description=&quot;内容审核&quot;)
+
+agency = Agency(
+    editor,
+    communication_flows=[
+        editor &gt; writer,
+        writer &gt; reviewer,
+        reviewer &gt; editor  # 可反馈修改
+    ]
+)
+</code></pre>
+<h3 id="53">5.3 不适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+<th>替代方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单智能体任务</strong></td>
+<td>过度设计</td>
+<td>直接使用 OpenAI API</td>
+</tr>
+<tr>
+<td><strong>实时对话</strong></td>
+<td>编排延迟较高</td>
+<td>使用 WebSocket + 单智能体</td>
+</tr>
+<tr>
+<td><strong>简单脚本</strong></td>
+<td>复杂度不匹配</td>
+<td>使用普通脚本</td>
+</tr>
+<tr>
+<td><strong>大规模并发</strong></td>
+<td>API 调用成本高</td>
+<td>考虑缓存和批处理</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">六、最佳实践</h2>
+<h3 id="61">6.1 智能体设计原则</h3>
+<pre><code>1. 单一职责
+   - 每个智能体专注于一个领域
+   - 避免全能型智能体
+
+2. 清晰边界
+   - 明确每个智能体的职责边界
+   - 避免职责重叠
+
+3. 适度粒度
+   - 不是越多智能体越好
+   - 3-5 个智能体通常足够
+
+4. 有效沟通
+   - 定义清晰的通信流
+   - 避免循环依赖
+</code></pre>
+<h3 id="62">6.2 通信流设计</h3>
+<pre><code class="language-python"># ✅ 好的设计：层级清晰
+communication_flows=[
+    ceo &gt; manager,
+    manager &gt; developer,
+    manager &gt; designer
+]
+
+# ❌ 避免的设计：过于复杂
+communication_flows=[
+    a &gt; b, b &gt; c, c &gt; d, d &gt; e,
+    a &gt; c, a &gt; d, b &gt; d, b &gt; e
+]
+</code></pre>
+<h3 id="63">6.3 工具设计</h3>
+<pre><code class="language-python"># ✅ 好的工具设计
+@function_tool
+def search_document(query: str) -&gt; str:
+    &quot;&quot;&quot;
+    在文档库中搜索相关内容。
+
+    Args:
+        query: 搜索关键词或问题
+
+    Returns:
+        找到的相关文档片段
+    &quot;&quot;&quot;
+    pass
+
+# ❌ 避免：过于通用
+@function_tool
+def do_anything(task: str) -&gt; str:
+    &quot;&quot;&quot;执行任何任务&quot;&quot;&quot;
+    pass
+</code></pre>
+<h3 id="64">6.4 成本优化</h3>
+<pre><code class="language-python"># 使用更便宜的模型处理简单任务
+va = Agent(
+    name=&quot;VirtualAssistant&quot;,
+    model=&quot;gpt-5-mini&quot;,  # 更便宜的模型
+    ...
+)
+
+# 复杂任务使用强大模型
+ceo = Agent(
+    name=&quot;CEO&quot;,
+    model=&quot;gpt-5.2&quot;,  # 更强的模型
+    ...
+)
+
+# 设置 token 限制
+from agency_swarm import ModelSettings
+
+agent = Agent(
+    name=&quot;Agent&quot;,
+    model_settings=ModelSettings(
+        max_tokens=2048  # 限制输出长度
+    )
+)
+</code></pre>
+<h3 id="65">6.5 错误处理</h3>
+<pre><code class="language-python">import asyncio
+from agency_swarm import Agency
+
+async def run_with_retry(agency, message, max_retries=3):
+    &quot;&quot;&quot;带重试的执行&quot;&quot;&quot;
+    for attempt in range(max_retries):
+        try:
+            response = await agency.get_response(message)
+            return response
+        except Exception as e:
+            print(f&quot;尝试 {attempt + 1} 失败: {e}&quot;)
+            if attempt == max_retries - 1:
+                raise
+            await asyncio.sleep(2 ** attempt)  # 指数退避
+
+    return None
+</code></pre>
+<hr />
+<h2 id="_7">七、对比分析</h2>
+<h3 id="71">7.1 功能对比矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align: center;">Agency Swarm</th>
+<th style="text-align: center;">CrewAI</th>
+<th style="text-align: center;">LangGraph</th>
+<th style="text-align: center;">LangChain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">低</td>
+<td style="text-align: center;">高</td>
+<td style="text-align: center;">中</td>
+</tr>
+<tr>
+<td><strong>提示词控制</strong></td>
+<td style="text-align: center;">完全</td>
+<td style="text-align: center;">部分</td>
+<td style="text-align: center;">完全</td>
+<td style="text-align: center;">部分</td>
+</tr>
+<tr>
+<td><strong>通信编排</strong></td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">⚠️</td>
+</tr>
+<tr>
+<td><strong>状态管理</strong></td>
+<td style="text-align: center;">回调</td>
+<td style="text-align: center;">内置</td>
+<td style="text-align: center;">强大</td>
+<td style="text-align: center;">手动</td>
+</tr>
+<tr>
+<td><strong>工具生态</strong></td>
+<td style="text-align: center;">OpenAI</td>
+<td style="text-align: center;">丰富</td>
+<td style="text-align: center;">丰富</td>
+<td style="text-align: center;">最丰富</td>
+</tr>
+<tr>
+<td><strong>生产就绪</strong></td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">⚠️</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td><strong>调试能力</strong></td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">中</td>
+<td style="text-align: center;">强</td>
+<td style="text-align: center;">中</td>
+</tr>
+<tr>
+<td><strong>多模型</strong></td>
+<td style="text-align: center;">LiteLLM</td>
+<td style="text-align: center;">多</td>
+<td style="text-align: center;">多</td>
+<td style="text-align: center;">多</td>
+</tr>
+<tr>
+<td><strong>文档质量</strong></td>
+<td style="text-align: center;">好</td>
+<td style="text-align: center;">好</td>
+<td style="text-align: center;">很好</td>
+<td style="text-align: center;">最好</td>
+</tr>
+<tr>
+<td><strong>社区规模</strong></td>
+<td style="text-align: center;">小</td>
+<td style="text-align: center;">大</td>
+<td style="text-align: center;">大</td>
+<td style="text-align: center;">最大</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 架构对比</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    框架架构对比                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Agency Swarm:                                                  │
+│  ┌───────────────────────────────────────────────────────┐     │
+│  │  Agent &gt; Agent &gt; Agent (方向性通信流)                   │     │
+│  └───────────────────────────────────────────────────────┘     │
+│                                                                 │
+│  CrewAI:                                                        │
+│  ┌───────────────────────────────────────────────────────┐     │
+│  │  Crew[Agent, Agent, Agent] (任务驱动协作)              │     │
+│  └───────────────────────────────────────────────────────┘     │
+│                                                                 │
+│  LangGraph:                                                     │
+│  ┌───────────────────────────────────────────────────────┐     │
+│  │  State → Node → State → Node (状态图)                  │     │
+│  └───────────────────────────────────────────────────────┘     │
+│                                                                 │
+│  LangChain:                                                     │
+│  ┌───────────────────────────────────────────────────────┐     │
+│  │  Chain[Step, Step, Step] (链式调用)                    │     │
+│  └───────────────────────────────────────────────────────┘     │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="73">7.3 选型建议</h3>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>推荐框架</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI 原生体验</strong></td>
+<td>Agency Swarm</td>
+<td>基于官方 SDK</td>
+</tr>
+<tr>
+<td><strong>快速原型</strong></td>
+<td>CrewAI</td>
+<td>上手最快</td>
+</tr>
+<tr>
+<td><strong>复杂工作流</strong></td>
+<td>LangGraph</td>
+<td>状态图最灵活</td>
+</tr>
+<tr>
+<td><strong>最大生态</strong></td>
+<td>LangChain</td>
+<td>工具最丰富</td>
+</tr>
+<tr>
+<td><strong>企业级稳定</strong></td>
+<td>Agency Swarm / LangGraph</td>
+<td>生产就绪</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">八、总结</h2>
+<h3 id="81">8.1 优势</h3>
+<ul>
+<li>✅ 基于 OpenAI 官方 SDK，原生体验好</li>
+<li>✅ 提示词完全可控，便于调试优化</li>
+<li>✅ 通信流设计直观，符合直觉</li>
+<li>✅ 类型安全的工具定义</li>
+<li>✅ 学习曲线平缓</li>
+<li>✅ 生产就绪</li>
+</ul>
+<h3 id="82">8.2 劣势</h3>
+<ul>
+<li>❌ 社区规模相对较小</li>
+<li>❌ 主要绑定 OpenAI 生态</li>
+<li>❌ 文档和示例相对较少</li>
+<li>❌ 高级特性需要深入了解 OpenAI SDK</li>
+</ul>
+<h3 id="83">8.3 最终评价</h3>
+<pre><code>┌────────────────────────────────────────────────────────────────┐
+│                     Agency Swarm 评分                           │
+├────────────────────────────────────────────────────────────────┤
+│                                                                │
+│  易用性    ████████████████████░░░░  85%                       │
+│  功能性    ████████████████████░░░░  80%                       │
+│  稳定性    ██████████████████████░░  90%                       │
+│  文档      ████████████████░░░░░░░░  70%                       │
+│  社区      ████████████░░░░░░░░░░░░  50%                       │
+│                                                                │
+│  综合评分: 75/100                                               │
+│                                                                │
+│  推荐指数: ⭐⭐⭐⭐                                              │
+│                                                                │
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="84">8.4 适用人群</h3>
+<ul>
+<li><strong>推荐</strong>: OpenAI 生态用户、需要多智能体协作的项目</li>
+<li><strong>谨慎</strong>: 需要跨模型、大型社区的团队</li>
+<li><strong>不推荐</strong>: 简单单智能体任务、预算敏感项目</li>
+</ul>
+<hr />
+<h2 id="_9">九、参考资料</h2>
+<h3 id="91">9.1 官方资源</h3>
+<ul>
+<li>GitHub: https://github.com/VRSEN/agency-swarm</li>
+<li>文档: https://agency-swarm.ai</li>
+<li>Discord: VRSEN 社区</li>
+</ul>
+<h3 id="92">9.2 相关文章</h3>
+<ul>
+<li>OpenAI Agents SDK 文档</li>
+<li>"Building Multi-Agent Systems with Agency Swarm"</li>
+<li>"Agency Swarm vs CrewAI: A Comparison"</li>
+</ul>
+<h3 id="93">9.3 学习路径</h3>
+<ol>
+<li>熟悉 OpenAI API 基础</li>
+<li>学习 Agency Swarm 基本概念</li>
+<li>实现简单的双智能体协作</li>
+<li>逐步增加智能体数量和复杂度</li>
+<li>学习状态持久化和生产部署</li>
+</ol>
+<hr />
+<p><em>调研日期: 2026-03-17</em>
+<em>报告版本: 1.0</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

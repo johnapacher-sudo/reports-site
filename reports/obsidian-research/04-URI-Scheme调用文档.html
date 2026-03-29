@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian URI Scheme 调用文档</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">更新日期: 2026-03-14 | 文档版本: 1.0</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#uri-scheme" class="toc-h2">一、URI Scheme 概述</a></li>
+<li><a href="#11-uri-scheme" class="toc-h3">1.1 什么是 URI Scheme？</a></li>
+<li><a href="#12-uri" class="toc-h3">1.2 两种 URI 方式</a></li>
+<li><a href="#13" class="toc-h3">1.3 使用场景</a></li>
+<li><a href="#uri-api" class="toc-h2">二、原生 URI API</a></li>
+<li><a href="#21" class="toc-h3">2.1 基础格式</a></li>
+<li><a href="#22" class="toc-h3">2.2 支持的动作</a></li>
+<li><a href="#open-" class="toc-h4">open - 打开笔记</a></li>
+<li><a href="#new-" class="toc-h4">new - 新建笔记</a></li>
+<li><a href="#search-" class="toc-h4">search - 搜索</a></li>
+<li><a href="#daily-" class="toc-h4">daily - 打开日记</a></li>
+<li><a href="#advanced-uri" class="toc-h2">三、Advanced URI 插件</a></li>
+<li><a href="#31" class="toc-h3">3.1 安装</a></li>
+<li><a href="#32" class="toc-h3">3.2 基础格式</a></li>
+<li><a href="#33" class="toc-h3">3.3 支持的动作</a></li>
+<li><a href="#new" class="toc-h4">新建笔记 (new)</a></li>
+<li><a href="#append" class="toc-h4">追加内容 (append)</a></li>
+<li><a href="#read" class="toc-h4">读取笔记 (read)</a></li>
+<li><a href="#_2" class="toc-h4">打开设置</a></li>
+<li><a href="#_3" class="toc-h4">执行命令</a></li>
+<li><a href="#_4" class="toc-h4">打开工作区</a></li>
+<li><a href="#_5" class="toc-h4">创建日记</a></li>
+<li><a href="#34-x-callback-url" class="toc-h3">3.4 x-callback-url 支持</a></li>
+<li><a href="#_6" class="toc-h2">四、跨平台调用</a></li>
+<li><a href="#41-macos" class="toc-h3">4.1 macOS</a></li>
+<li><a href="#42-windows" class="toc-h3">4.2 Windows</a></li>
+<li><a href="#43-linux" class="toc-h3">4.3 Linux</a></li>
+<li><a href="#44-ios" class="toc-h3">4.4 iOS</a></li>
+<li><a href="#45-android" class="toc-h3">4.5 Android</a></li>
+<li><a href="#_7" class="toc-h2">五、与其他应用集成</a></li>
+<li><a href="#51-macos-shortcuts" class="toc-h3">5.1 macOS Shortcuts</a></li>
+<li><a href="#52-raycast" class="toc-h3">5.2 Raycast 扩展</a></li>
+<li><a href="#53-alfred-workflow" class="toc-h3">5.3 Alfred Workflow</a></li>
+<li><a href="#54-keyboard-maestro" class="toc-h3">5.4 Keyboard Maestro</a></li>
+<li><a href="#55" class="toc-h3">5.5 网页集成</a></li>
+<li><a href="#56-vs-code" class="toc-h3">5.6 VS Code 集成</a></li>
+<li><a href="#_8" class="toc-h2">六、实用脚本示例</a></li>
+<li><a href="#61-python" class="toc-h3">6.1 Python 快速收集脚本</a></li>
+<li><a href="#62-shell" class="toc-h3">6.2 Shell 快捷函数</a></li>
+<li><a href="#63-cron" class="toc-h3">6.3 自动化 Cron 任务</a></li>
+<li><a href="#uri-vs-rest-api" class="toc-h2">七、URI vs REST API 对比</a></li>
+<li><a href="#_9" class="toc-h2">八、常见问题</a></li>
+<li><a href="#q1-uri" class="toc-h3">Q1: URI 不生效？</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 如何获取仓库名称？</a></li>
+<li><a href="#q3" class="toc-h3">Q3: 特殊字符如何处理？</a></li>
+<li><a href="#_10" class="toc-h2">九、参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Obsidian URI Scheme 调用文档</h1>
+                        <div class="article-meta">更新日期: 2026-03-14<br>文档版本: 1.0</div>
+                    </header>
+                    <h1 id="obsidian-uri-scheme">Obsidian URI Scheme 调用文档</h1>
+<blockquote>
+<p>更新日期: 2026-03-14
+文档版本: 1.0</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一uri-scheme-概述">URI Scheme 概述</a></li>
+<li><a href="#二原生-uri-api">原生 URI API</a></li>
+<li><a href="#三advanced-uri-插件">Advanced URI 插件</a></li>
+<li><a href="#四跨平台调用">跨平台调用</a></li>
+<li><a href="#五与其他应用集成">与其他应用集成</a></li>
+<li><a href="#六实用脚本示例">实用脚本示例</a></li>
+</ol>
+<hr />
+<h2 id="uri-scheme">一、URI Scheme 概述</h2>
+<h3 id="11-uri-scheme">1.1 什么是 URI Scheme？</h3>
+<p><strong>URI Scheme</strong> 是 Obsidian 的自定义 URL 协议，允许通过 URL 触发 Obsidian 操作：</p>
+<pre><code>obsidian://动作?参数1=值1&amp;参数2=值2
+</code></pre>
+<h3 id="12-uri">1.2 两种 URI 方式</h3>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>插件</th>
+<th>功能范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>原生 URI</strong></td>
+<td>内置</td>
+<td>基础操作（打开、新建、搜索）</td>
+</tr>
+<tr>
+<td><strong>Advanced URI</strong></td>
+<td>需安装</td>
+<td>高级操作（追加、执行命令、设置）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13">1.3 使用场景</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    URI Scheme 使用场景                       │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  🔗 网页链接                                                 │
+│     └── 点击网页链接打开笔记                                 │
+│                                                             │
+│  📱 快捷指令 (Shortcuts/Raycast)                             │
+│     └── 一键创建/追加笔记                                    │
+│                                                             │
+│  🤖 脚本自动化                                               │
+│     └── Python/Shell 调用                                   │
+│                                                             │
+│  📋 其他应用                                                 │
+│     └── Alfred/Keyboard Maestro/启动器                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="uri-api">二、原生 URI API</h2>
+<h3 id="21">2.1 基础格式</h3>
+<pre><code>obsidian://动作?vault=仓库名&amp;参数=值
+</code></pre>
+<h3 id="22">2.2 支持的动作</h3>
+<h4 id="open-">open - 打开笔记</h4>
+<pre><code>obsidian://open?vault=MyVault&amp;file=Notes/MyNote
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vault</code></td>
+<td>✅</td>
+<td>仓库名称</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>✅</td>
+<td>文件路径（相对于仓库根目录）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>:</p>
+<pre><code># 打开根目录笔记
+obsidian://open?vault=MyVault&amp;file=README.md
+
+# 打开子文件夹中的笔记
+obsidian://open?vault=MyVault&amp;file=Projects/App/Design.md
+
+# 打开并定位到标题
+obsidian://open?vault=MyVault&amp;file=Notes/MyNote%23Section
+</code></pre>
+<h4 id="new-">new - 新建笔记</h4>
+<pre><code>obsidian://new?vault=MyVault&amp;name=NewNote
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vault</code></td>
+<td>✅</td>
+<td>仓库名称</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>✅</td>
+<td>笔记名称</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>❌</td>
+<td>初始内容</td>
+</tr>
+<tr>
+<td><code>path</code></td>
+<td>❌</td>
+<td>保存路径</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>:</p>
+<pre><code># 新建空白笔记
+obsidian://new?vault=MyVault&amp;name=MyNewNote
+
+# 新建带内容的笔记
+obsidian://new?vault=MyVault&amp;name=MyNote&amp;content=Hello%20World
+
+# 指定路径
+obsidian://new?vault=MyVault&amp;name=MyNote&amp;path=Notes/
+</code></pre>
+<h4 id="search-">search - 搜索</h4>
+<pre><code>obsidian://search?vault=MyVault&amp;query=关键词
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>必填</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vault</code></td>
+<td>✅</td>
+<td>仓库名称</td>
+</tr>
+<tr>
+<td><code>query</code></td>
+<td>✅</td>
+<td>搜索关键词</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>:</p>
+<pre><code>obsidian://search?vault=MyVault&amp;query=机器学习
+</code></pre>
+<h4 id="daily-">daily - 打开日记</h4>
+<pre><code>obsidian://daily?vault=MyVault
+</code></pre>
+<hr />
+<h2 id="advanced-uri">三、Advanced URI 插件</h2>
+<h3 id="31">3.1 安装</h3>
+<ol>
+<li>设置 → 第三方插件 → 浏览</li>
+<li>搜索 "Advanced URI"</li>
+<li>安装并启用</li>
+</ol>
+<h3 id="32">3.2 基础格式</h3>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;参数=值
+</code></pre>
+<h3 id="33">3.3 支持的动作</h3>
+<h4 id="new">新建笔记 (new)</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;filepath=Notes/NewNote.md&amp;data=内容
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>filepath</code></td>
+<td>文件路径（含扩展名）</td>
+</tr>
+<tr>
+<td><code>data</code></td>
+<td>笔记内容</td>
+</tr>
+<tr>
+<td><code>mode</code></td>
+<td><code>overwrite</code> / <code>append</code> / <code>prepend</code></td>
+</tr>
+<tr>
+<td><code>openmode</code></td>
+<td>打开方式</td>
+</tr>
+</tbody>
+</table>
+<h4 id="append">追加内容 (append)</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;filepath=Notes/MyNote.md&amp;data=追加内容&amp;mode=append
+</code></pre>
+<h4 id="read">读取笔记 (read)</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;filepath=Notes/MyNote.md&amp;mode=read
+</code></pre>
+<h4 id="_2">打开设置</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;settingid=editor
+</code></pre>
+<p><strong>可用的设置 ID</strong>:
+- <code>editor</code> - 编辑器
+- <code>file</code> - 文件与链接
+- <code>appearance</code> - 外观
+- <code>hotkeys</code> - 快捷键
+- <code>core-plugins</code> - 核心插件</p>
+<h4 id="_3">执行命令</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;commandid=editor:save-file
+</code></pre>
+<p><strong>常用命令 ID</strong>:
+| 命令 | ID |
+|------|-----|
+| 保存 | <code>editor:save-file</code> |
+| 撤销 | <code>editor:undo</code> |
+| 重做 | <code>editor:redo</code> |
+| 切换预览 | <code>markdown:toggle-preview</code> |
+| 搜索 | <code>editor:open-search</code> |</p>
+<h4 id="_4">打开工作区</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;workspace=MyWorkspace
+</code></pre>
+<h4 id="_5">创建日记</h4>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;daily=true&amp;data=日记内容&amp;mode=append
+</code></pre>
+<h3 id="34-x-callback-url">3.4 x-callback-url 支持</h3>
+<p>Advanced URI 支持 x-callback-url 协议：</p>
+<pre><code>obsidian://advanced-uri?vault=MyVault&amp;filepath=Test.md&amp;x-success=myapp://success&amp;x-error=myapp://error
+</code></pre>
+<hr />
+<h2 id="_6">四、跨平台调用</h2>
+<h3 id="41-macos">4.1 macOS</h3>
+<pre><code class="language-bash"># 使用 open 命令
+open &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+
+# AppleScript
+osascript -e 'open location &quot;obsidian://new?vault=MyVault&amp;name=NewNote&quot;'
+</code></pre>
+<h3 id="42-windows">4.2 Windows</h3>
+<pre><code class="language-powershell"># PowerShell
+Start-Process &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+
+# CMD
+start &quot;&quot; &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+</code></pre>
+<h3 id="43-linux">4.3 Linux</h3>
+<pre><code class="language-bash"># xdg-open
+xdg-open &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+
+# gtk-launch
+gtk-launch obsidian &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+</code></pre>
+<h3 id="44-ios">4.4 iOS</h3>
+<pre><code># Shortcuts 中使用
+URL: obsidian://new?vault=MyVault&amp;name=QuickNote
+
+# 从其他 App 调用
+UIApplication.shared.open(URL(string: &quot;obsidian://daily?vault=MyVault&quot;)!)
+</code></pre>
+<h3 id="45-android">4.5 Android</h3>
+<pre><code class="language-kotlin">// Kotlin
+val intent = Intent(Intent.ACTION_VIEW, Uri.parse(&quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;))
+startActivity(intent)
+</code></pre>
+<hr />
+<h2 id="_7">五、与其他应用集成</h2>
+<h3 id="51-macos-shortcuts">5.1 macOS Shortcuts</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  快捷指令: 快速收集                                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. 获取剪贴板内容                                          │
+│     ↓                                                       │
+│  2. 询问输入标题                                            │
+│     ↓                                                       │
+│  3. URL 操作                                                │
+│     obsidian://new?vault=MyVault&amp;name=[标题]&amp;content=[内容] │
+│     ↓                                                       │
+│  4. 打开 URL                                                │
+│     ↓                                                       │
+│  5. 显示通知 &quot;已保存到 Obsidian&quot;                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52-raycast">5.2 Raycast 扩展</h3>
+<pre><code class="language-typescript">// Raycast Extension
+import { showToast, Toast, LaunchProps } from &quot;@raycast/api&quot;;
+
+interface Arguments {
+  content: string;
+}
+
+export default async function (props: LaunchProps&lt;{ arguments: Arguments }&gt;) {
+  const content = encodeURIComponent(props.arguments.content);
+  const url = `obsidian://new?vault=MyVault&amp;name=QuickNote&amp;content=${content}`;
+
+  // 打开 URL
+  await open(url);
+
+  await showToast(Toast.Style.Success, &quot;已保存到 Obsidian&quot;);
+}
+</code></pre>
+<h3 id="53-alfred-workflow">5.3 Alfred Workflow</h3>
+<pre><code class="language-bash"># Alfred Script Filter
+#!/bin/bash
+
+QUERY=&quot;{query}&quot;
+ENCODED_QUERY=$(python3 -c &quot;import urllib.parse; print(urllib.parse.quote('$QUERY'))&quot;)
+
+# 追加到今日日记
+open &quot;obsidian://advanced-uri?vault=MyVault&amp;daily=true&amp;mode=append&amp;data=$ENCODED_QUERY&quot;
+</code></pre>
+<h3 id="54-keyboard-maestro">5.4 Keyboard Maestro</h3>
+<pre><code>Macro: 快速追加到日记
+Trigger: ⌃⌥D
+Actions:
+  1. Get Clipboard
+  2. Execute Shell Script:
+     open &quot;obsidian://advanced-uri?vault=MyVault&amp;daily=true&amp;mode=append&amp;data=$(pbpaste)&quot;
+</code></pre>
+<h3 id="55">5.5 网页集成</h3>
+<pre><code class="language-html">&lt;!-- 在网页中添加链接 --&gt;
+&lt;a href=&quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;&gt;
+  在 Obsidian 中打开
+&lt;/a&gt;
+
+&lt;a href=&quot;obsidian://new?vault=MyVault&amp;name=FromWeb&amp;content=Hello&quot;&gt;
+  创建新笔记
+&lt;/a&gt;
+</code></pre>
+<h3 id="56-vs-code">5.6 VS Code 集成</h3>
+<pre><code class="language-json">// tasks.json
+{
+  &quot;version&quot;: &quot;2.0.0&quot;,
+  &quot;tasks&quot;: [
+    {
+      &quot;label&quot;: &quot;Open in Obsidian&quot;,
+      &quot;type&quot;: &quot;shell&quot;,
+      &quot;command&quot;: &quot;open&quot;,
+      &quot;args&quot;: [
+        &quot;obsidian://open?vault=MyVault&amp;file=${file}&quot;
+      ],
+      &quot;problemMatcher&quot;: []
+    }
+  ]
+}
+</code></pre>
+<hr />
+<h2 id="_8">六、实用脚本示例</h2>
+<h3 id="61-python">6.1 Python 快速收集脚本</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+Obsidian 快速收集工具
+使用 URI Scheme 追加内容到日记
+&quot;&quot;&quot;
+
+import subprocess
+import urllib.parse
+import sys
+from datetime import datetime
+
+def open_url(url: str):
+    &quot;&quot;&quot;跨平台打开 URL&quot;&quot;&quot;
+    import platform
+    system = platform.system()
+
+    if system == &quot;Darwin&quot;:  # macOS
+        subprocess.run([&quot;open&quot;, url])
+    elif system == &quot;Windows&quot;:
+        subprocess.run([&quot;start&quot;, &quot;&quot;, url], shell=True)
+    else:  # Linux
+        subprocess.run([&quot;xdg-open&quot;, url])
+
+def quick_capture(content: str, vault: str = &quot;MyVault&quot;):
+    &quot;&quot;&quot;快速收集到 Inbox&quot;&quot;&quot;
+    encoded = urllib.parse.quote(content)
+    url = f&quot;obsidian://new?vault={vault}&amp;name=QuickNote&amp;content={encoded}&quot;
+    open_url(url)
+
+def append_daily(content: str, vault: str = &quot;MyVault&quot;):
+    &quot;&quot;&quot;追加到今日日记&quot;&quot;&quot;
+    timestamp = datetime.now().strftime(&quot;%H:%M&quot;)
+    full_content = f&quot;\n## {timestamp}\n{content}&quot;
+    encoded = urllib.parse.quote(full_content)
+    url = f&quot;obsidian://advanced-uri?vault={vault}&amp;daily=true&amp;mode=append&amp;data={encoded}&quot;
+    open_url(url)
+
+def search(query: str, vault: str = &quot;MyVault&quot;):
+    &quot;&quot;&quot;搜索笔记&quot;&quot;&quot;
+    encoded = urllib.parse.quote(query)
+    url = f&quot;obsidian://search?vault={vault}&amp;query={encoded}&quot;
+    open_url(url)
+
+# 命令行入口
+if __name__ == &quot;__main__&quot;:
+    if len(sys.argv) &lt; 2:
+        print(&quot;用法: obsidian-capture.py &lt;内容&gt;&quot;)
+        sys.exit(1)
+
+    content = &quot; &quot;.join(sys.argv[1:])
+    append_daily(content)
+    print(f&quot;✓ 已追加到日记: {content}&quot;)
+</code></pre>
+<h3 id="62-shell">6.2 Shell 快捷函数</h3>
+<pre><code class="language-bash"># 添加到 ~/.zshrc 或 ~/.bashrc
+
+# 追加到日记
+obs-daily() {
+    local content=&quot;$*&quot;
+    local encoded=$(python3 -c &quot;import urllib.parse; print(urllib.parse.quote('\n## $(date +%H:%M)\n$content'))&quot;)
+    open &quot;obsidian://advanced-uri?vault=MyVault&amp;daily=true&amp;mode=append&amp;data=$encoded&quot;
+    echo &quot;✓ 已追加到日记&quot;
+}
+
+# 快速收集
+obs-capture() {
+    local content=&quot;$*&quot;
+    local encoded=$(python3 -c &quot;import urllib.parse; print(urllib.parse.quote('$content'))&quot;)
+    open &quot;obsidian://new?vault=MyVault&amp;name=Capture-$(date +%Y%m%d%H%M%S)&amp;content=$encoded&quot;
+    echo &quot;✓ 已收集&quot;
+}
+
+# 搜索
+obs-search() {
+    local query=&quot;$*&quot;
+    open &quot;obsidian://search?vault=MyVault&amp;query=$query&quot;
+}
+
+# 打开笔记
+obs-open() {
+    local file=&quot;$1&quot;
+    open &quot;obsidian://open?vault=MyVault&amp;file=$file&quot;
+}
+</code></pre>
+<p><strong>使用示例</strong>:</p>
+<pre><code class="language-bash"># 追加到日记
+obs-daily &quot;完成了项目文档的编写&quot;
+
+# 快速收集
+obs-capture &quot;看到一个有趣的想法&quot;
+
+# 搜索
+obs-search &quot;机器学习&quot;
+
+# 打开笔记
+obs-open &quot;Projects/MyApp/设计.md&quot;
+</code></pre>
+<h3 id="63-cron">6.3 自动化 Cron 任务</h3>
+<pre><code class="language-bash"># crontab -e
+
+# 每天早上 8 点创建日记
+0 8 * * * open &quot;obsidian://daily?vault=MyVault&quot;
+
+# 每周五下午 5 点打开周回顾
+0 17 * * 5 open &quot;obsidian://open?vault=MyVault&amp;file=Reviews/Weekly.md&quot;
+</code></pre>
+<hr />
+<h2 id="uri-vs-rest-api">七、URI vs REST API 对比</h2>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>URI Scheme</th>
+<th>Local REST API</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>安装</strong></td>
+<td>内置/插件</td>
+<td>需要插件</td>
+</tr>
+<tr>
+<td><strong>功能</strong></td>
+<td>基础/中等</td>
+<td>完整</td>
+</tr>
+<tr>
+<td><strong>调用方式</strong></td>
+<td>URL</td>
+<td>HTTP 请求</td>
+</tr>
+<tr>
+<td><strong>需要运行</strong></td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td><strong>安全性</strong></td>
+<td>无认证</td>
+<td>API Key</td>
+</tr>
+<tr>
+<td><strong>跨设备</strong></td>
+<td>是</td>
+<td>仅本地</td>
+</tr>
+<tr>
+<td><strong>适合场景</strong></td>
+<td>快捷操作</td>
+<td>复杂自动化</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">八、常见问题</h2>
+<h3 id="q1-uri">Q1: URI 不生效？</h3>
+<p>检查：
+1. Obsidian 是否正在运行
+2. 仓库名称是否正确（区分大小写）
+3. URL 编码是否正确</p>
+<h3 id="q2">Q2: 如何获取仓库名称？</h3>
+<p>在 Obsidian 左下角查看仓库名称，或查看仓库文件夹名称。</p>
+<h3 id="q3">Q3: 特殊字符如何处理？</h3>
+<p>使用 URL 编码：
+| 字符 | 编码 |
+|------|------|
+| 空格 | <code>%20</code> |
+| # | <code>%23</code> |
+| / | <code>%2F</code> |
+| ? | <code>%3F</code> |
+| &amp; | <code>%26</code> |</p>
+<hr />
+<h2 id="_10">九、参考资源</h2>
+<ul>
+<li><strong>官方文档</strong>: https://help.obsidian.md/Extending+Obsidian/Obsidian+URI</li>
+<li><strong>Advanced URI</strong>: https://github.com/Vinzent03/obsidian-advanced-uri</li>
+<li><strong>中文教程</strong>: https://pkmer.cn</li>
+</ul>
+<hr />
+<p><em>文档生成时间: 2026-03-14</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

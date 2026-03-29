@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitNexus 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始掌握 GitNexus - Zero-Server Code Intelligence Engine | 教程日期：2026-03-28</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13" class="toc-h3">1.3 安装</a></li>
+<li><a href="#14" class="toc-h3">1.4 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21" class="toc-h3">2.1 分析第一个仓库</a></li>
+<li><a href="#22-web-ui" class="toc-h3">2.2 启动 Web UI</a></li>
+<li><a href="#23-ai-agent" class="toc-h3">2.3 配置 AI Agent</a></li>
+<li><a href="#24" class="toc-h3">2.4 完整示例</a></li>
+<li><a href="#_4" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31" class="toc-h3">3.1 知识图谱</a></li>
+<li><a href="#32" class="toc-h3">3.2 零服务器架构</a></li>
+<li><a href="#33-graph-rag" class="toc-h3">3.3 Graph RAG</a></li>
+<li><a href="#34-mcp-model-context-protocol" class="toc-h3">3.4 MCP (Model Context Protocol)</a></li>
+<li><a href="#cli" class="toc-h2">四、CLI 命令详解</a></li>
+<li><a href="#41-analyze" class="toc-h3">4.1 analyze 命令</a></li>
+<li><a href="#42-mcp" class="toc-h3">4.2 mcp 命令</a></li>
+<li><a href="#43-serve" class="toc-h3">4.3 serve 命令</a></li>
+<li><a href="#44-wiki" class="toc-h3">4.4 wiki 命令</a></li>
+<li><a href="#45-setup" class="toc-h3">4.5 setup 命令</a></li>
+<li><a href="#_5" class="toc-h2">五、知识图谱分析</a></li>
+<li><a href="#51" class="toc-h3">5.1 理解图谱结构</a></li>
+<li><a href="#52" class="toc-h3">5.2 查询图谱</a></li>
+<li><a href="#53" class="toc-h3">5.3 分析调用链</a></li>
+<li><a href="#54" class="toc-h3">5.4 爆炸半径分析</a></li>
+<li><a href="#mcp" class="toc-h2">六、MCP 集成</a></li>
+<li><a href="#61-claude-code" class="toc-h3">6.1 配置 Claude Code</a></li>
+<li><a href="#62-mcp" class="toc-h3">6.2 使用 MCP 工具</a></li>
+<li><a href="#63-mcp" class="toc-h3">6.3 MCP 工具详解</a></li>
+<li><a href="#list_repos" class="toc-h4">list_repos</a></li>
+<li><a href="#query" class="toc-h4">query</a></li>
+<li><a href="#context" class="toc-h4">context</a></li>
+<li><a href="#impact" class="toc-h4">impact</a></li>
+<li><a href="#rename" class="toc-h4">rename</a></li>
+<li><a href="#graph-rag" class="toc-h2">七、Graph RAG 使用</a></li>
+<li><a href="#71" class="toc-h3">7.1 基本用法</a></li>
+<li><a href="#72-ai-agent" class="toc-h3">7.2 在 AI Agent 中使用</a></li>
+<li><a href="#73" class="toc-h3">7.3 调试场景</a></li>
+<li><a href="#web-ui" class="toc-h2">八、Web UI 使用</a></li>
+<li><a href="#81-web-ui" class="toc-h3">8.1 启动 Web UI</a></li>
+<li><a href="#82" class="toc-h3">8.2 功能区域</a></li>
+<li><a href="#83" class="toc-h3">8.3 交互操作</a></li>
+<li><a href="#_6" class="toc-h2">九、高级功能</a></li>
+<li><a href="#91" class="toc-h3">9.1 多仓库分析</a></li>
+<li><a href="#92" class="toc-h3">9.2 自定义解析</a></li>
+<li><a href="#93" class="toc-h3">9.3 增量更新</a></li>
+<li><a href="#94" class="toc-h3">9.4 导出图谱</a></li>
+<li><a href="#_7" class="toc-h2">十、最佳实践</a></li>
+<li><a href="#101" class="toc-h3">10.1 项目结构优化</a></li>
+<li><a href="#102" class="toc-h3">10.2 命名规范</a></li>
+<li><a href="#103" class="toc-h3">10.3 定期更新</a></li>
+<li><a href="#104" class="toc-h3">10.4 团队协作</a></li>
+<li><a href="#_8" class="toc-h2">十一、常见问题</a></li>
+<li><a href="#q1" class="toc-h3">Q1: 分析大型仓库很慢</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 图谱不完整</a></li>
+<li><a href="#q3-mcp" class="toc-h3">Q3: MCP 连接失败</a></li>
+<li><a href="#q4" class="toc-h3">Q4: 搜索结果不准确</a></li>
+<li><a href="#q5" class="toc-h3">Q5: 商业使用问题</a></li>
+<li><a href="#_9" class="toc-h2">参考资源</a></li>
+<li><a href="#_10" class="toc-h3">官方资源</a></li>
+<li><a href="#_11" class="toc-h3">文档</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GitNexus 学习教程</h1>
+                        <div class="article-meta">从零开始掌握 GitNexus - Zero-Server Code Intelligence Engine<br>教程日期：2026-03-28</div>
+                    </header>
+                    <h1 id="gitnexus">GitNexus 学习教程</h1>
+<blockquote>
+<p>从零开始掌握 GitNexus - Zero-Server Code Intelligence Engine</p>
+<p>教程日期：2026-03-28</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四cli-命令详解">CLI 命令详解</a></li>
+<li><a href="#五知识图谱分析">知识图谱分析</a></li>
+<li><a href="#六mcp-集成">MCP 集成</a></li>
+<li><a href="#七graph-rag-使用">Graph RAG 使用</a></li>
+<li><a href="#八web-ui-使用">Web UI 使用</a></li>
+<li><a href="#九高级功能">高级功能</a></li>
+<li><a href="#十最佳实践">最佳实践</a></li>
+<li><a href="#十一常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 GitNPTus 前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命令行基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>CLI 工具使用</td>
+</tr>
+<tr>
+<td>Git 基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>仓库操作</td>
+</tr>
+<tr>
+<td>代码结构理解</td>
+<td>⭐⭐⭐</td>
+<td>类、函数、模块</td>
+</tr>
+<tr>
+<td>AI Agent 概念</td>
+<td>⭐⭐⭐</td>
+<td>MCP 协议基础</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>Node.js 版本：18+
+npm 或 pnpm
+
+支持平台：
+├── macOS ✅
+├── Linux ✅
+└── Windows ✅
+
+浏览器（Web UI）：
+├── Chrome ✅
+├── Firefox ✅
+└── Safari ✅
+</code></pre>
+<h3 id="13">1.3 安装</h3>
+<pre><code class="language-bash"># 全局安装（推荐）
+npm install -g gitnexus
+
+# 或使用 pnpm
+pnpm add -g gitnexus
+
+# 验证安装
+gitnexus --version
+# 输出: 1.4.10
+</code></pre>
+<h3 id="14">1.4 验证安装</h3>
+<pre><code class="language-bash"># 查看帮助
+gitnexus --help
+
+# 输出:
+# GitNexus - Zero-Server Code Intelligence Engine
+#
+# Commands:
+#   analyze   Index a repository into a knowledge graph
+#   mcp       Start MCP server for AI agents
+#   serve     Start local HTTP server for web UI
+#   wiki      Generate repository wiki
+#   setup     Configure MCP for editors
+</code></pre>
+<hr />
+<h2 id="_3">二、快速开始</h2>
+<h3 id="21">2.1 分析第一个仓库</h3>
+<pre><code class="language-bash"># 分析 GitHub 仓库
+gitnexus analyze https://github.com/vercel/next.js
+
+# 输出:
+# ✓ Cloning repository...
+# ✓ Parsing files with Tree-sitter...
+# ✓ Building knowledge graph...
+# ✓ Indexing symbols...
+# ✓ Done! Indexed 15,234 symbols in 2.3s
+</code></pre>
+<h3 id="22-web-ui">2.2 启动 Web UI</h3>
+<pre><code class="language-bash"># 启动本地 Web 服务
+gitnexus serve
+
+# 输出:
+# Server running at http://localhost:3000
+# Open in browser to explore the knowledge graph
+</code></pre>
+<h3 id="23-ai-agent">2.3 配置 AI Agent</h3>
+<pre><code class="language-bash"># 配置 Claude Code
+gitnexus setup --client claude
+
+# 输出:
+# ✓ MCP server configured for Claude Code
+# ✓ Restart Claude Code to use GitNexus tools
+</code></pre>
+<h3 id="24">2.4 完整示例</h3>
+<pre><code class="language-bash"># 1. 分析本地项目
+gitnexus analyze ./my-project
+
+# 2. 启动 MCP 服务器
+gitnexus mcp &amp;
+
+# 3. 在 Claude Code 中使用
+# Claude: 查找项目中的认证相关函数
+# (GitNexus 会通过 MCP 提供精确的代码定位)
+</code></pre>
+<hr />
+<h2 id="_4">三、核心概念</h2>
+<h3 id="31">3.1 知识图谱</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    Knowledge Graph Structure                         │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   节点类型 (Nodes):                                                 │
+│   ┌─────────────────────────────────────────────────────────────┐  │
+│   │  Symbol Nodes:                                               │  │
+│   │  ├── Class (类)                                              │  │
+│   │  ├── Function (函数)                                         │  │
+│   │  ├── Variable (变量)                                         │  │
+│   │  ├── Interface (接口)                                        │  │
+│   │  ├── Type (类型)                                             │  │
+│   │  └── Method (方法)                                           │  │
+│   │                                                              │  │
+│   │  Container Nodes:                                            │  │
+│   │  ├── File (文件)                                             │  │
+│   │  ├── Module (模块)                                           │  │
+│   │  └── Package (包)                                            │  │
+│   └─────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+│   边类型 (Edges):                                                   │
+│   ┌─────────────────────────────────────────────────────────────┐  │
+│   │  CALLS          A 调用 B                                     │  │
+│   │  DEPENDS_ON     A 依赖 B                                     │  │
+│   │  IMPORTS        A 导入 B                                     │  │
+│   │  EXTENDS        A 继承 B                                     │  │
+│   │  IMPLEMENTS     A 实现 B                                     │  │
+│   │  DEFINES        A 定义 B                                     │  │
+│   │  REFERENCES     A 引用 B                                     │  │
+│   └─────────────────────────────────────────────────────────────┘  │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 零服务器架构</h3>
+<p>GitNexus 完全在客户端运行：</p>
+<pre><code>传统方案:
+  Client → Server → Database → Parser → 返回结果
+
+GitNexus 方案:
+  Browser → WebAssembly → LadybugDB (IndexedDB)
+  ↑
+  所有处理都在本地完成
+</code></pre>
+<p><strong>优势</strong>：
+- 隐私保护：代码不离开本地
+- 零运维：无需服务器
+- 离线可用：不需要网络</p>
+<h3 id="33-graph-rag">3.3 Graph RAG</h3>
+<p>Graph RAG 结合了：
+- <strong>RAG</strong>：检索增强生成
+- <strong>Graph</strong>：知识图谱遍历</p>
+<pre><code>问题 → 混合检索 → 图遍历 → 上下文组装 → LLM 生成
+
+混合检索:
+├── BM25: 关键词精确匹配
+├── Semantic: 向量语义搜索
+└── RRF: Reciprocal Rank Fusion 融合排序
+
+图遍历:
+├── 从匹配节点出发
+├── 追踪调用链
+├── 扩展依赖关系
+└── 收集相关上下文
+</code></pre>
+<h3 id="34-mcp-model-context-protocol">3.4 MCP (Model Context Protocol)</h3>
+<p>MCP 是 AI Agent 的标准化工具协议：</p>
+<pre><code>┌─────────────────┐                    ┌─────────────────┐
+│   AI Agent      │                    │  GitNexus MCP   │
+│  (Claude Code)  │◄──── MCP 协议 ────►│     Server      │
+│                 │                    │                 │
+│  调用工具        │                    │  7 个工具:       │
+│  获取结果        │                    │  • list_repos   │
+│                 │                    │  • query        │
+│                 │                    │  • context      │
+│                 │                    │  • impact       │
+│                 │                    │  • detect_changes│
+│                 │                    │  • rename       │
+│                 │                    │  • cypher       │
+└─────────────────┘                    └─────────────────┘
+</code></pre>
+<hr />
+<h2 id="cli">四、CLI 命令详解</h2>
+<h3 id="41-analyze">4.1 analyze 命令</h3>
+<pre><code class="language-bash">gitnexus analyze &lt;source&gt; [options]
+</code></pre>
+<p><strong>参数</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>source</code></td>
+<td>源地址（URL/路径/ZIP）</td>
+<td><code>./my-project</code></td>
+</tr>
+<tr>
+<td><code>--output, -o</code></td>
+<td>输出目录</td>
+<td><code>--output ./graph</code></td>
+</tr>
+<tr>
+<td><code>--languages, -l</code></td>
+<td>指定语言</td>
+<td><code>-l typescript,python</code></td>
+</tr>
+<tr>
+<td><code>--exclude</code></td>
+<td>排除模式</td>
+<td><code>--exclude "test/**"</code></td>
+</tr>
+<tr>
+<td><code>--include</code></td>
+<td>包含模式</td>
+<td><code>--include "src/**"</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-bash"># 分析 GitHub 仓库
+gitnexus analyze https://github.com/facebook/react
+
+# 分析本地目录
+gitnexus analyze ./my-project
+
+# 只分析 TypeScript 文件
+gitnexus analyze ./my-project --languages typescript
+
+# 排除测试文件
+gitnexus analyze ./my-project --exclude &quot;**/*.test.ts&quot;
+
+# 指定输出目录
+gitnexus analyze ./my-project --output ./graph-data
+</code></pre>
+<h3 id="42-mcp">4.2 mcp 命令</h3>
+<pre><code class="language-bash">gitnexus mcp [options]
+</code></pre>
+<p><strong>参数</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--port, -p</code></td>
+<td>服务端口</td>
+<td>3000</td>
+</tr>
+<tr>
+<td><code>--config, -c</code></td>
+<td>配置文件</td>
+<td>-</td>
+</tr>
+<tr>
+<td><code>--repos, -r</code></td>
+<td>仓库目录</td>
+<td>~/.gitnexus/repos</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-bash"># 启动 MCP 服务器
+gitnexus mcp
+
+# 指定端口
+gitnexus mcp --port 4000
+
+# 使用配置文件
+gitnexus mcp --config ./gitnexus.config.json
+</code></pre>
+<p><strong>配置文件示例</strong>：</p>
+<pre><code class="language-json">{
+  &quot;repos&quot;: [
+    {
+      &quot;name&quot;: &quot;my-project&quot;,
+      &quot;path&quot;: &quot;/path/to/my-project&quot;
+    }
+  ],
+  &quot;tools&quot;: {
+    &quot;query&quot;: { &quot;enabled&quot;: true },
+    &quot;context&quot;: { &quot;enabled&quot;: true },
+    &quot;impact&quot;: { &quot;enabled&quot;: true },
+    &quot;rename&quot;: { &quot;enabled&quot;: false }
+  }
+}
+</code></pre>
+<h3 id="43-serve">4.3 serve 命令</h3>
+<pre><code class="language-bash">gitnexus serve [options]
+</code></pre>
+<p><strong>参数</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>默认值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--port, -p</code></td>
+<td>服务端口</td>
+<td>3000</td>
+</tr>
+<tr>
+<td><code>--host, -h</code></td>
+<td>绑定主机</td>
+<td>localhost</td>
+</tr>
+<tr>
+<td><code>--open</code></td>
+<td>自动打开浏览器</td>
+<td>false</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-bash"># 启动 Web UI
+gitnexus serve
+
+# 指定端口
+gitnexus serve --port 8080
+
+# 开放外部访问
+gitnexus serve --host 0.0.0.0
+
+# 自动打开浏览器
+gitnexus serve --open
+</code></pre>
+<h3 id="44-wiki">4.4 wiki 命令</h3>
+<pre><code class="language-bash">gitnexus wiki [options]
+</code></pre>
+<p><strong>参数</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--repo, -r</code></td>
+<td>仓库名称</td>
+</tr>
+<tr>
+<td><code>--output, -o</code></td>
+<td>输出目录</td>
+</tr>
+<tr>
+<td><code>--format, -f</code></td>
+<td>输出格式 (markdown/html)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-bash"># 生成 Wiki
+gitnexus wiki --repo my-project --output ./wiki
+
+# 生成 HTML 格式
+gitnexus wiki --repo my-project --format html
+</code></pre>
+<h3 id="45-setup">4.5 setup 命令</h3>
+<pre><code class="language-bash">gitnexus setup --client &lt;client&gt;
+</code></pre>
+<p><strong>支持的客户端</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>客户端</th>
+<th>参数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td><code>claude</code></td>
+</tr>
+<tr>
+<td>Cursor</td>
+<td><code>cursor</code></td>
+</tr>
+<tr>
+<td>Windsurf</td>
+<td><code>windsurf</code></td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td><code>opencode</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-bash"># 配置 Claude Code
+gitnexus setup --client claude
+
+# 配置 Cursor
+gitnexus setup --client cursor
+</code></pre>
+<hr />
+<h2 id="_5">五、知识图谱分析</h2>
+<h3 id="51">5.1 理解图谱结构</h3>
+<pre><code>示例代码:
+
+// user.ts
+import { Database } from './database';
+import { Logger } from './logger';
+
+export class UserService {
+  private db: Database;
+  private logger: Logger;
+
+  constructor(db: Database) {
+    this.db = db;
+  }
+
+  async login(email: string): Promise&lt;User&gt; {
+    this.logger.log('login attempt');
+    return this.db.findUser(email);
+  }
+}
+
+生成的知识图谱:
+
+节点:
+├── UserService (Class)
+├── login (Method)
+├── db (Field)
+├── logger (Field)
+├── Database (Class - 外部)
+├── Logger (Class - 外部)
+├── User (Type - 外部)
+├── user.ts (File)
+
+边:
+├── UserService DEFINES login
+├── UserService DEFINES db
+├── UserService DEFINES logger
+├── UserService IMPORTS Database
+├── UserService IMPORTS Logger
+├── login CALLS Logger.log
+├── login CALLS Database.findUser
+├── login RETURNS User
+</code></pre>
+<h3 id="52">5.2 查询图谱</h3>
+<pre><code class="language-bash"># 使用 CLI 查询
+gitnexus query &quot;authentication&quot; --repo my-project
+
+# 输出:
+# Found 5 symbols:
+# 1. UserService.login (Method)
+#    File: src/services/user.ts:25
+#    Calls: Logger.log, Database.findUser
+#
+# 2. AuthService.authenticate (Method)
+#    File: src/auth/auth.service.ts:15
+#    Calls: UserService.login, TokenService.generate
+# ...
+</code></pre>
+<h3 id="53">5.3 分析调用链</h3>
+<pre><code class="language-bash"># 分析函数调用链
+gitnexus call-chain &quot;UserService.login&quot; --repo my-project
+
+# 输出:
+# Call chain for UserService.login:
+#
+# Callers (谁调用了它):
+# ├── AuthService.authenticate
+# │   └── AuthController.login
+#
+# Callees (它调用了谁):
+# ├── Logger.log
+# └── Database.findUser
+#     └── DatabaseConnection.query
+</code></pre>
+<h3 id="54">5.4 爆炸半径分析</h3>
+<pre><code class="language-bash"># 分析修改影响范围
+gitnexus impact &quot;UserService.login&quot; --repo my-project
+
+# 输出:
+# Impact analysis for UserService.login:
+#
+# Direct dependents: 3
+# ├── AuthService.authenticate
+# ├── UserController.profile
+# └── TestUserService.test_login
+#
+# Transitive dependents: 12
+# └── (显示所有受影响的符号)
+#
+# Risk level: MEDIUM
+# Recommendation: Run tests for AuthService before deploying
+</code></pre>
+<hr />
+<h2 id="mcp">六、MCP 集成</h2>
+<h3 id="61-claude-code">6.1 配置 Claude Code</h3>
+<p><strong>方式 1: 自动配置</strong></p>
+<pre><code class="language-bash">gitnexus setup --client claude
+</code></pre>
+<p><strong>方式 2: 手动配置</strong></p>
+<p>编辑 <code>~/.claude/settings.json</code>:</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;gitnexus&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;mcp&quot;],
+      &quot;env&quot;: {
+        &quot;GITNEXUS_REPOS_DIR&quot;: &quot;/path/to/repos&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="62-mcp">6.2 使用 MCP 工具</h3>
+<p><strong>在 Claude Code 中使用</strong>：</p>
+<pre><code>你: 查找项目中所有的认证相关函数
+
+Claude: [使用 GitNexus query 工具]
+找到了以下认证相关函数:
+
+1. UserService.login (src/services/user.ts:25)
+   - 用户登录验证
+
+2. AuthService.authenticate (src/auth/auth.service.ts:15)
+   - JWT token 验证
+
+3. TokenService.generate (src/auth/token.service.ts:10)
+   - 生成访问令牌
+</code></pre>
+<h3 id="63-mcp">6.3 MCP 工具详解</h3>
+<h4 id="list_repos">list_repos</h4>
+<pre><code class="language-typescript">// 列出所有已索引的仓库
+const repos = await mcp.gitnexus.list_repos();
+
+// 返回:
+// [
+//   { name: &quot;my-project&quot;, symbols: 15234, edges: 45678 },
+//   { name: &quot;my-api&quot;, symbols: 5432, edges: 12345 }
+// ]
+</code></pre>
+<h4 id="query">query</h4>
+<pre><code class="language-typescript">// 混合搜索
+const results = await mcp.gitnexus.query({
+  q: &quot;authentication&quot;,
+  repo: &quot;my-project&quot;,
+  limit: 10,
+  types: [&quot;function&quot;, &quot;class&quot;]
+});
+
+// 返回:
+// [
+//   { name: &quot;authenticate&quot;, file: &quot;auth.ts&quot;, line: 15, score: 0.95 },
+//   { name: &quot;AuthService&quot;, file: &quot;auth.service.ts&quot;, line: 5, score: 0.87 }
+// ]
+</code></pre>
+<h4 id="context">context</h4>
+<pre><code class="language-typescript">// 获取符号完整上下文
+const context = await mcp.gitnexus.context({
+  symbol: &quot;UserService.login&quot;,
+  repo: &quot;my-project&quot;,
+  depth: 2
+});
+
+// 返回:
+// {
+//   symbol: { name: &quot;login&quot;, type: &quot;method&quot;, file: &quot;user.ts&quot; },
+//   callers: [{ name: &quot;AuthService.authenticate&quot;, ... }],
+//   callees: [{ name: &quot;Logger.log&quot;, ... }, { name: &quot;Database.findUser&quot;, ... }],
+//   dependencies: [{ name: &quot;Database&quot;, ... }],
+//   definition: &quot;async login(email: string): Promise&lt;User&gt; { ... }&quot;
+// }
+</code></pre>
+<h4 id="impact">impact</h4>
+<pre><code class="language-typescript">// 分析修改影响
+const impact = await mcp.gitnexus.impact({
+  symbol: &quot;UserService.login&quot;,
+  repo: &quot;my-project&quot;
+});
+
+// 返回:
+// {
+//   directDependents: [...],
+//   transitiveDependents: [...],
+//   riskLevel: &quot;MEDIUM&quot;,
+//   recommendations: [&quot;Run AuthService tests&quot;, ...]
+// }
+</code></pre>
+<h4 id="rename">rename</h4>
+<pre><code class="language-typescript">// 安全重命名
+const result = await mcp.gitnexus.rename({
+  oldName: &quot;UserService&quot;,
+  newName: &quot;AccountService&quot;,
+  repo: &quot;my-project&quot;,
+  dryRun: true  // 预览模式
+});
+
+// 返回:
+// {
+//   filesAffected: 12,
+//   changes: [
+//     { file: &quot;user.ts&quot;, old: &quot;UserService&quot;, new: &quot;AccountService&quot; },
+//     { file: &quot;auth.ts&quot;, old: &quot;UserService&quot;, new: &quot;AccountService&quot; }
+//   ]
+// }
+</code></pre>
+<hr />
+<h2 id="graph-rag">七、Graph RAG 使用</h2>
+<h3 id="71">7.1 基本用法</h3>
+<pre><code class="language-bash"># 在 Web UI 中使用 Graph RAG
+gitnexus serve
+
+# 访问 http://localhost:3000
+# 在搜索框输入问题:
+# &quot;这个项目的认证流程是怎样的？&quot;
+</code></pre>
+<h3 id="72-ai-agent">7.2 在 AI Agent 中使用</h3>
+<pre><code>你: 这个项目的认证流程是怎样的？
+
+Claude (使用 GitNexus Graph RAG):
+
+根据代码分析，认证流程如下:
+
+1. 用户提交登录请求
+   - 入口: AuthController.login()
+   - 文件: src/controllers/auth.controller.ts
+
+2. 验证用户凭据
+   - 调用: AuthService.authenticate()
+   - 文件: src/auth/auth.service.ts
+   - 依赖: UserService.login()
+
+3. 生成访问令牌
+   - 调用: TokenService.generate()
+   - 文件: src/auth/token.service.ts
+
+4. 返回 JWT Token
+   - 类型: AuthResponse
+   - 字段: accessToken, refreshToken, expiresIn
+
+相关代码关系图:
+AuthController.login()
+    → AuthService.authenticate()
+        → UserService.login()
+            → Database.findUser()
+        → TokenService.generate()
+</code></pre>
+<h3 id="73">7.3 调试场景</h3>
+<pre><code>你: 我遇到了一个 Bug：用户登录后 token 无效
+
+Claude (使用 GitNexus 追踪调用链):
+
+让我追踪 token 生成和验证的调用链...
+
+调用链分析:
+TokenService.generate() --生成--&gt; TokenService.verify()
+
+发现可能的问题:
+1. TokenService.generate() 使用 HS256 算法
+2. TokenService.verify() 期望 RS256 算法
+3. 算法不匹配导致验证失败
+
+建议修改:
+- src/auth/token.service.ts:15
+- 将 verify() 的算法改为 HS256
+</code></pre>
+<hr />
+<h2 id="web-ui">八、Web UI 使用</h2>
+<h3 id="81-web-ui">8.1 启动 Web UI</h3>
+<pre><code class="language-bash">gitnexus serve
+
+# 输出:
+# Server running at http://localhost:3000
+# Graph visualization available
+</code></pre>
+<h3 id="82">8.2 功能区域</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    GitNexus Web UI                                  │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  Search Bar                                                   │   │
+│  │  [搜索符号、文件、问题...]                                     │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+│  ┌──────────────────┐ ┌─────────────────────────────────────────┐  │
+│  │                  │ │                                         │  │
+│  │  Graph View      │ │  Code View                              │  │
+│  │                  │ │                                         │  │
+│  │  ┌──────┐       │ │  // UserService.ts                       │  │
+│  │  │User  │       │ │  export class UserService {              │  │
+│  │  │Service│──┐    │ │    async login(email: string) {         │  │
+│  │  └──────┘  │    │ │      // ...                             │  │
+│  │            │    │ │    }                                    │  │
+│  │  ┌──────┐  │    │ │  }                                      │  │
+│  │  │Auth  │◄─┘    │ │                                         │  │
+│  │  │Service│       │ │  [调用链] [依赖] [影响分析]              │  │
+│  │  └──────┘       │ │                                         │  │
+│  │                  │ │                                         │  │
+│  └──────────────────┘ └─────────────────────────────────────────┘  │
+│                                                                     │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  Agent Chat                                                   │   │
+│  │  [与 Graph RAG Agent 对话]                                    │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="83">8.3 交互操作</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>点击节点</td>
+<td>查看符号详情</td>
+</tr>
+<tr>
+<td>拖拽节点</td>
+<td>重新布局</td>
+</tr>
+<tr>
+<td>双击节点</td>
+<td>跳转到代码</td>
+</tr>
+<tr>
+<td>右键菜单</td>
+<td>影响分析、调用链</td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>符号、文件、问题</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">九、高级功能</h2>
+<h3 id="91">9.1 多仓库分析</h3>
+<pre><code class="language-bash"># 分析多个仓库
+gitnexus analyze ./frontend --name frontend
+gitnexus analyze ./backend --name backend
+gitnexus analyze ./shared --name shared
+
+# MCP 服务器自动服务所有仓库
+gitnexus mcp
+</code></pre>
+<h3 id="92">9.2 自定义解析</h3>
+<pre><code class="language-bash"># 只解析特定目录
+gitnexus analyze ./my-project --include &quot;src/**&quot; --exclude &quot;**/*.test.ts&quot;
+
+# 指定语言
+gitnexus analyze ./my-project --languages typescript,python
+</code></pre>
+<h3 id="93">9.3 增量更新</h3>
+<pre><code class="language-bash"># 增量更新（只重新解析修改的文件）
+gitnexus analyze ./my-project --incremental
+</code></pre>
+<h3 id="94">9.4 导出图谱</h3>
+<pre><code class="language-bash"># 导出为 JSON
+gitnexus export ./my-project --format json --output graph.json
+
+# 导出为 GraphML
+gitnexus export ./my-project --format graphml --output graph.graphml
+</code></pre>
+<hr />
+<h2 id="_7">十、最佳实践</h2>
+<h3 id="101">10.1 项目结构优化</h3>
+<pre><code>好的结构（GitNexus 易于分析）:
+my-project/
+├── src/
+│   ├── services/          # 清晰的模块划分
+│   ├── controllers/
+│   └── models/
+└── package.json
+
+不好的结构（GitNexus 难以分析）:
+my-project/
+├── all-in-one.js          # 所有代码在一个文件
+├── utils/                 # 过于分散
+│   └── *.js (100+ files)
+└── package.json
+</code></pre>
+<h3 id="102">10.2 命名规范</h3>
+<pre><code>好的命名（GitNexus 易于理解）:
+- UserService
+- AuthService
+- DatabaseConnection
+
+不好的命名（GitNexus 难以理解）:
+- US
+- AS
+- DC
+</code></pre>
+<h3 id="103">10.3 定期更新</h3>
+<pre><code class="language-bash"># 定期更新图谱（CI/CD 集成）
+# .github/workflows/update-graph.yml
+name: Update GitNexus Graph
+on:
+  push:
+    branches: [main]
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: npm install -g gitnexus
+      - run: gitnexus analyze . --output ./graph
+      - uses: actions/upload-artifact@v3
+        with:
+          name: knowledge-graph
+          path: ./graph
+</code></pre>
+<h3 id="104">10.4 团队协作</h3>
+<pre><code class="language-bash"># 共享图谱配置
+# gitnexus.config.json
+{
+  &quot;version&quot;: &quot;1.0&quot;,
+  &quot;repos&quot;: [...],
+  &quot;exclude&quot;: [&quot;**/*.test.ts&quot;, &quot;**/dist/**&quot;],
+  &quot;include&quot;: [&quot;src/**&quot;]
+}
+
+# 提交到版本控制
+git add gitnexus.config.json
+</code></pre>
+<hr />
+<h2 id="_8">十一、常见问题</h2>
+<h3 id="q1">Q1: 分析大型仓库很慢</h3>
+<p><strong>原因</strong>: 文件数量多，解析耗时</p>
+<p><strong>解决</strong>:</p>
+<pre><code class="language-bash"># 只包含需要的目录
+gitnexus analyze ./large-project --include &quot;src/**&quot;
+
+# 排除不需要的目录
+gitnexus analyze ./large-project --exclude &quot;test/**&quot;, &quot;docs/**&quot;
+</code></pre>
+<h3 id="q2">Q2: 图谱不完整</h3>
+<p><strong>原因</strong>: 语言不支持或解析错误</p>
+<p><strong>解决</strong>:</p>
+<pre><code class="language-bash"># 查看支持的
+gitnexus analyze ./my-project --languages typescript,python
+
+# 查看解析日志
+gitnexus analyze ./my-project --verbose
+</code></pre>
+<h3 id="q3-mcp">Q3: MCP 连接失败</h3>
+<p><strong>原因</strong>: 端口被占用或配置错误</p>
+<p><strong>解决</strong>:</p>
+<pre><code class="language-bash"># 检查端口
+lsof -i :3000
+
+# 使用其他端口
+gitnexus mcp --port 4000
+</code></pre>
+<h3 id="q4">Q4: 搜索结果不准确</h3>
+<p><strong>原因</strong>: 图谱未更新或查询词不精确</p>
+<p><strong>解决</strong>:</p>
+<pre><code class="language-bash"># 更新图谱
+gitnexus analyze ./my-project --incremental
+
+# 使用更精确的查询
+gitnexus query &quot;UserService.login&quot; --repo my-project
+</code></pre>
+<h3 id="q5">Q5: 商业使用问题</h3>
+<p><strong>原因</strong>: GitNexus 使用 PolyForm Noncommercial License</p>
+<p><strong>解决</strong>:
+- 个人/非商业使用: 免费
+- 商业使用: 联系作者获取商业许可</p>
+<hr />
+<h2 id="_9">参考资源</h2>
+<h3 id="_10">官方资源</h3>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/abhigyanpatwari/GitNexus</li>
+<li><strong>官网</strong>: https://gitnexus.vercel.app</li>
+<li><strong>NPM</strong>: https://www.npmjs.com/package/gitnexus</li>
+<li><strong>Discord</strong>: https://discord.gg/AAsRVT6fGb</li>
+</ul>
+<h3 id="_11">文档</h3>
+<ul>
+<li><code>ARCHITECTURE.md</code> - 架构详解</li>
+<li><code>RUNBOOK.md</code> - 运维手册</li>
+<li><code>GUARDRAILS.md</code> - 贡献规则</li>
+<li><code>TESTING.md</code> - 测试指南</li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-28</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

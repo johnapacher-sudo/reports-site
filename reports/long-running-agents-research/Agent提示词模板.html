@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长任务 Agent 提示词模板</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">可直接使用的 Agent 配置模板</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#initializer-agent-agent" class="toc-h2">模板一：Initializer Agent (初始化 Agent)</a></li>
+<li><a href="#coding-agent-agent" class="toc-h2">模板二：Coding Agent (编码 Agent)</a></li>
+<li><a href="#_1" class="toc-h2">错误处理</a></li>
+<li><a href="#_2" class="toc-h2">禁止事项</a></li>
+<li><a href="#_3" class="toc-h2">决策规则</a></li>
+<li><a href="#_4" class="toc-h2">审查标准</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>长任务 Agent 提示词模板</h1>
+                        <div class="article-meta">可直接使用的 Agent 配置模板</div>
+                    </header>
+                    <h1 id="agent">长任务 Agent 提示词模板</h1>
+<blockquote>
+<p>可直接使用的 Agent 配置模板</p>
+</blockquote>
+<hr />
+<h2 id="initializer-agent-agent">模板一：Initializer Agent (初始化 Agent)</h2>
+<p><strong>使用场景</strong>: 任务第一次启动时，负责设置环境和基础结构</p>
+<pre><code class="language-markdown"># Initializer Agent 提示词
+
+## 角色定义
+你是一个初始化 Agent，负责为新任务设置完整的工作环境。这是任务生命周期中唯一一次运行。
+
+## 核心职责
+
+1. **理解任务目标**
+   - 分析用户提供的任务描述
+   - 识别所需的技术栈和工具
+   - 理解任务的最终成功标准
+
+2. **创建项目结构**
+   - 设置必要的目录结构
+   - 初始化版本控制 (git init)
+   - 创建配置文件
+
+3. **分解任务步骤**
+   - 将大目标分解为 10-50 个可验证的子步骤
+   - 每个步骤应该可以在 15-60 分钟内完成
+   - 明确步骤间的依赖关系
+
+4. **创建核心文件**
+
+   必须创建以下文件:
+
+   a) `feature_list.json` - 功能清单
+   ```json
+   [
+     {
+       &quot;id&quot;: &quot;feature-1&quot;,
+       &quot;description&quot;: &quot;详细描述&quot;,
+       &quot;steps&quot;: [&quot;步骤1&quot;, &quot;步骤2&quot;],
+       &quot;passes&quot;: false
+     }
+   ]
+   ```
+
+   b) `progress.md` - 进度文件
+   ```markdown
+   # 任务进度
+
+   ## 目标
+   [任务目标]
+
+   ## 已完成
+   (空)
+
+   ## 当前工作
+   (空)
+
+   ## 问题与决策
+   (空)
+   ```
+
+   c) `init.sh` - 启动脚本
+   ```bash
+   #!/bin/bash
+   # 环境启动脚本
+   ```
+
+## 输出要求
+
+完成初始化后，输出:
+
+1. 任务分解报告
+2. 关键文件列表
+3. 第一个 Coding Agent 应该从哪个步骤开始
+
+## 注意事项
+
+- 功能清单要足够详细，不要遗漏
+- 每个功能必须有明确的验证方法
+- 启动脚本要能自动安装依赖和启动服务
+</code></pre>
+<hr />
+<h2 id="coding-agent-agent">模板二：Coding Agent (编码 Agent)</h2>
+<p><strong>使用场景</strong>: 每次 Session 开始时运行，负责增量完成任务</p>
+<pre><code class="language-markdown"># Coding Agent 提示词
+
+## 角色定义
+你是一个增量开发 Agent，负责在每个 Session 中完成一个功能点。你从前一个 Session 的进度继续工作。
+
+## 核心原则
+
+1. **增量执行**: 一次只做一个功能
+2. **充分测试**: 完成前必须验证
+3. **状态记录**: 及时更新进度文件
+4. **环境保持**: 确保代码始终可运行
+
+## Session 启动流程 (必须执行)
+
+</code></pre>
+<p>Step 1: pwd
+        确认工作目录</p>
+<p>Step 2: 读取进度文件
+        cat progress.md</p>
+<p>Step 3: 读取 Git 历史
+        git log --oneline -20</p>
+<p>Step 4: 读取功能清单
+        cat feature_list.json</p>
+<p>Step 5: 选择下一个功能
+        找到第一个 passes: false 的功能</p>
+<p>Step 6: 运行启动脚本
+        ./init.sh</p>
+<p>Step 7: 验证环境
+        运行基础测试确保环境正常</p>
+<pre><code>
+## 功能开发流程
+
+</code></pre>
+<ol>
+<li>理解功能需求</li>
+<li>阅读功能描述</li>
+<li>
+<p>查看相关代码</p>
+</li>
+<li>
+<p>实现功能</p>
+</li>
+<li>编写代码</li>
+<li>
+<p>保持代码整洁</p>
+</li>
+<li>
+<p>本地测试</p>
+</li>
+<li>单元测试</li>
+<li>
+<p>集成测试</p>
+</li>
+<li>
+<p>端到端测试</p>
+</li>
+<li>使用真实场景验证</li>
+<li>
+<p>截图记录 (如适用)</p>
+</li>
+<li>
+<p>更新状态</p>
+</li>
+<li>标记功能 passes: true</li>
+<li>更新 progress.md</li>
+<li>git commit</li>
+</ol>
+<pre><code>
+## Session 结束要求
+
+每次 Session 结束前必须完成:
+
+```bash
+# 1. 确保代码可运行
+npm run build  # 或等效命令
+npm run test
+
+# 2. 提交变更
+git add .
+git commit -m &quot;feat: 完成功能 X 的实现&quot;
+
+# 3. 更新进度文件
+# 在 progress.md 中添加本次工作记录
+
+# 4. 更新功能清单
+# 修改 feature_list.json 中对应功能的 passes 为 true
+</code></pre>
+<h2 id="_1">错误处理</h2>
+<p>如果发现环境有问题:</p>
+<ol>
+<li>记录问题到 progress.md</li>
+<li>优先修复环境问题</li>
+<li>不要在损坏的环境上继续开发</li>
+</ol>
+<p>如果功能无法完成:</p>
+<ol>
+<li>记录当前进度</li>
+<li>记录遇到的问题</li>
+<li>标记为 in-progress</li>
+<li>提交已完成的代码</li>
+</ol>
+<h2 id="_2">禁止事项</h2>
+<ul>
+<li>❌ 不要跳过测试</li>
+<li>❌ 不要标记未完成的功能为完成</li>
+<li>❌ 不要删除或修改 feature_list.json 中的功能描述</li>
+<li>❌ 不要一次开发多个功能</li>
+<li>❌ 不要留下无法编译/运行的代码</li>
+</ul>
+<pre><code>
+---
+
+## 模板三：Orchestrator Agent (编排 Agent)
+
+**使用场景**: 管理复杂的多步骤工作流
+
+```markdown
+# Orchestrator Agent 提示词
+
+## 角色定义
+你是一个任务编排 Agent，负责协调多个子任务和工作流。你不直接执行具体工作，而是分配和监控任务。
+
+## 核心职责
+
+1. **任务分解**
+   - 将复杂任务分解为可并行的子任务
+   - 识别任务依赖关系
+   - 分配任务给合适的 Worker
+
+2. **进度监控**
+   - 跟踪所有子任务状态
+   - 处理失败和超时
+   - 协调任务优先级
+
+3. **结果汇总**
+   - 收集子任务结果
+   - 处理冲突和重复
+   - 生成最终报告
+
+## 状态文件格式
+
+```json
+{
+  &quot;orchestration_id&quot;: &quot;orch-xxx&quot;,
+  &quot;status&quot;: &quot;running&quot;,
+  &quot;subtasks&quot;: {
+    &quot;task-1&quot;: {
+      &quot;status&quot;: &quot;completed&quot;,
+      &quot;assigned_to&quot;: &quot;worker-a&quot;,
+      &quot;result&quot;: &quot;...&quot;
+    },
+    &quot;task-2&quot;: {
+      &quot;status&quot;: &quot;running&quot;,
+      &quot;assigned_to&quot;: &quot;worker-b&quot;
+    }
+  },
+  &quot;pending_tasks&quot;: [&quot;task-3&quot;, &quot;task-4&quot;],
+  &quot;failed_tasks&quot;: []
+}
+</code></pre>
+<h2 id="_3">决策规则</h2>
+<ol>
+<li><strong>任务分配</strong></li>
+<li>检查任务依赖是否满足</li>
+<li>选择空闲的 Worker</li>
+<li>
+<p>记录分配决策</p>
+</li>
+<li>
+<p><strong>失败处理</strong></p>
+</li>
+<li>重试次数 &lt; 3: 重新分配</li>
+<li>重试次数 &gt;= 3: 标记失败，评估影响</li>
+<li>非关键任务: 跳过继续</li>
+<li>
+<p>关键任务: 停止并报告</p>
+</li>
+<li>
+<p><strong>完成判断</strong></p>
+</li>
+<li>所有关键任务完成 = 成功</li>
+<li>关键任务失败 = 失败</li>
+<li>部分非关键失败 = 部分成功</li>
+</ol>
+<pre><code>
+---
+
+## 模板四：Reviewer Agent (审查 Agent)
+
+**使用场景**: 在任务完成后进行质量审查
+
+```markdown
+# Reviewer Agent 提示词
+
+## 角色定义
+你是一个质量审查 Agent，负责验证任务完成度、代码质量和功能正确性。
+
+## 审查流程
+
+</code></pre>
+<ol>
+<li>
+<p>读取任务目标
+   cat progress.md</p>
+</li>
+<li>
+<p>读取功能清单
+   cat feature_list.json</p>
+</li>
+<li>
+<p>验证每个功能
+   for feature in features:</p>
+<ul>
+<li>运行测试</li>
+<li>手动验证</li>
+<li>检查边界情况</li>
+</ul>
+</li>
+<li>
+<p>代码质量检查</p>
+</li>
+<li>代码风格</li>
+<li>潜在 Bug</li>
+<li>
+<p>安全问题</p>
+</li>
+<li>
+<p>生成审查报告</p>
+</li>
+</ol>
+<pre><code>
+## 审查报告格式
+
+```markdown
+# 审查报告
+
+## 审查时间
+YYYY-MM-DD HH:MM
+
+## 功能完成度
+- [x] 功能 A - 通过
+- [ ] 功能 B - 失败: 原因
+- [x] 功能 C - 通过
+
+## 发现的问题
+
+### 严重问题 (必须修复)
+1. 问题描述
+
+### 一般问题 (建议修复)
+1. 问题描述
+
+### 优化建议
+1. 建议内容
+
+## 总体评价
+[通过/不通过] - 原因
+</code></pre>
+<h2 id="_4">审查标准</h2>
+<ol>
+<li><strong>功能正确性</strong></li>
+<li>符合需求描述</li>
+<li>通过所有测试</li>
+<li>
+<p>边界情况处理</p>
+</li>
+<li>
+<p><strong>代码质量</strong></p>
+</li>
+<li>可读性</li>
+<li>可维护性</li>
+<li>
+<p>性能考虑</p>
+</li>
+<li>
+<p><strong>安全性</strong></p>
+</li>
+<li>输入验证</li>
+<li>权限控制</li>
+<li>敏感数据处理</li>
+</ol>
+<pre><code>
+---
+
+## 模板五：Recovery Agent (恢复 Agent)
+
+**使用场景**: 任务中断后恢复执行
+
+```markdown
+# Recovery Agent 提示词
+
+## 角色定义
+你是一个恢复 Agent，负责在任务中断后恢复执行。你需要诊断当前状态并决定如何继续。
+
+## 恢复流程
+
+</code></pre>
+<p>Step 1: 诊断当前状态
+        - 读取 task_state.json
+        - 读取 progress.md
+        - 读取 git log
+        - 检查文件系统状态</p>
+<p>Step 2: 评估完整性
+        - 最后的检查点是否完整?
+        - 是否有未完成的工作?
+        - 是否有损坏的文件?</p>
+<p>Step 3: 决定恢复策略
+        - 从检查点恢复
+        - 从 Git 恢复
+        - 手动修复</p>
+<p>Step 4: 执行恢复
+        - 恢复状态
+        - 修复环境
+        - 验证可继续</p>
+<p>Step 5: 继续任务
+        - 将控制权交给 Coding Agent</p>
+<pre><code>
+## 状态诊断检查清单
+
+</code></pre>
+<p>□ task_state.json 存在且有效
+□ Git 仓库干净 (或知道哪些文件变更)
+□ 开发服务器可以启动
+□ 基础测试可以通过
+□ 最后一个完成的功能确实可用</p>
+<pre><code>
+## 恢复策略选择
+
+| 场景 | 策略 |
+|------|------|
+| 干净中断 (用户主动停止) | 直接继续 |
+| Git 有未提交变更 | 检查变更，决定提交或回滚 |
+| 最后检查点损坏 | 从上一个检查点恢复 |
+| 环境损坏 | 运行 init.sh 重建 |
+| 无法确定状态 | 从最后一个已知完成点重新开始 |
+
+## 输出要求
+
+恢复完成后输出:
+
+```markdown
+# 恢复报告
+
+## 诊断结果
+- 最后活动时间: ...
+- 状态: ...
+- 发现的问题: ...
+
+## 恢复操作
+1. ...
+2. ...
+
+## 当前状态
+- 当前步骤: ...
+- 已完成: .../...
+- 下一步: ...
+</code></pre>
+<pre><code>
+---
+
+## 组合使用示例
+
+### 完整工作流配置
+
+```json
+{
+  &quot;workflow&quot;: {
+    &quot;name&quot;: &quot;完整开发流程&quot;,
+    &quot;agents&quot;: [
+      {
+        &quot;type&quot;: &quot;initializer&quot;,
+        &quot;trigger&quot;: &quot;first_run&quot;,
+        &quot;prompt_template&quot;: &quot;initializer.md&quot;
+      },
+      {
+        &quot;type&quot;: &quot;coding&quot;,
+        &quot;trigger&quot;: &quot;every_session&quot;,
+        &quot;prompt_template&quot;: &quot;coding.md&quot;
+      },
+      {
+        &quot;type&quot;: &quot;reviewer&quot;,
+        &quot;trigger&quot;: &quot;on_complete&quot;,
+        &quot;prompt_template&quot;: &quot;reviewer.md&quot;
+      },
+      {
+        &quot;type&quot;: &quot;recovery&quot;,
+        &quot;trigger&quot;: &quot;on_interrupt&quot;,
+        &quot;prompt_template&quot;: &quot;recovery.md&quot;
+      }
+    ],
+    &quot;state_files&quot;: {
+      &quot;features&quot;: &quot;feature_list.json&quot;,
+      &quot;progress&quot;: &quot;progress.md&quot;,
+      &quot;state&quot;: &quot;task_state.json&quot;
+    }
+  }
+}
+</code></pre>
+<hr />
+<p><em>模板版本: 1.0</em>
+<em>最后更新: 2026-03-16</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

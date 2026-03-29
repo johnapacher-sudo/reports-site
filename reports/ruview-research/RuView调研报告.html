@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuView 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**"WiFi DensePose: Seeing Human Pose Through Walls Using WiFi Signals"**</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 核心定位</a></li>
+<li><a href="#14" class="toc-h3">1.4 设计理念</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心特性详解</a></li>
+<li><a href="#1-wifi-densepose-wifi" class="toc-h4">特性 1: WiFi DensePose - WiFi 人体姿态估计</a></li>
+<li><a href="#2-csi" class="toc-h4">特性 2: CSI 信号处理</a></li>
+<li><a href="#3" class="toc-h4">特性 3: 生命体征检测</a></li>
+<li><a href="#4-rust" class="toc-h4">特性 4: Rust 性能优化</a></li>
+<li><a href="#_3" class="toc-h2">三、技术架构</a></li>
+<li><a href="#31" class="toc-h3">3.1 整体架构</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心组件</a></li>
+<li><a href="#esp32-s3-csi" class="toc-h4">ESP32-S3 CSI 节点</a></li>
+<li><a href="#ruvector-ai" class="toc-h4">RuVector AI 框架</a></li>
+<li><a href="#sona" class="toc-h4">SONA 自适应架构</a></li>
+<li><a href="#rvf" class="toc-h4">RVF 模型容器</a></li>
+<li><a href="#33" class="toc-h3">3.3 目录结构</a></li>
+<li><a href="#34" class="toc-h3">3.4 多节点感知网络</a></li>
+<li><a href="#_4" class="toc-h2">四、安装与使用</a></li>
+<li><a href="#41" class="toc-h3">4.1 硬件准备</a></li>
+<li><a href="#42" class="toc-h3">4.2 软件安装</a></li>
+<li><a href="#1-docker" class="toc-h4">方式 1: Docker 部署</a></li>
+<li><a href="#2" class="toc-h4">方式 2: 从源码构建</a></li>
+<li><a href="#3-esp32" class="toc-h4">方式 3: ESP32 固件烧录</a></li>
+<li><a href="#43" class="toc-h3">4.3 基本使用</a></li>
+<li><a href="#csi" class="toc-h4">启动 CSI 采集</a></li>
+<li><a href="#_5" class="toc-h4">运行姿态估计</a></li>
+<li><a href="#_6" class="toc-h4">启动可视化</a></li>
+<li><a href="#44-api" class="toc-h3">4.4 API 使用</a></li>
+<li><a href="#_7" class="toc-h2">五、技术深度分析</a></li>
+<li><a href="#51-csi" class="toc-h3">5.1 CSI 信号原理</a></li>
+<li><a href="#52" class="toc-h3">5.2 信号处理流水线</a></li>
+<li><a href="#53" class="toc-h3">5.3 边缘智能模块</a></li>
+<li><a href="#54-wifi-ai-adr-024" class="toc-h3">5.4 自学习 WiFi AI (ADR-024)</a></li>
+<li><a href="#_8" class="toc-h2">六、使用场景</a></li>
+<li><a href="#61" class="toc-h3">6.1 适用场景</a></li>
+<li><a href="#62" class="toc-h3">6.2 不适用场景</a></li>
+<li><a href="#63" class="toc-h3">6.3 典型用例</a></li>
+<li><a href="#_9" class="toc-h2">七、对比分析</a></li>
+<li><a href="#71-ruview-vs-vs-vs" class="toc-h3">7.1 RuView vs 摄像头 vs 激光雷达 vs 毫米波</a></li>
+<li><a href="#72" class="toc-h3">7.2 技术选型建议</a></li>
+<li><a href="#_10" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 推荐做法</a></li>
+<li><a href="#82" class="toc-h3">8.2 避坑指南</a></li>
+<li><a href="#_11" class="toc-h2">九、生态系统</a></li>
+<li><a href="#91" class="toc-h3">9.1 相关项目</a></li>
+<li><a href="#92" class="toc-h3">9.2 学术研究</a></li>
+<li><a href="#_12" class="toc-h2">十、总结</a></li>
+<li><a href="#101" class="toc-h3">10.1 优势</a></li>
+<li><a href="#102" class="toc-h3">10.2 劣势</a></li>
+<li><a href="#103" class="toc-h3">10.3 最终评价</a></li>
+<li><a href="#_13" class="toc-h2">参考资料</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>RuView 调研报告</h1>
+                        <div class="article-meta">**"WiFi DensePose: Seeing Human Pose Through Walls Using WiFi Signals"**</div>
+                    </header>
+                    <h1 id="ruview">RuView 调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>项目信息</th>
+<th>详情</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>π RuView (WiFi DensePose)</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>Reuven Cohen (ruvnet)</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/ruvnet/RuView</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://ruv.net</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>编程语言</strong></td>
+<td>Rust (v2), Python (v1)</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>37.3k+</td>
+</tr>
+<tr>
+<td><strong>测试覆盖</strong></td>
+<td>1,031+ Rust 测试用例</td>
+</tr>
+<tr>
+<td><strong>当前状态</strong></td>
+<td>活跃开发中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p><strong>RuView</strong> 是一个基于 WiFi 信号的无摄像头人体感知系统，利用 WiFi CSI（信道状态信息）实现穿墙人体姿态估计、呼吸检测和心率监测，通过 Rust 重写实现了 810 倍的性能提升。</p>
+<h3 id="13">1.3 核心定位</h3>
+<blockquote>
+<p><strong>"WiFi DensePose: Seeing Human Pose Through Walls Using WiFi Signals"</strong></p>
+</blockquote>
+<p>RuView 将 WiFi 路由器变成了感知设备，无需摄像头即可"看到"墙后的人体姿态。</p>
+<h3 id="14">1.4 设计理念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    RuView 设计理念                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ❌ 无摄像头                                                    │
+│  ❌ 无可穿戴设备                                                │
+│  ❌ 无隐私担忧                                                  │
+│  ❌ 无光线依赖                                                  │
+│                                                                 │
+│  ✅ WiFi 信号感知                                               │
+│  ✅ 穿墙探测能力                                                │
+│  ✅ 低成本硬件 ($8-9/节点)                                      │
+│  ✅ 边缘计算                                                    │
+│  ✅ 实时处理 (54,000 fps)                                       │
+│                                                                 │
+│  目标: 让 WiFi 成为无处不在的感知基础设施                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 功能概览</h3>
+<table>
+<thead>
+<tr>
+<th>功能模块</th>
+<th>状态</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>WiFi DensePose</strong></td>
+<td>✅ 完整</td>
+<td>WiFi 人体姿态估计</td>
+</tr>
+<tr>
+<td><strong>CSI 信号采集</strong></td>
+<td>✅ 完整</td>
+<td>ESP32-S3 CSI 数据捕获</td>
+</tr>
+<tr>
+<td><strong>生命体征检测</strong></td>
+<td>✅ 完整</td>
+<td>呼吸(6-30 BPM)、心率(40-120 BPM)</td>
+</tr>
+<tr>
+<td><strong>穿墙感知</strong></td>
+<td>✅ 完整</td>
+<td>穿透墙壁、家具、碎片</td>
+</tr>
+<tr>
+<td><strong>运动检测</strong></td>
+<td>✅ 完整</td>
+<td>高精度运动状态识别</td>
+</tr>
+<tr>
+<td><strong>多节点网络</strong></td>
+<td>✅ 完整</td>
+<td>4-6 节点 360° 覆盖</td>
+</tr>
+<tr>
+<td><strong>边缘智能</strong></td>
+<td>✅ 完整</td>
+<td>65 个 WASM 模块</td>
+</tr>
+<tr>
+<td><strong>3D 可视化</strong></td>
+<td>✅ 完整</td>
+<td>Three.js 实时渲染</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 核心特性详解</h3>
+<h4 id="1-wifi-densepose-wifi">特性 1: WiFi DensePose - WiFi 人体姿态估计</h4>
+<p><strong>原理</strong>: 利用 WiFi 信号的 CSI（信道状态信息）重建人体姿态。</p>
+<pre><code>WiFi 发射器 ──→ 人体反射 ──→ WiFi 接收器
+                  │
+                  ▼
+           CSI 信号变化
+                  │
+                  ▼
+           深度学习模型
+                  │
+                  ▼
+           人体姿态估计
+</code></pre>
+<p><strong>技术优势</strong>:
+- 无需摄像头，保护隐私
+- 穿透墙壁、家具
+- 不受光线影响
+- 低成本硬件</p>
+<h4 id="2-csi">特性 2: CSI 信号处理</h4>
+<p><strong>CSI (Channel State Information)</strong> 是 WiFi 信号在子载波级别的幅度和相位信息。</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CSI 信号结构                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  WiFi 信道 = 多个子载波 (Subcarriers)                           │
+│                                                                 │
+│  每个子载波包含:                                                │
+│  ┌─────────────┐ ┌─────────────┐                               │
+│  │   幅度       │ │   相位       │                               │
+│  │ (Amplitude) │ │  (Phase)    │                               │
+│  └─────────────┘ └─────────────┘                               │
+│                                                                 │
+│  人体运动 → 信号反射 → CSI 变化 → 模式识别                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>处理流程</strong>:
+1. <strong>CSI 采集</strong>: ESP32-S3 捕获原始 CSI 数据
+2. <strong>预处理</strong>: 幅度归一化、相位清理
+3. <strong>特征提取</strong>: 时频域特征
+4. <strong>模型推理</strong>: RuVector AI 模型</p>
+<h4 id="3">特性 3: 生命体征检测</h4>
+<p><strong>呼吸检测 (6-30 BPM)</strong>:
+- 通过 CSI 相位变化检测胸部起伏
+- FFT 频谱分析提取呼吸频率
+- 精度: ±1 BPM</p>
+<p><strong>心率检测 (40-120 BPM)</strong>:
+- 检测心脏跳动引起的微小震动
+- 高灵敏度相位处理
+- 精度: ±2 BPM</p>
+<h4 id="4-rust">特性 4: Rust 性能优化</h4>
+<p><strong>性能对比 (Python vs Rust)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>Python (v1)</th>
+<th>Rust (v2)</th>
+<th>加速比</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CSI 预处理</strong></td>
+<td>~5ms</td>
+<td>5.19 µs</td>
+<td>1000x</td>
+</tr>
+<tr>
+<td><strong>相位清理</strong></td>
+<td>~3ms</td>
+<td>3.84 µs</td>
+<td>780x</td>
+</tr>
+<tr>
+<td><strong>特征提取</strong></td>
+<td>~8ms</td>
+<td>9.03 µs</td>
+<td>890x</td>
+</tr>
+<tr>
+<td><strong>运动检测</strong></td>
+<td>~1ms</td>
+<td>186 ns</td>
+<td>5400x</td>
+</tr>
+<tr>
+<td><strong>完整流水线</strong></td>
+<td>~15ms</td>
+<td>18.47 µs</td>
+<td><strong>810x</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Rust 优化技术</strong>:
+- SIMD 向量化
+- 零拷贝数据处理
+- 无锁并发
+- 内存池优化</p>
+<hr />
+<h2 id="_3">三、技术架构</h2>
+<h3 id="31">3.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      RuView 架构                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    感知层 (Sensing)                       │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │   │
+│  │  │ ESP32-S3 │ │ ESP32-S3 │ │ ESP32-S3 │ │ ESP32-S3 │   │   │
+│  │  │  节点 1   │ │  节点 2   │ │  节点 3   │ │  节点 N   │   │   │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼ (WiFi CSI Data)                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    处理层 (Processing)                    │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ CSI 预处理    │ │ 特征提取     │ │ 模型推理     │    │   │
+│  │  │ (Rust)       │ │ (Rust)       │ │ (RuVector)   │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    智能层 (Intelligence)                  │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ 姿态估计     │ │ 生命体征     │ │ 运动检测     │    │   │
+│  │  │ DensePose    │ │ Vital Signs  │ │ Motion       │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    应用层 (Application)                   │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ 3D 可视化    │ │ API 服务     │ │ 边缘模块     │    │   │
+│  │  │ (Three.js)   │ │ (REST/gRPC)  │ │ (WASM)       │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 核心组件</h3>
+<h4 id="esp32-s3-csi">ESP32-S3 CSI 节点</h4>
+<p><strong>硬件规格</strong>:
+| 参数 | 规格 |
+|------|------|
+| <strong>芯片</strong> | ESP32-S3 |
+| <strong>成本</strong> | $8-9/节点 |
+| <strong>WiFi</strong> | 802.11 b/g/n |
+| <strong>子载波</strong> | 64 (20MHz) / 256 (40MHz) |
+| <strong>采样率</strong> | 最高 1000 Hz |</p>
+<p><strong>固件功能</strong>:
+- CSI 数据采集
+- 原始数据打包
+- 通过串口/网络传输</p>
+<h4 id="ruvector-ai">RuVector AI 框架</h4>
+<p><strong>核心特性</strong>:
+- 注意力机制 (Attention)
+- 图算法 (Graph Algorithms)
+- 模型压缩 (Compression)
+- 边缘优化</p>
+<h4 id="sona">SONA 自适应架构</h4>
+<p><strong>SONA (Self-Optimizing Neural Architecture)</strong>:
+- <strong>Micro-LoRA</strong>: 轻量级模型适配
+- <strong>EWC++</strong>: 持续学习防止遗忘
+- <strong>设备端自适应</strong>: 无需云端训练</p>
+<h4 id="rvf">RVF 模型容器</h4>
+<p><strong>RVF (RuView Format)</strong> 特性:
+- 单文件模型打包
+- 渐进式加载
+- 跨平台兼容
+- 压缩存储</p>
+<h3 id="33">3.3 目录结构</h3>
+<pre><code>RuView/
+├── firmware/
+│   └── esp32-csi-node/       # ESP32 固件
+│       ├── src/              # 固件源码
+│       └── CMakeLists.txt    # 构建配置
+│
+├── rust-port/
+│   └── wifi-densepose-rs/    # Rust 实现
+│       ├── src/
+│       │   ├── csi/          # CSI 处理
+│       │   ├── features/     # 特征提取
+│       │   ├── models/       # AI 模型
+│       │   └── pipeline/     # 处理流水线
+│       └── Cargo.toml
+│
+├── v1/                       # Python 原版
+│   ├── wifi_densepose/       # 核心模块
+│   └── examples/             # 示例代码
+│
+├── ui/                       # Three.js 可视化
+│   ├── src/
+│   └── public/
+│
+├── docs/
+│   └── adr/                  # 架构决策记录
+│       ├── ADR-024.md        # 自学习 WiFi AI
+│       └── ...
+│
+└── docker/                   # Docker 部署
+    └── Dockerfile
+</code></pre>
+<h3 id="34">3.4 多节点感知网络</h3>
+<p><strong>多静态网格 (Multistatic Mesh)</strong>:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    多节点感知布局                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│     [节点 1] ──────────────────────────────────── [节点 2]      │
+│        │                                           │            │
+│        │         ┌─────────────┐                  │            │
+│        │         │   人体目标   │                  │            │
+│        │         └─────────────┘                  │            │
+│        │                                           │            │
+│     [节点 3] ──────────────────────────────────── [节点 4]      │
+│                                                                 │
+│     4-6 个节点提供 360° 房间覆盖                                │
+│     多视角融合提高感知精度                                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>优势</strong>:
+- 360° 无死角覆盖
+- 多视角数据融合
+- 冗余备份
+- 提高定位精度</p>
+<hr />
+<h2 id="_4">四、安装与使用</h2>
+<h3 id="41">4.1 硬件准备</h3>
+<p><strong>所需硬件</strong>:
+| 组件 | 数量 | 成本 |
+|------|------|------|
+| ESP32-S3 开发板 | 2-6 个 | $8-9/个 |
+| WiFi 路由器 | 1 个 | 现有 |
+| 主机 (运行 RuView) | 1 台 | - |</p>
+<h3 id="42">4.2 软件安装</h3>
+<h4 id="1-docker">方式 1: Docker 部署</h4>
+<pre><code class="language-bash"># 拉取镜像
+docker pull ruvnet/ruview:latest
+
+# 启动服务
+docker run -d --name ruview \
+  -p 8080:8080 \
+  -p 9222:9222 \
+  ruvnet/ruview:latest
+</code></pre>
+<h4 id="2">方式 2: 从源码构建</h4>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/ruvnet/RuView.git
+cd RuView
+
+# 构建 Rust 版本
+cd rust-port/wifi-densepose-rs
+cargo build --release
+
+# 运行测试
+cargo test
+</code></pre>
+<h4 id="3-esp32">方式 3: ESP32 固件烧录</h4>
+<pre><code class="language-bash"># 安装 ESP-IDF
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf
+./install.sh
+
+# 编译固件
+cd RuView/firmware/esp32-csi-node
+idf.py build
+
+# 烧录到 ESP32
+idf.py -p /dev/ttyUSB0 flash monitor
+</code></pre>
+<h3 id="43">4.3 基本使用</h3>
+<h4 id="csi">启动 CSI 采集</h4>
+<pre><code class="language-bash"># 连接 ESP32，启动 CSI 数据流
+python scripts/start_csi_stream.py --port /dev/ttyUSB0
+</code></pre>
+<h4 id="_5">运行姿态估计</h4>
+<pre><code class="language-bash"># 启动 Rust 处理流水线
+./target/release/wifi-densepose \
+  --csi-source tcp://0.0.0.0:9000 \
+  --model models/densepose.rvf \
+  --output ui/data/
+</code></pre>
+<h4 id="_6">启动可视化</h4>
+<pre><code class="language-bash"># 启动 Web UI
+cd ui
+npm install
+npm start
+
+# 访问 http://localhost:3000
+</code></pre>
+<h3 id="44-api">4.4 API 使用</h3>
+<pre><code class="language-python">import requests
+
+# 获取当前姿态
+response = requests.get('http://localhost:8080/api/pose')
+pose_data = response.json()
+print(f&quot;检测到 {pose_data['person_count']} 人&quot;)
+print(f&quot;姿态关键点: {pose_data['keypoints']}&quot;)
+
+# 获取生命体征
+vitals = requests.get('http://localhost:8080/api/vitals')
+print(f&quot;呼吸频率: {vitals.json()['breathing_rate']} BPM&quot;)
+print(f&quot;心率: {vitals.json()['heart_rate']} BPM&quot;)
+</code></pre>
+<hr />
+<h2 id="_7">五、技术深度分析</h2>
+<h3 id="51-csi">5.1 CSI 信号原理</h3>
+<p><strong>WiFi CSI vs RSSI</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>RSSI</th>
+<th>CSI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>粒度</strong></td>
+<td>单一值</td>
+<td>多子载波</td>
+</tr>
+<tr>
+<td><strong>信息量</strong></td>
+<td>信号强度</td>
+<td>幅度+相位</td>
+</tr>
+<tr>
+<td><strong>分辨率</strong></td>
+<td>低</td>
+<td>高</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>简单定位</td>
+<td>精细感知</td>
+</tr>
+</tbody>
+</table>
+<p><strong>CSI 数学表示</strong>:</p>
+<pre><code>H(f, t) = |H(f, t)| * e^(j∠H(f, t))
+
+其中:
+- H(f, t): 时刻 t 频率 f 的信道响应
+- |H(f, t)|: 幅度
+- ∠H(f, t): 相位
+- f: 子载波频率
+- t: 时间
+</code></pre>
+<h3 id="52">5.2 信号处理流水线</h3>
+<pre><code>原始 CSI 数据
+      │
+      ▼
+┌─────────────┐
+│  幅度处理    │  ← 归一化、滤波
+└─────────────┘
+      │
+      ▼
+┌─────────────┐
+│  相位清理    │  ← 相位解卷绕、线性化
+└─────────────┘
+      │
+      ▼
+┌─────────────┐
+│  特征提取    │  ← 时域、频域特征
+└─────────────┘
+      │
+      ▼
+┌─────────────┐
+│  模型推理    │  ← RuVector AI
+└─────────────┘
+      │
+      ▼
+┌─────────────┐
+│  姿态/体征   │  ← 输出结果
+└─────────────┘
+</code></pre>
+<h3 id="53">5.3 边缘智能模块</h3>
+<p><strong>65 个 WASM 模块分类</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>模块数</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>预处理</strong></td>
+<td>15</td>
+<td>CSI 数据清洗、归一化</td>
+</tr>
+<tr>
+<td><strong>特征</strong></td>
+<td>12</td>
+<td>时频域特征提取</td>
+</tr>
+<tr>
+<td><strong>检测</strong></td>
+<td>10</td>
+<td>运动、存在检测</td>
+</tr>
+<tr>
+<td><strong>估计</strong></td>
+<td>8</td>
+<td>姿态、位置估计</td>
+</tr>
+<tr>
+<td><strong>追踪</strong></td>
+<td>7</td>
+<td>多目标追踪</td>
+</tr>
+<tr>
+<td><strong>适配</strong></td>
+<td>6</td>
+<td>模型自适应</td>
+</tr>
+<tr>
+<td><strong>通信</strong></td>
+<td>7</td>
+<td>数据传输、协议</td>
+</tr>
+</tbody>
+</table>
+<h3 id="54-wifi-ai-adr-024">5.4 自学习 WiFi AI (ADR-024)</h3>
+<p><strong>对比自监督学习架构</strong>:</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                 自学习 WiFi AI 架构                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐     ┌──────────────┐                         │
+│  │ CSI 样本 A   │     │ CSI 样本 B   │                         │
+│  └──────────────┘     └──────────────┘                         │
+│         │                    │                                  │
+│         ▼                    ▼                                  │
+│  ┌──────────────┐     ┌──────────────┐                         │
+│  │  编码器 A    │     │  编码器 B    │                         │
+│  └──────────────┘     └──────────────┘                         │
+│         │                    │                                  │
+│         └────────┬───────────┘                                  │
+│                  ▼                                              │
+│         ┌──────────────┐                                        │
+│         │  对比损失    │  ← 正样本拉近，负样本推远               │
+│         └──────────────┘                                        │
+│                  │                                              │
+│                  ▼                                              │
+│         ┌──────────────┐                                        │
+│         │  表征学习    │  ← 无标注自动学习                       │
+│         └──────────────┘                                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>优势</strong>:
+- 无需人工标注
+- 环境自适应
+- 持续学习
+- 边缘部署友好</p>
+<hr />
+<h2 id="_8">六、使用场景</h2>
+<h3 id="61">6.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+<th>推荐指数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>智能家居</strong></td>
+<td>人员检测、手势控制</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>健康监测</strong></td>
+<td>老人跌倒、呼吸监测</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>安防监控</strong></td>
+<td>穿墙入侵检测</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>搜索救援</strong></td>
+<td>灾后生命探测</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>运动分析</strong></td>
+<td>姿态、动作识别</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>医疗康复</strong></td>
+<td>远程生命体征</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>隐私场所</strong></td>
+<td>浴室、更衣室监控</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 不适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>高精度定位</strong></td>
+<td>精度约 10-50cm，不如 UWB</td>
+</tr>
+<tr>
+<td><strong>多人精细区分</strong></td>
+<td>超过 5 人时准确率下降</td>
+</tr>
+<tr>
+<td><strong>室外开放空间</strong></td>
+<td>WiFi 信号衰减快</td>
+</tr>
+<tr>
+<td><strong>金属密集环境</strong></td>
+<td>信号反射干扰严重</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 典型用例</h3>
+<p><strong>用例 1: 老人跌倒检测</strong></p>
+<pre><code>老人居住房间
+      │
+      ├── [ESP32 节点 x 4] ──→ CSI 数据流
+      │                              │
+      └── RuView 边缘服务器          │
+                                     ▼
+                              ┌─────────────┐
+                              │  跌倒检测   │
+                              └─────────────┘
+                                     │
+                    ┌────────────────┼────────────────┐
+                    ▼                ▼                ▼
+              [本地报警]       [推送子女]       [呼叫急救]
+</code></pre>
+<p><strong>用例 2: 搜索救援</strong></p>
+<pre><code>灾后废墟
+      │
+      ├── [便携 ESP32 阵列] ──→ CSI 扫描
+      │                              │
+      └── 移动边缘设备               │
+                                     ▼
+                              ┌─────────────┐
+                              │ 生命体征   │
+                              │ 检测       │
+                              └─────────────┘
+                                     │
+                                     ▼
+                              [定位被困者]
+</code></pre>
+<p><strong>用例 3: 智能家居手势控制</strong></p>
+<pre><code>用户手势 ──→ CSI 变化 ──→ RuView ──→ 手势识别 ──→ 智能家居控制
+                                          │
+                    ┌─────────────────────┼─────────────────────┐
+                    ▼                     ▼                     ▼
+              [开灯/关灯]            [调节音量]            [切换频道]
+</code></pre>
+<hr />
+<h2 id="_9">七、对比分析</h2>
+<h3 id="71-ruview-vs-vs-vs">7.1 RuView vs 摄像头 vs 激光雷达 vs 毫米波</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RuView</th>
+<th>摄像头</th>
+<th>激光雷达</th>
+<th>毫米波雷达</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>穿墙能力</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>部分</td>
+</tr>
+<tr>
+<td><strong>隐私保护</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>光线依赖</strong></td>
+<td>❌</td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>$20-60</td>
+<td>$50-200</td>
+<td>$500-5000</td>
+<td>$100-500</td>
+</tr>
+<tr>
+<td><strong>精度</strong></td>
+<td>中</td>
+<td>高</td>
+<td>极高</td>
+<td>中高</td>
+</tr>
+<tr>
+<td><strong>覆盖范围</strong></td>
+<td>5-10m</td>
+<td>视角限制</td>
+<td>100m+</td>
+<td>50-200m</td>
+</tr>
+<tr>
+<td><strong>3D 感知</strong></td>
+<td>✅</td>
+<td>部分</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>生命体征</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 技术选型建议</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      场景选择指南                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  需要穿墙感知?                                                  │
+│  │                                                              │
+│  ├── 是 ──→ 预算有限?                                          │
+│  │           │                                                   │
+│  │           ├── 是 ──→ 【RuView】                              │
+│  │           │                                                   │
+│  │           └── 否 ──→ 需要极高精度?                           │
+│  │                      │                                       │
+│  │                      ├── 是 ──→ 【毫米波雷达】               │
+│  │                      │                                       │
+│  │                      └── 否 ──→ 【RuView】                   │
+│  │                                                              │
+│  └── 否 ──→ 隐私敏感?                                          │
+│              │                                                   │
+│              ├── 是 ──→ 【RuView】或【毫米波】                  │
+│              │                                                   │
+│              └── 否 ──→ 需要视觉细节?                           │
+│                         │                                       │
+│                         ├── 是 ──→ 【摄像头】                   │
+│                         │                                       │
+│                         └── 否 ──→ 【RuView】                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_10">八、最佳实践</h2>
+<h3 id="81">8.1 推荐做法</h3>
+<ol>
+<li><strong>多节点部署</strong></li>
+<li>至少 4 个 ESP32 节点</li>
+<li>分布在房间四角</li>
+<li>
+<p>确保视线覆盖</p>
+</li>
+<li>
+<p><strong>信号校准</strong></p>
+</li>
+<li>部署后进行空房间校准</li>
+<li>定期更新基线</li>
+<li>
+<p>环境变化后重新校准</p>
+</li>
+<li>
+<p><strong>边缘计算优先</strong></p>
+</li>
+<li>使用 WASM 模块本地处理</li>
+<li>减少网络延迟</li>
+<li>保护隐私数据</li>
+</ol>
+<h3 id="82">8.2 避坑指南</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>信号干扰</strong></td>
+<td>避免与其他 2.4GHz 设备冲突</td>
+</tr>
+<tr>
+<td><strong>金属反射</strong></td>
+<td>调整节点位置，避开大型金属</td>
+</tr>
+<tr>
+<td><strong>多径效应</strong></td>
+<td>增加节点数量，多视角融合</td>
+</tr>
+<tr>
+<td><strong>精度不足</strong></td>
+<td>校准环境，优化模型参数</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">九、生态系统</h2>
+<h3 id="91">9.1 相关项目</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>描述</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ESP32-CSI-Tool</strong></td>
+<td>ESP32 CSI 采集工具</td>
+<td>GitHub</td>
+</tr>
+<tr>
+<td><strong>WiFi-DensePose</strong></td>
+<td>原始研究论文实现</td>
+<td>CMU</td>
+</tr>
+<tr>
+<td><strong>RuVector</strong></td>
+<td>AI 推理框架</td>
+<td>ruv.net</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 学术研究</h3>
+<ul>
+<li><strong>WiFi-DensePose</strong>: CMU 原始研究</li>
+<li><strong>Widar</strong>: WiFi 人体运动识别</li>
+<li><strong>WiVi</strong>: WiFi 可视化穿墙</li>
+<li><strong>RF-Capture</strong>: MIT 穿墙人体成像</li>
+</ul>
+<hr />
+<h2 id="_12">十、总结</h2>
+<h3 id="101">10.1 优势</h3>
+<table>
+<thead>
+<tr>
+<th>优势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>穿墙感知</strong></td>
+<td>无需视线的独特能力</td>
+</tr>
+<tr>
+<td><strong>隐私友好</strong></td>
+<td>无摄像头，无隐私担忧</td>
+</tr>
+<tr>
+<td><strong>低成本</strong></td>
+<td>$8-9/节点的硬件成本</td>
+</tr>
+<tr>
+<td><strong>高性能</strong></td>
+<td>810x 加速，54,000 fps</td>
+</tr>
+<tr>
+<td><strong>边缘智能</strong></td>
+<td>65 个 WASM 模块本地处理</td>
+</tr>
+<tr>
+<td><strong>全功能</strong></td>
+<td>姿态、生命体征、运动检测</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 劣势</h3>
+<table>
+<thead>
+<tr>
+<th>劣势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>精度限制</strong></td>
+<td>不如摄像头/激光雷达</td>
+</tr>
+<tr>
+<td><strong>环境敏感</strong></td>
+<td>金属、多径干扰</td>
+</tr>
+<tr>
+<td><strong>范围限制</strong></td>
+<td>5-10m 有效范围</td>
+</tr>
+<tr>
+<td><strong>硬件依赖</strong></td>
+<td>需要 ESP32 节点</td>
+</tr>
+<tr>
+<td><strong>生态较新</strong></td>
+<td>社区还在发展中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103">10.3 最终评价</h3>
+<p>RuView 是 WiFi 感知领域的突破性项目，通过创新的 CSI 处理和 Rust 性能优化，实现了低成本、高性能的穿墙人体感知。对于智能家居、健康监测、搜索救援等隐私敏感场景，它是理想的选择。</p>
+<p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ (5/5) - 特定场景</p>
+<p><strong>适用人群</strong>:
+- 智能家居开发者
+- 健康监测系统工程师
+- 安防监控系统集成商
+- 搜索救援技术研究者
+- 隐私敏感应用开发者</p>
+<hr />
+<h2 id="_13">参考资料</h2>
+<ul>
+<li><a href="https://github.com/ruvnet/RuView">RuView GitHub</a></li>
+<li><a href="https://ruv.net">RuView 官网</a></li>
+<li><a href="https://arxiv.org/abs/2201.00250">WiFi-DensePose 论文</a></li>
+<li><a href="https://github.com/StevenGao602/ESP32-CSI-Tool">ESP32 CSI Tool</a></li>
+<li><a href="https://github.com/ruvnet/RuView/tree/main/docs/adr">ADR-024: Self-Learning WiFi AI</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

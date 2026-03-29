@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI-Anything 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">>> open /path/to/image.png | >> resize 800x600 | >> filter blur --radius 5 | >> save output.png | >> exit</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 环境要求</a></li>
+<li><a href="#13" class="toc-h3">1.3 安装步骤</a></li>
+<li><a href="#14" class="toc-h3">1.4 项目结构概览</a></li>
+<li><a href="#_2" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21-hello-world-cli" class="toc-h3">2.1 Hello World：使用已有 CLI</a></li>
+<li><a href="#22" class="toc-h3">2.2 第一个命令</a></li>
+<li><a href="#23-repl" class="toc-h3">2.3 进入 REPL 模式</a></li>
+<li><a href="#_3" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31" class="toc-h3">3.1 概念图谱</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心概念详解</a></li>
+<li><a href="#agent-native-softwareagent" class="toc-h4">Agent-Native Software（Agent 原生软件）</a></li>
+<li><a href="#harnessmd" class="toc-h4">HARNESS.md</a></li>
+<li><a href="#replskin" class="toc-h4">ReplSkin</a></li>
+<li><a href="#skillmd" class="toc-h4">SKILL.md</a></li>
+<li><a href="#resize" class="toc-h3">resize</a></li>
+<li><a href="#_4" class="toc-h2">使用示例</a></li>
+<li><a href="#42-phase-2-design" class="toc-h3">4.2 Phase 2: Design（设计）</a></li>
+<li><a href="#43-phase-3-implement" class="toc-h3">4.3 Phase 3: Implement（实现）</a></li>
+<li><a href="#44-phase-4-plan-tests" class="toc-h3">4.4 Phase 4: Plan Tests（规划测试）</a></li>
+<li><a href="#45-phase-5-write-tests" class="toc-h3">4.5 Phase 5: Write Tests（编写测试）</a></li>
+<li><a href="#46-phase-6-document" class="toc-h3">4.6 Phase 6: Document（文档化）</a></li>
+<li><a href="#_5" class="toc-h2">可用命令</a></li>
+<li><a href="#_6" class="toc-h3">文件操作</a></li>
+<li><a href="#open" class="toc-h4">open</a></li>
+<li><a href="#_7" class="toc-h3">编辑操作</a></li>
+<li><a href="#resize_1" class="toc-h4">resize</a></li>
+<li><a href="#_8" class="toc-h2">使用示例</a></li>
+<li><a href="#1" class="toc-h3">示例 1: 基本图像处理</a></li>
+<li><a href="#2" class="toc-h3">示例 2: 批量转换格式</a></li>
+<li><a href="#_9" class="toc-h2">五、实战案例</a></li>
+<li><a href="#51-1-blender-cli" class="toc-h3">5.1 案例 1：使用 Blender CLI</a></li>
+<li><a href="#52-2-libreoffice-cli" class="toc-h3">5.2 案例 2：使用 LibreOffice CLI</a></li>
+<li><a href="#53-3-gimp-cli" class="toc-h3">5.3 案例 3：使用 GIMP CLI</a></li>
+<li><a href="#54-4ai-agent" class="toc-h3">5.4 案例 4：AI Agent 集成</a></li>
+<li><a href="#agent-harness" class="toc-h2">六、创建新的 Agent Harness</a></li>
+<li><a href="#61" class="toc-h3">6.1 准备工作</a></li>
+<li><a href="#62" class="toc-h3">6.2 实现核心文件</a></li>
+<li><a href="#63" class="toc-h3">6.3 编写测试</a></li>
+<li><a href="#64-skillmd" class="toc-h3">6.4 生成 SKILL.md</a></li>
+<li><a href="#_10" class="toc-h2">可用命令</a></li>
+<li><a href="#file-open" class="toc-h3">file open</a></li>
+<li><a href="#file-save" class="toc-h3">file save</a></li>
+<li><a href="#_11" class="toc-h2">使用示例</a></li>
+<li><a href="#_12" class="toc-h2">七、进阶主题</a></li>
+<li><a href="#71-replskin" class="toc-h3">7.1 ReplSkin 高级用法</a></li>
+<li><a href="#72" class="toc-h3">7.2 错误处理最佳实践</a></li>
+<li><a href="#73" class="toc-h3">7.3 性能优化</a></li>
+<li><a href="#74" class="toc-h3">7.4 日志和调试</a></li>
+<li><a href="#_13" class="toc-h2">八、常见问题</a></li>
+<li><a href="#q1-api" class="toc-h3">Q1: 如何处理复杂的软件 API？</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 如何支持异步操作？</a></li>
+<li><a href="#q3" class="toc-h3">Q3: 如何实现命令组合？</a></li>
+<li><a href="#q4" class="toc-h3">Q4: 如何处理大文件？</a></li>
+<li><a href="#q5-ai-agent" class="toc-h3">Q5: 如何与 AI Agent 调试？</a></li>
+<li><a href="#_14" class="toc-h2">九、参考资料</a></li>
+<li><a href="#91" class="toc-h3">9.1 官方资源</a></li>
+<li><a href="#92" class="toc-h3">9.2 相关项目</a></li>
+<li><a href="#93" class="toc-h3">9.3 学习路径</a></li>
+<li><a href="#_15" class="toc-h2">十、总结</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>CLI-Anything 学习教程</h1>
+                        <div class="article-meta">>> open /path/to/image.png<br>>> resize 800x600<br>>> filter blur --radius 5<br>>> save output.png<br>>> exit</div>
+                    </header>
+                    <h1 id="cli-anything">CLI-Anything 学习教程</h1>
+<h2 id="_1">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 CLI-Anything 前，建议掌握以下知识：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>要求程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Python</strong></td>
+<td>中级</td>
+<td>理解类、模块、装饰器</td>
+</tr>
+<tr>
+<td><strong>Click 框架</strong></td>
+<td>基础</td>
+<td>了解命令行开发</td>
+</tr>
+<tr>
+<td><strong>CLI 基础</strong></td>
+<td>基础</td>
+<td>熟悉命令行操作</td>
+</tr>
+<tr>
+<td><strong>AI Agent 概念</strong></td>
+<td>基础</td>
+<td>理解 Agent 工作原理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 环境要求</h3>
+<pre><code class="language-bash"># 系统要求
+- Python 3.8+
+- pip 包管理器
+- Git
+
+# 可选（用于特定应用）
+- GIMP 2.10+ (使用 GIMP CLI)
+- Blender 3.0+ (使用 Blender CLI)
+- LibreOffice 7.0+ (使用 LibreOffice CLI)
+</code></pre>
+<h3 id="13">1.3 安装步骤</h3>
+<pre><code class="language-bash"># Step 1: 克隆仓库
+git clone https://github.com/HKUDS/CLI-Anything.git
+cd CLI-Anything
+
+# Step 2: 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# 或 venv\Scripts\activate  # Windows
+
+# Step 3: 安装依赖
+pip install -r requirements.txt
+
+# Step 4: 验证安装
+python -c &quot;import click; print('Click 版本:', click.__version__)&quot;
+</code></pre>
+<h3 id="14">1.4 项目结构概览</h3>
+<pre><code>CLI-Anything/
+├── cli-anything-plugin/      # Claude Code 插件
+│   ├── HARNESS.md            # 方法论文档 ⭐
+│   ├── repl_skin.py          # REPL 接口 ⭐
+│   └── commands/
+│
+├── gimp/agent-harness/       # GIMP CLI 示例
+├── blender/agent-harness/    # Blender CLI 示例
+├── libreoffice/agent-harness/ # LibreOffice CLI 示例
+├── inkscape/agent-harness/   # Inkscape CLI 示例
+├── audacity/agent-harness/   # Audacity CLI 示例
+└── ... (其他应用)
+</code></pre>
+<hr />
+<h2 id="_2">二、快速开始</h2>
+<h3 id="21-hello-world-cli">2.1 Hello World：使用已有 CLI</h3>
+<p>让我们先体验一下已有的 GIMP CLI：</p>
+<pre><code class="language-bash"># 进入 GIMP CLI 目录
+cd gimp/agent-harness
+
+# 查看帮助
+python cli.py --help
+
+# 输出示例:
+# Usage: cli.py [OPTIONS] COMMAND [ARGS]...
+#
+# Commands:
+#   open      打开图像文件
+#   save      保存图像
+#   resize    调整图像大小
+#   crop      裁剪图像
+#   filter    应用滤镜
+#   ...
+</code></pre>
+<h3 id="22">2.2 第一个命令</h3>
+<pre><code class="language-bash"># 打开并处理图像
+python cli.py open /path/to/image.png --resize 800x600 --save output.png
+
+# 批量处理
+python cli.py batch /path/to/images/ --filter grayscale --output /path/to/output/
+</code></pre>
+<h3 id="23-repl">2.3 进入 REPL 模式</h3>
+<pre><code class="language-bash"># 启动交互式 REPL
+python cli.py repl
+
+# REPL 中执行命令
+&gt;&gt;&gt; open /path/to/image.png
+&gt;&gt;&gt; resize 800x600
+&gt;&gt;&gt; filter blur --radius 5
+&gt;&gt;&gt; save output.png
+&gt;&gt;&gt; exit
+</code></pre>
+<hr />
+<h2 id="_3">三、核心概念</h2>
+<h3 id="31">3.1 概念图谱</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CLI-Anything 核心概念                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Agent-Native                          │   │
+│  │   软件设计理念：优先考虑 AI Agent 的控制需求              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│              ┌───────────────┼───────────────┐                  │
+│              ▼               ▼               ▼                  │
+│  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐          │
+│  │  HARNESS.md   │ │   ReplSkin    │ │   SKILL.md    │          │
+│  │   方法论      │ │   统一接口    │ │  技能定义     │          │
+│  └───────────────┘ └───────────────┘ └───────────────┘          │
+│              │               │               │                  │
+│              └───────────────┼───────────────┘                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                  7-Phase Pipeline                        │   │
+│  │   Analyze → Design → Implement → Test → Document → Pub   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 核心概念详解</h3>
+<h4 id="agent-native-softwareagent">Agent-Native Software（Agent 原生软件）</h4>
+<p><strong>定义</strong>: 专为 AI Agent 控制设计的软件架构</p>
+<p><strong>特点</strong>:
+- CLI 优先的接口设计
+- 结构化的输入/输出
+- 完整的错误处理
+- 可预测的行为</p>
+<pre><code class="language-python"># Agent-Native 设计示例
+
+# ❌ 传统设计（面向人类）
+def process_image():
+    &quot;&quot;&quot;打开图像，用户手动操作&quot;&quot;&quot;
+    # 弹出 GUI 窗口
+    # 用户点击按钮
+    pass
+
+# ✅ Agent-Native 设计（面向 AI）
+@click.command()
+@click.argument('input_path')
+@click.option('--output', '-o', required=True)
+@click.option('--filter', type=click.Choice(['blur', 'sharpen']))
+def process_image(input_path, output, filter):
+    &quot;&quot;&quot;
+    处理图像
+
+    INPUT_PATH: 输入图像路径
+    &quot;&quot;&quot;
+    # 结构化参数
+    # 明确的返回值
+    # 可预测的错误
+    return {&quot;status&quot;: &quot;success&quot;, &quot;output&quot;: output}
+</code></pre>
+<h4 id="harnessmd">HARNESS.md</h4>
+<p><strong>定义</strong>: 将软件 Agent 化的标准操作流程文档</p>
+<p><strong>作用</strong>:
+- 指导 CLI 设计
+- 保证一致性
+- 作为开发规范</p>
+<p><strong>核心内容</strong>:</p>
+<pre><code class="language-markdown"># HARNESS.md 核心规范
+
+## 1. CLI 结构
+- 使用 Click 框架
+- 遵循命令分组规范
+- 统一的参数命名
+
+## 2. 测试要求
+- 每个命令至少 3 个测试用例
+- 覆盖正常、边界、错误场景
+- 100% 通过率
+
+## 3. 文档规范
+- 生成 SKILL.md
+- 包含使用示例
+- 明确错误码
+</code></pre>
+<h4 id="replskin">ReplSkin</h4>
+<p><strong>定义</strong>: 跨所有生成 CLI 的统一 REPL 接口</p>
+<p><strong>核心功能</strong>:</p>
+<pre><code class="language-python">class ReplSkin:
+    &quot;&quot;&quot;统一 REPL 接口&quot;&quot;&quot;
+
+    def start(self):
+        &quot;&quot;&quot;启动交互式会话&quot;&quot;&quot;
+
+    def execute(self, command: str) -&gt; dict:
+        &quot;&quot;&quot;执行命令并返回结果&quot;&quot;&quot;
+
+    def autocomplete(self, partial: str) -&gt; list:
+        &quot;&quot;&quot;命令自动补全&quot;&quot;&quot;
+
+    def help(self, command: str = None) -&gt; str:
+        &quot;&quot;&quot;显示帮助信息&quot;&quot;&quot;
+</code></pre>
+<h4 id="skillmd">SKILL.md</h4>
+<p><strong>定义</strong>: AI Agent 技能发现和使用的定义文件</p>
+<p><strong>结构</strong>:</p>
+<pre><code class="language-markdown"># SKILL.md - [软件名] 技能定义
+
+## 触发条件
+当用户需要：
+- 编辑图像/照片
+- 批量处理图片
+- 应用图像滤镜
+
+## 可用命令
+
+### open
+打开图像文件
+```bash
+{app} open &lt;path&gt; [--format &lt;fmt&gt;]
+</code></pre>
+<h3 id="resize">resize</h3>
+<p>调整图像大小</p>
+<pre><code class="language-bash">{app} resize &lt;width&gt; &lt;height&gt; [--keep-aspect]
+</code></pre>
+<h2 id="_4">使用示例</h2>
+<ul>
+<li>"帮我调整这张图片到 800x600"</li>
+<li>"批量将所有 PNG 转为 JPG"</li>
+</ul>
+<pre><code>
+### 3.3 术语表
+
+| 术语 | 英文 | 定义 |
+|------|------|------|
+| **Agent-Native** | Agent Native | 专为 AI Agent 控制设计 |
+| **HARNESS** | Harness | 标准化操作流程 |
+| **ReplSkin** | REPL Skin | 统一 REPL 接口层 |
+| **Agent Harness** | Agent Harness | 为特定应用生成的 CLI 包 |
+| **Pipeline** | Pipeline | 7 阶段自动化流程 |
+| **SKILL.md** | Skill Definition | Agent 技能定义文件 |
+
+---
+
+## 四、7阶段流水线详解
+
+### 4.1 Phase 1: Analyze（分析）
+
+**目标**: 深度理解目标软件的代码库
+
+**输入**: 源代码
+
+**输出**: 代码结构分析报告
+
+**关键任务**:
+```bash
+# 分析任务
+1. 识别核心模块
+2. 理解 API 结构
+3. 分析依赖关系
+4. 评估可 CLI 化程度
+</code></pre>
+<p><strong>示例输出</strong>:</p>
+<pre><code class="language-json">{
+  &quot;modules&quot;: [&quot;core&quot;, &quot;image&quot;, &quot;filters&quot;, &quot;export&quot;],
+  &quot;api_endpoints&quot;: 45,
+  &quot;cli_candidates&quot;: [&quot;open&quot;, &quot;save&quot;, &quot;resize&quot;, &quot;filter&quot;],
+  &quot;complexity&quot;: &quot;medium&quot;
+}
+</code></pre>
+<h3 id="42-phase-2-design">4.2 Phase 2: Design（设计）</h3>
+<p><strong>目标</strong>: 设计 CLI 架构和命令结构</p>
+<p><strong>输入</strong>: 分析报告</p>
+<p><strong>输出</strong>: CLI 设计文档</p>
+<p><strong>设计原则</strong>:</p>
+<pre><code>1. 一致性 - 命令命名遵循统一规范
+2. 可发现性 - 帮助信息清晰完整
+3. 可组合性 - 命令可以组合使用
+4. 可预测性 - 行为符合预期
+</code></pre>
+<p><strong>CLI 结构设计</strong>:</p>
+<pre><code>{app}-cli/
+├── cli.py              # 入口点
+├── commands/
+│   ├── file.py         # 文件操作命令组
+│   ├── edit.py         # 编辑命令组
+│   └── export.py       # 导出命令组
+└── utils/
+    ├── __init__.py
+    └── helpers.py
+</code></pre>
+<h3 id="43-phase-3-implement">4.3 Phase 3: Implement（实现）</h3>
+<p><strong>目标</strong>: 实现所有 CLI 命令</p>
+<p><strong>输入</strong>: 设计文档</p>
+<p><strong>输出</strong>: CLI 代码</p>
+<p><strong>实现模板</strong>:</p>
+<pre><code class="language-python"># cli.py
+import click
+from commands import file, edit, export
+
+@click.group()
+def cli():
+    &quot;&quot;&quot;{App Name} CLI - Agent-Native Interface&quot;&quot;&quot;
+    pass
+
+cli.add_command(file.file_group)
+cli.add_command(edit.edit_group)
+cli.add_command(export.export_group)
+
+if __name__ == '__main__':
+    cli()
+</code></pre>
+<pre><code class="language-python"># commands/file.py
+import click
+
+@click.group(name='file')
+def file_group():
+    &quot;&quot;&quot;文件操作命令&quot;&quot;&quot;
+    pass
+
+@file_group.command()
+@click.argument('path', type=click.Path(exists=True))
+@click.option('--format', '-f', type=click.Choice(['png', 'jpg', 'svg']))
+def open(path, format):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    # 实现逻辑
+    click.echo(f&quot;Opened: {path}&quot;)
+</code></pre>
+<h3 id="44-phase-4-plan-tests">4.4 Phase 4: Plan Tests（规划测试）</h3>
+<p><strong>目标</strong>: 规划测试策略和用例</p>
+<p><strong>输入</strong>: CLI 代码</p>
+<p><strong>输出</strong>: 测试计划</p>
+<p><strong>测试分类</strong>:</p>
+<pre><code>测试类型
+├── 单元测试
+│   └── 每个命令函数
+├── 集成测试
+│   └── 命令组合
+├── 端到端测试
+│   └── 完整工作流
+└── 错误测试
+    └── 异常场景
+</code></pre>
+<p><strong>测试计划示例</strong>:</p>
+<pre><code class="language-markdown">## open 命令测试计划
+
+### 正常场景
+- TC001: 打开有效的 PNG 文件
+- TC002: 打开有效的 JPG 文件
+- TC003: 使用 --format 参数
+
+### 边界场景
+- TC004: 打开空文件
+- TC005: 打开大文件 (&gt;100MB)
+
+### 错误场景
+- TC006: 文件不存在
+- TC007: 文件格式不支持
+- TC008: 权限不足
+</code></pre>
+<h3 id="45-phase-5-write-tests">4.5 Phase 5: Write Tests（编写测试）</h3>
+<p><strong>目标</strong>: 实现所有测试用例</p>
+<p><strong>输入</strong>: 测试计划</p>
+<p><strong>输出</strong>: 测试代码</p>
+<p><strong>测试模板</strong>:</p>
+<pre><code class="language-python"># tests/test_file_commands.py
+import pytest
+from click.testing import CliRunner
+from cli import cli
+
+class TestOpenCommand:
+    &quot;&quot;&quot;open 命令测试&quot;&quot;&quot;
+
+    @pytest.fixture
+    def runner(self):
+        return CliRunner()
+
+    def test_open_valid_png(self, runner, tmp_path):
+        &quot;&quot;&quot;TC001: 打开有效的 PNG 文件&quot;&quot;&quot;
+        # 创建测试文件
+        test_file = tmp_path / &quot;test.png&quot;
+        test_file.write_bytes(b&quot;fake png content&quot;)
+
+        # 执行命令
+        result = runner.invoke(cli, ['file', 'open', str(test_file)])
+
+        # 验证
+        assert result.exit_code == 0
+        assert &quot;Opened&quot; in result.output
+
+    def test_open_nonexistent_file(self, runner):
+        &quot;&quot;&quot;TC006: 文件不存在&quot;&quot;&quot;
+        result = runner.invoke(cli, ['file', 'open', 'nonexistent.png'])
+
+        assert result.exit_code != 0
+        assert &quot;Error&quot; in result.output
+</code></pre>
+<h3 id="46-phase-6-document">4.6 Phase 6: Document（文档化）</h3>
+<p><strong>目标</strong>: 生成完整文档和 SKILL.md</p>
+<p><strong>输入</strong>: CLI 代码和测试</p>
+<p><strong>输出</strong>: 文档文件</p>
+<p><strong>SKILL.md 模板</strong>:</p>
+<pre><code class="language-markdown"># SKILL.md - {App Name} CLI
+
+## 触发条件
+
+当用户需要：
+- {操作类型1}
+- {操作类型2}
+- {操作类型3}
+
+## 安装
+
+```bash
+pip install {app}-cli
+</code></pre>
+<h2 id="_5">可用命令</h2>
+<h3 id="_6">文件操作</h3>
+<h4 id="open">open</h4>
+<p>打开文件</p>
+<pre><code class="language-bash">{app} file open &lt;path&gt; [--format &lt;fmt&gt;]
+</code></pre>
+<p><strong>参数</strong>:
+- <code>path</code>: 文件路径（必需）
+- <code>--format, -f</code>: 文件格式 (png/jpg/svg)</p>
+<p><strong>示例</strong>:</p>
+<pre><code class="language-bash">{app} file open image.png
+{app} file open photo.jpg --format jpg
+</code></pre>
+<h3 id="_7">编辑操作</h3>
+<h4 id="resize_1">resize</h4>
+<p>调整大小</p>
+<pre><code class="language-bash">{app} edit resize &lt;width&gt; &lt;height&gt; [--keep-aspect]
+</code></pre>
+<h2 id="_8">使用示例</h2>
+<h3 id="1">示例 1: 基本图像处理</h3>
+<p>用户: "帮我把 image.png 调整到 800x600"
+执行: <code>{app} file open image.png &amp;&amp; {app} edit resize 800 600</code></p>
+<h3 id="2">示例 2: 批量转换格式</h3>
+<p>用户: "把所有 PNG 转成 JPG"
+执行: <code>{app} batch convert *.png --to jpg</code></p>
+<pre><code>
+### 4.7 Phase 7: Publish（发布）
+
+**目标**: 发布到各 AI 平台
+
+**输入**: 完整的 Agent Harness 包
+
+**输出**: 发布版本
+
+**发布清单**:
+```bash
+# 1. 运行所有测试
+pytest tests/ -v --cov
+
+# 2. 检查代码质量
+flake8 .
+mypy .
+
+# 3. 构建分发包
+python -m build
+
+# 4. 发布到 PyPI（可选）
+twine upload dist/*
+
+# 5. 发布到 AI 平台
+# - 复制到 Claude Code skills 目录
+# - 上传到技能市场
+</code></pre>
+<hr />
+<h2 id="_9">五、实战案例</h2>
+<h3 id="51-1-blender-cli">5.1 案例 1：使用 Blender CLI</h3>
+<pre><code class="language-bash"># 进入 Blender CLI 目录
+cd blender/agent-harness
+
+# 查看帮助
+python cli.py --help
+
+# 创建简单场景
+python cli.py scene create --name &quot;MyScene&quot;
+
+# 添加立方体
+python cli.py object add cube --position 0,0,0
+
+# 设置材质
+python cli.py material set --color &quot;#FF5733&quot; --metallic 0.8
+
+# 渲染
+python cli.py render --output render.png --resolution 1920x1080
+</code></pre>
+<h3 id="52-2-libreoffice-cli">5.2 案例 2：使用 LibreOffice CLI</h3>
+<pre><code class="language-bash"># 进入 LibreOffice CLI 目录
+cd libreoffice/agent-harness
+
+# 转换文档格式
+python cli.py convert document.docx --to pdf --output document.pdf
+
+# 批量转换
+python cli.py batch convert *.docx --to pdf --output-dir ./pdfs/
+
+# 提取文本
+python cli.py extract text document.pdf --output text.txt
+
+# 合并文档
+python cli.py merge doc1.docx doc2.docx --output merged.docx
+</code></pre>
+<h3 id="53-3-gimp-cli">5.3 案例 3：使用 GIMP CLI</h3>
+<pre><code class="language-bash"># 进入 GIMP CLI 目录
+cd gimp/agent-harness
+
+# 批量调整图片大小
+python cli.py batch resize ./images/ --size 800x600 --output ./resized/
+
+# 应用滤镜
+python cli.py filter apply blur --radius 5 --input photo.png --output blurred.png
+
+# 转换格式
+python cli.py convert image.png --to jpg --quality 90
+
+# 添加水印
+python cli.py watermark add logo.png --position bottom-right --opacity 0.5
+</code></pre>
+<h3 id="54-4ai-agent">5.4 案例 4：AI Agent 集成</h3>
+<p><strong>在 Claude Code 中使用</strong>:</p>
+<pre><code class="language-bash"># 1. 安装 CLI-Anything 插件
+cp cli-anything-plugin ~/.claude/skills/
+
+# 2. 在对话中使用
+用户: &quot;帮我处理这张图片，调整到 800x600 并应用模糊滤镜&quot;
+
+Claude Code:
+  → 识别任务需要 GIMP CLI
+  → 执行命令序列:
+    1. gimp-cli open image.png
+    2. gimp-cli resize 800 600
+    3. gimp-cli filter blur --radius 5
+    4. gimp-cli save output.png
+  → 返回处理结果
+</code></pre>
+<hr />
+<h2 id="agent-harness">六、创建新的 Agent Harness</h2>
+<h3 id="61">6.1 准备工作</h3>
+<pre><code class="language-bash"># 1. 创建项目目录
+mkdir my-app-agent-harness
+cd my-app-agent-harness
+
+# 2. 创建标准结构
+mkdir -p commands tests utils
+
+# 3. 创建必要文件
+touch cli.py commands/__init__.py tests/__init__.py
+touch SKILL.md HARNESS.md requirements.txt
+</code></pre>
+<h3 id="62">6.2 实现核心文件</h3>
+<p><strong>cli.py</strong>:</p>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+MyApp CLI - Agent-Native Interface
+&quot;&quot;&quot;
+import click
+from commands import file_ops, edit, export
+
+@click.group()
+@click.version_option('1.0.0')
+def cli():
+    &quot;&quot;&quot;MyApp CLI - Agent-Native Interface for MyApp&quot;&quot;&quot;
+    pass
+
+# 注册命令组
+cli.add_command(file_ops.file_group)
+cli.add_command(edit.edit_group)
+cli.add_command(export.export_group)
+
+if __name__ == '__main__':
+    cli()
+</code></pre>
+<p><strong>commands/file_ops.py</strong>:</p>
+<pre><code class="language-python">&quot;&quot;&quot;文件操作命令&quot;&quot;&quot;
+import click
+
+@click.group(name='file')
+def file_group():
+    &quot;&quot;&quot;文件操作命令&quot;&quot;&quot;
+    pass
+
+@file_group.command()
+@click.argument('path', type=click.Path(exists=True))
+def open(path):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    # 调用 MyApp 的实际 API
+    click.echo(f&quot;Opened: {path}&quot;)
+
+@file_group.command()
+@click.argument('path', type=click.Path())
+@click.option('--format', '-f', default='default')
+def save(path, format):
+    &quot;&quot;&quot;保存文件&quot;&quot;&quot;
+    click.echo(f&quot;Saved: {path} as {format}&quot;)
+</code></pre>
+<h3 id="63">6.3 编写测试</h3>
+<p><strong>tests/test_cli.py</strong>:</p>
+<pre><code class="language-python">&quot;&quot;&quot;CLI 测试&quot;&quot;&quot;
+import pytest
+from click.testing import CliRunner
+from cli import cli
+
+@pytest.fixture
+def runner():
+    return CliRunner()
+
+class TestCLI:
+    def test_help(self, runner):
+        &quot;&quot;&quot;测试帮助命令&quot;&quot;&quot;
+        result = runner.invoke(cli, ['--help'])
+        assert result.exit_code == 0
+        assert 'MyApp CLI' in result.output
+
+    def test_version(self, runner):
+        &quot;&quot;&quot;测试版本命令&quot;&quot;&quot;
+        result = runner.invoke(cli, ['--version'])
+        assert result.exit_code == 0
+        assert '1.0.0' in result.output
+
+class TestFileCommands:
+    def test_file_open(self, runner, tmp_path):
+        &quot;&quot;&quot;测试打开文件&quot;&quot;&quot;
+        test_file = tmp_path / &quot;test.txt&quot;
+        test_file.write_text(&quot;test content&quot;)
+
+        result = runner.invoke(cli, ['file', 'open', str(test_file)])
+        assert result.exit_code == 0
+</code></pre>
+<h3 id="64-skillmd">6.4 生成 SKILL.md</h3>
+<pre><code class="language-markdown"># SKILL.md - MyApp CLI
+
+## 触发条件
+
+当用户需要：
+- 操作 MyApp 文件
+- 使用 MyApp 进行编辑
+- 导出 MyApp 项目
+
+## 安装
+
+```bash
+pip install myapp-cli
+</code></pre>
+<h2 id="_10">可用命令</h2>
+<h3 id="file-open">file open</h3>
+<p>打开文件</p>
+<pre><code class="language-bash">myapp-cli file open &lt;path&gt;
+</code></pre>
+<h3 id="file-save">file save</h3>
+<p>保存文件</p>
+<pre><code class="language-bash">myapp-cli file save &lt;path&gt; [--format &lt;fmt&gt;]
+</code></pre>
+<h2 id="_11">使用示例</h2>
+<p>用户: "用 MyApp 打开 project.myapp"
+执行: <code>myapp-cli file open project.myapp</code></p>
+<pre><code>
+### 6.5 运行测试
+
+```bash
+# 安装测试依赖
+pip install pytest pytest-cov
+
+# 运行测试
+pytest tests/ -v
+
+# 查看覆盖率
+pytest tests/ --cov=commands --cov-report=html
+</code></pre>
+<hr />
+<h2 id="_12">七、进阶主题</h2>
+<h3 id="71-replskin">7.1 ReplSkin 高级用法</h3>
+<pre><code class="language-python"># 自定义 REPL 行为
+from repl_skin import ReplSkin
+
+class MyAppReplSkin(ReplSkin):
+    &quot;&quot;&quot;MyApp 自定义 REPL&quot;&quot;&quot;
+
+    def __init__(self, cli):
+        super().__init__(cli)
+        self.history_file = &quot;.myapp_history&quot;
+
+    def pre_execute(self, command: str) -&gt; str:
+        &quot;&quot;&quot;命令预处理&quot;&quot;&quot;
+        # 添加默认参数
+        if command.startswith(&quot;open&quot;):
+            command += &quot; --verbose&quot;
+        return command
+
+    def post_execute(self, result: dict) -&gt; dict:
+        &quot;&quot;&quot;结果后处理&quot;&quot;&quot;
+        # 添加时间戳
+        result['timestamp'] = datetime.now().isoformat()
+        return result
+</code></pre>
+<h3 id="72">7.2 错误处理最佳实践</h3>
+<pre><code class="language-python"># commands/file_ops.py
+import click
+from typing import Optional
+
+class FileError(Exception):
+    &quot;&quot;&quot;文件操作错误&quot;&quot;&quot;
+    def __init__(self, message: str, code: str):
+        self.message = message
+        self.code = code
+        super().__init__(message)
+
+@file_group.command()
+@click.argument('path', type=click.Path())
+def open(path):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    try:
+        # 尝试打开文件
+        result = _do_open(path)
+        click.echo(click.style(f&quot;✓ Opened: {path}&quot;, fg='green'))
+
+    except FileNotFoundError:
+        raise FileError(
+            f&quot;File not found: {path}&quot;,
+            code=&quot;FILE_NOT_FOUND&quot;
+        )
+
+    except PermissionError:
+        raise FileError(
+            f&quot;Permission denied: {path}&quot;,
+            code=&quot;PERMISSION_DENIED&quot;
+        )
+
+    except Exception as e:
+        raise FileError(
+            f&quot;Unexpected error: {str(e)}&quot;,
+            code=&quot;INTERNAL_ERROR&quot;
+        )
+
+def _do_open(path: str) -&gt; dict:
+    &quot;&quot;&quot;实际打开逻辑&quot;&quot;&quot;
+    # 实现细节
+    pass
+</code></pre>
+<h3 id="73">7.3 性能优化</h3>
+<pre><code class="language-python"># 使用缓存优化
+from functools import lru_cache
+
+@lru_cache(maxsize=128)
+def get_file_info(path: str) -&gt; dict:
+    &quot;&quot;&quot;获取文件信息（带缓存）&quot;&quot;&quot;
+    # 文件信息通常不会频繁变化
+    return {
+        &quot;path&quot;: path,
+        &quot;size&quot;: os.path.getsize(path),
+        &quot;modified&quot;: os.path.getmtime(path)
+    }
+
+# 批量处理优化
+import concurrent.futures
+
+@file_group.command()
+@click.argument('paths', nargs=-1)
+def batch_open(paths):
+    &quot;&quot;&quot;批量打开文件&quot;&quot;&quot;
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        results = list(executor.map(_do_open, paths))
+
+    click.echo(f&quot;Opened {len(results)} files&quot;)
+</code></pre>
+<h3 id="74">7.4 日志和调试</h3>
+<pre><code class="language-python"># utils/logger.py
+import logging
+import click
+
+def setup_logger(verbose: bool = False):
+    &quot;&quot;&quot;设置日志&quot;&quot;&quot;
+    level = logging.DEBUG if verbose else logging.INFO
+
+    logging.basicConfig(
+        level=level,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
+    return logging.getLogger('myapp-cli')
+
+# 在命令中使用
+@file_group.command()
+@click.option('--verbose', '-v', is_flag=True)
+def open(path, verbose):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    logger = setup_logger(verbose)
+    logger.debug(f&quot;Opening file: {path}&quot;)
+
+    # ... 实现
+</code></pre>
+<hr />
+<h2 id="_13">八、常见问题</h2>
+<h3 id="q1-api">Q1: 如何处理复杂的软件 API？</h3>
+<p><strong>A</strong>: 使用分层抽象：</p>
+<pre><code class="language-python"># 第一层：API 封装
+class MyAppAPI:
+    def __init__(self):
+        self._connection = None
+
+    def connect(self):
+        &quot;&quot;&quot;建立连接&quot;&quot;&quot;
+        pass
+
+    def open_document(self, path):
+        &quot;&quot;&quot;打开文档&quot;&quot;&quot;
+        pass
+
+# 第二层：命令实现
+@file_group.command()
+def open(path):
+    api = MyAppAPI()
+    api.connect()
+    result = api.open_document(path)
+    click.echo(result)
+</code></pre>
+<h3 id="q2">Q2: 如何支持异步操作？</h3>
+<p><strong>A</strong>: 使用 asyncio 和 anyio：</p>
+<pre><code class="language-python">import asyncio
+import click
+
+async def _async_open(path):
+    &quot;&quot;&quot;异步打开&quot;&quot;&quot;
+    await asyncio.sleep(0.1)  # 模拟异步操作
+    return {&quot;status&quot;: &quot;opened&quot;, &quot;path&quot;: path}
+
+@file_group.command()
+@click.argument('path')
+def open(path):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    result = asyncio.run(_async_open(path))
+    click.echo(f&quot;Result: {result}&quot;)
+</code></pre>
+<h3 id="q3">Q3: 如何实现命令组合？</h3>
+<p><strong>A</strong>: 使用管道或工作流：</p>
+<pre><code class="language-python"># 管道模式
+@cli.command()
+@click.argument('commands', nargs=-1)
+def pipeline(commands):
+    &quot;&quot;&quot;执行命令管道&quot;&quot;&quot;
+    context = {}
+
+    for cmd in commands:
+        parts = cmd.split()
+        result = cli.main(args=parts, standalone_mode=False)
+        context.update(result)
+
+    return context
+
+# 使用
+# myapp-cli pipeline &quot;file open doc.txt&quot; &quot;edit replace old new&quot; &quot;file save output.txt&quot;
+</code></pre>
+<h3 id="q4">Q4: 如何处理大文件？</h3>
+<p><strong>A</strong>: 使用流式处理：</p>
+<pre><code class="language-python">@file_group.command()
+@click.argument('path')
+def process_large(path):
+    &quot;&quot;&quot;处理大文件&quot;&quot;&quot;
+    chunk_size = 1024 * 1024  # 1MB
+
+    with open(path, 'rb') as f:
+        while chunk := f.read(chunk_size):
+            # 流式处理
+            process_chunk(chunk)
+            click.echo(&quot;.&quot;, nl=False)
+
+    click.echo(&quot;\nDone!&quot;)
+</code></pre>
+<h3 id="q5-ai-agent">Q5: 如何与 AI Agent 调试？</h3>
+<p><strong>A</strong>: 使用详细日志和 dry-run 模式：</p>
+<pre><code class="language-python">@file_group.command()
+@click.option('--dry-run', is_flag=True, help='模拟执行')
+@click.option('--verbose', '-v', is_flag=True, help='详细输出')
+def open(path, dry_run, verbose):
+    &quot;&quot;&quot;打开文件&quot;&quot;&quot;
+    if dry_run:
+        click.echo(f&quot;[DRY-RUN] Would open: {path}&quot;)
+        return
+
+    if verbose:
+        click.echo(f&quot;Opening: {path}&quot;)
+
+    # 实际执行
+    result = _do_open(path)
+
+    if verbose:
+        click.echo(f&quot;Result: {result}&quot;)
+</code></pre>
+<hr />
+<h2 id="_14">九、参考资料</h2>
+<h3 id="91">9.1 官方资源</h3>
+<ul>
+<li><a href="https://github.com/HKUDS/CLI-Anything">CLI-Anything GitHub</a></li>
+<li><a href="https://github.com/HKUDS/CLI-Anything/blob/main/cli-anything-plugin/HARNESS.md">HARNESS.md 方法论</a></li>
+<li><a href="https://click.palletsprojects.com/">Click 框架文档</a></li>
+</ul>
+<h3 id="92">9.2 相关项目</h3>
+<ul>
+<li><a href="https://docs.anthropic.com/claude-code">Claude Code</a> - Anthropic 官方 CLI</li>
+<li><a href="https://modelcontextprotocol.io/">MCP Protocol</a> - Model Context Protocol</li>
+<li><a href="https://platform.openai.com/docs/guides/function-calling">OpenAI Function Calling</a></li>
+</ul>
+<h3 id="93">9.3 学习路径</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CLI-Anything 学习路径                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Week 1: 基础                                                   │
+│  ├── 理解 Agent-Native 概念                                     │
+│  ├── 体验已有 CLI（GIMP、Blender）                               │
+│  └── 学习 Click 框架                                            │
+│                                                                 │
+│  Week 2: 实践                                                   │
+│  ├── 阅读 HARNESS.md                                            │
+│  ├── 分析现有 Agent Harness 结构                                │
+│  └── 实现简单命令                                               │
+│                                                                 │
+│  Week 3: 深入                                                   │
+│  ├── 编写测试用例                                               │
+│  ├── 生成 SKILL.md                                              │
+│  └── AI Agent 集成测试                                          │
+│                                                                 │
+│  Week 4: 进阶                                                   │
+│  ├── 为新软件创建 Agent Harness                                 │
+│  ├── 优化性能                                                   │
+│  └── 发布到社区                                                 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_15">十、总结</h2>
+<p>CLI-Anything 是连接 AI Agent 和传统软件的桥梁。通过本教程，你学会了：</p>
+<ol>
+<li><strong>核心概念</strong>: Agent-Native、HARNESS.md、ReplSkin、SKILL.md</li>
+<li><strong>7 阶段流水线</strong>: 从分析到发布的完整流程</li>
+<li><strong>实战技能</strong>: 使用和创建 Agent Harness</li>
+<li><strong>最佳实践</strong>: 错误处理、性能优化、调试技巧</li>
+</ol>
+<p>下一步行动：
+- [ ] 克隆仓库，运行示例 CLI
+- [ ] 阅读 HARNESS.md 理解方法论
+- [ ] 为你常用的软件创建 Agent Harness
+- [ ] 在 AI Agent 中测试集成</p>
+<p>Happy Coding! 🚀</p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

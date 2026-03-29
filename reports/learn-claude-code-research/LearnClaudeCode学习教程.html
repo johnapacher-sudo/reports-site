@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn-Claude-Code 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始学习 Agent Harness 工程 - 12 个渐进式会话 | 教程日期：2026-03-27</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13" class="toc-h3">1.3 安装</a></li>
+<li><a href="#14-api-key" class="toc-h3">1.4 配置 API Key</a></li>
+<li><a href="#15" class="toc-h3">1.5 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21-agent" class="toc-h3">2.1 运行第一个 Agent</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心概念速览</a></li>
+<li><a href="#1-agent-loop" class="toc-h2">三、会话 1: Agent Loop</a></li>
+<li><a href="#31" class="toc-h3">3.1 核心概念</a></li>
+<li><a href="#32" class="toc-h3">3.2 基础实现</a></li>
+<li><a href="#33" class="toc-h3">3.3 带历史记录的循环</a></li>
+<li><a href="#2-tool-use" class="toc-h2">四、会话 2: Tool Use</a></li>
+<li><a href="#41" class="toc-h3">4.1 核心概念</a></li>
+<li><a href="#42" class="toc-h3">4.2 定义工具</a></li>
+<li><a href="#43" class="toc-h3">4.3 创建具体工具</a></li>
+<li><a href="#44-agent" class="toc-h3">4.4 Agent 循环 + 工具</a></li>
+<li><a href="#3-todoplanning" class="toc-h2">五、会话 3: Todo/Planning</a></li>
+<li><a href="#51" class="toc-h3">5.1 核心概念</a></li>
+<li><a href="#52-todo" class="toc-h3">5.2 Todo 工具实现</a></li>
+<li><a href="#53" class="toc-h3">5.3 使用示例</a></li>
+<li><a href="#4-subagent" class="toc-h2">六、会话 4: Subagent</a></li>
+<li><a href="#61" class="toc-h3">6.1 核心概念</a></li>
+<li><a href="#62-subagent" class="toc-h3">6.2 Subagent 实现</a></li>
+<li><a href="#63" class="toc-h3">6.3 使用示例</a></li>
+<li><a href="#5-skill-loading" class="toc-h2">七、会话 5: Skill Loading</a></li>
+<li><a href="#71" class="toc-h3">7.1 核心概念</a></li>
+<li><a href="#72-skill" class="toc-h3">7.2 Skill 结构</a></li>
+<li><a href="#73-skillmd" class="toc-h3">7.3 SKILL.md 格式</a></li>
+<li><a href="#74-skill" class="toc-h3">7.4 Skill 加载器</a></li>
+<li><a href="#6-context-compact" class="toc-h2">八、会话 6: Context Compact</a></li>
+<li><a href="#81" class="toc-h3">8.1 核心概念</a></li>
+<li><a href="#82" class="toc-h3">8.2 实现</a></li>
+<li><a href="#83" class="toc-h3">8.3 使用示例</a></li>
+<li><a href="#7-12" class="toc-h2">九、会话 7-12: 高级功能</a></li>
+<li><a href="#91-task-system-s07" class="toc-h3">9.1 Task System (s07)</a></li>
+<li><a href="#92-background-tasks-s08" class="toc-h3">9.2 Background Tasks (s08)</a></li>
+<li><a href="#93-agent-teams-s09-s10" class="toc-h3">9.3 Agent Teams (s09-s10)</a></li>
+<li><a href="#94-autonomous-agents-s11" class="toc-h3">9.4 Autonomous Agents (s11)</a></li>
+<li><a href="#95-worktree-isolation-s12" class="toc-h3">9.5 Worktree Isolation (s12)</a></li>
+<li><a href="#_4" class="toc-h2">十、最佳实践</a></li>
+<li><a href="#101" class="toc-h3">10.1 设计原则</a></li>
+<li><a href="#102" class="toc-h3">10.2 调试技巧</a></li>
+<li><a href="#103" class="toc-h3">10.3 错误处理</a></li>
+<li><a href="#_5" class="toc-h2">十一、常见问题</a></li>
+<li><a href="#q1-agent" class="toc-h3">Q1: Agent 一直在循环，没有返回</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 上下文超出了限制</a></li>
+<li><a href="#q3" class="toc-h3">Q3: 工具执行失败</a></li>
+<li><a href="#q4-agent" class="toc-h3">Q4: 子 Agent 没有隔离上下文</a></li>
+<li><a href="#_6" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Learn-Claude-Code 学习教程</h1>
+                        <div class="article-meta">从零开始学习 Agent Harness 工程 - 12 个渐进式会话<br>教程日期：2026-03-27</div>
+                    </header>
+                    <h1 id="learn-claude-code">Learn-Claude-Code 学习教程</h1>
+<blockquote>
+<p>从零开始学习 Agent Harness 工程 - 12 个渐进式会话</p>
+<p>教程日期：2026-03-27</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三会话-1-agent-loop">会话 1: Agent Loop</a></li>
+<li><a href="#四会话-2-tool-use">会话 2: Tool Use</a></li>
+<li><a href="#五会话-3-todoplanning">会话 3: Todo/Planning</a></li>
+<li><a href="#六会话-4-subagent">会话 4: Subagent</a></li>
+<li><a href="#七会话-5-skill-loading">会话 5: Skill Loading</a></li>
+<li><a href="#八会话-6-context-compact">会话 6: Context Compact</a></li>
+<li><a href="#九会话-7-12-高级功能">会话 7-12: 高级功能</a></li>
+<li><a href="#十最佳实践">最佳实践</a></li>
+<li><a href="#十一常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习本教程前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 基础</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>异步编程、类和数据类</td>
+</tr>
+<tr>
+<td>LLM API</td>
+<td>⭐⭐⭐⭐</td>
+<td>理解 API 调用方式</td>
+</tr>
+<tr>
+<td>Claude API</td>
+<td>⭐⭐⭐</td>
+<td>Anthropic API 基础</td>
+</tr>
+<tr>
+<td>工具调用概念</td>
+<td>⭐⭐⭐</td>
+<td>Function Calling</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>Python 版本：3.9+
+操作系统：macOS / Linux / Windows
+
+需要：
+├── Anthropic API Key
+└── 网络访问
+</code></pre>
+<h3 id="13">1.3 安装</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/shareAI-lab/learn-claude-code.git
+cd learn-claude-code
+
+# 创建虚拟环境
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# 或 venv\Scripts\activate  # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+</code></pre>
+<h3 id="14-api-key">1.4 配置 API Key</h3>
+<pre><code class="language-bash"># 方式 1: 环境变量
+export ANTHROPIC_API_KEY=your_api_key
+
+# 方式 2: .env 文件
+echo &quot;ANTHROPIC_API_KEY=your_api_key&quot; &gt; .env
+</code></pre>
+<h3 id="15">1.5 验证安装</h3>
+<pre><code class="language-python">import anthropic
+
+client = anthropic.Anthropic()
+message = client.messages.create(
+    model=&quot;claude-sonnet-4-20250514&quot;,
+    max_tokens=100,
+    messages=[{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Hello!&quot;}]
+)
+print(message.content)
+</code></pre>
+<hr />
+<h2 id="_3">二、快速开始</h2>
+<h3 id="21-agent">2.1 运行第一个 Agent</h3>
+<pre><code class="language-bash"># 运行会话 1: Agent Loop
+python agents/s01_agent_loop.py
+</code></pre>
+<h3 id="22">2.2 核心概念速览</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    Agent Harness 核心概念                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   1. Agent Loop: 一个循环处理所有交互                               │
+│                                                                     │
+│   while True:                                                       │
+│       response = call_llm()                                        │
+│       if has_tool_calls(response):                                 │
+│           results = execute_tools()                                │
+│           add_to_history(results)                                  │
+│       else:                                                        │
+│           return text                                              │
+│                                                                     │
+│   2. Tool: 每个工具一个处理器                                       │
+│                                                                     │
+│   class Tool:                                                       │
+│       name: str                                                     │
+│       description: str                                              │
+│       input_schema: dict                                            │
+│       execute(**kwargs) -&gt; str                                      │
+│                                                                     │
+│   3. Context: 上下文管理和压缩                                      │
+│                                                                     │
+│   4. Subagent: 干净上下文的子任务处理                               │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="1-agent-loop">三、会话 1: Agent Loop</h2>
+<h3 id="31">3.1 核心概念</h3>
+<p><strong>格言</strong>: "One loop &amp; Bash is all you need"</p>
+<p>Agent Loop 是所有 Agent 的基础。它是一个简单的循环：
+1. 调用 LLM
+2. 检查是否有工具调用
+3. 如果有，执行工具并添加结果
+4. 循环继续
+5. 如果没有，返回文本</p>
+<h3 id="32">3.2 基础实现</h3>
+<pre><code class="language-python">import anthropic
+
+MODEL = &quot;claude-sonnet-4-20250514&quot;
+SYSTEM = &quot;You are a helpful assistant.&quot;
+
+def agent_loop(user_message: str) -&gt; str:
+    &quot;&quot;&quot;基础 Agent 循环&quot;&quot;&quot;
+    client = anthropic.Anthropic()
+    messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_message}]
+
+    while True:
+        # 1. 调用 LLM
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            system=SYSTEM,
+            messages=messages,
+        )
+
+        # 2. 添加助手响应
+        messages.append({
+            &quot;role&quot;: &quot;assistant&quot;,
+            &quot;content&quot;: response.content
+        })
+
+        # 3. 检查停止原因
+        if response.stop_reason == &quot;end_turn&quot;:
+            # 没有工具调用，返回文本
+            return response.content[0].text
+
+        # 如果有工具调用，继续循环
+        # (下一个会话会添加工具处理)
+
+# 使用
+result = agent_loop(&quot;Hello, how are you?&quot;)
+print(result)
+</code></pre>
+<h3 id="33">3.3 带历史记录的循环</h3>
+<pre><code class="language-python">def agent_loop_with_history(user_message: str, history: list = None) -&gt; tuple[str, list]:
+    &quot;&quot;&quot;带历史记录的 Agent 循环&quot;&quot;&quot;
+    client = anthropic.Anthropic()
+    messages = history or []
+    messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_message})
+
+    while True:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            system=SYSTEM,
+            messages=messages,
+        )
+
+        messages.append({
+            &quot;role&quot;: &quot;assistant&quot;,
+            &quot;content&quot;: response.content
+        })
+
+        if response.stop_reason == &quot;end_turn&quot;:
+            return response.content[0].text, messages
+
+# 多轮对话
+history = []
+response, history = agent_loop_with_history(&quot;My name is Alice&quot;, history)
+print(response)
+
+response, history = agent_loop_with_history(&quot;What's my name?&quot;, history)
+print(response)  # Should remember &quot;Alice&quot;
+</code></pre>
+<hr />
+<h2 id="2-tool-use">四、会话 2: Tool Use</h2>
+<h3 id="41">4.1 核心概念</h3>
+<p><strong>格言</strong>: "Adding a tool means adding one handler"</p>
+<p>工具扩展了 Agent 的能力。每个工具需要：
+- 名称和描述
+- 输入 Schema
+- 执行函数</p>
+<h3 id="42">4.2 定义工具</h3>
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import Any
+
+@dataclass
+class Tool:
+    &quot;&quot;&quot;工具基类&quot;&quot;&quot;
+    name: str
+    description: str
+    input_schema: dict[str, Any]
+
+    def to_api_format(self) -&gt; dict:
+        &quot;&quot;&quot;转换为 Claude API 格式&quot;&quot;&quot;
+        return {
+            &quot;name&quot;: self.name,
+            &quot;description&quot;: self.description,
+            &quot;input_schema&quot;: self.input_schema,
+        }
+
+    def execute(self, **kwargs) -&gt; str:
+        &quot;&quot;&quot;执行工具&quot;&quot;&quot;
+        raise NotImplementedError
+</code></pre>
+<h3 id="43">4.3 创建具体工具</h3>
+<pre><code class="language-python">import subprocess
+
+class BashTool(Tool):
+    &quot;&quot;&quot;Bash 命令工具&quot;&quot;&quot;
+
+    name = &quot;bash&quot;
+    description = &quot;Execute bash commands&quot;
+    input_schema = {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;command&quot;: {
+                &quot;type&quot;: &quot;string&quot;,
+                &quot;description&quot;: &quot;The bash command to execute&quot;
+            }
+        },
+        &quot;required&quot;: [&quot;command&quot;]
+    }
+
+    def execute(self, command: str) -&gt; str:
+        result = subprocess.run(
+            command,
+            shell=True,
+            capture_output=True,
+            text=True
+        )
+        return result.stdout or result.stderr
+
+class ReadFileTool(Tool):
+    &quot;&quot;&quot;读取文件工具&quot;&quot;&quot;
+
+    name = &quot;read_file&quot;
+    description = &quot;Read the contents of a file&quot;
+    input_schema = {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;file_path&quot;: {
+                &quot;type&quot;: &quot;string&quot;,
+                &quot;description&quot;: &quot;Path to the file to read&quot;
+            }
+        },
+        &quot;required&quot;: [&quot;file_path&quot;]
+    }
+
+    def execute(self, file_path: str) -&gt; str:
+        try:
+            with open(file_path, 'r') as f:
+                return f.read()
+        except Exception as e:
+            return f&quot;Error reading file: {str(e)}&quot;
+</code></pre>
+<h3 id="44-agent">4.4 Agent 循环 + 工具</h3>
+<pre><code class="language-python">import json
+
+def agent_loop_with_tools(user_message: str, tools: list[Tool]) -&gt; str:
+    &quot;&quot;&quot;带工具的 Agent 循环&quot;&quot;&quot;
+    client = anthropic.Anthropic()
+    messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: user_message}]
+
+    # 创建工具字典
+    tool_dict = {tool.name: tool for tool in tools}
+
+    while True:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=1024,
+            system=SYSTEM,
+            messages=messages,
+            tools=[tool.to_api_format() for tool in tools],
+        )
+
+        messages.append({
+            &quot;role&quot;: &quot;assistant&quot;,
+            &quot;content&quot;: response.content
+        })
+
+        # 检查是否有工具调用
+        if response.stop_reason == &quot;tool_use&quot;:
+            # 提取工具调用
+            tool_calls = [block for block in response.content if block.type == &quot;tool_use&quot;]
+
+            # 执行每个工具
+            tool_results = []
+            for tool_call in tool_calls:
+                tool = tool_dict[tool_call.name]
+                args = tool_call.input
+                result = tool.execute(**args)
+
+                tool_results.append({
+                    &quot;type&quot;: &quot;tool_result&quot;,
+                    &quot;tool_use_id&quot;: tool_call.id,
+                    &quot;content&quot;: result,
+                })
+
+            # 添加工具结果
+            messages.append({
+                &quot;role&quot;: &quot;user&quot;,
+                &quot;content&quot;: tool_results
+            })
+
+            # 继续循环
+            continue
+
+        # 没有工具调用，返回文本
+        return response.content[0].text
+
+# 使用
+tools = [BashTool(), ReadFileTool()]
+result = agent_loop_with_tools(&quot;List files in current directory&quot;, tools)
+print(result)
+</code></pre>
+<hr />
+<h2 id="3-todoplanning">五、会话 3: Todo/Planning</h2>
+<h3 id="51">5.1 核心概念</h3>
+<p><strong>格言</strong>: "An agent without a plan drifts"</p>
+<p>计划能力让 Agent 能够：
+- 追踪进度
+- 分解任务
+- 保持专注</p>
+<h3 id="52-todo">5.2 Todo 工具实现</h3>
+<pre><code class="language-python">from typing import Literal
+
+class TodoWriteTool(Tool):
+    &quot;&quot;&quot;Todo 写入工具&quot;&quot;&quot;
+
+    name = &quot;TodoWrite&quot;
+    description = &quot;Write todos to track progress on tasks&quot;
+    input_schema = {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;todos&quot;: {
+                &quot;type&quot;: &quot;array&quot;,
+                &quot;items&quot;: {
+                    &quot;type&quot;: &quot;object&quot;,
+                    &quot;properties&quot;: {
+                        &quot;content&quot;: {&quot;type&quot;: &quot;string&quot;},
+                        &quot;status&quot;: {
+                            &quot;type&quot;: &quot;string&quot;,
+                            &quot;enum&quot;: [&quot;pending&quot;, &quot;in_progress&quot;, &quot;completed&quot;]
+                        },
+                        &quot;priority&quot;: {&quot;type&quot;: &quot;string&quot;, &quot;enum&quot;: [&quot;high&quot;, &quot;medium&quot;, &quot;low&quot;]}
+                    },
+                    &quot;required&quot;: [&quot;content&quot;, &quot;status&quot;]
+                }
+            }
+        },
+        &quot;required&quot;: [&quot;todos&quot;]
+    }
+
+    def __init__(self):
+        self.todos = []
+
+    def execute(self, todos: list) -&gt; str:
+        self.todos = todos
+        return f&quot;Updated {len(todos)} todos:\n&quot; + &quot;\n&quot;.join(
+            f&quot;- [{t['status']}] {t['content']}&quot; for t in todos
+        )
+
+class TodoReadTool(Tool):
+    &quot;&quot;&quot;Todo 读取工具&quot;&quot;&quot;
+
+    name = &quot;TodoRead&quot;
+    description = &quot;Read the current todo list&quot;
+    input_schema = {&quot;type&quot;: &quot;object&quot;, &quot;properties&quot;: {}}
+
+    def __init__(self, todo_write_tool: TodoWriteTool):
+        self.todo_tool = todo_write_tool
+
+    def execute(self) -&gt; str:
+        if not self.todo_tool.todos:
+            return &quot;No todos currently&quot;
+        return &quot;\n&quot;.join(
+            f&quot;- [{t['status']}] {t['content']}&quot; for t in self.todo_tool.todos
+        )
+</code></pre>
+<h3 id="53">5.3 使用示例</h3>
+<pre><code class="language-python"># 创建工具
+todo_write = TodoWriteTool()
+todo_read = TodoReadTool(todo_write)
+
+# 创建 Agent
+tools = [todo_write, todo_read, BashTool()]
+
+# Agent 会自动使用 TodoWrite 来规划任务
+result = agent_loop_with_tools(
+    &quot;Create a simple Python web server&quot;,
+    tools
+)
+print(result)
+</code></pre>
+<hr />
+<h2 id="4-subagent">六、会话 4: Subagent</h2>
+<h3 id="61">6.1 核心概念</h3>
+<p><strong>格言</strong>: "Break big tasks down; each subtask gets a clean context"</p>
+<p>子 Agent 的优势：
+- 隔离上下文
+- 专注单一任务
+- 避免干扰</p>
+<h3 id="62-subagent">6.2 Subagent 实现</h3>
+<pre><code class="language-python">class SubagentTool(Tool):
+    &quot;&quot;&quot;子 Agent 工具&quot;&quot;&quot;
+
+    name = &quot;subagent&quot;
+    description = &quot;Spawn a subagent to handle a specific task&quot;
+    input_schema = {
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: {
+            &quot;task&quot;: {
+                &quot;type&quot;: &quot;string&quot;,
+                &quot;description&quot;: &quot;The task for the subagent&quot;
+            },
+            &quot;context&quot;: {
+                &quot;type&quot;: &quot;string&quot;,
+                &quot;description&quot;: &quot;Additional context for the subagent&quot;
+            }
+        },
+        &quot;required&quot;: [&quot;task&quot;]
+    }
+
+    def __init__(self, tools: list[Tool]):
+        self.tools = tools
+
+    def execute(self, task: str, context: str = &quot;&quot;) -&gt; str:
+        # 创建子 Agent
+        subagent_messages = [{
+            &quot;role&quot;: &quot;user&quot;,
+            &quot;content&quot;: f&quot;Task: {task}\n\n{context}&quot;
+        }]
+
+        # 使用干净的上下文运行
+        result = agent_loop_with_tools(
+            subagent_messages[0][&quot;content&quot;],
+            self.tools
+        )
+        return result
+</code></pre>
+<h3 id="63">6.3 使用示例</h3>
+<pre><code class="language-python">tools = [
+    BashTool(),
+    ReadFileTool(),
+    TodoWriteTool(),
+    SubagentTool([BashTool(), ReadFileTool()])  # 子 Agent 的工具
+]
+
+result = agent_loop_with_tools(
+    &quot;Analyze the codebase structure and create a summary&quot;,
+    tools
+)
+print(result)
+</code></pre>
+<hr />
+<h2 id="5-skill-loading">七、会话 5: Skill Loading</h2>
+<h3 id="71">7.1 核心概念</h3>
+<p><strong>格言</strong>: "Load knowledge when you need it, not upfront"</p>
+<p>技能系统允许：
+- 按需加载知识
+- 模块化组织
+- 可扩展性</p>
+<h3 id="72-skill">7.2 Skill 结构</h3>
+<pre><code>skills/
+├── code-review/
+│   └── SKILL.md
+├── testing/
+│   └── SKILL.md
+└── documentation/
+    └── SKILL.md
+</code></pre>
+<h3 id="73-skillmd">7.3 SKILL.md 格式</h3>
+<pre><code class="language-markdown">---
+name: code-review
+description: Use when reviewing code for quality, security, and best practices
+---
+
+# Code Review Skill
+
+## Purpose
+Review code and provide actionable feedback.
+
+## Checklist
+1. Code quality
+2. Security issues
+3. Performance concerns
+4. Best practices
+
+## Output Format
+- Issue: [description]
+- Severity: [high/medium/low]
+- Recommendation: [fix]
+</code></pre>
+<h3 id="74-skill">7.4 Skill 加载器</h3>
+<pre><code class="language-python">from pathlib import Path
+import yaml
+
+class SkillLoader:
+    &quot;&quot;&quot;技能加载器&quot;&quot;&quot;
+
+    def __init__(self, skills_dir: Path):
+        self.skills_dir = skills_dir
+        self.loaded_skills: dict[str, dict] = {}
+
+    def load_skill(self, skill_name: str) -&gt; dict:
+        &quot;&quot;&quot;加载技能&quot;&quot;&quot;
+        if skill_name in self.loaded_skills:
+            return self.loaded_skills[skill_name]
+
+        skill_path = self.skills_dir / skill_name / &quot;SKILL.md&quot;
+        with open(skill_path) as f:
+            content = f.read()
+
+        # 解析 YAML frontmatter
+        if content.startswith(&quot;---&quot;):
+            parts = content.split(&quot;---&quot;, 2)
+            metadata = yaml.safe_load(parts[1])
+            body = parts[2].strip()
+        else:
+            metadata = {}
+            body = content
+
+        skill = {
+            &quot;name&quot;: metadata.get(&quot;name&quot;, skill_name),
+            &quot;description&quot;: metadata.get(&quot;description&quot;, &quot;&quot;),
+            &quot;body&quot;: body,
+        }
+
+        self.loaded_skills[skill_name] = skill
+        return skill
+
+    def get_skill_prompt(self, skill_name: str) -&gt; str:
+        &quot;&quot;&quot;获取技能提示词&quot;&quot;&quot;
+        skill = self.load_skill(skill_name)
+        return f&quot;# {skill['name']}\n\n{skill['body']}&quot;
+</code></pre>
+<hr />
+<h2 id="6-context-compact">八、会话 6: Context Compact</h2>
+<h3 id="81">8.1 核心概念</h3>
+<p><strong>格言</strong>: "Context will fill up; you need a way to make room"</p>
+<p>上下文压缩策略：
+- 移除旧消息
+- 保留关键信息
+- 添加压缩通知</p>
+<h3 id="82">8.2 实现</h3>
+<pre><code class="language-python">class MessageHistory:
+    &quot;&quot;&quot;消息历史管理&quot;&quot;&quot;
+
+    def __init__(self, context_window: int = 100000):
+        self.messages: list[dict] = []
+        self.context_window = context_window
+        self.token_count = 0
+
+    def add(self, message: dict) -&gt; None:
+        &quot;&quot;&quot;添加消息&quot;&quot;&quot;
+        self.messages.append(message)
+        self.token_count += self._count_tokens(message)
+        self._check_truncate()
+
+    def _count_tokens(self, message: dict) -&gt; int:
+        &quot;&quot;&quot;估算 token 数量&quot;&quot;&quot;
+        content = str(message.get(&quot;content&quot;, &quot;&quot;))
+        return len(content) // 4  # 粗略估算
+
+    def _check_truncate(self) -&gt; None:
+        &quot;&quot;&quot;检查是否需要压缩&quot;&quot;&quot;
+        if self.token_count &gt; self.context_window:
+            self._truncate()
+
+    def _truncate(self) -&gt; None:
+        &quot;&quot;&quot;压缩上下文&quot;&quot;&quot;
+        # 移除最旧的消息对
+        while len(self.messages) &gt;= 2 and self.token_count &gt; self.context_window * 0.7:
+            removed = self.messages.pop(0)
+            self.token_count -= self._count_tokens(removed)
+
+        # 添加压缩通知
+        self.messages.insert(0, {
+            &quot;role&quot;: &quot;user&quot;,
+            &quot;content&quot;: &quot;[Earlier conversation truncated for context limit]&quot;
+        })
+
+    def get_messages(self) -&gt; list[dict]:
+        &quot;&quot;&quot;获取消息列表&quot;&quot;&quot;
+        return self.messages
+</code></pre>
+<h3 id="83">8.3 使用示例</h3>
+<pre><code class="language-python">history = MessageHistory(context_window=50000)
+
+# 添加多轮对话
+for i in range(100):
+    history.add({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: f&quot;Message {i}&quot;})
+    history.add({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: f&quot;Response {i}&quot;})
+
+# 自动压缩
+print(f&quot;Total messages: {len(history.get_messages())}&quot;)
+print(f&quot;First message: {history.get_messages()[0]}&quot;)
+</code></pre>
+<hr />
+<h2 id="7-12">九、会话 7-12: 高级功能</h2>
+<h3 id="91-task-system-s07">9.1 Task System (s07)</h3>
+<pre><code class="language-python">from dataclasses import dataclass
+from enum import Enum
+import json
+from pathlib import Path
+
+class TaskStatus(Enum):
+    PENDING = &quot;pending&quot;
+    IN_PROGRESS = &quot;in_progress&quot;
+    COMPLETED = &quot;completed&quot;
+
+@dataclass
+class Task:
+    id: str
+    content: str
+    status: TaskStatus = TaskStatus.PENDING
+    priority: str = &quot;medium&quot;
+
+class TaskManager:
+    &quot;&quot;&quot;任务管理器&quot;&quot;&quot;
+
+    def __init__(self, storage_path: Path):
+        self.storage_path = storage_path
+        self.tasks: list[Task] = []
+        self._load()
+
+    def add(self, task: Task) -&gt; None:
+        self.tasks.append(task)
+        self._save()
+
+    def get_next(self) -&gt; Task | None:
+        pending = [t for t in self.tasks if t.status == TaskStatus.PENDING]
+        return pending[0] if pending else None
+
+    def complete(self, task_id: str) -&gt; None:
+        for task in self.tasks:
+            if task.id == task_id:
+                task.status = TaskStatus.COMPLETED
+        self._save()
+
+    def _save(self) -&gt; None:
+        data = [{&quot;id&quot;: t.id, &quot;content&quot;: t.content, &quot;status&quot;: t.status.value} for t in self.tasks]
+        with open(self.storage_path, 'w') as f:
+            json.dump(data, f)
+
+    def _load(self) -&gt; None:
+        if self.storage_path.exists():
+            with open(self.storage_path) as f:
+                data = json.load(f)
+            self.tasks = [Task(**t) for t in data]
+</code></pre>
+<h3 id="92-background-tasks-s08">9.2 Background Tasks (s08)</h3>
+<pre><code class="language-python">import asyncio
+
+class BackgroundTaskManager:
+    &quot;&quot;&quot;后台任务管理器&quot;&quot;&quot;
+
+    def __init__(self):
+        self.tasks: dict[str, asyncio.Task] = {}
+
+    async def start(self, task_id: str, coro) -&gt; str:
+        &quot;&quot;&quot;启动后台任务&quot;&quot;&quot;
+        task = asyncio.create_task(coro)
+        self.tasks[task_id] = task
+        return f&quot;Started background task: {task_id}&quot;
+
+    async def status(self, task_id: str) -&gt; str:
+        &quot;&quot;&quot;检查任务状态&quot;&quot;&quot;
+        task = self.tasks.get(task_id)
+        if not task:
+            return f&quot;Task {task_id} not found&quot;
+        if task.done():
+            try:
+                result = task.result()
+                return f&quot;Task {task_id} completed: {result}&quot;
+            except Exception as e:
+                return f&quot;Task {task_id} failed: {e}&quot;
+        return f&quot;Task {task_id} running&quot;
+
+    async def wait(self, task_id: str) -&gt; str:
+        &quot;&quot;&quot;等待任务完成&quot;&quot;&quot;
+        task = self.tasks.get(task_id)
+        if task:
+            await task
+            return await self.status(task_id)
+        return f&quot;Task {task_id} not found&quot;
+</code></pre>
+<h3 id="93-agent-teams-s09-s10">9.3 Agent Teams (s09-s10)</h3>
+<pre><code class="language-python">class AgentTeam:
+    &quot;&quot;&quot;Agent 团队&quot;&quot;&quot;
+
+    def __init__(self, name: str, role: str, tools: list[Tool]):
+        self.name = name
+        self.role = role
+        self.tools = tools
+
+    async def run(self, task: str) -&gt; str:
+        &quot;&quot;&quot;执行任务&quot;&quot;&quot;
+        return agent_loop_with_tools(
+            f&quot;[{self.role}] {task}&quot;,
+            self.tools
+        )
+
+class TeamCoordinator:
+    &quot;&quot;&quot;团队协调器&quot;&quot;&quot;
+
+    def __init__(self):
+        self.agents: dict[str, AgentTeam] = {}
+
+    def add_agent(self, agent: AgentTeam) -&gt; None:
+        self.agents[agent.name] = agent
+
+    async def delegate(self, agent_name: str, task: str) -&gt; str:
+        agent = self.agents.get(agent_name)
+        if agent:
+            return await agent.run(task)
+        return f&quot;Agent {agent_name} not found&quot;
+</code></pre>
+<h3 id="94-autonomous-agents-s11">9.4 Autonomous Agents (s11)</h3>
+<pre><code class="language-python">class AutonomousAgent:
+    &quot;&quot;&quot;自主 Agent&quot;&quot;&quot;
+
+    def __init__(self, name: str, skills: list[str]):
+        self.name = name
+        self.skills = skills
+        self.claimed_tasks: list[str] = []
+
+    def can_handle(self, task: Task) -&gt; bool:
+        &quot;&quot;&quot;检查能否处理任务&quot;&quot;&quot;
+        return any(skill in task.required_skills for skill in self.skills)
+
+    def claim(self, task: Task) -&gt; bool:
+        &quot;&quot;&quot;认领任务&quot;&quot;&quot;
+        if self.can_handle(task) and task.status == TaskStatus.PENDING:
+            self.claimed_tasks.append(task.id)
+            return True
+        return False
+
+    async def work(self, task: Task) -&gt; str:
+        &quot;&quot;&quot;处理任务&quot;&quot;&quot;
+        # 实现任务处理逻辑
+        pass
+</code></pre>
+<h3 id="95-worktree-isolation-s12">9.5 Worktree Isolation (s12)</h3>
+<pre><code class="language-python">import subprocess
+from pathlib import Path
+
+class WorktreeManager:
+    &quot;&quot;&quot;Git Worktree 管理器&quot;&quot;&quot;
+
+    def __init__(self, repo_path: Path):
+        self.repo_path = repo_path
+        self.worktrees: dict[str, Path] = {}
+
+    def create(self, agent_name: str, branch: str) -&gt; Path:
+        &quot;&quot;&quot;创建隔离的 worktree&quot;&quot;&quot;
+        worktree_path = self.repo_path / f&quot;.worktrees/{agent_name}&quot;
+
+        subprocess.run([
+            &quot;git&quot;, &quot;worktree&quot;, &quot;add&quot;,
+            str(worktree_path), &quot;-b&quot;, branch
+        ], cwd=self.repo_path)
+
+        self.worktrees[agent_name] = worktree_path
+        return worktree_path
+
+    def remove(self, agent_name: str) -&gt; None:
+        &quot;&quot;&quot;移除 worktree&quot;&quot;&quot;
+        worktree_path = self.worktrees.get(agent_name)
+        if worktree_path:
+            subprocess.run([
+                &quot;git&quot;, &quot;worktree&quot;, &quot;remove&quot;, str(worktree_path)
+            ], cwd=self.repo_path)
+            del self.worktrees[agent_name]
+</code></pre>
+<hr />
+<h2 id="_4">十、最佳实践</h2>
+<h3 id="101">10.1 设计原则</h3>
+<ol>
+<li><strong>保持简单</strong>: 从基础循环开始，逐步添加功能</li>
+<li><strong>工具独立</strong>: 每个工具只做一件事</li>
+<li><strong>上下文管理</strong>: 始终监控上下文使用</li>
+<li><strong>子 Agent 隔离</strong>: 给子 Agent 干净的上下文</li>
+</ol>
+<h3 id="102">10.2 调试技巧</h3>
+<pre><code class="language-python"># 添加日志
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+def agent_loop_debug(user_message: str, tools: list[Tool]) -&gt; str:
+    logger.info(f&quot;Starting agent loop with: {user_message}&quot;)
+
+    while True:
+        response = call_llm(...)
+        logger.debug(f&quot;Response: {response}&quot;)
+
+        if has_tool_calls(response):
+            logger.info(f&quot;Tool calls: {extract_tools(response)}&quot;)
+            results = execute_tools(...)
+            logger.debug(f&quot;Tool results: {results}&quot;)
+        else:
+            logger.info(&quot;Returning final response&quot;)
+            return response.text
+</code></pre>
+<h3 id="103">10.3 错误处理</h3>
+<pre><code class="language-python">async def safe_agent_loop(user_message: str, tools: list[Tool], max_iterations: int = 50) -&gt; str:
+    &quot;&quot;&quot;带错误处理的 Agent 循环&quot;&quot;&quot;
+    iterations = 0
+
+    while iterations &lt; max_iterations:
+        try:
+            iterations += 1
+            response = await call_llm_async(...)
+
+            if has_tool_calls(response):
+                results = await execute_tools_async(...)
+                add_to_history(results)
+            else:
+                return response.text
+
+        except Exception as e:
+            logger.error(f&quot;Error in iteration {iterations}: {e}&quot;)
+            if iterations &gt;= max_iterations:
+                raise RuntimeError(f&quot;Max iterations ({max_iterations}) reached&quot;)
+            await asyncio.sleep(1)
+
+    raise RuntimeError(&quot;Unexpected loop exit&quot;)
+</code></pre>
+<hr />
+<h2 id="_5">十一、常见问题</h2>
+<h3 id="q1-agent">Q1: Agent 一直在循环，没有返回</h3>
+<p><strong>原因</strong>: 可能是工具调用陷入了无限循环</p>
+<p><strong>解决</strong>: 添加最大迭代次数限制</p>
+<pre><code class="language-python">def agent_loop_with_limit(user_message: str, tools: list[Tool], max_iterations: int = 20) -&gt; str:
+    iterations = 0
+    while iterations &lt; max_iterations:
+        iterations += 1
+        # ... 正常循环逻辑
+    return &quot;Max iterations reached&quot;
+</code></pre>
+<h3 id="q2">Q2: 上下文超出了限制</h3>
+<p><strong>原因</strong>: 消息历史太长</p>
+<p><strong>解决</strong>: 实现上下文压缩</p>
+<pre><code class="language-python">def truncate_history(messages: list, max_tokens: int = 50000) -&gt; list:
+    while count_tokens(messages) &gt; max_tokens:
+        messages.pop(0)
+    return messages
+</code></pre>
+<h3 id="q3">Q3: 工具执行失败</h3>
+<p><strong>原因</strong>: 工具参数不正确或执行环境问题</p>
+<p><strong>解决</strong>: 添加错误处理</p>
+<pre><code class="language-python">def safe_execute(tool: Tool, **kwargs) -&gt; str:
+    try:
+        return tool.execute(**kwargs)
+    except Exception as e:
+        return f&quot;Error executing {tool.name}: {str(e)}&quot;
+</code></pre>
+<h3 id="q4-agent">Q4: 子 Agent 没有隔离上下文</h3>
+<p><strong>原因</strong>: 直接传递了历史记录</p>
+<p><strong>解决</strong>: 创建新的消息列表</p>
+<pre><code class="language-python">def dispatch_subagent(task: str) -&gt; str:
+    # 不要传递历史！
+    fresh_messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: task}]
+    return agent_loop(fresh_messages, subagent_tools)
+</code></pre>
+<hr />
+<h2 id="_6">参考资源</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/shareAI-lab/learn-claude-code</li>
+<li><strong>官网</strong>: https://learn.shareai.run</li>
+<li><strong>Anthropic API 文档</strong>: https://docs.anthropic.com</li>
+<li><strong>Claude Code 文档</strong>: https://docs.anthropic.com/en/docs/claude-code</li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-27</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Team 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速开始</a></li>
+<li><a href="#11-agent-team" class="toc-h3">1.1 什么是 Agent Team？</a></li>
+<li><a href="#12" class="toc-h3">1.2 框架选择指南</a></li>
+<li><a href="#13-5-crewai" class="toc-h3">1.3 5 分钟上手 CrewAI</a></li>
+<li><a href="#crewai" class="toc-h2">二、CrewAI 教程</a></li>
+<li><a href="#21" class="toc-h3">2.1 安装配置</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心概念</a></li>
+<li><a href="#23-agent" class="toc-h3">2.3 Agent 详解</a></li>
+<li><a href="#24-task" class="toc-h3">2.4 Task 详解</a></li>
+<li><a href="#25-crew" class="toc-h3">2.5 Crew 组装与执行</a></li>
+<li><a href="#26" class="toc-h3">2.6 工具集成</a></li>
+<li><a href="#27" class="toc-h3">2.7 完整示例：内容创作团队</a></li>
+<li><a href="#autogen" class="toc-h2">三、AutoGen 教程</a></li>
+<li><a href="#31" class="toc-h3">3.1 安装配置</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心概念</a></li>
+<li><a href="#33" class="toc-h3">3.3 基础对话</a></li>
+<li><a href="#34" class="toc-h3">3.4 代码执行</a></li>
+<li><a href="#35" class="toc-h3">3.5 群聊模式</a></li>
+<li><a href="#36-human-in-the-loop" class="toc-h3">3.6 Human-in-the-Loop</a></li>
+<li><a href="#metagpt" class="toc-h2">四、MetaGPT 教程</a></li>
+<li><a href="#41" class="toc-h3">4.1 安装配置</a></li>
+<li><a href="#42" class="toc-h3">4.2 快速开始</a></li>
+<li><a href="#43" class="toc-h3">4.3 角色详解</a></li>
+<li><a href="#44" class="toc-h3">4.4 自定义角色</a></li>
+<li><a href="#45" class="toc-h3">4.5 项目结构</a></li>
+<li><a href="#langgraph" class="toc-h2">五、LangGraph 教程</a></li>
+<li><a href="#51" class="toc-h3">5.1 安装配置</a></li>
+<li><a href="#52" class="toc-h3">5.2 核心概念</a></li>
+<li><a href="#53" class="toc-h3">5.3 基础图构建</a></li>
+<li><a href="#54" class="toc-h3">5.4 条件分支</a></li>
+<li><a href="#55" class="toc-h3">5.5 循环结构</a></li>
+<li><a href="#56-agent" class="toc-h3">5.6 多 Agent 协作</a></li>
+<li><a href="#_3" class="toc-h2">六、进阶主题</a></li>
+<li><a href="#61" class="toc-h3">6.1 记忆系统</a></li>
+<li><a href="#62" class="toc-h3">6.2 工具集成</a></li>
+<li><a href="#63" class="toc-h3">6.3 并行执行</a></li>
+<li><a href="#_4" class="toc-h2">七、最佳实践</a></li>
+<li><a href="#71-agent" class="toc-h3">7.1 Agent 设计原则</a></li>
+<li><a href="#72" class="toc-h3">7.2 任务拆分技巧</a></li>
+<li><a href="#73" class="toc-h3">7.3 成本控制</a></li>
+<li><a href="#_5" class="toc-h2">八、常见问题</a></li>
+<li><a href="#q1" class="toc-h3">Q1: 如何选择框架？</a></li>
+<li><a href="#q2-agent" class="toc-h3">Q2: Agent 执行卡住怎么办？</a></li>
+<li><a href="#q3-agent" class="toc-h3">Q3: 如何调试多 Agent 系统？</a></li>
+<li><a href="#q4" class="toc-h3">Q4: 成本太高怎么办？</a></li>
+<li><a href="#_6" class="toc-h2">九、速查表</a></li>
+<li><a href="#_7" class="toc-h3">框架对比</a></li>
+<li><a href="#_8" class="toc-h3">常用命令</a></li>
+<li><a href="#_9" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI Agent Team 学习教程</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="ai-agent-team">AI Agent Team 学习教程</h1>
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速开始">快速开始</a></li>
+<li><a href="#二crewai-教程">CrewAI 教程</a></li>
+<li><a href="#三autogen-教程">AutoGen 教程</a></li>
+<li><a href="#四metagpt-教程">MetaGPT 教程</a></li>
+<li><a href="#五langgraph-教程">LangGraph 教程</a></li>
+<li><a href="#六进阶主题">进阶主题</a></li>
+<li><a href="#七最佳实践">最佳实践</a></li>
+<li><a href="#八常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速开始</h2>
+<h3 id="11-agent-team">1.1 什么是 Agent Team？</h3>
+<p>Agent Team 是一组协作完成任务的 AI 智能体。就像人类团队一样，每个 Agent 有自己的角色和职责：</p>
+<pre><code>人类团队                    AI Agent Team
+┌─────────┐                ┌─────────┐
+│ 产品经理 │                │ PM Agent │
+├─────────┤                ├─────────┤
+│ 架构师   │       →        │ Architect│
+├─────────┤                ├─────────┤
+│ 开发者   │                │ Engineer│
+├─────────┤                ├─────────┤
+│ 测试工程师│               │ QA Agent │
+└─────────┘                └─────────┘
+</code></pre>
+<h3 id="12">1.2 框架选择指南</h3>
+<table>
+<thead>
+<tr>
+<th>你的需求</th>
+<th>推荐框架</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>新手入门</strong></td>
+<td>CrewAI</td>
+<td>API 简洁，概念清晰</td>
+</tr>
+<tr>
+<td><strong>软件开发</strong></td>
+<td>MetaGPT</td>
+<td>内置 SDLC 流程</td>
+</tr>
+<tr>
+<td><strong>研究分析</strong></td>
+<td>AutoGen</td>
+<td>代码执行能力强</td>
+</tr>
+<tr>
+<td><strong>复杂流程</strong></td>
+<td>LangGraph</td>
+<td>图结构灵活可控</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-5-crewai">1.3 5 分钟上手 CrewAI</h3>
+<pre><code class="language-bash"># 安装
+pip install crewai
+
+# 创建脚本
+cat &gt; my_crew.py &lt;&lt; 'EOF'
+from crewai import Agent, Task, Crew
+
+# 定义 Agent
+researcher = Agent(
+    role=&quot;研究员&quot;,
+    goal=&quot;研究 AI 趋势&quot;,
+    backstory=&quot;你是一位资深的 AI 研究员&quot;
+)
+
+writer = Agent(
+    role=&quot;撰稿人&quot;,
+    goal=&quot;撰写技术文章&quot;,
+    backstory=&quot;你是一位技术作家&quot;
+)
+
+# 定义任务
+research_task = Task(
+    description=&quot;研究 2024 年 AI 发展趋势&quot;,
+    agent=researcher
+)
+
+write_task = Task(
+    description=&quot;基于研究结果撰写一篇文章&quot;,
+    agent=writer
+)
+
+# 组建团队并执行
+crew = Crew(
+    agents=[researcher, writer],
+    tasks=[research_task, write_task]
+)
+
+result = crew.kickoff()
+print(result)
+EOF
+
+# 运行
+python my_crew.py
+</code></pre>
+<hr />
+<h2 id="crewai">二、CrewAI 教程</h2>
+<h3 id="21">2.1 安装配置</h3>
+<pre><code class="language-bash"># 安装核心包
+pip install crewai crewai-tools
+
+# 安装额外依赖（可选）
+pip install 'crewai[tools]'  # 完整工具集
+</code></pre>
+<h3 id="22">2.2 核心概念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CrewAI 核心组件                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Agent (智能体)                                                │
+│   ├── role: 角色名称                                           │
+│   ├── goal: 目标                                               │
+│   ├── backstory: 背景故事                                      │
+│   ├── tools: 可用工具                                          │
+│   └── llm: 语言模型                                            │
+│                                                                 │
+│   Task (任务)                                                   │
+│   ├── description: 任务描述                                    │
+│   ├── expected_output: 期望输出                                │
+│   ├── agent: 执行的 Agent                                      │
+│   └── context: 上下文任务                                      │
+│                                                                 │
+│   Crew (团队)                                                   │
+│   ├── agents: Agent 列表                                       │
+│   ├── tasks: Task 列表                                         │
+│   └── process: 执行流程                                        │
+│                                                                 │
+│   Process (流程)                                                │
+│   ├── sequential: 顺序执行                                     │
+│   └── hierarchical: 层级管理                                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="23-agent">2.3 Agent 详解</h3>
+<pre><code class="language-python">from crewai import Agent
+from langchain_openai import ChatOpenAI
+
+# 创建 LLM
+llm = ChatOpenAI(model=&quot;gpt-4&quot;, temperature=0.7)
+
+# 创建 Agent
+researcher = Agent(
+    # 基本属性
+    role=&quot;高级研究分析师&quot;,
+    goal=&quot;发现 AI 和数据科学领域的前沿发展&quot;,
+    backstory=&quot;&quot;&quot;你是一位经验丰富的研究员，
+    专注于发现技术趋势和深入分析。&quot;&quot;&quot;,
+
+    # 工具配置
+    tools=[search_tool, web_scraper],
+
+    # LLM 配置
+    llm=llm,
+
+    # 行为配置
+    verbose=True,           # 详细输出
+    allow_delegation=False,  # 是否允许委托
+    max_iter=15,            # 最大迭代次数
+    max_rpm=10,             # 每分钟最大请求数
+    memory=True,            # 启用记忆
+)
+</code></pre>
+<h3 id="24-task">2.4 Task 详解</h3>
+<pre><code class="language-python">from crewai import Task
+
+research_task = Task(
+    # 任务描述
+    description=&quot;&quot;&quot;
+    研究 {topic} 领域的最新发展。
+    关注以下方面：
+    1. 技术趋势
+    2. 主要参与者
+    3. 未来预测
+    &quot;&quot;&quot;,
+
+    # 期望输出
+    expected_output=&quot;&quot;&quot;
+    一份结构化的研究报告，包含：
+    - 执行摘要
+    - 关键发现
+    - 详细分析
+    - 建议
+    &quot;&quot;&quot;,
+
+    # 指派 Agent
+    agent=researcher,
+
+    # 输出配置
+    output_file=&quot;research_report.md&quot;,
+
+    # 异步执行
+    async_execution=False,
+
+    # 回调函数
+    callback=lambda output: print(f&quot;任务完成: {output}&quot;),
+)
+</code></pre>
+<h3 id="25-crew">2.5 Crew 组装与执行</h3>
+<pre><code class="language-python">from crewai import Crew, Process
+
+# Sequential 流程
+crew = Crew(
+    agents=[researcher, writer, editor],
+    tasks=[research_task, write_task, edit_task],
+    process=Process.sequential,
+    verbose=True,
+    memory=True,  # 团队记忆
+)
+
+# 执行
+result = crew.kickoff()
+
+# 带输入执行
+result = crew.kickoff(inputs={&quot;topic&quot;: &quot;大语言模型&quot;})
+
+# Hierarchical 流程（需要 Manager）
+crew = Crew(
+    agents=[researcher, writer, editor],
+    tasks=[main_task],
+    process=Process.hierarchical,
+    manager_llm=llm,  # Manager 使用的 LLM
+    verbose=True,
+)
+</code></pre>
+<h3 id="26">2.6 工具集成</h3>
+<pre><code class="language-python">from crewai_tools import (
+    SerperDevTool,      # 搜索
+    ScrapeWebsiteTool,  # 网页抓取
+    FileReadTool,       # 文件读取
+    DirectoryReadTool,  # 目录读取
+)
+
+# 使用内置工具
+search = SerperDevTool()
+scrape = ScrapeWebsiteTool()
+
+agent = Agent(
+    role=&quot;研究员&quot;,
+    goal=&quot;搜索和分析信息&quot;,
+    tools=[search, scrape],
+)
+
+# 自定义工具
+from crewai_tools import tool
+
+@tool(&quot;计算器工具&quot;)
+def calculator(expression: str) -&gt; str:
+    &quot;&quot;&quot;执行数学计算&quot;&quot;&quot;
+    try:
+        return str(eval(expression))
+    except Exception as e:
+        return f&quot;计算错误: {e}&quot;
+
+agent = Agent(
+    role=&quot;数据分析师&quot;,
+    tools=[calculator],
+)
+</code></pre>
+<h3 id="27">2.7 完整示例：内容创作团队</h3>
+<pre><code class="language-python">from crewai import Agent, Task, Crew, Process
+from crewai_tools import SerperDevTool, ScrapeWebsiteTool
+from langchain_openai import ChatOpenAI
+
+# 配置
+llm = ChatOpenAI(model=&quot;gpt-4&quot;)
+search_tool = SerperDevTool()
+scrape_tool = ScrapeWebsiteTool()
+
+# Agent 1: 研究员
+researcher = Agent(
+    role=&quot;内容研究员&quot;,
+    goal=&quot;研究主题并收集关键信息&quot;,
+    backstory=&quot;你是专业的内容研究员，擅长发现有价值的信息&quot;,
+    tools=[search_tool, scrape_tool],
+    llm=llm,
+    verbose=True,
+)
+
+# Agent 2: 撰稿人
+writer = Agent(
+    role=&quot;技术撰稿人&quot;,
+    goal=&quot;撰写高质量的技术文章&quot;,
+    backstory=&quot;你是资深技术作家，擅长将复杂概念简单化&quot;,
+    llm=llm,
+    verbose=True,
+)
+
+# Agent 3: 编辑
+editor = Agent(
+    role=&quot;内容编辑&quot;,
+    goal=&quot;审核和优化文章质量&quot;,
+    backstory=&quot;你是严谨的编辑，确保内容准确和流畅&quot;,
+    llm=llm,
+    verbose=True,
+)
+
+# Task 1: 研究
+research_task = Task(
+    description=&quot;研究 {topic} 的核心概念和最新发展&quot;,
+    expected_output=&quot;包含关键点的结构化研究报告&quot;,
+    agent=researcher,
+)
+
+# Task 2: 撰写
+write_task = Task(
+    description=&quot;基于研究结果撰写一篇关于 {topic} 的文章&quot;,
+    expected_output=&quot;结构清晰的技术文章（1000字左右）&quot;,
+    agent=writer,
+    context=[research_task],  # 依赖研究任务
+)
+
+# Task 3: 编辑
+edit_task = Task(
+    description=&quot;审核并优化文章&quot;,
+    expected_output=&quot;最终版本的文章&quot;,
+    agent=editor,
+    context=[write_task],
+    output_file=&quot;final_article.md&quot;,
+)
+
+# 组建团队
+crew = Crew(
+    agents=[researcher, writer, editor],
+    tasks=[research_task, write_task, edit_task],
+    process=Process.sequential,
+    verbose=True,
+)
+
+# 执行
+result = crew.kickoff(inputs={&quot;topic&quot;: &quot;多智能体系统&quot;})
+print(result)
+</code></pre>
+<hr />
+<h2 id="autogen">三、AutoGen 教程</h2>
+<h3 id="31">3.1 安装配置</h3>
+<pre><code class="language-bash"># 安装
+pip install pyautogen
+
+# 配置 API Key
+export OPENAI_API_KEY=&quot;your-api-key&quot;
+</code></pre>
+<h3 id="32">3.2 核心概念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    AutoGen 核心组件                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ConversableAgent (可对话 Agent)                               │
+│   └── 所有 Agent 的基类，支持发送和接收消息                      │
+│                                                                 │
+│   AssistantAgent (助手 Agent)                                   │
+│   └── AI 驱动的 Agent，使用 LLM 生成响应                         │
+│                                                                 │
+│   UserProxyAgent (用户代理)                                     │
+│   └── 代表人类用户，可执行代码、请求输入                         │
+│                                                                 │
+│   GroupChat (群聊)                                              │
+│   └── 管理多个 Agent 的群组对话                                 │
+│                                                                 │
+│   GroupChatManager (群聊管理器)                                 │
+│   └── 协调群聊中的发言顺序                                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="33">3.3 基础对话</h3>
+<pre><code class="language-python">import autogen
+
+# 配置 LLM
+config_list = [
+    {
+        &quot;model&quot;: &quot;gpt-4&quot;,
+        &quot;api_key&quot;: &quot;your-api-key&quot;
+    }
+]
+
+llm_config = {
+    &quot;config_list&quot;: config_list,
+    &quot;temperature&quot;: 0.7,
+}
+
+# 创建助手 Agent
+assistant = autogen.AssistantAgent(
+    name=&quot;assistant&quot;,
+    llm_config=llm_config,
+    system_message=&quot;你是一个有帮助的 AI 助手。&quot;,
+)
+
+# 创建用户代理
+user_proxy = autogen.UserProxyAgent(
+    name=&quot;user_proxy&quot;,
+    human_input_mode=&quot;NEVER&quot;,  # 不请求人类输入
+    max_consecutive_auto_reply=10,
+    code_execution_config={
+        &quot;work_dir&quot;: &quot;coding&quot;,
+        &quot;use_docker&quot;: False,
+    },
+)
+
+# 发起对话
+user_proxy.initiate_chat(
+    assistant,
+    message=&quot;用 Python 写一个斐波那契数列函数&quot;,
+)
+</code></pre>
+<h3 id="34">3.4 代码执行</h3>
+<pre><code class="language-python">import autogen
+
+# 配置
+config_list = [{&quot;model&quot;: &quot;gpt-4&quot;, &quot;api_key&quot;: &quot;your-api-key&quot;}]
+
+# 创建 Agent
+assistant = autogen.AssistantAgent(
+    name=&quot;coder&quot;,
+    llm_config={&quot;config_list&quot;: config_list},
+    system_message=&quot;你是 Python 编程专家。代码请用 ```python``` 包裹。&quot;,
+)
+
+# 用户代理，启用代码执行
+user_proxy = autogen.UserProxyAgent(
+    name=&quot;user&quot;,
+    human_input_mode=&quot;NEVER&quot;,
+    code_execution_config={
+        &quot;work_dir&quot;: &quot;workspace&quot;,    # 工作目录
+        &quot;use_docker&quot;: False,         # 不使用 Docker
+        &quot;timeout&quot;: 60,               # 超时时间
+    },
+)
+
+# 执行任务
+user_proxy.initiate_chat(
+    assistant,
+    message=&quot;&quot;&quot;
+    创建一个数据分析脚本：
+    1. 生成 100 个随机数
+    2. 计算均值、中位数、标准差
+    3. 绘制直方图并保存
+    &quot;&quot;&quot;,
+)
+</code></pre>
+<h3 id="35">3.5 群聊模式</h3>
+<pre><code class="language-python">import autogen
+
+config_list = [{&quot;model&quot;: &quot;gpt-4&quot;, &quot;api_key&quot;: &quot;your-api-key&quot;}]
+llm_config = {&quot;config_list&quot;: config_list}
+
+# 创建多个 Agent
+researcher = autogen.AssistantAgent(
+    name=&quot;researcher&quot;,
+    llm_config=llm_config,
+    system_message=&quot;你是研究员，负责收集和分析信息。&quot;,
+)
+
+coder = autogen.AssistantAgent(
+    name=&quot;coder&quot;,
+    llm_config=llm_config,
+    system_message=&quot;你是程序员，负责编写代码。&quot;,
+)
+
+reviewer = autogen.AssistantAgent(
+    name=&quot;reviewer&quot;,
+    llm_config=llm_config,
+    system_message=&quot;你是代码审核员，负责检查代码质量。&quot;,
+)
+
+# 用户代理
+user = autogen.UserProxyAgent(
+    name=&quot;user&quot;,
+    human_input_mode=&quot;NEVER&quot;,
+    code_execution_config={&quot;work_dir&quot;: &quot;workspace&quot;},
+)
+
+# 创建群聊
+groupchat = autogen.GroupChat(
+    agents=[user, researcher, coder, reviewer],
+    messages=[],
+    max_round=12,  # 最大轮数
+)
+
+# 创建管理器
+manager = autogen.GroupChatManager(
+    groupchat=groupchat,
+    llm_config=llm_config,
+)
+
+# 发起群聊
+user.initiate_chat(
+    manager,
+    message=&quot;分析一个 CSV 文件并生成可视化报告&quot;,
+)
+</code></pre>
+<h3 id="36-human-in-the-loop">3.6 Human-in-the-Loop</h3>
+<pre><code class="language-python">import autogen
+
+# ALWAYS: 每次都请求人类输入
+user_always = autogen.UserProxyAgent(
+    name=&quot;user_always&quot;,
+    human_input_mode=&quot;ALWAYS&quot;,
+)
+
+# NEVER: 完全自动
+user_never = autogen.UserProxyAgent(
+    name=&quot;user_never&quot;,
+    human_input_mode=&quot;NEVER&quot;,
+)
+
+# TERMINATE: 仅在终止时请求
+user_terminate = autogen.UserProxyAgent(
+    name=&quot;user_terminate&quot;,
+    human_input_mode=&quot;TERMINATE&quot;,
+    is_termination_msg=lambda x: x.get(&quot;content&quot;, &quot;&quot;).rstrip().endswith(&quot;TERMINATE&quot;),
+)
+</code></pre>
+<hr />
+<h2 id="metagpt">四、MetaGPT 教程</h2>
+<h3 id="41">4.1 安装配置</h3>
+<pre><code class="language-bash"># 安装
+pip install metagpt
+
+# 配置
+# 创建 config/config.yaml
+cat &gt; config/config.yaml &lt;&lt; 'EOF'
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;your-api-key&quot;
+  temperature: 0.7
+EOF
+</code></pre>
+<h3 id="42">4.2 快速开始</h3>
+<pre><code class="language-python">import asyncio
+from metagpt.roles import ProductManager, Architect, ProjectManager, Engineer, QaEngineer
+from metagpt.team import Team
+from metagpt.software_company import SoftwareCompany
+
+# 方式一：使用 SoftwareCompany
+async def main():
+    company = SoftwareCompany()
+
+    # 雇佣角色
+    company.hire([
+        ProductManager(),
+        Architect(),
+        ProjectManager(),
+        Engineer(),
+        QaEngineer(),
+    ])
+
+    # 运行项目
+    await company.run_project(&quot;创建一个贪吃蛇游戏&quot;)
+
+asyncio.run(main())
+</code></pre>
+<h3 id="43">4.3 角色详解</h3>
+<pre><code class="language-python">from metagpt.roles import ProductManager, Architect, Engineer
+
+# 产品经理
+pm = ProductManager()
+# 输出：PRD 文档、用户故事
+
+# 架构师
+architect = Architect()
+# 输出：系统架构、API 设计、数据模型
+
+# 工程师
+engineer = Engineer()
+# 输出：源代码文件
+
+# QA 工程师
+qa = QaEngineer()
+# 输出：测试用例
+</code></pre>
+<h3 id="44">4.4 自定义角色</h3>
+<pre><code class="language-python">from metagpt.roles import Role
+from metagpt.actions import Action
+
+# 定义自定义动作
+class WriteDocumentation(Action):
+    &quot;&quot;&quot;编写文档&quot;&quot;&quot;
+
+    async def run(self, code_content: str):
+        # 使用 LLM 生成文档
+        prompt = f&quot;为以下代码编写文档:\n{code_content}&quot;
+        return await self.llm.aask(prompt)
+
+# 定义自定义角色
+class TechnicalWriter(Role):
+    &quot;&quot;&quot;技术文档作者&quot;&quot;&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.set_actions([WriteDocumentation])
+
+    async def _act(self) -&gt; str:
+        # 执行动作
+        todo = self.rc.todo
+        result = await todo.run(self.rc.history[-1].content)
+        return result
+
+# 使用自定义角色
+writer = TechnicalWriter(name=&quot;TechWriter&quot;, profile=&quot;技术文档作者&quot;)
+</code></pre>
+<h3 id="45">4.5 项目结构</h3>
+<pre><code>metagpt_project/
+├── config/
+│   └── config.yaml          # 配置文件
+├── workspace/               # 生成的项目
+│   └── snake_game/
+│       ├── docs/
+│       │   ├── prd.md       # 产品需求文档
+│       │   └── design.md    # 设计文档
+│       ├── snake_game/
+│       │   ├── __init__.py
+│       │   ├── main.py      # 主入口
+│       │   ├── game.py      # 游戏逻辑
+│       │   └── config.py    # 配置
+│       ├── tests/
+│       │   └── test_game.py # 测试
+│       └── requirements.txt
+└── logs/                    # 日志
+</code></pre>
+<hr />
+<h2 id="langgraph">五、LangGraph 教程</h2>
+<h3 id="51">5.1 安装配置</h3>
+<pre><code class="language-bash"># 安装
+pip install langgraph langchain-openai
+
+# 可选：更多集成
+pip install langgraph-checkpoint
+</code></pre>
+<h3 id="52">5.2 核心概念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    LangGraph 核心组件                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   StateGraph (状态图)                                           │
+│   └── 图容器，管理状态在节点间的流转                             │
+│                                                                 │
+│   State (状态)                                                  │
+│   └── TypedDict 定义的数据结构，节点间共享                       │
+│                                                                 │
+│   Node (节点)                                                   │
+│   └── 处理状态的函数，返回状态更新                               │
+│                                                                 │
+│   Edge (边)                                                     │
+│   └── 节点间的连接，支持条件分支                                 │
+│                                                                 │
+│   Checkpointer (检查点)                                         │
+│   └── 状态持久化，支持暂停/恢复                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="53">5.3 基础图构建</h3>
+<pre><code class="language-python">from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph, END
+import operator
+
+# 定义状态
+class State(TypedDict):
+    messages: Annotated[list, operator.add]
+    next: str
+
+# 定义节点
+def node_a(state: State) -&gt; dict:
+    return {&quot;messages&quot;: [&quot;A 处理完成&quot;], &quot;next&quot;: &quot;b&quot;}
+
+def node_b(state: State) -&gt; dict:
+    return {&quot;messages&quot;: [&quot;B 处理完成&quot;], &quot;next&quot;: &quot;end&quot;}
+
+# 构建图
+graph = StateGraph(State)
+
+# 添加节点
+graph.add_node(&quot;a&quot;, node_a)
+graph.add_node(&quot;b&quot;, node_b)
+
+# 设置入口
+graph.set_entry_point(&quot;a&quot;)
+
+# 添加边
+graph.add_edge(&quot;a&quot;, &quot;b&quot;)
+graph.add_edge(&quot;b&quot;, END)
+
+# 编译
+app = graph.compile()
+
+# 执行
+result = app.invoke({&quot;messages&quot;: [], &quot;next&quot;: &quot;&quot;})
+print(result)
+</code></pre>
+<h3 id="54">5.4 条件分支</h3>
+<pre><code class="language-python">from typing import Literal
+from langgraph.graph import StateGraph, END
+
+# 定义状态
+class AgentState(TypedDict):
+    input: str
+    output: str
+    decision: str
+
+# 路由函数
+def router(state: AgentState) -&gt; Literal[&quot;research&quot;, &quot;code&quot;, &quot;end&quot;]:
+    if &quot;研究&quot; in state[&quot;input&quot;]:
+        return &quot;research&quot;
+    elif &quot;代码&quot; in state[&quot;input&quot;]:
+        return &quot;code&quot;
+    else:
+        return &quot;end&quot;
+
+# 节点函数
+def research_node(state: AgentState) -&gt; dict:
+    return {&quot;output&quot;: &quot;研究结果...&quot;, &quot;decision&quot;: &quot;done&quot;}
+
+def code_node(state: AgentState) -&gt; dict:
+    return {&quot;output&quot;: &quot;代码实现...&quot;, &quot;decision&quot;: &quot;done&quot;}
+
+# 构建图
+graph = StateGraph(AgentState)
+
+graph.add_node(&quot;research&quot;, research_node)
+graph.add_node(&quot;code&quot;, code_node)
+
+graph.set_entry_point(&quot;router&quot;)
+
+# 条件边
+graph.add_conditional_edges(
+    &quot;router&quot;,
+    router,
+    {
+        &quot;research&quot;: &quot;research&quot;,
+        &quot;code&quot;: &quot;code&quot;,
+        &quot;end&quot;: END,
+    }
+)
+
+graph.add_edge(&quot;research&quot;, END)
+graph.add_edge(&quot;code&quot;, END)
+</code></pre>
+<h3 id="55">5.5 循环结构</h3>
+<pre><code class="language-python">from typing import TypedDict, Annotated
+from langgraph.graph import StateGraph, END
+import operator
+
+class LoopState(TypedDict):
+    count: Annotated[int, operator.add]
+    max_count: int
+
+def increment(state: LoopState) -&gt; dict:
+    return {&quot;count&quot;: 1}
+
+def should_continue(state: LoopState) -&gt; str:
+    if state[&quot;count&quot;] &gt;= state[&quot;max_count&quot;]:
+        return &quot;end&quot;
+    return &quot;continue&quot;
+
+# 构建循环图
+graph = StateGraph(LoopState)
+
+graph.add_node(&quot;increment&quot;, increment)
+
+graph.set_entry_point(&quot;increment&quot;)
+
+graph.add_conditional_edges(
+    &quot;increment&quot;,
+    should_continue,
+    {&quot;continue&quot;: &quot;increment&quot;, &quot;end&quot;: END}
+)
+
+app = graph.compile()
+
+# 执行
+result = app.invoke({&quot;count&quot;: 0, &quot;max_count&quot;: 5})
+print(result)  # count: 5
+</code></pre>
+<h3 id="56-agent">5.6 多 Agent 协作</h3>
+<pre><code class="language-python">from typing import TypedDict, Annotated, Sequence
+from langgraph.graph import StateGraph, END
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_openai import ChatOpenAI
+import operator
+
+# 状态定义
+class TeamState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], operator.add]
+    next_agent: str
+    iterations: Annotated[int, operator.add]
+
+# LLM
+llm = ChatOpenAI(model=&quot;gpt-4&quot;)
+
+# Agent 节点
+def researcher_node(state: TeamState) -&gt; dict:
+    response = llm.invoke([
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;你是研究员，专注于收集信息。&quot;},
+        *state[&quot;messages&quot;]
+    ])
+    return {
+        &quot;messages&quot;: [response],
+        &quot;next_agent&quot;: &quot;writer&quot;
+    }
+
+def writer_node(state: TeamState) -&gt; dict:
+    response = llm.invoke([
+        {&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;你是作家，专注于内容创作。&quot;},
+        *state[&quot;messages&quot;]
+    ])
+    return {
+        &quot;messages&quot;: [response],
+        &quot;iterations&quot;: 1
+    }
+
+def router(state: TeamState) -&gt; str:
+    if state[&quot;iterations&quot;] &gt;= 3:
+        return &quot;end&quot;
+    if state[&quot;next_agent&quot;] == &quot;writer&quot;:
+        return &quot;writer&quot;
+    return &quot;researcher&quot;
+
+# 构建团队图
+workflow = StateGraph(TeamState)
+
+workflow.add_node(&quot;researcher&quot;, researcher_node)
+workflow.add_node(&quot;writer&quot;, writer_node)
+
+workflow.set_entry_point(&quot;researcher&quot;)
+
+workflow.add_edge(&quot;researcher&quot;, &quot;writer&quot;)
+workflow.add_conditional_edges(
+    &quot;writer&quot;,
+    router,
+    {&quot;researcher&quot;: &quot;researcher&quot;, &quot;end&quot;: END}
+)
+
+app = workflow.compile()
+
+# 执行
+result = app.invoke({
+    &quot;messages&quot;: [HumanMessage(content=&quot;写一篇关于 AI Agent 的文章&quot;)],
+    &quot;next_agent&quot;: &quot;researcher&quot;,
+    &quot;iterations&quot;: 0
+})
+</code></pre>
+<hr />
+<h2 id="_3">六、进阶主题</h2>
+<h3 id="61">6.1 记忆系统</h3>
+<pre><code class="language-python"># CrewAI 记忆
+from crewai import Crew
+
+crew = Crew(
+    agents=[agent1, agent2],
+    tasks=[task1, task2],
+    memory=True,  # 启用团队记忆
+)
+
+# AutoGen 教学模式
+from autogen import ConversableAgent
+
+agent = ConversableAgent(
+    name=&quot;teachable_agent&quot;,
+    llm_config=config,
+    teach_config={
+        &quot;db_path&quot;: &quot;./teach_db&quot;,
+        &quot;verbosity&quot;: 1,
+    }
+)
+</code></pre>
+<h3 id="62">6.2 工具集成</h3>
+<pre><code class="language-python"># LangChain 工具
+from langchain.tools import Tool
+
+def search_tool(query: str) -&gt; str:
+    return f&quot;搜索结果: {query}&quot;
+
+tool = Tool(
+    name=&quot;search&quot;,
+    func=search_tool,
+    description=&quot;搜索工具&quot;
+)
+
+# CrewAI 使用
+from crewai import Agent
+agent = Agent(role=&quot;Researcher&quot;, tools=[tool])
+
+# AutoGen 使用
+from autogen import AssistantAgent
+agent = AssistantAgent(
+    name=&quot;assistant&quot;,
+    llm_config={
+        &quot;config_list&quot;: config_list,
+        &quot;functions&quot;: [{
+            &quot;name&quot;: &quot;search&quot;,
+            &quot;description&quot;: &quot;搜索工具&quot;,
+            &quot;parameters&quot;: {...}
+        }]
+    }
+)
+</code></pre>
+<h3 id="63">6.3 并行执行</h3>
+<pre><code class="language-python"># CrewAI 异步任务
+from crewai import Task
+
+task1 = Task(description=&quot;任务1&quot;, agent=agent1, async_execution=True)
+task2 = Task(description=&quot;任务2&quot;, agent=agent2, async_execution=True)
+
+crew = Crew(agents=[agent1, agent2], tasks=[task1, task2])
+result = crew.kickoff()
+
+# LangGraph 并行
+from langgraph.graph import StateGraph
+
+# 通过多个边指向同一节点实现并行
+graph.add_edge(&quot;start&quot;, &quot;node_a&quot;)
+graph.add_edge(&quot;start&quot;, &quot;node_b&quot;)
+</code></pre>
+<hr />
+<h2 id="_4">七、最佳实践</h2>
+<h3 id="71-agent">7.1 Agent 设计原则</h3>
+<ol>
+<li><strong>单一职责</strong>：每个 Agent 只做一件事</li>
+<li><strong>清晰边界</strong>：明确 Agent 的输入和输出</li>
+<li><strong>适当粒度</strong>：不要过度细分或过于笼统</li>
+<li><strong>工具赋能</strong>：给 Agent 提供必要的工具</li>
+</ol>
+<h3 id="72">7.2 任务拆分技巧</h3>
+<pre><code>好任务：
+├── 具体明确
+├── 可验证输出
+├── 依赖关系清晰
+└── 粒度适中
+
+坏任务：
+├── 模糊不清
+├── 无法验证
+├── 循环依赖
+└── 粒度过大或过小
+</code></pre>
+<h3 id="73">7.3 成本控制</h3>
+<ol>
+<li><strong>选择合适的模型</strong>：简单任务用小模型</li>
+<li><strong>缓存结果</strong>：避免重复调用</li>
+<li><strong>限制迭代</strong>：设置最大迭代次数</li>
+<li><strong>并行执行</strong>：利用并行减少时间</li>
+</ol>
+<hr />
+<h2 id="_5">八、常见问题</h2>
+<h3 id="q1">Q1: 如何选择框架？</h3>
+<ul>
+<li><strong>快速原型</strong> → CrewAI</li>
+<li><strong>软件开发</strong> → MetaGPT</li>
+<li><strong>数据分析</strong> → AutoGen</li>
+<li><strong>复杂流程</strong> → LangGraph</li>
+</ul>
+<h3 id="q2-agent">Q2: Agent 执行卡住怎么办？</h3>
+<ol>
+<li>检查 LLM 配置</li>
+<li>设置最大迭代次数</li>
+<li>添加超时机制</li>
+<li>检查工具是否正常</li>
+</ol>
+<h3 id="q3-agent">Q3: 如何调试多 Agent 系统？</h3>
+<ol>
+<li>启用 verbose 模式</li>
+<li>查看消息历史</li>
+<li>检查状态流转</li>
+<li>使用可视化工具</li>
+</ol>
+<h3 id="q4">Q4: 成本太高怎么办？</h3>
+<ol>
+<li>使用更小的模型</li>
+<li>缓存中间结果</li>
+<li>减少迭代次数</li>
+<li>合并相似任务</li>
+</ol>
+<hr />
+<h2 id="_6">九、速查表</h2>
+<h3 id="_7">框架对比</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>CrewAI</th>
+<th>AutoGen</th>
+<th>MetaGPT</th>
+<th>LangGraph</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>学习曲线</td>
+<td>低</td>
+<td>中</td>
+<td>中</td>
+<td>高</td>
+</tr>
+<tr>
+<td>灵活性</td>
+<td>中</td>
+<td>高</td>
+<td>中</td>
+<td>最高</td>
+</tr>
+<tr>
+<td>代码执行</td>
+<td>✅ Tools</td>
+<td>✅ 内置</td>
+<td>✅ 内置</td>
+<td>✅ Tools</td>
+</tr>
+<tr>
+<td>可视化</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>循环支持</td>
+<td>有限</td>
+<td>✅</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_8">常用命令</h3>
+<pre><code class="language-bash"># 安装
+pip install crewai pyautogen metagpt langgraph
+
+# 配置
+export OPENAI_API_KEY=&quot;your-key&quot;
+
+# 运行
+python your_script.py
+</code></pre>
+<hr />
+<h2 id="_9">参考资源</h2>
+<ul>
+<li><strong>CrewAI 文档</strong>：https://docs.crewai.com</li>
+<li><strong>AutoGen 文档</strong>：https://microsoft.github.io/autogen</li>
+<li><strong>MetaGPT 文档</strong>：https://docs.deepwisdom.ai</li>
+<li><strong>LangGraph 文档</strong>：https://langchain-ai.github.io/langgraph</li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-22</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

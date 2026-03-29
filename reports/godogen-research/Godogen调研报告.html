@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godogen 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**核心理念**：你描述想要的游戏，AI 完成剩下的所有工作。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 项目定位</a></li>
+<li><a href="#_2" class="toc-h2">二、核心架构</a></li>
+<li><a href="#21-skills" class="toc-h3">2.1 双 Skills 架构</a></li>
+<li><a href="#22" class="toc-h3">2.2 技术栈</a></li>
+<li><a href="#23-claude-code" class="toc-h3">2.3 为什么选择 Claude Code？</a></li>
+<li><a href="#_3" class="toc-h2">三、核心特性详解</a></li>
+<li><a href="#31" class="toc-h3">3.1 端到端流水线</a></li>
+<li><a href="#32-gdscript" class="toc-h3">3.2 GDScript 专项优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 资产生成系统</a></li>
+<li><a href="#34-visual-qa" class="toc-h3">3.4 Visual QA（视觉质量保证）</a></li>
+<li><a href="#_4" class="toc-h2">四、项目结构</a></li>
+<li><a href="#41-godogen" class="toc-h3">4.1 Godogen 仓库结构</a></li>
+<li><a href="#42" class="toc-h3">4.2 生成的游戏项目结构</a></li>
+<li><a href="#_5" class="toc-h2">五、安装与使用</a></li>
+<li><a href="#51" class="toc-h3">5.1 前置要求</a></li>
+<li><a href="#52" class="toc-h3">5.2 环境变量配置</a></li>
+<li><a href="#53" class="toc-h3">5.3 创建游戏项目</a></li>
+<li><a href="#54" class="toc-h3">5.4 生成游戏</a></li>
+<li><a href="#55-vm" class="toc-h3">5.5 云端 VM 运行</a></li>
+<li><a href="#_6" class="toc-h2">六、演示案例</a></li>
+<li><a href="#61" class="toc-h3">6.1 已生成的游戏类型</a></li>
+<li><a href="#62-demo" class="toc-h3">6.2 Demo 视频</a></li>
+<li><a href="#_7" class="toc-h2">七、与其他方案对比</a></li>
+<li><a href="#71-vs" class="toc-h3">7.1 vs 传统游戏开发</a></li>
+<li><a href="#72-vs-ai" class="toc-h3">7.2 vs 其他 AI 游戏工具</a></li>
+<li><a href="#73-vs-github-copilot-cursor" class="toc-h3">7.3 vs GitHub Copilot / Cursor</a></li>
+<li><a href="#_8" class="toc-h2">八、路线图</a></li>
+<li><a href="#_9" class="toc-h2">九、优势与局限</a></li>
+<li><a href="#91" class="toc-h3">9.1 优势</a></li>
+<li><a href="#92" class="toc-h3">9.2 局限</a></li>
+<li><a href="#93" class="toc-h3">9.3 适用场景</a></li>
+<li><a href="#_10" class="toc-h2">十、社区与生态</a></li>
+<li><a href="#101" class="toc-h3">10.1 社区资源</a></li>
+<li><a href="#102" class="toc-h3">10.2 相关技能</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Godogen 深度调研报告</h1>
+                        <div class="article-meta">**核心理念**：你描述想要的游戏，AI 完成剩下的所有工作。</div>
+                    </header>
+                    <h1 id="godogen">Godogen 深度调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>Godogen</td>
+</tr>
+<tr>
+<td><strong>作者</strong></td>
+<td>htdt (alex_erm)</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/htdt/godogen</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>TypeScript / GDScript</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>651+</td>
+</tr>
+<tr>
+<td><strong>创建时间</strong></td>
+<td>2024年（开发超过1年）</td>
+</tr>
+<tr>
+<td><strong>目标引擎</strong></td>
+<td>Godot Engine 4</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 项目定位</h3>
+<p>Godogen 是一个 <strong>基于 Claude Code Skills 的 AI 游戏开发流水线</strong>，能够从一行文本描述生成完整、可玩的 Godot 4 游戏项目。</p>
+<blockquote>
+<p><strong>核心理念</strong>：你描述想要的游戏，AI 完成剩下的所有工作。</p>
+</blockquote>
+<p><strong>核心特点</strong>：
+- <strong>端到端自动化</strong>：从设计到代码到资源到测试
+- <strong>Claude Code Skills 驱动</strong>：两个 Skills 协作完成整个流程
+- <strong>视觉 QA 闭环</strong>：截取运行截图并用 AI 视觉分析修复问题
+- <strong>真实项目输出</strong>：生成结构化的 Godot 4 项目</p>
+<hr />
+<h2 id="_2">二、核心架构</h2>
+<h3 id="21-skills">2.1 双 Skills 架构</h3>
+<p>Godogen 采用 <strong>Planner-Executor（规划-执行）</strong> 双技能架构：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Godogen Architecture                         │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                    用户输入                              │  │
+│   │         &quot;做一个赛车游戏，AI 车辆自动跟随&quot;                  │  │
+│   └─────────────────────────┬───────────────────────────────┘  │
+│                             │                                   │
+│                             ▼                                   │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │              Skill 1: Orchestrator (规划)                │  │
+│   │  • 分析游戏需求                                          │  │
+│   │  • 设计游戏架构                                          │  │
+│   │  • 拆分开发任务                                          │  │
+│   │  • 生成任务计划                                          │  │
+│   └─────────────────────────┬───────────────────────────────┘  │
+│                             │                                   │
+│                             ▼                                   │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │              Skill 2: Task Executor (执行)               │  │
+│   │  • 每个任务在独立上下文中运行                              │  │
+│   │  • 生成 GDScript 代码                                    │  │
+│   │  • 创建场景树结构                                        │  │
+│   │  • 生成游戏资源                                          │  │
+│   └─────────────────────────┬───────────────────────────────┘  │
+│                             │                                   │
+│                             ▼                                   │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                  Visual QA (视觉验证)                     │  │
+│   │  • 截取运行中的游戏画面                                   │  │
+│   │  • Gemini Flash 视觉分析                                 │  │
+│   │  • 检测问题：z-fighting、缺失纹理、物理错误               │  │
+│   │  • 自动修复并重新验证                                     │  │
+│   └─────────────────────────┬───────────────────────────────┘  │
+│                             │                                   │
+│                             ▼                                   │
+│   ┌─────────────────────────────────────────────────────────┐  │
+│   │                  输出：完整 Godot 4 项目                  │  │
+│   │  • 正确的场景树结构                                       │  │
+│   │  • 可读的 GDScript 脚本                                   │  │
+│   │  • 组织良好的资源结构                                     │  │
+│   └─────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 技术栈</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>技术</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI 核心</strong></td>
+<td>Claude Code + Opus 4.6</td>
+<td>规划、代码生成、任务协调</td>
+</tr>
+<tr>
+<td><strong>视觉 AI</strong></td>
+<td>Gemini Flash</td>
+<td>图像生成、视觉 QA</td>
+</tr>
+<tr>
+<td><strong>3D 转换</strong></td>
+<td>Tripo3D</td>
+<td>2D 图像转 3D 模型</td>
+</tr>
+<tr>
+<td><strong>游戏引擎</strong></td>
+<td>Godot 4</td>
+<td>目标游戏引擎</td>
+</tr>
+<tr>
+<td><strong>脚本语言</strong></td>
+<td>GDScript</td>
+<td>Godot 原生脚本</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-claude-code">2.3 为什么选择 Claude Code？</h3>
+<p>根据作者测试：</p>
+<table>
+<thead>
+<tr>
+<th>模型组合</th>
+<th>效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Claude Code + Opus 4.6</strong></td>
+<td>最佳结果，高度自主</td>
+</tr>
+<tr>
+<td>Claude Code + Sonnet 4.6</td>
+<td>可用，但需要更多用户指导</td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td>可行的替代方案</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">三、核心特性详解</h2>
+<h3 id="31">3.1 端到端流水线</h3>
+<pre><code>┌──────────────────────────────────────────────────────────────────┐
+│                    Godogen 完整流水线                             │
+├──────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐         │
+│  │ 需求分析 │ → │ 架构设计 │ → │ 资源生成 │ → │ 代码编写 │         │
+│  └─────────┘   └─────────┘   └─────────┘   └─────────┘         │
+│       │             │             │             │                │
+│       ▼             ▼             ▼             ▼                │
+│  分析游戏需求   设计场景树     Gemini 生成    GDScript          │
+│  识别核心玩法   定义组件结构   2D 纹理/图像    全部代码          │
+│  确定技术方案   规划数据流     Tripo3D 转 3D                    │
+│                                                                  │
+│                              ↓                                   │
+│                                                                  │
+│  ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐         │
+│  │ 项目构建 │ → │ 运行测试 │ → │ 视觉 QA │ → │ 问题修复 │         │
+│  └─────────┘   └─────────┘   └─────────┘   └─────────┘         │
+│       │             │             │             │                │
+│       ▼             ▼             ▼             ▼                │
+│  Godot 项目     启动游戏      截图捕获      分析问题             │
+│  结构生成       无头/有头     Gemini 分析   自动修复             │
+│                                                                  │
+│                              ↓                                   │
+│                                                                  │
+│                    ┌─────────────────┐                          │
+│                    │  完整可玩的游戏  │                          │
+│                    └─────────────────┘                          │
+│                                                                  │
+└──────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32-gdscript">3.2 GDScript 专项优化</h3>
+<p>由于 LLM 对 GDScript 的训练数据相对较少，Godogen 采用了专项优化：</p>
+<table>
+<thead>
+<tr>
+<th>优化措施</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自定义语言参考</strong></td>
+<td>针对 GDScript 的语法参考文档</td>
+</tr>
+<tr>
+<td><strong>懒加载 API 文档</strong></td>
+<td>覆盖 850+ Godot 类的 API 文档</td>
+</tr>
+<tr>
+<td><strong>按需加载</strong></td>
+<td>只加载当前任务相关的文档</td>
+</tr>
+<tr>
+<td><strong>最佳实践模板</strong></td>
+<td>内置 Godot 开发最佳实践</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 资产生成系统</h3>
+<p><strong>2D 资产</strong>（Gemini）：
+- 角色精灵图
+- UI 纹理
+- 背景图像
+- 图标和按钮</p>
+<p><strong>3D 资产</strong>（Tripo3D）：
+- 将选定的 2D 图像转换为 3D 模型
+- 仅在需要时调用（节省成本）
+- 支持常见 3D 格式</p>
+<p><strong>成本优化</strong>：
+- 预算感知：最大化每分钱的视觉冲击力
+- 单个游戏生成成本约 <strong>$5</strong></p>
+<h3 id="34-visual-qa">3.4 Visual QA（视觉质量保证）</h3>
+<p>这是 Godogen 的核心创新之一：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Visual QA 流程                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   ┌─────────────┐                                          │
+│   │ 运行游戏    │                                          │
+│   │ (Godot 4)   │                                          │
+│   └──────┬──────┘                                          │
+│          │                                                  │
+│          ▼                                                  │
+│   ┌─────────────┐      ┌─────────────────────────────┐    │
+│   │ 截取屏幕    │ ───→ │ Gemini Flash 视觉分析        │    │
+│   │ (实时)      │      │                             │    │
+│   └─────────────┘      │ • z-fighting (模型闪烁)     │    │
+│                        │ • 缺失纹理                   │    │
+│                        │ • 物理异常                   │    │
+│                        │ • UI 布局问题                │    │
+│                        │ • 光照错误                   │    │
+│                        └──────────────┬──────────────┘    │
+│                                       │                    │
+│                                       ▼                    │
+│                        ┌─────────────────────────────┐    │
+│                        │ 发现问题？                   │    │
+│                        └──────────────┬──────────────┘    │
+│                                       │                    │
+│                          ┌────────────┴────────────┐       │
+│                          │                         │       │
+│                        是 │                         │ 否   │
+│                          ▼                         ▼       │
+│                   ┌─────────────┐           ┌───────────┐  │
+│                   │ 生成修复代码 │           │ QA 通过   │  │
+│                   │ 自动应用    │           │           │  │
+│                   └──────┬──────┘           └───────────┘  │
+│                          │                                   │
+│                          └───────→ 运行游戏重新测试          │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>关键特点</strong>：
+- <strong>闭环验证</strong>：不只是写代码，而是看实际效果
+- <strong>无需代码访问</strong>：QA 阶段只评估渲染结果
+- <strong>对比参考图</strong>：将渲染截图与生成的参考图对比</p>
+<hr />
+<h2 id="_4">四、项目结构</h2>
+<h3 id="41-godogen">4.1 Godogen 仓库结构</h3>
+<pre><code>godogen/
+├── .claude/
+│   └── skills/
+│       ├── godogen/           # 主技能
+│       │   └── skill.md
+│       ├── planner/           # 规划技能
+│       │   └── skill.md
+│       └── executor/          # 执行技能
+│           └── skill.md
+├── godot-knowledge/           # Godot 知识库
+│   ├── gdscript-reference.md  # GDScript 语法参考
+│   ├── api-docs/              # 850+ 类的 API 文档
+│   └── best-practices/        # 最佳实践
+├── asset-tools/               # 资产生成工具
+│   ├── gemini-generator/      # Gemini 图像生成
+│   └── tripo3d-converter/     # Tripo3D 3D 转换
+├── visual-qa/                 # 视觉 QA 工具
+│   ├── screenshot-capture/    # 截图捕获
+│   └── gemini-analyzer/       # Gemini 分析
+├── publish.sh                 # 发布脚本
+├── teleforge.md               # 默认 CLAUDE.md 模板
+└── local.md                   # 本地运行模板
+</code></pre>
+<h3 id="42">4.2 生成的游戏项目结构</h3>
+<pre><code>my-game/
+├── project.godot              # Godot 项目文件
+├── .claude/
+│   ├── skills/               # 安装的技能
+│   └── CLAUDE.md             # 项目说明
+├── scenes/
+│   ├── main.tscn             # 主场景
+│   ├── player.tscn           # 玩家场景
+│   ├── enemy.tscn            # 敌人场景
+│   └── ui/
+│       ├── hud.tscn          # HUD 界面
+│       └── menu.tscn         # 菜单
+├── scripts/
+│   ├── player.gd             # 玩家脚本
+│   ├── enemy.gd              # 敌人脚本
+│   ├── game_manager.gd       # 游戏管理器
+│   └── ui/
+│       ├── hud.gd
+│       └── menu.gd
+├── assets/
+│   ├── sprites/              # 2D 精灵
+│   ├── textures/             # 纹理
+│   ├── models/               # 3D 模型
+│   └── audio/                # 音频
+└── resources/
+    └── themes/               # UI 主题
+</code></pre>
+<hr />
+<h2 id="_5">五、安装与使用</h2>
+<h3 id="51">5.1 前置要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Godot 4</strong></td>
+<td>无头模式或编辑器模式，需在 PATH 中</td>
+</tr>
+<tr>
+<td><strong>Claude Code</strong></td>
+<td>已安装并配置</td>
+</tr>
+<tr>
+<td><strong>Python 3</strong></td>
+<td>资产工具依赖</td>
+</tr>
+<tr>
+<td><strong>API Keys</strong></td>
+<td>Google API、Tripo3D API</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 环境变量配置</h3>
+<pre><code class="language-bash"># Google API Key (用于 Gemini 图像生成和视觉 QA)
+export GOOGLE_API_KEY=your_google_api_key
+
+# Tripo3D API Key (用于 3D 模型转换，仅 3D 游戏需要)
+export TRIPO3D_API_KEY=your_tripo3d_api_key
+</code></pre>
+<h3 id="53">5.3 创建游戏项目</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/htdt/godogen.git
+cd godogen
+
+# 创建新游戏项目（使用默认模板）
+./publish.sh ~/my-game
+
+# 或使用自定义模板
+./publish.sh ~/my-game local.md
+</code></pre>
+<p><code>publish.sh</code> 会：
+1. 创建目标目录
+2. 安装所有技能到 <code>.claude/skills/</code>
+3. 生成 <code>CLAUDE.md</code> 配置文件
+4. 初始化 Git 仓库</p>
+<h3 id="54">5.4 生成游戏</h3>
+<pre><code class="language-bash"># 进入项目目录
+cd ~/my-game
+
+# 启动 Claude Code
+claude
+
+# 在 Claude Code 中描述你想要的游戏
+&gt; /godogen 做一个赛车游戏，有 AI 对手，赛道有障碍物
+</code></pre>
+<h3 id="55-vm">5.5 云端 VM 运行</h3>
+<p>单次生成可能需要数小时，建议在云端 VM 运行：</p>
+<p><strong>推荐配置</strong>：
+- Google Compute Engine
+- T4 或 L4 GPU
+- 用于 Godot 截图捕获</p>
+<hr />
+<h2 id="_6">六、演示案例</h2>
+<h3 id="61">6.1 已生成的游戏类型</h3>
+<table>
+<thead>
+<tr>
+<th>游戏类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>赛车游戏</strong></td>
+<td>AI 车辆自动跟随，赛道障碍</td>
+</tr>
+<tr>
+<td><strong>滑雪游戏</strong></td>
+<td>物理模拟滑雪板</td>
+</tr>
+<tr>
+<td><strong>2D 平台游戏</strong></td>
+<td>跳跃、收集、敌人</td>
+</tr>
+<tr>
+<td><strong>3D 动作游戏</strong></td>
+<td>角色控制、战斗系统</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-demo">6.2 Demo 视频</h3>
+<p>官方 Demo 视频：<a href="https://www.youtube.com/watch?v=eUz19GROIiY">Godogen: From a Text Prompt to a Godot 4 Game</a></p>
+<hr />
+<h2 id="_7">七、与其他方案对比</h2>
+<h3 id="71-vs">7.1 vs 传统游戏开发</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Godogen</th>
+<th>传统开发</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>开发时间</strong></td>
+<td>数小时（自动化）</td>
+<td>数周至数月</td>
+</tr>
+<tr>
+<td><strong>编程知识</strong></td>
+<td>不需要</td>
+<td>必须掌握</td>
+</tr>
+<tr>
+<td><strong>美术资源</strong></td>
+<td>AI 自动生成</td>
+<td>需要美术师或购买</td>
+</tr>
+<tr>
+<td><strong>定制性</strong></td>
+<td>中等</td>
+<td>完全可控</td>
+</tr>
+<tr>
+<td><strong>适用规模</strong></td>
+<td>小型原型</td>
+<td>任何规模</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-vs-ai">7.2 vs 其他 AI 游戏工具</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Godogen</th>
+<th>其他工具</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>完整性</strong></td>
+<td>端到端完整流水线</td>
+<td>通常只覆盖部分环节</td>
+</tr>
+<tr>
+<td><strong>输出质量</strong></td>
+<td>可玩的完整项目</td>
+<td>通常只是代码片段</td>
+</tr>
+<tr>
+<td><strong>视觉验证</strong></td>
+<td>有（闭环 QA）</td>
+<td>通常没有</td>
+</tr>
+<tr>
+<td><strong>引擎支持</strong></td>
+<td>Godot 4 专用</td>
+<td>多种引擎或不指定</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>~$5/游戏</td>
+<td>因工具而异</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-vs-github-copilot-cursor">7.3 vs GitHub Copilot / Cursor</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Godogen</th>
+<th>Copilot / Cursor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自动化程度</strong></td>
+<td>全自动流水线</td>
+<td>代码补全/生成</td>
+</tr>
+<tr>
+<td><strong>资产生成</strong></td>
+<td>内置</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>测试验证</strong></td>
+<td>视觉 QA</td>
+<td>需手动</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>完整游戏开发</td>
+<td>代码编写辅助</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">八、路线图</h2>
+<table>
+<thead>
+<tr>
+<th>版本/功能</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心流水线</strong></td>
+<td>✅ 已完成</td>
+<td>规划-执行-验证</td>
+</tr>
+<tr>
+<td><strong>2D 游戏支持</strong></td>
+<td>✅ 已完成</td>
+<td>完整 2D 游戏生成</td>
+</tr>
+<tr>
+<td><strong>3D 游戏支持</strong></td>
+<td>✅ 已完成</td>
+<td>Tripo3D 集成</td>
+</tr>
+<tr>
+<td><strong>Visual QA</strong></td>
+<td>✅ 已完成</td>
+<td>Gemini Flash 视觉分析</td>
+</tr>
+<tr>
+<td><strong>grok-imagine-image</strong></td>
+<td>📋 计划中</td>
+<td>更便宜的图像生成</td>
+</tr>
+<tr>
+<td><strong>grok-imagine-video</strong></td>
+<td>📋 计划中</td>
+<td>视频生成精灵表</td>
+</tr>
+<tr>
+<td><strong>Android 导出</strong></td>
+<td>📋 计划中</td>
+<td>游戏构建配方</td>
+</tr>
+<tr>
+<td><strong>公开 Demo</strong></td>
+<td>📋 计划中</td>
+<td>完整游戏端到端展示</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">九、优势与局限</h2>
+<h3 id="91">9.1 优势</h3>
+<ol>
+<li><strong>真正的端到端</strong>：从描述到可玩游戏的完整流水线</li>
+<li><strong>视觉 QA 闭环</strong>：自动发现问题并修复</li>
+<li><strong>GDScript 专项优化</strong>：850+ 类的 API 文档支持</li>
+<li><strong>成本可控</strong>：~$5/游戏的生成成本</li>
+<li><strong>真实项目输出</strong>：结构良好的 Godot 项目</li>
+<li><strong>2D/3D 支持</strong>：覆盖两种游戏类型</li>
+<li><strong>开源免费</strong>：MIT 许可证</li>
+</ol>
+<h3 id="92">9.2 局限</h3>
+<ol>
+<li><strong>仅支持 Godot 4</strong>：不适用于其他引擎</li>
+<li><strong>需要 API Keys</strong>：依赖 Google、Tripo3D 服务</li>
+<li><strong>Linux 优先</strong>：macOS 截图捕获需要额外配置</li>
+<li><strong>生成时间长</strong>：单次可能需要数小时</li>
+<li><strong>不适合 AAA</strong>：面向原型和小型游戏</li>
+<li><strong>需要 GPU</strong>：截图捕获依赖 Vulkan</li>
+</ol>
+<h3 id="93">9.3 适用场景</h3>
+<ul>
+<li><strong>快速原型验证</strong>：验证游戏创意</li>
+<li><strong>独立开发者</strong>：降低开发门槛</li>
+<li><strong>学习 Godot</strong>：了解游戏架构</li>
+<li><strong>Game Jam</strong>：快速产出参赛作品</li>
+<li><strong>AI 游戏研究</strong>：研究 AI 辅助开发</li>
+</ul>
+<hr />
+<h2 id="_10">十、社区与生态</h2>
+<h3 id="101">10.1 社区资源</h3>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitHub 仓库</strong></td>
+<td>https://github.com/htdt/godogen</td>
+</tr>
+<tr>
+<td><strong>Hacker News 讨论</strong></td>
+<td>https://news.ycombinator.com/item?id=47400868</td>
+</tr>
+<tr>
+<td><strong>Reddit 讨论</strong></td>
+<td>r/aigamedev, r/ClaudeAI</td>
+</tr>
+<tr>
+<td><strong>作者 Twitter</strong></td>
+<td>@alex_erm</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 相关技能</h3>
+<table>
+<thead>
+<tr>
+<th>技能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>godot-skills</strong></td>
+<td>Claude Code 插件，支持测试、构建、部署</td>
+</tr>
+<tr>
+<td><strong>Godot-Claude-Skills</strong></td>
+<td>Shyft 上的自动化技能</td>
+</tr>
+<tr>
+<td><strong>FastMCP Godot Skill</strong></td>
+<td>Godot 文件格式和架构知识</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">参考资源</h2>
+<ul>
+<li><strong>GitHub 仓库</strong>：https://github.com/htdt/godogen</li>
+<li><strong>Demo 视频</strong>：https://www.youtube.com/watch?v=eUz19GROIiY</li>
+<li><strong>Gigazine 报道</strong>：https://gigazine.net/gsc_news/en/20260317-godogen/</li>
+<li><strong>Hacker News 讨论</strong>：https://news.ycombinator.com/item?id=47400868</li>
+<li><strong>TopAI Product 介绍</strong>：https://topaiproduct.com/2026/03/17/godogen-turns-a-one-line-prompt-into-a-playable-godot-4-game-for-about-5/</li>
+</ul>
+<hr />
+<p><em>报告生成时间：2026-03-22</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Shit Done (GSD) 学习手册</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始，手把手教你使用 GSD 进行 AI 辅助开发</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速开始</a></li>
+<li><a href="#11" class="toc-h3">1.1 安装</a></li>
+<li><a href="#12" class="toc-h3">1.2 验证安装</a></li>
+<li><a href="#13" class="toc-h3">1.3 推荐启动方式</a></li>
+<li><a href="#_3" class="toc-h2">二、核心概念</a></li>
+<li><a href="#21-gsd" class="toc-h3">2.1 GSD 是什么？</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心文件结构</a></li>
+<li><a href="#23" class="toc-h3">2.3 工作流程图</a></li>
+<li><a href="#_4" class="toc-h2">三、完整工作流教程</a></li>
+<li><a href="#31-cli" class="toc-h3">3.1 场景：开发一个待办事项 CLI 工具</a></li>
+<li><a href="#step-1" class="toc-h4">Step 1: 创建项目目录</a></li>
+<li><a href="#step-2-claude-code" class="toc-h4">Step 2: 启动 Claude Code</a></li>
+<li><a href="#step-3" class="toc-h4">Step 3: 初始化项目</a></li>
+<li><a href="#step-4" class="toc-h4">Step 4: 审阅路线图</a></li>
+<li><a href="#step-5-phase-1" class="toc-h4">Step 5: 讨论 Phase 1</a></li>
+<li><a href="#step-6-phase-1" class="toc-h4">Step 6: 计划 Phase 1</a></li>
+<li><a href="#step-7-phase-1" class="toc-h4">Step 7: 执行 Phase 1</a></li>
+<li><a href="#step-8" class="toc-h4">Step 8: 验证工作</a></li>
+<li><a href="#step-9-phase-2-3" class="toc-h4">Step 9: 重复 Phase 2-3</a></li>
+<li><a href="#step-10" class="toc-h4">Step 10: 完成里程碑</a></li>
+<li><a href="#_5" class="toc-h2">四、命令详解</a></li>
+<li><a href="#41" class="toc-h3">4.1 核心工作流命令</a></li>
+<li><a href="#gsdnew-project-" class="toc-h4">/gsd:new-project - 初始化新项目</a></li>
+<li><a href="#gsddiscuss-phase-n-" class="toc-h4">/gsd:discuss-phase [N] - 讨论阶段</a></li>
+<li><a href="#gsdplan-phase-n-" class="toc-h4">/gsd:plan-phase [N] - 计划阶段</a></li>
+<li><a href="#gsdexecute-phase-n-" class="toc-h4">/gsd:execute-phase &lt;N&gt; - 执行阶段</a></li>
+<li><a href="#gsdverify-work-n-" class="toc-h4">/gsd:verify-work [N] - 验证工作</a></li>
+<li><a href="#gsdcomplete-milestone-" class="toc-h4">/gsd:complete-milestone - 完成里程碑</a></li>
+<li><a href="#gsdnew-milestone-name-" class="toc-h4">/gsd:new-milestone [name] - 新建里程碑</a></li>
+<li><a href="#42" class="toc-h3">4.2 导航命令</a></li>
+<li><a href="#gsdprogress-" class="toc-h4">/gsd:progress - 查看进度</a></li>
+<li><a href="#gsdhelp-" class="toc-h4">/gsd:help - 帮助</a></li>
+<li><a href="#gsdupdate-" class="toc-h4">/gsd:update - 更新</a></li>
+<li><a href="#43-brownfield" class="toc-h3">4.3 Brownfield 命令</a></li>
+<li><a href="#gsdmap-codebase-" class="toc-h4">/gsd:map-codebase - 映射代码库</a></li>
+<li><a href="#44" class="toc-h3">4.4 阶段管理命令</a></li>
+<li><a href="#gsdadd-phase-" class="toc-h4">/gsd:add-phase - 添加阶段</a></li>
+<li><a href="#gsdinsert-phase-n-" class="toc-h4">/gsd:insert-phase [N] - 插入阶段</a></li>
+<li><a href="#gsdremove-phase-n-" class="toc-h4">/gsd:remove-phase [N] - 删除阶段</a></li>
+<li><a href="#45" class="toc-h3">4.5 会话命令</a></li>
+<li><a href="#gsdpause-work-" class="toc-h4">/gsd:pause-work - 暂停工作</a></li>
+<li><a href="#gsdresume-work-" class="toc-h4">/gsd:resume-work - 恢复工作</a></li>
+<li><a href="#46" class="toc-h3">4.6 实用工具命令</a></li>
+<li><a href="#gsdquick-" class="toc-h4">/gsd:quick - 快速任务</a></li>
+<li><a href="#gsdadd-todo-desc-" class="toc-h4">/gsd:add-todo [desc] - 添加待办</a></li>
+<li><a href="#gsdcheck-todos-" class="toc-h4">/gsd:check-todos - 查看待办</a></li>
+<li><a href="#gsddebug-desc-" class="toc-h4">/gsd:debug [desc] - 调试</a></li>
+<li><a href="#gsdsettings-" class="toc-h4">/gsd:settings - 配置</a></li>
+<li><a href="#gsdset-profile-profile-" class="toc-h4">/gsd:set-profile &lt;profile&gt; - 设置模型</a></li>
+<li><a href="#_6" class="toc-h2">五、配置指南</a></li>
+<li><a href="#51" class="toc-h3">5.1 配置文件位置</a></li>
+<li><a href="#52" class="toc-h3">5.2 核心设置</a></li>
+<li><a href="#53" class="toc-h3">5.3 模型配置</a></li>
+<li><a href="#54-agent" class="toc-h3">5.4 工作流 Agent</a></li>
+<li><a href="#55-git" class="toc-h3">5.5 Git 分支策略</a></li>
+<li><a href="#_7" class="toc-h2">六、实战案例</a></li>
+<li><a href="#1" class="toc-h3">案例 1：开发博客系统</a></li>
+<li><a href="#2" class="toc-h3">案例 2：为现有项目添加功能</a></li>
+<li><a href="#3-bug" class="toc-h3">案例 3：快速修复 Bug</a></li>
+<li><a href="#4" class="toc-h3">案例 4：中途暂停和恢复</a></li>
+<li><a href="#_8" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1" class="toc-h3">Q1: 命令找不到？</a></li>
+<li><a href="#q2-token" class="toc-h3">Q2: Token 消耗太多？</a></li>
+<li><a href="#q3" class="toc-h3">Q3: 执行结果不符合预期？</a></li>
+<li><a href="#q4" class="toc-h3">Q4: 想修改已生成的计划？</a></li>
+<li><a href="#q5" class="toc-h3">Q5: 如何在团队中使用？</a></li>
+<li><a href="#_9" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 提问阶段</a></li>
+<li><a href="#82-discuss" class="toc-h3">8.2 Discuss 阶段</a></li>
+<li><a href="#83-plan" class="toc-h3">8.3 Plan 阶段</a></li>
+<li><a href="#84-execute" class="toc-h3">8.4 Execute 阶段</a></li>
+<li><a href="#85-verify" class="toc-h3">8.5 Verify 阶段</a></li>
+<li><a href="#86" class="toc-h3">8.6 日常使用</a></li>
+<li><a href="#_10" class="toc-h2">九、速查表</a></li>
+<li><a href="#_11" class="toc-h2">十、总结</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Get Shit Done (GSD) 学习手册</h1>
+                        <div class="article-meta">从零开始，手把手教你使用 GSD 进行 AI 辅助开发</div>
+                    </header>
+                    <h1 id="get-shit-done-gsd">Get Shit Done (GSD) 学习手册</h1>
+<blockquote>
+<p>从零开始，手把手教你使用 GSD 进行 AI 辅助开发</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速开始">快速开始</a></li>
+<li><a href="#二核心概念">核心概念</a></li>
+<li><a href="#三完整工作流教程">完整工作流教程</a></li>
+<li><a href="#四命令详解">命令详解</a></li>
+<li><a href="#五配置指南">配置指南</a></li>
+<li><a href="#六实战案例">实战案例</a></li>
+<li><a href="#七常见问题">常见问题</a></li>
+<li><a href="#八最佳实践">最佳实践</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速开始</h2>
+<h3 id="11">1.1 安装</h3>
+<p>打开终端，运行：</p>
+<pre><code class="language-bash">npx get-shit-done-cc@latest
+</code></pre>
+<p>安装程序会提示你选择：</p>
+<pre><code>? Select runtime:
+  ❯ Claude Code
+    OpenCode
+    Gemini CLI
+    All
+
+? Install location:
+  ❯ Global (~/.claude/) - Available in all projects
+    Local (./.claude/) - Current project only
+</code></pre>
+<p><strong>推荐选择</strong>：
+- Runtime: <code>Claude Code</code>
+- Location: <code>Global</code> (如果你想所有项目都可用)</p>
+<h3 id="12">1.2 验证安装</h3>
+<p>启动 Claude Code，输入：</p>
+<pre><code>/gsd:help
+</code></pre>
+<p>如果看到帮助信息，说明安装成功！</p>
+<h3 id="13">1.3 推荐启动方式</h3>
+<p>GSD 设计用于无摩擦自动化，推荐使用：</p>
+<pre><code class="language-bash">claude --dangerously-skip-permissions
+</code></pre>
+<p>这样 Claude 可以自动执行命令而不需要你反复确认。</p>
+<hr />
+<h2 id="_3">二、核心概念</h2>
+<h3 id="21-gsd">2.1 GSD 是什么？</h3>
+<p>GSD 是一个 <strong>规范驱动开发 (Spec-Driven Development)</strong> 系统：</p>
+<pre><code>你的想法 → GSD 提问 → 生成规范 → Claude 执行 → 验证完成
+</code></pre>
+<h3 id="22">2.2 核心文件结构</h3>
+<p>GSD 会在项目中创建 <code>.planning/</code> 目录：</p>
+<pre><code>your-project/
+├── .planning/
+│   ├── config.json          # GSD 配置
+│   ├── PROJECT.md           # 项目愿景
+│   ├── REQUIREMENTS.md      # 需求文档
+│   ├── ROADMAP.md           # 开发路线图
+│   ├── STATE.md             # 当前状态
+│   ├── research/            # 研究文档
+│   │   └── *.md
+│   └── phases/              # 阶段文档
+│       ├── phase-1-CONTEXT.md
+│       ├── phase-1-RESEARCH.md
+│       ├── phase-1-1-PLAN.md
+│       ├── phase-1-1-SUMMARY.md
+│       └── ...
+└── src/                     # 你的代码
+</code></pre>
+<h3 id="23">2.3 工作流程图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                         GSD 完整工作流                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  第一步：初始化项目                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  /gsd:new-project                                            │   │
+│  │  ├── 提问阶段：GSD 会问你一系列问题                           │   │
+│  │  ├── 研究阶段：自动研究技术栈和最佳实践                       │   │
+│  │  ├── 需求阶段：生成 REQUIREMENTS.md                          │   │
+│  │  └── 路线图阶段：生成 ROADMAP.md（包含多个 Phase）            │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                              ↓                                      │
+│  第二步：循环执行每个 Phase                                         │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │                                                              │   │
+│  │   /gsd:discuss-phase 1    ← 讨论：细化实现细节               │   │
+│  │          ↓                                                  │   │
+│  │   /gsd:plan-phase 1       ← 计划：研究和制定执行计划         │   │
+│  │          ↓                                                  │   │
+│  │   /gsd:execute-phase 1    ← 执行：Claude 自动编码           │   │
+│  │          ↓                                                  │   │
+│  │   /gsd:verify-work 1      ← 验证：你手动测试功能            │   │
+│  │          ↓                                                  │   │
+│  │   （重复以上步骤直到所有 Phase 完成）                        │   │
+│  │                                                              │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                              ↓                                      │
+│  第三步：完成里程碑                                                 │
+│  ┌─────────────────────────────────────────────────────────────┐   │
+│  │  /gsd:complete-milestone   ← 归档当前里程碑，打 tag          │   │
+│  │  /gsd:new-milestone        ← 开始下一个版本                  │   │
+│  └─────────────────────────────────────────────────────────────┘   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_4">三、完整工作流教程</h2>
+<h3 id="31-cli">3.1 场景：开发一个待办事项 CLI 工具</h3>
+<p>让我们通过一个实际例子来学习 GSD。</p>
+<h4 id="step-1">Step 1: 创建项目目录</h4>
+<pre><code class="language-bash">mkdir todo-cli
+cd todo-cli
+</code></pre>
+<h4 id="step-2-claude-code">Step 2: 启动 Claude Code</h4>
+<pre><code class="language-bash">claude --dangerously-skip-permissions
+</code></pre>
+<h4 id="step-3">Step 3: 初始化项目</h4>
+<p>在 Claude Code 中输入：</p>
+<pre><code>/gsd:new-project
+</code></pre>
+<p>GSD 会开始提问：</p>
+<pre><code>🤖 GSD: 让我了解一下你的项目...
+
+1. 你想构建什么？
+   &gt; 一个命令行待办事项工具
+
+2. 你的主要目标是什么？
+   &gt; 能够添加、列出、完成和删除待办事项
+
+3. 你偏好什么技术栈？
+   &gt; Python + Click 框架
+
+4. 有什么特定的约束吗？
+   &gt; 数据存储在本地 JSON 文件中，不需要数据库
+
+5. 这是 v1 版本还是更大项目的一部分？
+   &gt; 先做 v1，之后可能添加云同步功能
+
+... 更多问题 ...
+</code></pre>
+<p><strong>💡 提示</strong>：回答越详细，生成的规范越准确。不要害怕写长答案！</p>
+<h4 id="step-4">Step 4: 审阅路线图</h4>
+<p>GSD 会生成路线图：</p>
+<pre><code>📋 ROADMAP 生成完成！
+
+Phase 1: 项目初始化
+  - 创建项目结构
+  - 配置 Click 框架
+  - 设置数据存储
+
+Phase 2: 核心功能
+  - 实现 add 命令
+  - 实现 list 命令
+  - 实现 complete 命令
+  - 实现 delete 命令
+
+Phase 3: 测试与文档
+  - 编写单元测试
+  - 编写 README
+
+是否批准此路线图？(y/n)
+</code></pre>
+<p>输入 <code>y</code> 继续。</p>
+<h4 id="step-5-phase-1">Step 5: 讨论 Phase 1</h4>
+<pre><code>/gsd:discuss-phase 1
+</code></pre>
+<p>GSD 会针对 Phase 1 提出更细节的问题：</p>
+<pre><code>🤖 关于项目初始化的一些细节：
+
+1. 项目名称？
+   &gt; todo-cli
+
+2. 需要虚拟环境吗？
+   &gt; 是的，使用 venv
+
+3. 配置文件放在哪里？
+   &gt; ~/.todo-cli/config.json
+
+4. 数据文件放在哪里？
+   &gt; ~/.todo-cli/todos.json
+</code></pre>
+<p>这些回答会被写入 <code>phase-1-CONTEXT.md</code>。</p>
+<h4 id="step-6-phase-1">Step 6: 计划 Phase 1</h4>
+<pre><code>/gsd:plan-phase 1
+</code></pre>
+<p>GSD 会：
+1. 研究 Python CLI 最佳实践
+2. 生成 2-3 个具体的执行计划（PLAN.md）</p>
+<pre><code>📝 生成的计划：
+
+Plan 1-1: 创建项目结构
+  - 创建 todo_cli/ 目录
+  - 创建 __init__.py
+  - 创建 main.py 入口
+
+Plan 1-2: 配置 Click 和数据存储
+  - 安装 click 依赖
+  - 创建 storage.py
+  - 实现 JSON 读写
+
+验证通过 ✓
+</code></pre>
+<h4 id="step-7-phase-1">Step 7: 执行 Phase 1</h4>
+<pre><code>/gsd:execute-phase 1
+</code></pre>
+<p><strong>这一步会自动执行！</strong> GSD 会：
+- 启动多个并行 Agent
+- 每个 Agent 执行一个计划
+- 自动提交 Git commit</p>
+<pre><code>🚀 执行 Phase 1...
+
+[Agent 1] 执行 Plan 1-1...
+          ✓ 创建 todo_cli/ 目录
+          ✓ 创建 __init__.py
+          ✓ 创建 main.py
+          ✓ Git commit: feat: 初始化项目结构
+
+[Agent 2] 执行 Plan 1-2...
+          ✓ 安装 click
+          ✓ 创建 storage.py
+          ✓ 实现 JSON 读写
+          ✓ Git commit: feat: 添加数据存储功能
+
+✅ Phase 1 执行完成！
+</code></pre>
+<h4 id="step-8">Step 8: 验证工作</h4>
+<pre><code>/gsd:verify-work 1
+</code></pre>
+<p>GSD 会引导你测试：</p>
+<pre><code>🧪 让我们验证 Phase 1 的功能：
+
+1. 运行 `python -m todo_cli --help`
+   能看到帮助信息吗？(y/n/describe issue)
+   &gt; y ✓
+
+2. 检查 ~/.todo-cli/ 目录是否存在
+   存在吗？(y/n/describe issue)
+   &gt; y ✓
+
+✅ Phase 1 验证通过！
+</code></pre>
+<p>如果有问题，输入 <code>describe issue</code> 描述问题，GSD 会自动诊断并生成修复计划。</p>
+<h4 id="step-9-phase-2-3">Step 9: 重复 Phase 2-3</h4>
+<pre><code>/gsd:discuss-phase 2
+/gsd:plan-phase 2
+/gsd:execute-phase 2
+/gsd:verify-work 2
+
+/gsd:discuss-phase 3
+/gsd:plan-phase 3
+/gsd:execute-phase 3
+/gsd:verify-work 3
+</code></pre>
+<h4 id="step-10">Step 10: 完成里程碑</h4>
+<pre><code>/gsd:complete-milestone
+</code></pre>
+<p>GSD 会：
+- 归档所有计划文档
+- 创建 Git tag (如 <code>v1.0.0</code>)
+- 询问是否开始下一个里程碑</p>
+<hr />
+<h2 id="_5">四、命令详解</h2>
+<h3 id="41">4.1 核心工作流命令</h3>
+<h4 id="gsdnew-project-"><code>/gsd:new-project</code> - 初始化新项目</h4>
+<p><strong>用途</strong>：开始一个全新的项目</p>
+<p><strong>流程</strong>：</p>
+<pre><code>提问 → 研究 → 需求 → 路线图 → 确认
+</code></pre>
+<p><strong>生成的文件</strong>：
+- <code>PROJECT.md</code> - 项目愿景和目标
+- <code>REQUIREMENTS.md</code> - v1/v2 需求划分
+- <code>ROADMAP.md</code> - 开发阶段规划
+- <code>STATE.md</code> - 项目状态跟踪
+- <code>.planning/research/</code> - 研究文档</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:new-project
+</code></pre>
+<p><strong>💡 技巧</strong>：如果已有代码库，先运行 <code>/gsd:map-codebase</code>！</p>
+<hr />
+<h4 id="gsddiscuss-phase-n-"><code>/gsd:discuss-phase [N]</code> - 讨论阶段</h4>
+<p><strong>用途</strong>：在计划前细化实现细节</p>
+<p><strong>参数</strong>：
+- <code>N</code> - 阶段编号（可选，默认当前阶段）</p>
+<p><strong>生成文件</strong>：
+- <code>phase-N-CONTEXT.md</code> - 上下文决策</p>
+<p><strong>问题类型</strong>：
+| 功能类型 | 问题示例 |
+|---------|---------|
+| 视觉功能 | 布局样式？密度？空状态？ |
+| API/CLI | 输出格式？错误处理？ |
+| 内容系统 | 结构？语调？深度？ |</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:discuss-phase 1
+/gsd:discuss-phase    # 自动使用当前阶段
+</code></pre>
+<hr />
+<h4 id="gsdplan-phase-n-"><code>/gsd:plan-phase [N]</code> - 计划阶段</h4>
+<p><strong>用途</strong>：研究和制定执行计划</p>
+<p><strong>参数</strong>：
+- <code>N</code> - 阶段编号
+- <code>--skip-research</code> - 跳过研究阶段
+- <code>--skip-verify</code> - 跳过计划验证</p>
+<p><strong>流程</strong>：</p>
+<pre><code>研究 → 计划 → 验证 → 循环直到通过
+</code></pre>
+<p><strong>生成文件</strong>：
+- <code>phase-N-RESEARCH.md</code> - 研究结果
+- <code>phase-N-1-PLAN.md</code> - 第 1 个计划
+- <code>phase-N-2-PLAN.md</code> - 第 2 个计划
+- ...</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:plan-phase 1
+/gsd:plan-phase 2 --skip-research
+</code></pre>
+<hr />
+<h4 id="gsdexecute-phase-n-"><code>/gsd:execute-phase &lt;N&gt;</code> - 执行阶段</h4>
+<p><strong>用途</strong>：自动执行所有计划</p>
+<p><strong>参数</strong>：
+- <code>N</code> - 阶段编号（必需）</p>
+<p><strong>执行方式</strong>：
+- 独立计划 → 并行执行
+- 依赖计划 → 顺序执行</p>
+<p><strong>每个计划</strong>：
+- 在全新的 200k 上下文中执行
+- 执行完立即 Git commit</p>
+<p><strong>生成文件</strong>：
+- <code>phase-N-X-SUMMARY.md</code> - 执行总结
+- <code>phase-N-VERIFICATION.md</code> - 验证结果</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:execute-phase 1
+</code></pre>
+<p><strong>⚠️ 注意</strong>：执行前确保你已经审阅了计划！</p>
+<hr />
+<h4 id="gsdverify-work-n-"><code>/gsd:verify-work [N]</code> - 验证工作</h4>
+<p><strong>用途</strong>：手动验收测试</p>
+<p><strong>参数</strong>：
+- <code>N</code> - 阶段编号（可选）</p>
+<p><strong>流程</strong>：
+1. GSD 提取可测试的交付物
+2. 逐个引导你测试
+3. 记录通过/失败
+4. 失败时自动诊断并生成修复计划</p>
+<p><strong>生成文件</strong>：
+- <code>phase-N-UAT.md</code> - 用户验收测试结果
+- 修复计划（如果失败）</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:verify-work 1
+</code></pre>
+<hr />
+<h4 id="gsdcomplete-milestone-"><code>/gsd:complete-milestone</code> - 完成里程碑</h4>
+<p><strong>用途</strong>：归档当前里程碑</p>
+<p><strong>操作</strong>：
+- 归档所有计划文档
+- 创建 Git tag
+- 询问是否 squash merge</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:complete-milestone
+</code></pre>
+<hr />
+<h4 id="gsdnew-milestone-name-"><code>/gsd:new-milestone [name]</code> - 新建里程碑</h4>
+<p><strong>用途</strong>：开始下一个版本</p>
+<p><strong>参数</strong>：
+- <code>name</code> - 里程碑名称（可选）</p>
+<p><strong>流程</strong>：与 <code>new-project</code> 类似，但基于现有代码库</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:new-milestone v2.0
+</code></pre>
+<hr />
+<h3 id="42">4.2 导航命令</h3>
+<h4 id="gsdprogress-"><code>/gsd:progress</code> - 查看进度</h4>
+<p><strong>用途</strong>：了解当前状态和下一步</p>
+<p><strong>输出示例</strong>：</p>
+<pre><code>📊 项目进度
+
+当前状态：执行中
+当前阶段：Phase 2 - 核心功能
+完成进度：2/3 阶段 (67%)
+
+下一步：
+  /gsd:verify-work 2  - 验证 Phase 2
+</code></pre>
+<hr />
+<h4 id="gsdhelp-"><code>/gsd:help</code> - 帮助</h4>
+<p><strong>用途</strong>：显示所有命令</p>
+<hr />
+<h4 id="gsdupdate-"><code>/gsd:update</code> - 更新</h4>
+<p><strong>用途</strong>：更新 GSD 到最新版本</p>
+<hr />
+<h3 id="43-brownfield">4.3 Brownfield 命令</h3>
+<h4 id="gsdmap-codebase-"><code>/gsd:map-codebase</code> - 映射代码库</h4>
+<p><strong>用途</strong>：在已有代码库中使用 GSD 前运行</p>
+<p><strong>操作</strong>：
+- 启动并行 Agent 分析代码库
+- 分析技术栈、架构、约定、关注点
+- 生成代码库映射</p>
+<p><strong>何时使用</strong>：</p>
+<pre><code>✅ 已有项目，想用 GSD 继续开发
+✅ 继承了他人的代码库
+✅ 想了解一个陌生的项目
+
+❌ 全新项目（不需要）
+</code></pre>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:map-codebase
+</code></pre>
+<hr />
+<h3 id="44">4.4 阶段管理命令</h3>
+<h4 id="gsdadd-phase-"><code>/gsd:add-phase</code> - 添加阶段</h4>
+<p><strong>用途</strong>：在路线图末尾添加新阶段</p>
+<hr />
+<h4 id="gsdinsert-phase-n-"><code>/gsd:insert-phase [N]</code> - 插入阶段</h4>
+<p><strong>用途</strong>：在阶段 N 之前插入新阶段</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:insert-phase 2   # 在 Phase 2 前插入
+</code></pre>
+<hr />
+<h4 id="gsdremove-phase-n-"><code>/gsd:remove-phase [N]</code> - 删除阶段</h4>
+<p><strong>用途</strong>：删除未执行的阶段</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:remove-phase 3
+</code></pre>
+<hr />
+<h3 id="45">4.5 会话命令</h3>
+<h4 id="gsdpause-work-"><code>/gsd:pause-work</code> - 暂停工作</h4>
+<p><strong>用途</strong>：中途停止时创建交接文档</p>
+<p><strong>生成文件</strong>：
+- <code>HANDOFF.md</code> - 交接文档</p>
+<hr />
+<h4 id="gsdresume-work-"><code>/gsd:resume-work</code> - 恢复工作</h4>
+<p><strong>用途</strong>：从上次停止的地方继续</p>
+<hr />
+<h3 id="46">4.6 实用工具命令</h3>
+<h4 id="gsdquick-"><code>/gsd:quick</code> - 快速任务</h4>
+<p><strong>用途</strong>：执行不需要完整规划的小任务</p>
+<p><strong>适用场景</strong>：
+- Bug 修复
+- 小功能添加
+- 配置更改
+- 一次性任务</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:quick
+&gt; What do you want to do? 添加深色模式开关
+</code></pre>
+<hr />
+<h4 id="gsdadd-todo-desc-"><code>/gsd:add-todo [desc]</code> - 添加待办</h4>
+<p><strong>用途</strong>：捕获想法供以后使用</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:add-todo 考虑添加导出功能
+</code></pre>
+<hr />
+<h4 id="gsdcheck-todos-"><code>/gsd:check-todos</code> - 查看待办</h4>
+<p><strong>用途</strong>：列出所有待处理的 todos</p>
+<hr />
+<h4 id="gsddebug-desc-"><code>/gsd:debug [desc]</code> - 调试</h4>
+<p><strong>用途</strong>：系统性调试问题</p>
+<p><strong>特点</strong>：带持久状态的调试流程</p>
+<hr />
+<h4 id="gsdsettings-"><code>/gsd:settings</code> - 配置</h4>
+<p><strong>用途</strong>：配置模型配置和工作流 Agent</p>
+<hr />
+<h4 id="gsdset-profile-profile-"><code>/gsd:set-profile &lt;profile&gt;</code> - 设置模型</h4>
+<p><strong>用途</strong>：切换模型配置</p>
+<p><strong>选项</strong>：
+| Profile | 规划 | 执行 | 验证 |
+|---------|------|------|------|
+| <code>quality</code> | Opus | Opus | Sonnet |
+| <code>balanced</code> | Opus | Sonnet | Sonnet |
+| <code>budget</code> | Sonnet | Sonnet | Haiku |</p>
+<p><strong>示例</strong>：</p>
+<pre><code>/gsd:set-profile quality
+</code></pre>
+<hr />
+<h2 id="_6">五、配置指南</h2>
+<h3 id="51">5.1 配置文件位置</h3>
+<p><code>.planning/config.json</code></p>
+<h3 id="52">5.2 核心设置</h3>
+<pre><code class="language-json">{
+  &quot;mode&quot;: &quot;interactive&quot;,
+  &quot;depth&quot;: &quot;standard&quot;
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>设置</th>
+<th>选项</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mode</code></td>
+<td><code>interactive</code> / <code>yolo</code></td>
+<td>交互式 vs 自动批准</td>
+</tr>
+<tr>
+<td><code>depth</code></td>
+<td><code>quick</code> / <code>standard</code> / <code>comprehensive</code></td>
+<td>计划详细程度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="53">5.3 模型配置</h3>
+<pre><code class="language-json">{
+  &quot;profile&quot;: &quot;balanced&quot;,
+  &quot;models&quot;: {
+    &quot;planning&quot;: &quot;opus&quot;,
+    &quot;execution&quot;: &quot;sonnet&quot;,
+    &quot;verification&quot;: &quot;sonnet&quot;
+  }
+}
+</code></pre>
+<h3 id="54-agent">5.4 工作流 Agent</h3>
+<pre><code class="language-json">{
+  &quot;workflow&quot;: {
+    &quot;research&quot;: true,       // 计划前研究领域
+    &quot;plan_check&quot;: true,     // 验证计划是否满足目标
+    &quot;verifier&quot;: true        // 执行后验证交付物
+  }
+}
+</code></pre>
+<h3 id="55-git">5.5 Git 分支策略</h3>
+<pre><code class="language-json">{
+  &quot;git&quot;: {
+    &quot;branching_strategy&quot;: &quot;none&quot;,  // none / phase / milestone
+    &quot;phase_branch_template&quot;: &quot;gsd/phase-{phase}-{slug}&quot;,
+    &quot;milestone_branch_template&quot;: &quot;gsd/{milestone}-{slug}&quot;
+  }
+}
+</code></pre>
+<p><strong>策略说明</strong>：
+- <code>none</code> - 直接在当前分支提交
+- <code>phase</code> - 每个阶段创建分支
+- <code>milestone</code> - 每个里程碑创建分支</p>
+<hr />
+<h2 id="_7">六、实战案例</h2>
+<h3 id="1">案例 1：开发博客系统</h3>
+<pre><code># 1. 初始化
+mkdir my-blog &amp;&amp; cd my-blog
+claude --dangerously-skip-permissions
+
+# 2. 开始项目
+/gsd:new-project
+&gt; 我想开发一个个人博客系统
+&gt; 技术栈：Next.js + MDX + Tailwind
+&gt; 功能：文章管理、标签、搜索、RSS
+
+# 3. 审阅路线图后，逐阶段执行
+/gsd:discuss-phase 1
+/gsd:plan-phase 1
+/gsd:execute-phase 1
+/gsd:verify-work 1
+
+# 4. 继续后续阶段...
+
+# 5. 完成
+/gsd:complete-milestone
+</code></pre>
+<h3 id="2">案例 2：为现有项目添加功能</h3>
+<pre><code># 1. 进入现有项目
+cd existing-project
+
+# 2. 先映射代码库
+/gsd:map-codebase
+
+# 3. 创建新里程碑
+/gsd:new-milestone add-auth
+
+&gt; 我想添加用户认证功能
+&gt; 使用 NextAuth.js
+&gt; 支持邮箱和 GitHub 登录
+
+# 4. 执行阶段...
+</code></pre>
+<h3 id="3-bug">案例 3：快速修复 Bug</h3>
+<pre><code>/gsd:quick
+&gt; 修复用户登录后无法跳转的问题
+</code></pre>
+<h3 id="4">案例 4：中途暂停和恢复</h3>
+<pre><code># 需要离开时
+/gsd:pause-work
+&gt; 创建了 HANDOFF.md
+
+# 下次回来
+/gsd:resume-work
+&gt; 从 Phase 2 计划阶段继续
+</code></pre>
+<hr />
+<h2 id="_8">七、常见问题</h2>
+<h3 id="q1">Q1: 命令找不到？</h3>
+<p><strong>原因</strong>：Claude Code 没有重新加载命令</p>
+<p><strong>解决</strong>：
+1. 重启 Claude Code
+2. 检查文件是否存在：<code>~/.claude/commands/gsd/</code>
+3. 重新安装：<code>npx get-shit-done-cc@latest</code></p>
+<hr />
+<h3 id="q2-token">Q2: Token 消耗太多？</h3>
+<p><strong>原因</strong>：GSD 的研究阶段会消耗较多 Token</p>
+<p><strong>解决</strong>：</p>
+<pre><code class="language-bash"># 使用 budget 配置
+/gsd:set-profile budget
+
+# 跳过研究阶段
+/gsd:plan-phase 1 --skip-research
+</code></pre>
+<hr />
+<h3 id="q3">Q3: 执行结果不符合预期？</h3>
+<p><strong>原因</strong>：discuss-phase 不够详细</p>
+<p><strong>解决</strong>：
+1. 在 discuss-phase 提供更多细节
+2. 在 plan-phase 仔细审阅计划
+3. 使用 <code>/gsd:list-phase-assumptions 1</code> 查看 Claude 的假设</p>
+<hr />
+<h3 id="q4">Q4: 想修改已生成的计划？</h3>
+<p><strong>解决</strong>：</p>
+<pre><code class="language-bash"># 直接编辑 PLAN.md 文件
+# 然后
+/gsd:execute-phase 1
+</code></pre>
+<hr />
+<h3 id="q5">Q5: 如何在团队中使用？</h3>
+<p><strong>建议</strong>：
+1. <code>.planning/</code> 目录提交到 Git
+2. 团队成员可以查看和编辑计划
+3. 使用 milestone 分支策略避免冲突</p>
+<hr />
+<h2 id="_9">八、最佳实践</h2>
+<h3 id="81">8.1 提问阶段</h3>
+<p>✅ <strong>好的回答</strong>：</p>
+<pre><code>&gt; 一个命令行工具，支持添加、列出、完成、删除待办事项。
+&gt; 数据存储在本地 JSON 文件，不需要数据库。
+&gt; 使用 Python + Click 框架。
+&gt; 命令风格类似 git：todo add &quot;任务名&quot;
+</code></pre>
+<p>❌ <strong>不好的回答</strong>：</p>
+<pre><code>&gt; 一个 todo 工具
+</code></pre>
+<h3 id="82-discuss">8.2 Discuss 阶段</h3>
+<p>✅ <strong>详细描述偏好</strong>：</p>
+<pre><code>&gt; 列表显示：编号、任务名、状态、创建时间
+&gt; 状态用颜色区分：绿色=完成，黄色=进行中
+&gt; 支持按状态筛选
+</code></pre>
+<h3 id="83-plan">8.3 Plan 阶段</h3>
+<p>✅ <strong>仔细审阅计划</strong>：</p>
+<pre><code># 检查要点：
+1. 技术选型是否正确？
+2. 是否遗漏了功能？
+3. 验证步骤是否合理？
+</code></pre>
+<h3 id="84-execute">8.4 Execute 阶段</h3>
+<p>✅ <strong>执行前准备</strong>：</p>
+<pre><code>1. 确保工作目录干净（git status）
+2. 审阅所有计划
+3. 预留足够时间（不要中途打断）
+</code></pre>
+<h3 id="85-verify">8.5 Verify 阶段</h3>
+<p>✅ <strong>认真测试</strong>：</p>
+<pre><code>1. 按照引导逐项测试
+2. 不要跳过任何检查项
+3. 发现问题详细描述
+</code></pre>
+<h3 id="86">8.6 日常使用</h3>
+<pre><code># 每日开始
+/gsd:progress          # 查看进度
+/gsd:resume-work       # 恢复工作
+
+# 每日结束
+/gsd:pause-work        # 保存进度
+
+# 捕获想法
+/gsd:add-todo 考虑添加导出功能
+
+# 快速任务
+/gsd:quick
+</code></pre>
+<hr />
+<h2 id="_10">九、速查表</h2>
+<pre><code># 项目初始化
+/gsd:new-project              # 新项目
+/gsd:map-codebase             # 现有项目先映射
+
+# 阶段循环
+/gsd:discuss-phase N          # 讨论细节
+/gsd:plan-phase N             # 制定计划
+/gsd:execute-phase N          # 执行计划
+/gsd:verify-work N            # 验证结果
+
+# 里程碑
+/gsd:complete-milestone       # 完成当前版本
+/gsd:new-milestone            # 开始新版本
+
+# 导航
+/gsd:progress                 # 查看进度
+/gsd:help                     # 帮助
+
+# 快速任务
+/gsd:quick                    # 小任务
+
+# 会话
+/gsd:pause-work               # 暂停
+/gsd:resume-work              # 恢复
+
+# 配置
+/gsd:settings                 # 配置
+/gsd:set-profile quality      # 切换模型
+
+# 更新
+npx get-shit-done-cc@latest   # 更新 GSD
+</code></pre>
+<hr />
+<h2 id="_11">十、总结</h2>
+<p>GSD 的核心价值：</p>
+<ol>
+<li><strong>结构化</strong> - 强制你先思考再编码</li>
+<li><strong>自动化</strong> - Claude 自动执行，你只需验证</li>
+<li><strong>可靠性</strong> - 解决上下文腐烂问题</li>
+<li><strong>可追溯</strong> - 每个任务都有原子提交</li>
+</ol>
+<p><strong>记住</strong>：</p>
+<blockquote>
+<p>"The complexity is in the system, not in your workflow."
+复杂性在系统中，而不是在你的工作流中。</p>
+</blockquote>
+<hr />
+<p><em>文档版本: 1.0</em>
+<em>创建日期: 2026-03-16</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

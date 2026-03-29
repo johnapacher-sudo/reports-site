@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD vs 自研工作流模板 对比分析</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">详细对比两个 AI 辅助开发工作流系统</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、概览对比</a></li>
+<li><a href="#_2" class="toc-h2">二、架构对比</a></li>
+<li><a href="#gsd" class="toc-h3">GSD 架构</a></li>
+<li><a href="#_3" class="toc-h3">自研模板架构</a></li>
+<li><a href="#_4" class="toc-h2">三、功能对比</a></li>
+<li><a href="#31" class="toc-h3">3.1 项目初始化</a></li>
+<li><a href="#32" class="toc-h3">3.2 阶段规划</a></li>
+<li><a href="#33" class="toc-h3">3.3 执行阶段</a></li>
+<li><a href="#34" class="toc-h3">3.4 验证阶段</a></li>
+<li><a href="#35" class="toc-h3">3.5 其他功能</a></li>
+<li><a href="#_5" class="toc-h2">四、文件结构对比</a></li>
+<li><a href="#gsd_1" class="toc-h3">GSD 文件结构</a></li>
+<li><a href="#_6" class="toc-h3">自研模板文件结构</a></li>
+<li><a href="#_7" class="toc-h2">五、工作流对比</a></li>
+<li><a href="#gsd_2" class="toc-h3">GSD 完整工作流</a></li>
+<li><a href="#_8" class="toc-h3">自研模板工作流</a></li>
+<li><a href="#_9" class="toc-h2">六、优缺点分析</a></li>
+<li><a href="#gsd_3" class="toc-h3">GSD 优点</a></li>
+<li><a href="#gsd_4" class="toc-h3">GSD 缺点</a></li>
+<li><a href="#_10" class="toc-h3">自研模板优点</a></li>
+<li><a href="#_11" class="toc-h3">自研模板缺点</a></li>
+<li><a href="#_12" class="toc-h2">七、适用场景</a></li>
+<li><a href="#gsd_5" class="toc-h3">选择 GSD 的场景</a></li>
+<li><a href="#_13" class="toc-h3">选择自研模板的场景</a></li>
+<li><a href="#token" class="toc-h2">八、Token 消耗对比</a></li>
+<li><a href="#gsd-token" class="toc-h3">GSD Token 消耗</a></li>
+<li><a href="#token_1" class="toc-h3">自研模板 Token 消耗</a></li>
+<li><a href="#_14" class="toc-h2">九、学习曲线对比</a></li>
+<li><a href="#gsd_6" class="toc-h3">GSD 学习曲线</a></li>
+<li><a href="#_15" class="toc-h3">自研模板学习曲线</a></li>
+<li><a href="#_16" class="toc-h2">十、整合建议</a></li>
+<li><a href="#1-gsd" class="toc-h3">方案 1: 采用 GSD</a></li>
+<li><a href="#2" class="toc-h3">方案 2: 采用自研模板</a></li>
+<li><a href="#3-gsd" class="toc-h3">方案 3: 借鉴 GSD 改进自研模板</a></li>
+<li><a href="#_17" class="toc-h2">十一、总结</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD vs 自研工作流模板 对比分析</h1>
+                        <div class="article-meta">详细对比两个 AI 辅助开发工作流系统</div>
+                    </header>
+                    <h1 id="gsd-vs">GSD vs 自研工作流模板 对比分析</h1>
+<blockquote>
+<p>详细对比两个 AI 辅助开发工作流系统</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、概览对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定位</strong></td>
+<td>完整的规范驱动开发系统</td>
+<td>轻量级长任务管理框架</td>
+</tr>
+<tr>
+<td><strong>复杂度</strong></td>
+<td>高 (功能丰富)</td>
+<td>低 (简单直接)</td>
+</tr>
+<tr>
+<td><strong>依赖</strong></td>
+<td>Node.js + NPM</td>
+<td>Python 3 (标准库)</td>
+</tr>
+<tr>
+<td><strong>安装</strong></td>
+<td><code>npx get-shit-done-cc</code></td>
+<td><code>python3 init_long_task.py</code></td>
+</tr>
+<tr>
+<td><strong>命令数量</strong></td>
+<td>20+</td>
+<td>3 (status, verify, init)</td>
+</tr>
+<tr>
+<td><strong>集成方式</strong></td>
+<td>Claude Code Slash Commands</td>
+<td>独立脚本 + 手动提示词</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、架构对比</h2>
+<h3 id="gsd">GSD 架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                         GSD 系统架构                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Claude Code                                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Slash Commands (/gsd:xxx)                               │  │
+│  │  ├── new-project    ├── plan-phase     ├── verify-work   │  │
+│  │  ├── discuss-phase  ├── execute-phase  ├── ...           │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              ↓                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Multi-Agent Orchestration                               │  │
+│  │  ├── Orchestrator (轻量调度)                              │  │
+│  │  ├── Research Agents (4个并行)                            │  │
+│  │  ├── Planning Agents (创建+验证)                          │  │
+│  │  ├── Execution Agents (并行执行，每个200k上下文)          │  │
+│  │  └── Verification Agents (代码检查+调试)                  │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              ↓                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Context Engineering                                     │  │
+│  │  ├── PROJECT.md      ├── ROADMAP.md                      │  │
+│  │  ├── REQUIREMENTS.md ├── STATE.md                        │  │
+│  │  ├── CONTEXT.md      ├── PLAN.md (XML)                   │  │
+│  │  └── SUMMARY.md      ├── RESEARCH.md                     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_3">自研模板架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                       自研模板架构                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  终端命令行                                                      │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  python3 init_long_task.py &quot;任务描述&quot;                    │  │
+│  │  python3 scripts/status.py --prompt                      │  │
+│  │  python3 scripts/verify.py --current                     │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              ↓                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  单一 Agent 执行 (Claude Code 会话)                      │  │
+│  │  ├── 读取 task.json                                      │  │
+│  │  ├── 执行当前步骤                                        │  │
+│  │  ├── 验证完成                                            │  │
+│  │  └── 更新状态                                            │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                              ↓                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  状态管理                                                │  │
+│  │  ├── task.json (统一文件)                                │  │
+│  │  ├── state/progress.md                                   │  │
+│  │  └── templates/*.json                                    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_4">三、功能对比</h2>
+<h3 id="31">3.1 项目初始化</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>命令</strong></td>
+<td><code>/gsd:new-project</code></td>
+<td><code>python3 init_long_task.py</code></td>
+</tr>
+<tr>
+<td><strong>交互方式</strong></td>
+<td>AI 问答式</td>
+<td>模板选择</td>
+</tr>
+<tr>
+<td><strong>步骤生成</strong></td>
+<td>AI 动态生成</td>
+<td>模板预设</td>
+</tr>
+<tr>
+<td><strong>研究阶段</strong></td>
+<td>✅ 4个并行Agent研究</td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>需求文档</strong></td>
+<td>✅ 自动生成 REQUIREMENTS.md</td>
+<td>❌ 简单描述</td>
+</tr>
+<tr>
+<td><strong>路线图</strong></td>
+<td>✅ 详细 ROADMAP.md</td>
+<td>✅ task.json 中</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GSD 初始化流程</strong>:</p>
+<pre><code>提问 (5-10分钟) → 研究 (并行Agent) → 需求 → 路线图 → 确认
+</code></pre>
+<p><strong>自研模板初始化流程</strong>:</p>
+<pre><code>选择模板 → 生成文件 → 完成
+</code></pre>
+<h3 id="32">3.2 阶段规划</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>讨论阶段</strong></td>
+<td><code>/gsd:discuss-phase</code> (详细问答)</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>研究阶段</strong></td>
+<td><code>/gsd:plan-phase</code> (包含研究)</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>计划生成</strong></td>
+<td>XML 格式 PLAN.md</td>
+<td>JSON 格式 task.json</td>
+</tr>
+<tr>
+<td><strong>计划验证</strong></td>
+<td>✅ 自动验证计划可行性</td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>假设查看</strong></td>
+<td><code>/gsd:list-phase-assumptions</code></td>
+<td>❌ 无</td>
+</tr>
+</tbody>
+</table>
+<p><strong>GSD 计划格式 (XML)</strong>:</p>
+<pre><code class="language-xml">&lt;task type=&quot;auto&quot;&gt;
+  &lt;name&gt;Create login endpoint&lt;/name&gt;
+  &lt;files&gt;src/app/api/auth/login/route.ts&lt;/files&gt;
+  &lt;action&gt;
+    Use jose for JWT (not jsonwebtoken).
+    Validate credentials against users table.
+  &lt;/action&gt;
+  &lt;verify&gt;curl -X POST localhost:3000/api/auth/login returns 200&lt;/verify&gt;
+  &lt;done&gt;Valid credentials return cookie, invalid return 401&lt;/done&gt;
+&lt;/task&gt;
+</code></pre>
+<p><strong>自研模板计划格式 (JSON)</strong>:</p>
+<pre><code class="language-json">{
+  &quot;id&quot;: &quot;setup&quot;,
+  &quot;description&quot;: &quot;项目初始化&quot;,
+  &quot;tasks&quot;: [&quot;创建目录&quot;, &quot;初始化 Git&quot;],
+  &quot;verification&quot;: {
+    &quot;type&quot;: &quot;command&quot;,
+    &quot;command&quot;: &quot;pip install -e .&quot;
+  },
+  &quot;status&quot;: &quot;pending&quot;
+}
+</code></pre>
+<h3 id="33">3.3 执行阶段</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>命令</strong></td>
+<td><code>/gsd:execute-phase N</code></td>
+<td>手动复制提示词</td>
+</tr>
+<tr>
+<td><strong>执行方式</strong></td>
+<td>并行 Agent + 全新上下文</td>
+<td>单一 Agent</td>
+</tr>
+<tr>
+<td><strong>上下文管理</strong></td>
+<td>✅ 每个 Plan 200k 全新上下文</td>
+<td>❌ 共享上下文</td>
+</tr>
+<tr>
+<td><strong>并行执行</strong></td>
+<td>✅ 独立计划并行</td>
+<td>❌ 顺序执行</td>
+</tr>
+<tr>
+<td><strong>Git 提交</strong></td>
+<td>✅ 每个任务自动提交</td>
+<td>⚠️ 手动提交</td>
+</tr>
+<tr>
+<td><strong>执行总结</strong></td>
+<td>SUMMARY.md</td>
+<td>progress.md</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34">3.4 验证阶段</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>命令</strong></td>
+<td><code>/gsd:verify-work</code></td>
+<td><code>python3 scripts/verify.py</code></td>
+</tr>
+<tr>
+<td><strong>验证类型</strong></td>
+<td>command, test, file_exists, manual</td>
+<td>command, test, file_exists, manual</td>
+</tr>
+<tr>
+<td><strong>失败诊断</strong></td>
+<td>✅ 自动启动调试 Agent</td>
+<td>❌ 手动处理</td>
+</tr>
+<tr>
+<td><strong>修复计划</strong></td>
+<td>✅ 自动生成</td>
+<td>❌ 无</td>
+</tr>
+</tbody>
+</table>
+<h3 id="35">3.5 其他功能</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>快速任务</strong></td>
+<td><code>/gsd:quick</code></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>暂停/恢复</strong></td>
+<td><code>/gsd:pause-work</code>, <code>/gsd:resume-work</code></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>代码库映射</strong></td>
+<td><code>/gsd:map-codebase</code></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>待办事项</strong></td>
+<td><code>/gsd:add-todo</code>, <code>/gsd:check-todos</code></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>调试助手</strong></td>
+<td><code>/gsd:debug</code></td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>模型配置</strong></td>
+<td>quality/balanced/budget</td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>分支策略</strong></td>
+<td>none/phase/milestone</td>
+<td>❌ 无</td>
+</tr>
+<tr>
+<td><strong>里程碑管理</strong></td>
+<td>✅ 完整支持</td>
+<td>❌ 无</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">四、文件结构对比</h2>
+<h3 id="gsd_1">GSD 文件结构</h3>
+<pre><code>project/
+├── .planning/
+│   ├── config.json              # 配置
+│   ├── PROJECT.md               # 项目愿景
+│   ├── REQUIREMENTS.md          # 需求文档
+│   ├── ROADMAP.md               # 路线图
+│   ├── STATE.md                 # 状态
+│   ├── research/                # 研究文档
+│   │   ├── stack.md
+│   │   ├── features.md
+│   │   └── architecture.md
+│   ├── phases/                  # 阶段文档
+│   │   ├── phase-1-CONTEXT.md
+│   │   ├── phase-1-RESEARCH.md
+│   │   ├── phase-1-1-PLAN.md    # XML 格式
+│   │   ├── phase-1-1-SUMMARY.md
+│   │   ├── phase-1-UAT.md
+│   │   └── ...
+│   ├── quick/                   # 快速任务
+│   └── todos/                   # 待办事项
+└── src/                         # 代码
+</code></pre>
+<h3 id="_6">自研模板文件结构</h3>
+<pre><code>project/
+├── task.json                    # 统一任务文件 (核心!)
+├── init.sh                      # 初始化脚本
+├── README.md                    # 说明
+├── scripts/
+│   ├── status.py                # 状态查询
+│   └── verify.py                # 验证执行
+├── state/
+│   ├── progress.md              # 进度日志
+│   └── checkpoints/             # 检查点
+├── logs/                        # 日志
+└── artifacts/                   # 产出物
+</code></pre>
+<hr />
+<h2 id="_7">五、工作流对比</h2>
+<h3 id="gsd_2">GSD 完整工作流</h3>
+<pre><code class="language-bash"># 1. 初始化 (AI 问答 + 研究)
+/gsd:new-project
+&gt; 回答 10+ 个问题...
+&gt; AI 研究技术栈...
+&gt; 审阅并确认路线图
+
+# 2. 每个阶段循环
+/gsd:discuss-phase 1      # 详细讨论实现细节
+/gsd:plan-phase 1         # 研究 + 计划 + 验证
+/gsd:execute-phase 1      # 并行执行 (自动)
+/gsd:verify-work 1        # 用户验收测试
+
+# 3. 完成里程碑
+/gsd:complete-milestone
+/gsd:new-milestone
+</code></pre>
+<h3 id="_8">自研模板工作流</h3>
+<pre><code class="language-bash"># 1. 初始化 (模板选择)
+python3 init_long_task.py &quot;任务描述&quot; --template cli-tool
+
+# 2. 进入项目
+cd task_xxx &amp;&amp; ./init.sh
+
+# 3. 生成提示词
+python3 scripts/status.py --prompt
+
+# 4. 复制提示词到 Claude Code
+
+# 5. Claude 执行步骤
+
+# 6. 验证
+python3 scripts/verify.py --current
+
+# 7. 重复 3-6
+</code></pre>
+<hr />
+<h2 id="_9">六、优缺点分析</h2>
+<h3 id="gsd_3">GSD 优点</h3>
+<table>
+<thead>
+<tr>
+<th>优点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅ <strong>功能完整</strong></td>
+<td>覆盖项目全生命周期</td>
+</tr>
+<tr>
+<td>✅ <strong>深度集成</strong></td>
+<td>Claude Code Slash Commands</td>
+</tr>
+<tr>
+<td>✅ <strong>多 Agent</strong></td>
+<td>并行执行，全新上下文</td>
+</tr>
+<tr>
+<td>✅ <strong>自动研究</strong></td>
+<td>AI 自动研究技术栈</td>
+</tr>
+<tr>
+<td>✅ <strong>上下文工程</strong></td>
+<td>解决 context rot 问题</td>
+</tr>
+<tr>
+<td>✅ <strong>XML 计划</strong></td>
+<td>结构化，验证内置</td>
+</tr>
+<tr>
+<td>✅ <strong>自动 Git</strong></td>
+<td>原子提交</td>
+</tr>
+<tr>
+<td>✅ <strong>失败诊断</strong></td>
+<td>自动调试 Agent</td>
+</tr>
+</tbody>
+</table>
+<h3 id="gsd_4">GSD 缺点</h3>
+<table>
+<thead>
+<tr>
+<th>缺点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>❌ <strong>复杂度高</strong></td>
+<td>学习曲线陡峭</td>
+</tr>
+<tr>
+<td>❌ <strong>Token 消耗大</strong></td>
+<td>研究阶段消耗大量 Token</td>
+</tr>
+<tr>
+<td>❌ <strong>依赖 Node.js</strong></td>
+<td>需要 NPM 环境</td>
+</tr>
+<tr>
+<td>❌ <strong>启动慢</strong></td>
+<td>初始化需要 10+ 分钟</td>
+</tr>
+<tr>
+<td>❌ <strong>过度工程</strong></td>
+<td>小项目可能不需要</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">自研模板优点</h3>
+<table>
+<thead>
+<tr>
+<th>优点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>✅ <strong>轻量简单</strong></td>
+<td>只有 3 个脚本</td>
+</tr>
+<tr>
+<td>✅ <strong>无依赖</strong></td>
+<td>纯 Python 标准库</td>
+</tr>
+<tr>
+<td>✅ <strong>快速启动</strong></td>
+<td>一条命令完成初始化</td>
+</tr>
+<tr>
+<td>✅ <strong>统一文件</strong></td>
+<td>task.json 管理一切</td>
+</tr>
+<tr>
+<td>✅ <strong>灵活</strong></td>
+<td>可以自由修改</td>
+</tr>
+<tr>
+<td>✅ <strong>可定制</strong></td>
+<td>模板系统</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">自研模板缺点</h3>
+<table>
+<thead>
+<tr>
+<th>缺点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>❌ <strong>功能简单</strong></td>
+<td>缺少研究、讨论等阶段</td>
+</tr>
+<tr>
+<td>❌ <strong>无深度集成</strong></td>
+<td>需要手动复制提示词</td>
+</tr>
+<tr>
+<td>❌ <strong>单一 Agent</strong></td>
+<td>共享上下文</td>
+</tr>
+<tr>
+<td>❌ <strong>无并行</strong></td>
+<td>顺序执行</td>
+</tr>
+<tr>
+<td>❌ <strong>无自动 Git</strong></td>
+<td>需要手动提交</td>
+</tr>
+<tr>
+<td>❌ <strong>无失败诊断</strong></td>
+<td>需要手动处理</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_12">七、适用场景</h2>
+<h3 id="gsd_5">选择 GSD 的场景</h3>
+<pre><code>✅ 大型复杂项目
+✅ 需要深度研究的领域
+✅ 团队协作
+✅ 长期维护的项目
+✅ 对质量要求高
+✅ 愿意投入 Token 成本
+✅ 熟悉 Claude Code 生态系统
+</code></pre>
+<h3 id="_13">选择自研模板的场景</h3>
+<pre><code>✅ 小型项目
+✅ 快速原型
+✅ 个人开发
+✅ 简单任务
+✅ Token 预算有限
+✅ 想要轻量级方案
+✅ 需要高度定制
+</code></pre>
+<hr />
+<h2 id="token">八、Token 消耗对比</h2>
+<h3 id="gsd-token">GSD Token 消耗</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>估算 Token</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化提问</td>
+<td>5,000 - 10,000</td>
+</tr>
+<tr>
+<td>研究阶段</td>
+<td>20,000 - 50,000</td>
+</tr>
+<tr>
+<td>计划阶段</td>
+<td>10,000 - 20,000</td>
+</tr>
+<tr>
+<td>执行阶段</td>
+<td>50,000 - 200,000</td>
+</tr>
+<tr>
+<td>验证阶段</td>
+<td>5,000 - 10,000</td>
+</tr>
+<tr>
+<td><strong>总计</strong></td>
+<td><strong>100,000 - 300,000</strong></td>
+</tr>
+</tbody>
+</table>
+<h3 id="token_1">自研模板 Token 消耗</h3>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>估算 Token</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>初始化</td>
+<td>0 (本地脚本)</td>
+</tr>
+<tr>
+<td>执行阶段</td>
+<td>50,000 - 150,000</td>
+</tr>
+<tr>
+<td>验证阶段</td>
+<td>5,000 - 10,000</td>
+</tr>
+<tr>
+<td><strong>总计</strong></td>
+<td><strong>55,000 - 160,000</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_14">九、学习曲线对比</h2>
+<h3 id="gsd_6">GSD 学习曲线</h3>
+<pre><code>难度: ████████████ (高)
+
+时间投入:
+- 基础使用: 1-2 小时
+- 熟练使用: 1-2 天
+- 精通: 1 周+
+
+需要学习:
+- 所有命令 (20+)
+- 配置选项
+- 多 Agent 协作模式
+- XML 计划格式
+- 里程碑管理
+</code></pre>
+<h3 id="_15">自研模板学习曲线</h3>
+<pre><code>难度: ███ (低)
+
+时间投入:
+- 基础使用: 10 分钟
+- 熟练使用: 30 分钟
+- 精通: 1 小时
+
+需要学习:
+- 3 个命令
+- task.json 结构
+- 模板选择
+</code></pre>
+<hr />
+<h2 id="_16">十、整合建议</h2>
+<h3 id="1-gsd">方案 1: 采用 GSD</h3>
+<p>如果你的需求：
+- 项目复杂度高
+- 愿意投入学习时间
+- Token 预算充足</p>
+<pre><code class="language-bash">npx get-shit-done-cc@latest
+claude --dangerously-skip-permissions
+/gsd:new-project
+</code></pre>
+<h3 id="2">方案 2: 采用自研模板</h3>
+<p>如果你的需求：
+- 项目简单
+- 快速上手
+- 灵活定制</p>
+<pre><code class="language-bash">python3 init_long_task.py &quot;任务描述&quot;
+cd task_xxx
+python3 scripts/status.py --prompt
+</code></pre>
+<h3 id="3-gsd">方案 3: 借鉴 GSD 改进自研模板</h3>
+<p>可以借鉴 GSD 的优点改进自研模板：</p>
+<table>
+<thead>
+<tr>
+<th>GSD 功能</th>
+<th>如何借鉴</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Slash Commands</td>
+<td>创建 Claude Code 命令文件</td>
+</tr>
+<tr>
+<td>XML 计划格式</td>
+<td>改进 task.json 格式</td>
+</tr>
+<tr>
+<td>自动 Git</td>
+<td>添加 git_commit() 函数</td>
+</tr>
+<tr>
+<td>验证失败诊断</td>
+<td>添加 diagnose.py 脚本</td>
+</tr>
+<tr>
+<td>快速任务</td>
+<td>添加 quick.py 脚本</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_17">十一、总结</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GSD</th>
+<th>自研模板</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>功能</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>易用性</strong></td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Token 效率</strong></td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>适合大型项目</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>适合小型项目</strong></td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>结论</strong>：</p>
+<ul>
+<li><strong>GSD</strong> = 功能强大的企业级解决方案，适合复杂项目</li>
+<li><strong>自研模板</strong> = 轻量灵活的个人工具，适合快速开发</li>
+</ul>
+<p>两者并不冲突，可以根据项目规模选择合适的工具。</p>
+<hr />
+<p><em>对比日期: 2026-03-16</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

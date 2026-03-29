@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperClip 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始，手把手教你构建零人工 AI 公司</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速开始</a></li>
+<li><a href="#11" class="toc-h3">1.1 环境准备</a></li>
+<li><a href="#12" class="toc-h3">1.2 一键安装（推荐）</a></li>
+<li><a href="#13" class="toc-h3">1.3 手动安装</a></li>
+<li><a href="#14" class="toc-h3">1.4 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、核心概念</a></li>
+<li><a href="#21-paperclip" class="toc-h3">2.1 PaperClip 是什么？</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心架构</a></li>
+<li><a href="#23" class="toc-h3">2.3 核心术语</a></li>
+<li><a href="#24" class="toc-h3">2.4 目标层级</a></li>
+<li><a href="#_4" class="toc-h2">三、完整工作流教程</a></li>
+<li><a href="#31-ai" class="toc-h3">3.1 场景：创建一个内容营销 AI 公司</a></li>
+<li><a href="#step-1-paperclip" class="toc-h4">Step 1: 启动 PaperClip</a></li>
+<li><a href="#step-2" class="toc-h4">Step 2: 创建公司</a></li>
+<li><a href="#step-3" class="toc-h4">Step 3: 设计组织架构</a></li>
+<li><a href="#step-4-agent" class="toc-h4">Step 4: 配置 Agent</a></li>
+<li><a href="#step-5-heartbeats" class="toc-h4">Step 5: 设置 Heartbeats</a></li>
+<li><a href="#step-6" class="toc-h4">Step 6: 创建第一个任务</a></li>
+<li><a href="#step-7" class="toc-h4">Step 7: 监控执行</a></li>
+<li><a href="#step-8" class="toc-h4">Step 8: 审批和发布</a></li>
+<li><a href="#_5" class="toc-h2">四、功能详解</a></li>
+<li><a href="#41" class="toc-h3">4.1 功能：组织架构管理</a></li>
+<li><a href="#_6" class="toc-h4">📌 功能概述</a></li>
+<li><a href="#_7" class="toc-h4">🔧 原理说明</a></li>
+<li><a href="#_8" class="toc-h4">📝 基础用法</a></li>
+<li><a href="#_9" class="toc-h4">🚀 进阶用法</a></li>
+<li><a href="#42-heartbeats" class="toc-h3">4.2 功能：心跳机制 (Heartbeats)</a></li>
+<li><a href="#_10" class="toc-h4">📌 功能概述</a></li>
+<li><a href="#_11" class="toc-h4">🔧 原理说明</a></li>
+<li><a href="#_12" class="toc-h4">📝 基础用法</a></li>
+<li><a href="#_13" class="toc-h4">🚀 进阶用法</a></li>
+<li><a href="#43" class="toc-h3">4.3 功能：成本控制</a></li>
+<li><a href="#_14" class="toc-h4">📌 功能概述</a></li>
+<li><a href="#_15" class="toc-h4">🔧 原理说明</a></li>
+<li><a href="#_16" class="toc-h4">📝 基础用法</a></li>
+<li><a href="#_17" class="toc-h4">⚠️ 注意事项</a></li>
+<li><a href="#44-ticket" class="toc-h3">4.4 功能：Ticket 系统</a></li>
+<li><a href="#_18" class="toc-h4">📌 功能概述</a></li>
+<li><a href="#_19" class="toc-h4">🔧 原理说明</a></li>
+<li><a href="#_20" class="toc-h4">📝 基础用法</a></li>
+<li><a href="#45" class="toc-h3">4.5 功能：治理层</a></li>
+<li><a href="#_21" class="toc-h4">📌 功能概述</a></li>
+<li><a href="#_22" class="toc-h4">🔧 原理说明</a></li>
+<li><a href="#_23" class="toc-h4">📝 基础用法</a></li>
+<li><a href="#_24" class="toc-h2">五、配置指南</a></li>
+<li><a href="#51" class="toc-h3">5.1 配置文件结构</a></li>
+<li><a href="#52-agent" class="toc-h3">5.2 Agent 配置模板</a></li>
+<li><a href="#53" class="toc-h3">5.3 公司配置模板</a></li>
+<li><a href="#54" class="toc-h3">5.4 开发命令</a></li>
+<li><a href="#_25" class="toc-h2">六、实战案例</a></li>
+<li><a href="#1" class="toc-h3">案例 1：内容营销公司</a></li>
+<li><a href="#2" class="toc-h3">案例 2：加密交易基金</a></li>
+<li><a href="#3tiktok" class="toc-h3">案例 3：TikTok 工厂</a></li>
+<li><a href="#_26" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1-paperclip-claude-code" class="toc-h3">Q1: PaperClip 和 Claude Code 有什么区别？</a></li>
+<li><a href="#q2-agent" class="toc-h3">Q2: 如何添加自定义 Agent？</a></li>
+<li><a href="#q3" class="toc-h3">Q3: 成本太高怎么办？</a></li>
+<li><a href="#q4-agent" class="toc-h3">Q4: 如何监控 Agent 活动？</a></li>
+<li><a href="#q5-agent" class="toc-h3">Q5: 支持哪些 Agent 提供商？</a></li>
+<li><a href="#_27" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 组织架构设计</a></li>
+<li><a href="#82" class="toc-h3">8.2 预算设置</a></li>
+<li><a href="#83" class="toc-h3">8.3 心跳频率</a></li>
+<li><a href="#84" class="toc-h3">8.4 治理级别</a></li>
+<li><a href="#_28" class="toc-h2">九、速查表</a></li>
+<li><a href="#_29" class="toc-h2">十、总结</a></li>
+<li><a href="#paperclip_1" class="toc-h3">PaperClip 的核心价值</a></li>
+<li><a href="#_30" class="toc-h3">适用人群</a></li>
+<li><a href="#_31" class="toc-h3">一句话总结</a></li>
+<li><a href="#_32" class="toc-h2">十一、资源链接</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>PaperClip 学习教程</h1>
+                        <div class="article-meta">从零开始，手把手教你构建零人工 AI 公司</div>
+                    </header>
+                    <h1 id="paperclip">PaperClip 学习教程</h1>
+<blockquote>
+<p>从零开始，手把手教你构建零人工 AI 公司</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速开始">快速开始</a></li>
+<li><a href="#二核心概念">核心概念</a></li>
+<li><a href="#三完整工作流教程">完整工作流教程</a></li>
+<li><a href="#四功能详解">功能详解</a></li>
+<li><a href="#五配置指南">配置指南</a></li>
+<li><a href="#六实战案例">实战案例</a></li>
+<li><a href="#七常见问题">常见问题</a></li>
+<li><a href="#八最佳实践">最佳实践</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速开始</h2>
+<h3 id="11">1.1 环境准备</h3>
+<p><strong>前置要求</strong>：
+- [ ] Node.js 20+ 已安装
+- [ ] pnpm 9.15+ 已安装
+- [ ] Git 已安装</p>
+<p><strong>检查环境</strong>：</p>
+<pre><code class="language-bash">node -v      # 需要 v20+
+pnpm -v      # 需要 9.15+
+git --version
+</code></pre>
+<h3 id="12">1.2 一键安装（推荐）</h3>
+<pre><code class="language-bash">npx paperclipai onboard --yes
+</code></pre>
+<p>这个命令会：
+1. 检查环境依赖
+2. 下载并配置 PaperClip
+3. 启动服务</p>
+<h3 id="13">1.3 手动安装</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/paperclipai/paperclip.git
+cd paperclip
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+</code></pre>
+<h3 id="14">1.4 验证安装</h3>
+<p>启动后，访问：
+- <strong>API</strong>: <code>http://localhost:3100</code>
+- <strong>Dashboard</strong>: <code>http://localhost:3100</code> (React UI 自动加载)</p>
+<p>看到 Dashboard 界面说明安装成功！</p>
+<hr />
+<h2 id="_3">二、核心概念</h2>
+<h3 id="21-paperclip">2.1 PaperClip 是什么？</h3>
+<pre><code>PaperClip = AI 公司运营平台
+
+传统公司:  CEO → 员工 → 任务
+AI 公司:   AI CEO → AI Agent → 任务 (PaperClip 编排)
+</code></pre>
+<h3 id="22">2.2 核心架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    PaperClip 核心架构                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  你 (Board of Directors)                                        │
+│  │                                                              │
+│  ├── 📊 Dashboard (监控、审批、管理)                            │
+│  │                                                              │
+│  ├── 🏢 Company (公司实体)                                      │
+│  │      │                                                       │
+│  │      ├── 👔 CEO Agent                                        │
+│  │      │      │                                                │
+│  │      │      ├── 💼 CTO Agent                                 │
+│  │      │      │      └── 👨‍💻 Engineer Agents                  │
+│  │      │      │                                                │
+│  │      │      ├── 📈 CMO Agent                                 │
+│  │      │      │      └── 📝 Content Agents                     │
+│  │      │      │                                                │
+│  │      │      └── 💰 CFO Agent                                 │
+│  │      │                                                       │
+│  │      └── 💓 Heartbeats (定时任务)                            │
+│  │                                                              │
+│  └── 🎫 Tickets (任务追踪)                                      │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="23">2.3 核心术语</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>英文</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>公司</td>
+<td>Company</td>
+<td>一个完整的 AI 公司实体</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>Agent</td>
+<td>AI 员工，有特定角色和职责</td>
+</tr>
+<tr>
+<td>组织架构</td>
+<td>Org Chart</td>
+<td>Agent 之间的层级关系</td>
+</tr>
+<tr>
+<td>目标</td>
+<td>Goal</td>
+<td>公司/项目/任务的目标层级</td>
+</tr>
+<tr>
+<td>心跳</td>
+<td>Heartbeat</td>
+<td>Agent 定时唤醒执行任务</td>
+</tr>
+<tr>
+<td>Ticket</td>
+<td>Ticket</td>
+<td>任务记录，可追溯</td>
+</tr>
+<tr>
+<td>预算</td>
+<td>Budget</td>
+<td>Agent 的月度费用限制</td>
+</tr>
+<tr>
+<td>治理</td>
+<td>Governance</td>
+<td>你作为董事会的控制权</td>
+</tr>
+</tbody>
+</table>
+<h3 id="24">2.4 目标层级</h3>
+<pre><code>◎ Company Mission (公司使命)
+   &quot;Build the #1 AI note-taking app to $1M MRR&quot;
+   │
+   ├── ◉ Project Goal (项目目标)
+   │      &quot;Ship collaboration features&quot;
+   │      │
+   │      ├── ○ Agent Goal (Agent 目标)
+   │      │      &quot;Implement real-time sync&quot;
+   │      │      │
+   │      │      └── • Task (任务)
+   │      │             &quot;Write WebSocket handler&quot;
+   │
+   └── ...
+</code></pre>
+<hr />
+<h2 id="_4">三、完整工作流教程</h2>
+<h3 id="31-ai">3.1 场景：创建一个内容营销 AI 公司</h3>
+<p>让我们通过一个实际例子来学习 PaperClip。</p>
+<h4 id="step-1-paperclip">Step 1: 启动 PaperClip</h4>
+<pre><code class="language-bash">cd paperclip
+pnpm dev
+</code></pre>
+<h4 id="step-2">Step 2: 创建公司</h4>
+<p>在 Dashboard 中点击 <strong>"Create Company"</strong>：</p>
+<pre><code>Company Name: Content Marketing Co
+Mission: &quot;Build a content marketing agency that generates 100K monthly traffic&quot;
+</code></pre>
+<h4 id="step-3">Step 3: 设计组织架构</h4>
+<p>创建 Agent 角色：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                  Content Marketing Co 组织架构                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  👔 CEO (Claude)                                                │
+│  │    预算: $60/月                                              │
+│  │    职责: 战略决策、任务分配                                  │
+│  │                                                              │
+│  ├── 📈 CMO (OpenClaw)                                          │
+│  │    │   预算: $40/月                                          │
+│  │    │   职责: 营销策略、内容规划                              │
+│  │    │                                                         │
+│  │    ├── 📝 Content Writer (Claude)                            │
+│  │    │       预算: $30/月                                      │
+│  │    │       职责: 撰写博客、社媒内容                          │
+│  │    │                                                         │
+│  │    ├── 🔍 SEO Specialist (Claude)                            │
+│  │    │       预算: $30/月                                      │
+│  │    │       职责: SEO 优化、关键词研究                        │
+│  │    │                                                         │
+│  │    └── 📱 Social Manager (Claude)                            │
+│  │            预算: $30/月                                      │
+│  │            职责: 社媒发布、互动管理                          │
+│  │                                                              │
+│  └── 💰 CFO (Claude)                                            │
+│       预算: $20/月                                              │
+│       职责: 成本监控、预算报告                                  │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="step-4-agent">Step 4: 配置 Agent</h4>
+<p>为每个 Agent 设置：</p>
+<pre><code class="language-yaml"># Content Writer 配置示例
+name: Content Writer
+provider: claude
+model: claude-sonnet-4-6
+budget: $30/month
+role: |
+  你是内容营销公司的专业写手。
+  负责撰写博客文章、社交媒体内容、邮件营销文案。
+  写作风格：专业但友好，SEO 友好。
+heartbeat: every 4h
+skills:
+  - blog_writing
+  - social_media
+  - email_copy
+</code></pre>
+<h4 id="step-5-heartbeats">Step 5: 设置 Heartbeats</h4>
+<p>配置定期任务：</p>
+<pre><code class="language-yaml"># Content Writer 心跳
+schedule: every 4h
+tasks:
+  - Check content calendar
+  - Draft blog post (if needed)
+  - Review and edit drafts
+  - Submit for approval
+</code></pre>
+<h4 id="step-6">Step 6: 创建第一个任务</h4>
+<p>在 Dashboard 中创建任务：</p>
+<pre><code>Title: Write blog post about AI marketing
+Assigned to: Content Writer
+Goal: Create engaging blog content
+Priority: High
+Due: Today
+
+Description:
+Write a 1500-word blog post about &quot;How AI is transforming content marketing&quot;.
+Include:
+- Introduction with hook
+- 3 key benefits of AI in marketing
+- Real-world examples
+- Call to action
+</code></pre>
+<h4 id="step-7">Step 7: 监控执行</h4>
+<p>在 Dashboard 中查看：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                       Task Progress                              │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Task: Write blog post about AI marketing                       │
+│  Status: 🔄 In Progress                                         │
+│  Agent: Content Writer                                          │
+│  Cost: $0.42 / $30                                              │
+│                                                                 │
+│  Timeline:                                                      │
+│  ├── 10:00 - Task assigned                                      │
+│  ├── 10:05 - Agent started                                      │
+│  ├── 10:15 - Research completed                                 │
+│  ├── 10:30 - Draft created                                      │
+│  └── 10:45 - Submitted for review                               │
+│                                                                 │
+│  Output:                                                        │
+│  [Preview draft...]                                             │
+│                                                                 │
+│  [Approve] [Request Changes] [Reject]                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="step-8">Step 8: 审批和发布</h4>
+<p>作为董事会：
+1. <strong>Review</strong> - 审阅 Agent 的工作
+2. <strong>Approve</strong> - 批准发布
+3. <strong>Override</strong> - 或要求修改</p>
+<hr />
+<h2 id="_5">四、功能详解</h2>
+<h3 id="41">4.1 功能：组织架构管理</h3>
+<h4 id="_6">📌 功能概述</h4>
+<p>可视化管理 AI 员工的层级关系</p>
+<h4 id="_7">🔧 原理说明</h4>
+<ul>
+<li>每个公司有一个组织架构图</li>
+<li>Agent 有上级和下属关系</li>
+<li>任务按层级流动</li>
+</ul>
+<h4 id="_8">📝 基础用法</h4>
+<p><strong>创建 Agent</strong>：</p>
+<pre><code>1. 进入 Dashboard
+2. 点击 &quot;Add Agent&quot;
+3. 填写配置：
+   - Name: Agent 名称
+   - Provider: claude / openclaw / codex
+   - Model: 模型选择
+   - Budget: 月度预算
+   - Role: 角色描述
+</code></pre>
+<p><strong>设置层级</strong>：</p>
+<pre><code>CEO
+├── reports_to: null
+└── direct_reports: [CTO, CMO, CFO]
+
+CTO
+├── reports_to: CEO
+└── direct_reports: [Engineer1, Engineer2]
+</code></pre>
+<h4 id="_9">🚀 进阶用法</h4>
+<p><strong>多公司管理</strong>：</p>
+<pre><code>Dashboard
+├── 📱 Mobile Marketing Co (8 agents)
+├── 💰 Crypto Trading Fund (14 agents)
+└── 🎬 TikTok Factory (5 agents)
+</code></pre>
+<hr />
+<h3 id="42-heartbeats">4.2 功能：心跳机制 (Heartbeats)</h3>
+<h4 id="_10">📌 功能概述</h4>
+<p>Agent 按计划自动唤醒执行任务</p>
+<h4 id="_11">🔧 原理说明</h4>
+<ul>
+<li>基于时间的触发器</li>
+<li>Agent 唤醒后检查工作队列</li>
+<li>执行完成后进入休眠</li>
+</ul>
+<h4 id="_12">📝 基础用法</h4>
+<pre><code class="language-yaml"># 配置心跳
+agent: Content Writer
+schedule: every 4h
+tasks:
+  - Check content queue
+  - Process pending items
+  - Report status
+</code></pre>
+<h4 id="_13">🚀 进阶用法</h4>
+<p><strong>复杂心跳配置</strong>：</p>
+<pre><code class="language-yaml"># SEO Analyst 心跳
+schedule:
+  weekday: &quot;0 8,16 * * 1-5&quot;  # 工作日 8AM, 4PM
+  weekend: &quot;0 10 * * 0,6&quot;    # 周末 10AM
+
+tasks:
+  - name: Crawl audit
+    priority: high
+  - name: Keyword research
+    priority: medium
+  - name: Rank tracking
+    priority: low
+</code></pre>
+<p><strong>紧急任务</strong>：</p>
+<pre><code class="language-yaml"># Social Manager 心跳
+schedule: every 12h
+urgent_triggers:
+  - brand_mention_spike
+  - negative_sentiment
+  - viral_content_opportunity
+</code></pre>
+<hr />
+<h3 id="43">4.3 功能：成本控制</h3>
+<h4 id="_14">📌 功能概述</h4>
+<p>管理每个 Agent 的预算和成本</p>
+<h4 id="_15">🔧 原理说明</h4>
+<ul>
+<li>每个 Agent 有月度预算</li>
+<li>实时追踪 Token 消耗</li>
+<li>超限自动暂停</li>
+</ul>
+<h4 id="_16">📝 基础用法</h4>
+<pre><code>Budget Dashboard:
+
+CEO Claude          $12.50 / $60
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+CMO OpenClaw        $8.20 / $40
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
+
+[Adjust Budget] [Pause Agent] [View Details]
+</code></pre>
+<h4 id="_17">⚠️ 注意事项</h4>
+<ol>
+<li><strong>80% 警告</strong> - 达到 80% 时收到通知</li>
+<li><strong>100% 暂停</strong> - 达到 100% 时自动暂停</li>
+<li><strong>董事会覆盖</strong> - 你可以随时调整限制</li>
+</ol>
+<hr />
+<h3 id="44-ticket">4.4 功能：Ticket 系统</h3>
+<h4 id="_18">📌 功能概述</h4>
+<p>每个对话可追溯，每个决策有解释</p>
+<h4 id="_19">🔧 原理说明</h4>
+<ul>
+<li>结构化任务记录</li>
+<li>完整工具调用追踪</li>
+<li>不可变审计日志</li>
+</ul>
+<h4 id="_20">📝 基础用法</h4>
+<pre><code>Ticket #1234
+──────────────────────────────────────
+Title: Deploy pricing page update
+Status: ✅ Completed
+Agent: CTO
+Cost: $0.85
+Duration: 15 min
+
+Conversation:
+──────────────────────────────────────
+You (10:00):
+&quot;Deploy the updated pricing page to production. Run tests.&quot;
+
+CTO Agent (10:02):
+&quot;Running test suite and staging deployment now...&quot;
+
+CTO Agent (10:10):
+&quot;Tests passed. Staging deployment complete.&quot;
+
+You (10:11):
+&quot;Approved. Go ahead.&quot;
+
+CTO Agent (10:15):
+&quot;Production deployment complete. All systems green.&quot;
+
+Trace:
+──────────────────────────────────────
+├── run_tests() ✅ passed (2m)
+├── deploy_to_staging() ✅ done (3m)
+├── smoke_test() ✅ passed (1m)
+└── deploy_to_production() ✅ done (2m)
+</code></pre>
+<hr />
+<h3 id="45">4.5 功能：治理层</h3>
+<h4 id="_21">📌 功能概述</h4>
+<p>你作为董事会保持对公司的完全控制</p>
+<h4 id="_22">🔧 原理说明</h4>
+<ul>
+<li>审批门强制执行</li>
+<li>配置变更可回滚</li>
+<li>随时暂停任何 Agent</li>
+</ul>
+<h4 id="_23">📝 基础用法</h4>
+<p><strong>治理权限</strong>：</p>
+<pre><code>作为董事会，你可以：
+✅ 批准新 Agent 招聘
+✅ 审阅和修改策略
+✅ 覆盖任何决策
+✅ 暂停任何 Agent
+✅ 重新分配任何任务
+✅ 调整任何预算
+✅ 终止任何 Agent
+</code></pre>
+<hr />
+<h2 id="_24">五、配置指南</h2>
+<h3 id="51">5.1 配置文件结构</h3>
+<pre><code>paperclip/
+├── config/
+│   ├── default.yaml          # 默认配置
+│   ├── agents/               # Agent 配置
+│   │   ├── ceo.yaml
+│   │   ├── cto.yaml
+│   │   └── ...
+│   └── companies/            # 公司配置
+│       ├── marketing.yaml
+│       └── trading.yaml
+└── data/
+    └── paperclip.db          # 嵌入式数据库
+</code></pre>
+<h3 id="52-agent">5.2 Agent 配置模板</h3>
+<pre><code class="language-yaml"># agents/content_writer.yaml
+name: Content Writer
+provider: claude
+model: claude-sonnet-4-6
+
+budget:
+  monthly: 30          # 月度预算 (美元)
+  warning_at: 0.8      # 80% 警告
+  halt_at: 1.0         # 100% 暂停
+
+role: |
+  你是专业内容写手，负责撰写博客和社媒内容。
+  写作风格：专业、友好、SEO 优化。
+
+heartbeat:
+  schedule: &quot;0 */4 * * *&quot;  # 每 4 小时
+  timezone: &quot;Asia/Shanghai&quot;
+
+skills:
+  - blog_writing
+  - seo_optimization
+  - social_media
+
+limits:
+  max_tasks_per_heartbeat: 5
+  max_tokens_per_task: 10000
+
+reporting:
+  to: CMO
+  frequency: daily
+</code></pre>
+<h3 id="53">5.3 公司配置模板</h3>
+<pre><code class="language-yaml"># companies/marketing.yaml
+name: Content Marketing Co
+mission: &quot;Build a content marketing agency generating 100K monthly traffic&quot;
+
+org_chart:
+  ceo:
+    agent: ceo
+    reports_to: null
+    direct_reports: [cmo, cfo]
+
+  cmo:
+    agent: cmo
+    reports_to: ceo
+    direct_reports: [content_writer, seo_specialist, social_manager]
+
+  cfo:
+    agent: cfo
+    reports_to: ceo
+    direct_reports: []
+
+settings:
+  governance_level: high    # high / medium / low
+  auto_approve: false       # 自动审批
+  require_review: true      # 需要人工审阅
+</code></pre>
+<h3 id="54">5.4 开发命令</h3>
+<pre><code class="language-bash"># 开发
+pnpm dev              # 完整开发 (API + UI)
+pnpm dev:once         # 无文件监控
+pnpm dev:server       # 仅服务器
+
+# 构建
+pnpm build            # 构建全部
+pnpm typecheck        # 类型检查
+
+# 测试
+pnpm test:run         # 运行测试
+
+# 数据库
+pnpm db:generate      # 生成迁移
+pnpm db:migrate       # 应用迁移
+</code></pre>
+<hr />
+<h2 id="_25">六、实战案例</h2>
+<h3 id="1">案例 1：内容营销公司</h3>
+<pre><code class="language-yaml">Company: Content Marketing Co
+Mission: Generate 100K monthly traffic
+Agents: 8
+Budget: $240/month
+
+Org Chart:
+CEO (Claude)
+├── CMO (OpenClaw)
+│   ├── Content Writer
+│   ├── SEO Specialist
+│   └── Social Manager
+├── CTO (Cursor)
+│   └── Developer
+└── CFO (Claude)
+
+Heartbeats:
+- Content Writer: every 4h
+- SEO Specialist: every 8h
+- Social Manager: every 12h
+</code></pre>
+<h3 id="2">案例 2：加密交易基金</h3>
+<pre><code class="language-yaml">Company: Crypto Trading Fund
+Mission: Generate alpha through systematic trading
+Agents: 14
+Budget: $500/month
+
+Org Chart:
+Managing Partner (Claude)
+├── Trading Lead (Claude)
+│   ├── Spot Trader
+│   ├── Derivatives Trader
+│   └── Execution Engine
+├── Research Lead (OpenClaw)
+│   ├── Market Analyst
+│   ├── On-chain Analyst
+│   └── Sentiment Analyst
+├── Risk Manager (Claude)
+└── Quant Lead (Codex)
+    ├── Strategy Developer
+    └── Backtester
+
+Heartbeats:
+- Traders: every 1h (market hours)
+- Research: every 4h
+- Risk: every 30m
+</code></pre>
+<h3 id="3tiktok">案例 3：TikTok 工厂</h3>
+<pre><code class="language-yaml">Company: Faceless TikTok Factory
+Mission: Create viral short-form content
+Agents: 6
+Budget: $150/month
+
+Org Chart:
+Producer (Claude)
+├── Scriptwriter (Claude)
+├── Video Editor (Codex)
+├── Voice (ElevenLabs)
+├── Thumbnail (DALL-E)
+└── Analytics (Claude)
+
+Workflow:
+1. Scriptwriter creates script
+2. Voice generates narration
+3. Video Editor assembles
+4. Thumbnail creates cover
+5. Producer reviews &amp; publishes
+6. Analytics tracks performance
+</code></pre>
+<hr />
+<h2 id="_26">七、常见问题</h2>
+<h3 id="q1-paperclip-claude-code">Q1: PaperClip 和 Claude Code 有什么区别？</h3>
+<p><strong>A</strong>: PaperClip <strong>使用</strong> Claude Code 等 Agent。它将它们编排成一个公司 —— 有组织架构、预算、目标、治理和问责制。</p>
+<hr />
+<h3 id="q2-agent">Q2: 如何添加自定义 Agent？</h3>
+<p><strong>A</strong>:</p>
+<pre><code class="language-yaml"># 1. 创建 Agent 配置
+config/agents/my_agent.yaml
+
+# 2. 添加到组织架构
+# 在公司配置中引用
+
+# 3. 重启服务
+pnpm dev
+</code></pre>
+<hr />
+<h3 id="q3">Q3: 成本太高怎么办？</h3>
+<p><strong>A</strong>:
+1. 使用 budget 配置文件
+2. 调整 Agent 心跳频率
+3. 使用更便宜的模型 (如 Haiku)
+4. 设置更严格的预算限制</p>
+<hr />
+<h3 id="q4-agent">Q4: 如何监控 Agent 活动？</h3>
+<p><strong>A</strong>:
+- Dashboard 实时监控
+- Ticket 系统完整追踪
+- 预算面板查看成本
+- 审计日志查看历史</p>
+<hr />
+<h3 id="q5-agent">Q5: 支持哪些 Agent 提供商？</h3>
+<p><strong>A</strong>:
+| 提供商 | 支持 |
+|--------|------|
+| Claude (Anthropic) | ✅ |
+| OpenClaw | ✅ |
+| Codex (OpenAI) | ✅ |
+| Cursor | ✅ |
+| 自定义 HTTP | ✅ |</p>
+<hr />
+<h2 id="_27">八、最佳实践</h2>
+<h3 id="81">8.1 组织架构设计</h3>
+<p>✅ <strong>好的设计</strong>：</p>
+<pre><code>CEO (战略层)
+├── CTO (技术层)
+│   └── Engineers (执行层)
+└── CMO (营销层)
+    └── Content Team (执行层)
+</code></pre>
+<p>❌ <strong>不好的设计</strong>：</p>
+<pre><code>CEO 直接管理 20 个 Agent (扁平化太严重)
+</code></pre>
+<h3 id="82">8.2 预算设置</h3>
+<pre><code>建议预算分配：
+- CEO: $50-100/月
+- 部门主管: $30-50/月
+- 执行 Agent: $20-30/月
+</code></pre>
+<h3 id="83">8.3 心跳频率</h3>
+<pre><code>根据角色设置：
+- 交易员: 每 30 分钟
+- 内容创作者: 每 4 小时
+- 分析师: 每 8 小时
+- 报告生成: 每天
+</code></pre>
+<h3 id="84">8.4 治理级别</h3>
+<pre><code>高治理 (推荐新手):
+- 所有决策需要审批
+- 完整审计追踪
+
+中治理 (有经验后):
+- 常规任务自动执行
+- 重要决策需要审批
+
+低治理 (完全自治):
+- Agent 自主决策
+- 仅监控异常
+</code></pre>
+<hr />
+<h2 id="_28">九、速查表</h2>
+<pre><code># 安装
+npx paperclipai onboard --yes
+
+# 启动
+pnpm dev
+
+# 创建公司
+Dashboard → Create Company
+
+# 添加 Agent
+Dashboard → Add Agent
+
+# 创建任务
+Dashboard → New Task
+
+# 查看进度
+Dashboard → Tickets
+
+# 管理预算
+Dashboard → Budgets
+
+# 治理操作
+Dashboard → Governance
+</code></pre>
+<hr />
+<h2 id="_29">十、总结</h2>
+<h3 id="paperclip_1">PaperClip 的核心价值</h3>
+<pre><code>1. 🏢 组织架构 - Agent 有老板、职位、工作描述
+2. 🎯 目标对齐 - 每个任务追溯到公司使命
+3. 💰 成本控制 - 预算管理，防止 Token 浪费
+4. 🛡️ 治理层 - 你是董事会，保持控制
+5. 💓 心跳机制 - 自动定期工作
+6. 🎫 Ticket 系统 - 完整审计追踪
+7. 📱 移动就绪 - 随时随地管理
+8. 🏢 多公司 - 一个部署，无限公司
+</code></pre>
+<h3 id="_30">适用人群</h3>
+<pre><code>✅ 想构建自主 AI 公司的人
+✅ 协调多个不同 Agent 的人
+✅ 有 20 个 Claude Code 终端的人
+✅ 希望 Agent 24/7 自主运行但保持审计的人
+✅ 想监控成本并执行预算的人
+✅ 管理多个自主业务的人
+</code></pre>
+<h3 id="_31">一句话总结</h3>
+<blockquote>
+<p><strong>Open source under MIT. Built for people who want to run companies, not babysit agents.</strong></p>
+<p>MIT 开源。为想要运营公司而不是看管 Agent 的人而构建。</p>
+</blockquote>
+<hr />
+<h2 id="_32">十一、资源链接</h2>
+<ul>
+<li><strong>官网</strong>: <a href="https://paperclip.ing/">paperclip.ing</a></li>
+<li><strong>GitHub</strong>: <a href="https://github.com/paperclipai/paperclip">github.com/paperclipai/paperclip</a></li>
+<li><strong>教程</strong>: <a href="https://paperclipai.info/">paperclipai.info</a></li>
+<li><strong>视频</strong>: <a href="https://www.youtube.com/watch?v=gPbDxMS_x9s">YouTube Tutorial</a></li>
+<li><strong>部署</strong>: <a href="https://zeabur.com/templates/E6H44N">Zeabur Template</a></li>
+</ul>
+<hr />
+<p><em>文档版本: 1.0</em>
+<em>创建日期: 2026-03-17</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

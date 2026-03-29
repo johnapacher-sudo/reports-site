@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GStack 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub 开源项目 garrytan/gstack 的深度技术调研 | 调研日期：2026-03-22（更新）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 发展历程</a></li>
+<li><a href="#14" class="toc-h3">1.4 核心价值</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 十大工作流技能</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心理念：显式认知齿轮</a></li>
+<li><a href="#23" class="toc-h3">2.3 工作流示例</a></li>
+<li><a href="#_3" class="toc-h2">三、技术架构</a></li>
+<li><a href="#31" class="toc-h3">3.1 整体架构</a></li>
+<li><a href="#32" class="toc-h3">3.2 浏览器自动化模块</a></li>
+<li><a href="#33-greptile" class="toc-h3">3.3 Greptile 集成</a></li>
+<li><a href="#34-conductor" class="toc-h3">3.4 Conductor 并行架构</a></li>
+<li><a href="#_4" class="toc-h2">四、核心技能详解</a></li>
+<li><a href="#41-plan-ceo-review-" class="toc-h3">4.1 /plan-ceo-review - 创始人模式</a></li>
+<li><a href="#42-plan-eng-review-" class="toc-h3">4.2 /plan-eng-review - 工程经理模式</a></li>
+<li><a href="#43-review-" class="toc-h3">4.3 /review - 偏执高级工程师模式</a></li>
+<li><a href="#44-ship-" class="toc-h3">4.4 /ship - 发布机器模式</a></li>
+<li><a href="#45-browse-qa" class="toc-h3">4.5 /browse - QA 工程师模式</a></li>
+<li><a href="#46-qa-qa" class="toc-h3">4.6 /qa - QA + 修复工程师模式</a></li>
+<li><a href="#47-retro-" class="toc-h3">4.7 /retro - 工程经理复盘模式</a></li>
+<li><a href="#_5" class="toc-h2">五、安装配置</a></li>
+<li><a href="#51" class="toc-h3">5.1 环境要求</a></li>
+<li><a href="#52" class="toc-h3">5.2 安装步骤</a></li>
+<li><a href="#_6" class="toc-h4">方式一：全局安装（推荐）</a></li>
+<li><a href="#_7" class="toc-h4">方式二：项目级安装</a></li>
+<li><a href="#53" class="toc-h3">5.3 安装内容</a></li>
+<li><a href="#54" class="toc-h3">5.4 配置文件</a></li>
+<li><a href="#_8" class="toc-h2">六、使用场景</a></li>
+<li><a href="#61" class="toc-h3">6.1 适用场景</a></li>
+<li><a href="#62" class="toc-h3">6.2 典型工作流</a></li>
+<li><a href="#_9" class="toc-h4">功能开发工作流</a></li>
+<li><a href="#qa" class="toc-h4">QA 自动化工作流</a></li>
+<li><a href="#63" class="toc-h3">6.3 不适用场景</a></li>
+<li><a href="#_10" class="toc-h2">七、对比分析</a></li>
+<li><a href="#71" class="toc-h3">7.1 与类似工具对比</a></li>
+<li><a href="#72" class="toc-h3">7.2 技术栈对比</a></li>
+<li><a href="#73" class="toc-h3">7.3 选型建议</a></li>
+<li><a href="#_11" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 技能组合使用</a></li>
+<li><a href="#82" class="toc-h3">8.2 浏览器测试技巧</a></li>
+<li><a href="#83" class="toc-h3">8.3 避坑指南</a></li>
+<li><a href="#_12" class="toc-h2">九、总结</a></li>
+<li><a href="#91" class="toc-h3">9.1 优势</a></li>
+<li><a href="#92" class="toc-h3">9.2 劣势</a></li>
+<li><a href="#93" class="toc-h3">9.3 最终评价</a></li>
+<li><a href="#_13" class="toc-h2">十、参考资料</a></li>
+<li><a href="#_14" class="toc-h3">官方资源</a></li>
+<li><a href="#_15" class="toc-h3">社区讨论</a></li>
+<li><a href="#_16" class="toc-h3">相关文章</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GStack 调研报告</h1>
+                        <div class="article-meta">基于 GitHub 开源项目 garrytan/gstack 的深度技术调研<br>调研日期：2026-03-22（更新）</div>
+                    </header>
+                    <h1 id="gstack">GStack 调研报告</h1>
+<blockquote>
+<p>基于 GitHub 开源项目 garrytan/gstack 的深度技术调研</p>
+<p>调研日期：2026-03-22（更新）</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>GStack</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/garrytan/gstack</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>Garry Tan (陈嘉兴)</td>
+</tr>
+<tr>
+<td><strong>身份</strong></td>
+<td>Y Combinator CEO &amp; President</td>
+</tr>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>Claude Code 专业工作流工具集</td>
+</tr>
+<tr>
+<td><strong>开源状态</strong></td>
+<td>MIT License</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>36,386+ (持续增长中)</td>
+</tr>
+<tr>
+<td><strong>技术栈</strong></td>
+<td>TypeScript, Bun, Playwright</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>GStack 是 Y Combinator CEO Garry Tan 开源的 Claude Code 工作流配置，将通用 AI 助手转变为可按需召唤的专家团队（CEO、工程经理、QA 等），实现 10K LOC/周、100 PRs/周的惊人生产力。</p>
+<h3 id="13">1.3 发展历程</h3>
+<pre><code>2025 年
+├── Garry Tan 个人使用 Claude Code 进行高强度开发
+├── 50 天内产出 10K LOC/周、100 PRs/周
+└── 打磨出一套成熟的工作流配置
+
+2026 年 3 月
+├── GStack 正式开源发布
+├── 24 小时内获得 6,000+ Stars
+├── 48 小时内突破 11,900+ Stars
+├── 截至 3 月 22 日：36,386+ Stars
+└── 引发社区广泛讨论和争议
+</code></pre>
+<h3 id="14">1.4 核心价值</h3>
+<ul>
+<li><strong>角色切换</strong>：一键切换 AI 的"认知模式"（创始人/工程师/审查员/发布）</li>
+<li><strong>工作流标准化</strong>：将模糊的 AI 交互转变为结构化流程</li>
+<li><strong>浏览器自动化</strong>：让 AI 拥有"眼睛"，能够测试 UI</li>
+<li><strong>并行执行</strong>：通过 Conductor 运行多达 10 个并行会话</li>
+</ul>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 十大工作流技能</h3>
+<table>
+<thead>
+<tr>
+<th>技能</th>
+<th>模式</th>
+<th>功能描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/plan-ceo-review</code></td>
+<td>创始人/CEO</td>
+<td>重新思考问题，找到隐藏在需求中的 10 星产品</td>
+</tr>
+<tr>
+<td><code>/plan-eng-review</code></td>
+<td>工程经理/技术负责人</td>
+<td>锁定架构、数据流、边界条件和测试矩阵</td>
+</tr>
+<tr>
+<td><code>/review</code></td>
+<td>偏执的高级工程师</td>
+<td>找出能通过 CI 但在生产环境爆炸的 Bug</td>
+</tr>
+<tr>
+<td><code>/ship</code></td>
+<td>发布工程师</td>
+<td>同步 main、运行测试、解决 Greptile 审查、推送、创建 PR</td>
+</tr>
+<tr>
+<td><code>/browse</code></td>
+<td>QA 工程师</td>
+<td>让 Agent 拥有"眼睛"，登录、点击、截图、发现故障</td>
+</tr>
+<tr>
+<td><code>/qa</code></td>
+<td>QA + 修复工程师</td>
+<td>测试应用、发现 Bug、用原子提交修复、重新验证</td>
+</tr>
+<tr>
+<td><code>/qa-only</code></td>
+<td>QA 报告员</td>
+<td>仅报告模式，不修改任何代码</td>
+</tr>
+<tr>
+<td><code>/setup-browser-cookies</code></td>
+<td>会话管理器</td>
+<td>从真实浏览器导入 Cookies 到无头会话</td>
+</tr>
+<tr>
+<td><code>/retro</code></td>
+<td>工程经理</td>
+<td>团队复盘：深度分析 + 每人表扬和成长机会</td>
+</tr>
+<tr>
+<td><code>/document-release</code></td>
+<td>技术文档工程师</td>
+<td>更新 README、ARCHITECTURE、CONTRIBUTING 等文档</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 核心理念：显式认知齿轮</h3>
+<pre><code>Garry Tan 的核心观点：
+
+&quot;我不希望 AI 编码工具停留在一种模糊模式。
+
+规划不是审查。审查不是发布。创始人品味不是工程严谨。
+如果你把所有这些都混在一起，通常会得到四者的平庸混合。
+
+我想要显式的齿轮。
+
+这些技能让我告诉模型我现在想要什么样的'大脑'。
+我可以按需切换认知模式 —— 创始人、工程经理、偏执审查员、发布机器。
+这就是解锁。&quot;
+</code></pre>
+<h3 id="23">2.3 工作流示例</h3>
+<pre><code>一个功能，五种模式：
+
+You:   [进入计划模式，描述功能]
+       我想在商品列表应用中添加卖家照片上传功能。
+       卖家应该能够上传商品照片，我们从照片创建列表。
+
+You:   /plan-ceo-review
+
+Claude: &quot;照片上传&quot;不是功能。真正的工作是帮助卖家创建能卖出去的列表。
+        10 星版本长这样：从照片自动识别产品，从网络提取规格和定价参考，
+        起草标题和描述，建议最佳主图...
+
+You:   /plan-eng-review
+
+Claude: [架构图，上传→分类→丰富→草稿流水线的状态机，
+        异步作业边界，失败模式，测试矩阵]
+
+You:   [退出计划模式，实现计划]
+
+You:   /review
+
+Claude: 发现竞态条件：两个标签页可能覆盖封面照片选择。
+        信任边界：将网络数据拉入草稿生成会创建提示注入向量。
+        缺失：失败上传的孤立文件清理。
+
+You:   (修复问题)
+
+You:   /ship
+
+Claude: [同步 main，运行测试，推送分支，创建 PR — 6 个工具调用，完成]
+
+You:   /qa
+
+Claude: 分析分支差异... 8 个文件变更，3 个路由受影响。
+        [测试 /listings/new, /listings/:id, /api/listings]
+        所有 3 个路由正常工作。上传 + 丰富流程端到端通过。
+</code></pre>
+<hr />
+<h2 id="_3">三、技术架构</h2>
+<h3 id="31">3.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                          GStack 系统架构                                 │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                      Claude Code CLI                              │    │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │    │
+│  │  │ /plan   │ │ /review │ │  /ship  │ │ /browse │ │  /qa    │   │    │
+│  │  │ -ceo    │ │         │ │         │ │         │ │         │   │    │
+│  │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘   │    │
+│  └───────┼───────────┼───────────┼───────────┼───────────┼─────────┘    │
+│          │           │           │           │           │              │
+│  ┌───────┴───────────┴───────────┴───────────┴───────────┴─────────┐    │
+│  │                    Skills Layer (~/.claude/skills/)              │    │
+│  │  ┌─────────────────────────────────────────────────────────┐    │    │
+│  │  │  gstack/                                                  │    │    │
+│  │  │  ├── plan-ceo-review.md      (CEO 模式提示词)            │    │    │
+│  │  │  ├── plan-eng-review.md      (工程经理模式提示词)         │    │    │
+│  │  │  ├── review.md               (审查模式提示词)             │    │    │
+│  │  │  ├── ship.md                 (发布模式提示词)             │    │    │
+│  │  │  ├── browse.md               (浏览模式提示词)             │    │    │
+│  │  │  ├── qa.md                   (QA 模式提示词)              │    │    │
+│  │  │  ├── retro.md                (复盘模式提示词)             │    │    │
+│  │  │  ├── document-release.md     (文档模式提示词)             │    │    │
+│  │  │  └── browse/                 (浏览器自动化模块)           │    │    │
+│  │  │      ├── src/                (TypeScript 源码)            │    │    │
+│  │  │      └── dist/browse         (编译后二进制 ~58MB)         │    │    │
+│  │  └─────────────────────────────────────────────────────────┘    │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                      External Integrations                        │    │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │    │
+│  │  │  Greptile   │  │  Chromium   │  │   Git/GitHub │              │    │
+│  │  │ (PR 审查)   │  │ (Playwright) │  │   (PR/CI)   │              │    │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘              │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 浏览器自动化模块</h3>
+<pre><code>/browse 技术架构：
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      /browse 命令                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌───────────────┐     ┌───────────────┐     ┌───────────────┐  │
+│  │  Claude Code  │ --&gt; │  browse 二进制 │ --&gt; │  Playwright   │  │
+│  │   (调用命令)   │     │  (Bun 编译)    │     │  (浏览器控制)  │  │
+│  └───────────────┘     └───────────────┘     └───────────────┘  │
+│                                                     │            │
+│                                                     ▼            │
+│                                              ┌───────────────┐   │
+│                                              │  Chromium     │   │
+│                                              │  (持久会话)    │   │
+│                                              └───────────────┘   │
+│                                                                  │
+│  特点：                                                          │
+│  - 首次调用启动浏览器 (~3s)                                      │
+│  - 后续调用响应快 (~100-200ms)                                   │
+│  - Cookies、tabs、localStorage 在命令间保持                      │
+│  - 30 分钟空闲后自动关闭                                         │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="33-greptile">3.3 Greptile 集成</h3>
+<pre><code>Greptile 集成流程：
+
+┌─────────────────────────────────────────────────────────────────┐
+│                     /review 或 /ship                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  1. 读取 PR 上的 Greptile 评论                                   │
+│     ┌───────────────────────────────────────────────────┐       │
+│     │  Greptile Comments                                 │       │
+│     │  ├── 竞态条件警告                                   │       │
+│     │  ├── 安全问题提示                                   │       │
+│     │  └── 代码风格建议                                   │       │
+│     └───────────────────────────────────────────────────┘       │
+│                          │                                       │
+│                          ▼                                       │
+│  2. 分类处理                                                      │
+│     ┌──────────────┬──────────────┬──────────────┐              │
+│     │  有效问题    │  已修复问题   │  误报        │              │
+│     │  (自动修复)  │  (自动回复)   │  (推送反驳)   │              │
+│     └──────────────┴──────────────┴──────────────┘              │
+│                          │                                       │
+│                          ▼                                       │
+│  3. 学习和记录                                                    │
+│     ┌───────────────────────────────────────────────────┐       │
+│     │  ~/.gstack/greptile-history.md                     │       │
+│     │  (记录已知误报模式，未来自动跳过)                    │       │
+│     └───────────────────────────────────────────────────┘       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="34-conductor">3.4 Conductor 并行架构</h3>
+<pre><code>Conductor: 10 个并行 Claude Code 会话
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Conductor                                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
+│  │ Session │ │ Session │ │ Session │ │ Session │ │ Session │           │
+│  │   #1    │ │   #2    │ │   #3    │ │   #4    │ │   #5    │           │
+│  │         │ │         │ │         │ │         │ │         │           │
+│  │ /qa     │ │ /review │ │ 实现功能 │ │ 实现功能 │ │ /browse │           │
+│  │ staging │ │ PR #42  │ │ 分支 A   │ │ 分支 B   │ │ 测试    │           │
+│  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘           │
+│       │           │           │           │           │                 │
+│  ┌────┴────┐ ┌────┴────┐ ┌────┴────┐ ┌────┴────┐ ┌────┴────┐           │
+│  │Workspace│ │Workspace│ │Workspace│ │Workspace│ │Workspace│           │
+│  │   #1    │ │   #2    │ │   #3    │ │   #4    │ │   #5    │           │
+│  │ 独立浏览器│ │ 独立浏览器│ │ 独立浏览器│ │ 独立浏览器│ │ 独立浏览器│           │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
+│                                                                          │
+│  每个工作空间：                                                          │
+│  - 独立的代码库副本                                                      │
+│  - 独立的 Chromium 进程                                                  │
+│  - 独立的 Cookies 和会话                                                 │
+│  - 无端口冲突，无共享状态                                                │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_4">四、核心技能详解</h2>
+<h3 id="41-plan-ceo-review-">4.1 <code>/plan-ceo-review</code> - 创始人模式</h3>
+<p><strong>设计哲学</strong>：Brian Chesky 模式（Airbnb CEO）</p>
+<p><strong>核心问题</strong>：这个产品到底是为了什么？</p>
+<p><strong>行为特征</strong>：
+- 不按字面意思理解需求
+- 从用户角度重新思考问题
+- 寻找"不可避免、令人愉悦、甚至有点神奇"的版本
+- 追问"隐藏在这个需求中的 10 星产品是什么"</p>
+<pre><code>示例：
+
+输入: &quot;让卖家上传商品照片&quot;
+弱助手: 添加文件选择器，保存图片
+
+/plan-ceo-review:
+&quot;照片上传&quot;不是真正的功能。
+真正的工作是帮助卖家创建能卖出去的列表。
+
+应该追问：
+- 能否从照片识别产品？
+- 能否推断 SKU 或型号？
+- 能否搜索网络并自动起草标题和描述？
+- 能否提取规格、类别和定价参考？
+- 能否建议哪张照片最适合做主图？
+- 能否检测照片是否丑陋、黑暗、杂乱或低信任度？
+</code></pre>
+<h3 id="42-plan-eng-review-">4.2 <code>/plan-eng-review</code> - 工程经理模式</h3>
+<p><strong>核心任务</strong>：让想法变得可构建</p>
+<p><strong>关注点</strong>：
+- 架构设计
+- 系统边界
+- 数据流
+- 状态转换
+- 失败模式
+- 边界条件
+- 信任边界
+- 测试覆盖</p>
+<p><strong>关键解锁</strong>：图表</p>
+<pre><code>图表类型：
+├── 架构图
+├── 状态图
+├── 组件图
+├── 数据流图
+└── 测试矩阵
+
+图表强制将隐藏假设暴露出来，
+使模糊的规划变得更难。
+</code></pre>
+<h3 id="43-review-">4.3 <code>/review</code> - 偏执高级工程师模式</h3>
+<p><strong>核心问题</strong>：什么还会出错？</p>
+<p><strong>关注点</strong>：通过 CI 但在生产环境爆炸的 Bug</p>
+<pre><code>审查清单：
+├── N+1 查询
+├── 过期读取
+├── 竞态条件
+├── 错误的信任边界
+├── 缺失索引
+├── 转义 Bug
+├── 破坏的不变量
+├── 错误的重试逻辑
+└── 测试通过但遗漏真正失败模式的测试
+</code></pre>
+<h3 id="44-ship-">4.4 <code>/ship</code> - 发布机器模式</h3>
+<p><strong>核心任务</strong>：执行最后一公里</p>
+<p><strong>自动化流程</strong>：</p>
+<pre><code>/ship 流程：
+1. 同步 main
+2. 运行测试
+3. 确保分支状态正常
+4. 更新 changelog/版本号
+5. 推送分支
+6. 创建/更新 PR
+</code></pre>
+<p><strong>设计理念</strong>：此时不需要头脑风暴，只需要执行</p>
+<h3 id="45-browse-qa">4.5 <code>/browse</code> - QA 工程师模式</h3>
+<p><strong>核心能力</strong>：给 Agent 眼睛</p>
+<p><strong>技术实现</strong>：
+- 基于 Playwright (Microsoft)
+- 编译为原生二进制 (~58MB)
+- 持久 Chromium 守护进程
+- 首次调用 ~3s，后续 ~100-200ms</p>
+<pre><code>/browse 命令集：
+├── goto &lt;url&gt;       # 导航到 URL
+├── snapshot         # 获取页面快照
+├── fill &lt;selector&gt;  # 填充表单
+├── click &lt;selector&gt; # 点击元素
+├── screenshot       # 截图
+├── console          # 检查控制台错误
+└── text             # 获取页面文本
+</code></pre>
+<h3 id="46-qa-qa">4.6 <code>/qa</code> - QA + 修复工程师模式</h3>
+<p><strong>四种模式</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+<th>耗时</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Diff-aware</td>
+<td>读取 git diff，识别受影响页面，针对性测试</td>
+<td>自动</td>
+</tr>
+<tr>
+<td>Full</td>
+<td>系统性探索整个应用</td>
+<td>5-15 分钟</td>
+</tr>
+<tr>
+<td>Quick</td>
+<td>30 秒冒烟测试</td>
+<td>30 秒</td>
+</tr>
+<tr>
+<td>Regression</td>
+<td>与基线对比，发现新/修复的问题</td>
+<td>可变</td>
+</tr>
+</tbody>
+</table>
+<pre><code>/qa 输出示例：
+
+QA Report: staging.myapp.com — Health Score: 72/100
+
+Top 3 Issues:
+1. CRITICAL: Checkout form submits with empty required fields
+2. HIGH: Mobile nav menu doesn't close after selecting an item
+3. MEDIUM: Dashboard chart overlaps sidebar below 1024px
+</code></pre>
+<h3 id="47-retro-">4.7 <code>/retro</code> - 工程经理复盘模式</h3>
+<p><strong>核心功能</strong>：团队感知的周度复盘</p>
+<p><strong>输出内容</strong>：
+- 提交历史分析
+- 工作模式识别
+- 发货速度追踪
+- 每个贡献者的具体表扬和成长机会</p>
+<pre><code>/retro 输出示例：
+
+Week of Mar 1: 47 commits (3 contributors), 3.2k LOC, 38% tests, 12 PRs
+
+## Your Week
+32 commits, +2.4k LOC, 41% tests. Peak hours: 9-11pm.
+Biggest ship: cookie import system
+
+## Team Breakdown
+
+### Alice
+12 commits focused on app/services/
+Opportunity: test ratio at 12% — worth investing
+
+### Bob
+3 commits — fixed the N+1 query on dashboard
+Opportunity: only 1 active day — check if blocked
+</code></pre>
+<hr />
+<h2 id="_5">五、安装配置</h2>
+<h3 id="51">5.1 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>版本要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td>最新版</td>
+<td>Anthropic 官方 CLI</td>
+</tr>
+<tr>
+<td>Git</td>
+<td>任意版本</td>
+<td>版本控制</td>
+</tr>
+<tr>
+<td>Bun</td>
+<td>v1.0+</td>
+<td>JavaScript 运行时（用于编译浏览器二进制）</td>
+</tr>
+<tr>
+<td>macOS/Linux</td>
+<td>x64/arm64</td>
+<td>浏览器二进制支持平台</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 安装步骤</h3>
+<h4 id="_6">方式一：全局安装（推荐）</h4>
+<pre><code class="language-bash"># 在 Claude Code 中粘贴以下命令：
+
+# 安装 gstack
+git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack &amp;&amp; \
+cd ~/.claude/skills/gstack &amp;&amp; \
+./setup
+</code></pre>
+<p>然后在 <code>~/.claude/CLAUDE.md</code> 中添加：</p>
+<pre><code class="language-markdown">## gstack
+
+使用 gstack 的 /browse 技能进行所有 Web 浏览，不要使用 mcp__claude-in-chrome__* 工具。
+
+可用技能：
+- /plan-ceo-review: 创始人模式，重新思考产品方向
+- /plan-eng-review: 工程经理模式，锁定架构和边界
+- /review: 偏执审查模式，发现潜在问题
+- /ship: 发布模式，自动化发布流程
+- /browse: 浏览器自动化，让 AI 看见 UI
+- /qa: QA 模式，测试和修复
+- /qa-only: 仅报告 QA 模式
+- /setup-browser-cookies: 导入浏览器 Cookies
+- /retro: 团队复盘模式
+- /document-release: 文档更新模式
+</code></pre>
+<h4 id="_7">方式二：项目级安装</h4>
+<pre><code class="language-bash"># 将 gstack 复制到项目中，让团队成员共享
+cp -Rf ~/.claude/skills/gstack .claude/skills/gstack
+rm -rf .claude/skills/gstack/.git
+cd .claude/skills/gstack &amp;&amp; ./setup
+</code></pre>
+<h3 id="53">5.3 安装内容</h3>
+<pre><code>安装后的文件结构：
+
+~/.claude/skills/gstack/
+├── setup                          # 安装脚本
+├── plan-ceo-review.md             # CEO 模式提示词
+├── plan-eng-review.md             # 工程经理模式提示词
+├── review.md                      # 审查模式提示词
+├── ship.md                        # 发布模式提示词
+├── browse.md                      # 浏览模式提示词
+├── qa.md                          # QA 模式提示词
+├── qa-only.md                     # 仅报告 QA 模式提示词
+├── setup-browser-cookies.md       # Cookie 导入提示词
+├── retro.md                       # 复盘模式提示词
+├── document-release.md            # 文档更新提示词
+└── browse/                        # 浏览器自动化模块
+    ├── src/                       # TypeScript 源码
+    └── dist/browse                # 编译后二进制 (~58MB)
+
+符号链接：
+~/.claude/skills/browse -&gt; gstack/browse
+~/.claude/skills/qa -&gt; gstack/qa
+~/.claude/skills/review -&gt; gstack/review
+... 等等
+</code></pre>
+<h3 id="54">5.4 配置文件</h3>
+<pre><code class="language-yaml"># ~/.gstack/config.yaml (可选)
+
+# 自动升级
+auto_upgrade: true
+
+# 浏览器会话超时（分钟）
+browser_session_timeout: 30
+
+# Greptile 集成
+greptile:
+  enabled: true
+  auto_reply: true
+
+# QA 报告存储
+qa_reports_dir: .gstack/qa-reports/
+
+# 复盘快照存储
+retro_snapshots_dir: .context/retros/
+</code></pre>
+<hr />
+<h2 id="_8">六、使用场景</h2>
+<h3 id="61">6.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐技能</th>
+<th>价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新功能规划</td>
+<td><code>/plan-ceo-review</code> → <code>/plan-eng-review</code></td>
+<td>确保"做正确的事"</td>
+</tr>
+<tr>
+<td>代码审查</td>
+<td><code>/review</code></td>
+<td>发现 CI 遗漏的问题</td>
+</tr>
+<tr>
+<td>发布部署</td>
+<td><code>/ship</code></td>
+<td>自动化繁琐的发布流程</td>
+</tr>
+<tr>
+<td>UI 测试</td>
+<td><code>/browse</code> / <code>/qa</code></td>
+<td>自动化浏览器测试</td>
+</tr>
+<tr>
+<td>团队复盘</td>
+<td><code>/retro</code></td>
+<td>数据驱动的周度复盘</td>
+</tr>
+<tr>
+<td>文档维护</td>
+<td><code>/document-release</code></td>
+<td>保持文档与代码同步</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 典型工作流</h3>
+<h4 id="_9">功能开发工作流</h4>
+<pre><code>1. [计划阶段]
+   /plan-ceo-review   # 验证产品方向
+   /plan-eng-review   # 锁定技术架构
+
+2. [实现阶段]
+   # 正常编码...
+
+3. [审查阶段]
+   /review            # 发现潜在问题
+   # 修复问题...
+
+4. [发布阶段]
+   /ship              # 自动化发布
+   /qa                # 验证发布
+
+5. [文档阶段]
+   /document-release  # 更新文档
+</code></pre>
+<h4 id="qa">QA 自动化工作流</h4>
+<pre><code>1. [准备]
+   /setup-browser-cookies staging.myapp.com
+
+2. [测试]
+   /qa https://staging.myapp.com --quick   # 冒烟测试
+   /qa https://staging.myapp.com           # 完整测试
+
+3. [验证]
+   /browse staging.myapp.com               # 手动检查特定页面
+</code></pre>
+<h3 id="63">6.3 不适用场景</h3>
+<ul>
+<li><strong>初学者</strong>：需要熟悉 Claude Code 基本用法</li>
+<li><strong>简单任务</strong>：一句话能解决的不需要复杂工作流</li>
+<li><strong>非技术项目</strong>：主要针对软件开发场景</li>
+<li><strong>Windows 平台</strong>：浏览器二进制暂不支持 Windows</li>
+</ul>
+<hr />
+<h2 id="_10">七、对比分析</h2>
+<h3 id="71">7.1 与类似工具对比</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>GStack</th>
+<th>GSD</th>
+<th>Superpowers</th>
+<th>Cursor Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>平台</strong></td>
+<td>Claude Code</td>
+<td>Claude Code</td>
+<td>Claude Code</td>
+<td>Cursor IDE</td>
+</tr>
+<tr>
+<td><strong>类型</strong></td>
+<td>技能配置</td>
+<td>开发框架</td>
+<td>开发框架</td>
+<td>原生功能</td>
+</tr>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>角色切换</td>
+<td>规范驱动</td>
+<td>TDD 工作流</td>
+<td>规则指令</td>
+</tr>
+<tr>
+<td><strong>技能数量</strong></td>
+<td>10 个</td>
+<td>多阶段流程</td>
+<td>可组合技能</td>
+<td>自定义</td>
+</tr>
+<tr>
+<td><strong>浏览器自动化</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>❌</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>并行会话</strong></td>
+<td>⭐⭐⭐⭐⭐ (Conductor)</td>
+<td>❌</td>
+<td>⭐⭐⭐</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>中等</td>
+<td>较高</td>
+<td>较高</td>
+<td>较低</td>
+</tr>
+<tr>
+<td><strong>创建者</strong></td>
+<td>Garry Tan (YC)</td>
+<td>Glitter Cowboy</td>
+<td>obra</td>
+<td>Cursor 团队</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 技术栈对比</h3>
+<pre><code>                    GStack           GSD            Superpowers
+                    ─────────        ─────────      ────────────
+核心机制            Skills           Markdown       Skills + Hooks
+提示词存储          .md 文件         .md 文件       .md 文件
+浏览器支持          Playwright       无             有限
+并行支持            Conductor        无             有限
+外部集成            Greptile         无             可选
+</code></pre>
+<h3 id="73">7.3 选型建议</h3>
+<table>
+<thead>
+<tr>
+<th>需求场景</th>
+<th>推荐选择</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>角色切换工作流</td>
+<td>GStack</td>
+<td>专为多角色设计</td>
+</tr>
+<tr>
+<td>规范驱动开发</td>
+<td>GSD</td>
+<td>强调规范和文档</td>
+</tr>
+<tr>
+<td>TDD 测试驱动</td>
+<td>Superpowers</td>
+<td>强制 RED/GREEN 流程</td>
+</tr>
+<tr>
+<td>Cursor 用户</td>
+<td>Cursor Rules</td>
+<td>原生集成，零配置</td>
+</tr>
+<tr>
+<td>需要浏览器自动化</td>
+<td>GStack</td>
+<td>最完整的浏览器支持</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">八、最佳实践</h2>
+<h3 id="81">8.1 技能组合使用</h3>
+<pre><code class="language-bash"># 最佳实践：按顺序使用技能
+
+# 1. 产品规划
+/plan-ceo-review     # 确保方向正确
+
+# 2. 技术规划
+/plan-eng-review     # 确保架构可行
+
+# 3. 实现
+# ... 正常编码 ...
+
+# 4. 代码审查
+/review              # 发现问题
+
+# 5. 发布
+/ship                # 自动化发布
+
+# 6. 测试
+/qa                  # 验证功能
+
+# 7. 文档
+/document-release    # 更新文档
+</code></pre>
+<h3 id="82">8.2 浏览器测试技巧</h3>
+<pre><code class="language-bash"># 导入已登录的会话
+/setup-browser-cookies github.com,myapp.com
+
+# 快速冒烟测试
+/qa https://staging.myapp.com --quick
+
+# 完整测试
+/qa https://staging.myapp.com
+
+# 检查特定页面
+/browse https://staging.myapp.com/checkout
+</code></pre>
+<h3 id="83">8.3 避坑指南</h3>
+<pre><code>常见问题：
+
+1. 技能未显示
+   解决：运行 cd ~/.claude/skills/gstack &amp;&amp; ./setup
+
+2. 浏览器二进制缺失
+   解决：运行 cd ~/.claude/skills/gstack &amp;&amp; bun install &amp;&amp; bun run build
+
+3. Bun 未安装
+   解决：curl -fsSL https://bun.sh/install | bash
+
+4. Cookies 导入失败
+   解决：确保在 macOS Keychain 提示时点击&quot;允许&quot;
+
+5. Greptile 集成不工作
+   解决：确保在 greptile.com 安装了 GitHub 应用
+</code></pre>
+<hr />
+<h2 id="_12">九、总结</h2>
+<h3 id="91">9.1 优势</h3>
+<table>
+<thead>
+<tr>
+<th>优势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>角色切换</strong></td>
+<td>一键切换 AI 的认知模式</td>
+</tr>
+<tr>
+<td><strong>浏览器自动化</strong></td>
+<td>让 AI 拥有"眼睛"</td>
+</tr>
+<tr>
+<td><strong>工作流标准化</strong></td>
+<td>将模糊交互转为结构化流程</td>
+</tr>
+<tr>
+<td><strong>并行执行</strong></td>
+<td>Conductor 支持 10 个并行会话</td>
+</tr>
+<tr>
+<td><strong>名人背书</strong></td>
+<td>YC CEO 的真实工作配置</td>
+</tr>
+<tr>
+<td><strong>开源免费</strong></td>
+<td>MIT 许可证</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 劣势</h3>
+<table>
+<thead>
+<tr>
+<th>劣势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>需要熟悉 Claude Code</td>
+</tr>
+<tr>
+<td><strong>平台限制</strong></td>
+<td>不支持 Windows</td>
+</tr>
+<tr>
+<td><strong>争议</strong></td>
+<td>生产力声明引发质疑</td>
+</tr>
+<tr>
+<td><strong>依赖 Bun</strong></td>
+<td>需要额外安装</td>
+</tr>
+<tr>
+<td><strong>文档</strong></td>
+<td>部分功能文档不完整</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 最终评价</h3>
+<pre><code>推荐指数：⭐⭐⭐⭐⭐ (5/5)
+
+适合人群：
+- 重度 Claude Code 用户
+- 追求高效率的开发团队
+- 需要浏览器自动化的场景
+- 想要标准化工作流的团队
+
+不建议人群：
+- Claude Code 新手
+- 只需要简单 AI 辅助的用户
+- Windows 用户
+- 不需要复杂工作流的场景
+</code></pre>
+<hr />
+<h2 id="_13">十、参考资料</h2>
+<h3 id="_14">官方资源</h3>
+<ul>
+<li><a href="https://github.com/garrytan/gstack">GStack GitHub</a></li>
+<li><a href="https://docs.anthropic.com/claude-code">Claude Code 官方文档</a></li>
+<li><a href="https://greptile.com/">Greptile</a></li>
+</ul>
+<h3 id="_15">社区讨论</h3>
+<ul>
+<li><a href="https://news.ycombinator.com/item?id=47355173">Hacker News 讨论</a></li>
+<li><a href="https://www.reddit.com/r/ClaudeAI/">Reddit 讨论</a></li>
+<li><a href="https://www.producthunt.com/posts/conductor-b15c0e1e-ebd2-441d-a8e2-17003b39744a">Product Hunt</a></li>
+</ul>
+<h3 id="_16">相关文章</h3>
+<ul>
+<li><a href="https://agentnativedev.medium.com/garry-tans-gstack-running-claude-like-an-engineering-team-392f1bd38085">Garry Tan's gstack: Running Claude Like an Engineering Team</a></li>
+<li><a href="https://www.sitepoint.com/gstack-claude-code-setup/">GStack: Installing Garry Tan's Claude Code Setup</a></li>
+<li><a href="https://civillearning.medium.com/the-y-combinator-ceo-crushed-100-prs-in-7-days-with-claude-code-heres-his-exact-setup-42231b8dcf2b">The Y Combinator CEO Crushed 100 PRs in 7 Days</a></li>
+</ul>
+<hr />
+<blockquote>
+<p>调研完成于 2026-03-17</p>
+</blockquote>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

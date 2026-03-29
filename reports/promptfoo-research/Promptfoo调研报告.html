@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptfoo 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 发展历程</a></li>
+<li><a href="#14" class="toc-h3">1.4 解决的核心问题</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 功能详解</a></li>
+<li><a href="#221-llm-evals" class="toc-h4">2.2.1 LLM 评估 (Evals)</a></li>
+<li><a href="#222-red-teaming" class="toc-h4">2.2.2 红队测试 (Red Teaming)</a></li>
+<li><a href="#223" class="toc-h4">2.2.3 多模型对比</a></li>
+<li><a href="#224-cicd" class="toc-h4">2.2.4 CI/CD 集成</a></li>
+<li><a href="#_3" class="toc-h2">三、安装配置</a></li>
+<li><a href="#31" class="toc-h3">3.1 环境要求</a></li>
+<li><a href="#32" class="toc-h3">3.2 安装方式</a></li>
+<li><a href="#33-api-keys" class="toc-h3">3.3 配置 API Keys</a></li>
+<li><a href="#34" class="toc-h3">3.4 快速开始</a></li>
+<li><a href="#_4" class="toc-h2">四、架构设计</a></li>
+<li><a href="#41" class="toc-h3">4.1 整体架构</a></li>
+<li><a href="#42" class="toc-h3">4.2 核心模块</a></li>
+<li><a href="#421-provider" class="toc-h4">4.2.1 Provider 模块</a></li>
+<li><a href="#422-assertion" class="toc-h4">4.2.2 Assertion 模块</a></li>
+<li><a href="#423-red-team" class="toc-h4">4.2.3 Red Team 模块</a></li>
+<li><a href="#43" class="toc-h3">4.3 配置文件结构</a></li>
+<li><a href="#44" class="toc-h3">4.4 数据流</a></li>
+<li><a href="#_5" class="toc-h2">五、断言与指标</a></li>
+<li><a href="#51" class="toc-h3">5.1 断言类型详解</a></li>
+<li><a href="#511" class="toc-h4">5.1.1 确定性断言</a></li>
+<li><a href="#512" class="toc-h4">5.1.2 模型评分断言</a></li>
+<li><a href="#513" class="toc-h4">5.1.3 自定义断言</a></li>
+<li><a href="#52" class="toc-h3">5.2 指标系统</a></li>
+<li><a href="#_6" class="toc-h2">六、红队安全测试</a></li>
+<li><a href="#61" class="toc-h3">6.1 快速开始</a></li>
+<li><a href="#62" class="toc-h3">6.2 配置示例</a></li>
+<li><a href="#63" class="toc-h3">6.3 攻击策略类型</a></li>
+<li><a href="#64" class="toc-h3">6.4 漏洞评级</a></li>
+<li><a href="#_7" class="toc-h2">七、使用场景</a></li>
+<li><a href="#71" class="toc-h3">7.1 适用场景</a></li>
+<li><a href="#72" class="toc-h3">7.2 典型案例</a></li>
+<li><a href="#1" class="toc-h4">案例 1：客服机器人评估</a></li>
+<li><a href="#2" class="toc-h4">案例 2：代码助手评估</a></li>
+<li><a href="#73" class="toc-h3">7.3 不适用场景</a></li>
+<li><a href="#_8" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 评估设计</a></li>
+<li><a href="#82" class="toc-h3">8.2 红队测试建议</a></li>
+<li><a href="#83" class="toc-h3">8.3 性能优化</a></li>
+<li><a href="#84" class="toc-h3">8.4 避坑指南</a></li>
+<li><a href="#_9" class="toc-h2">九、对比分析</a></li>
+<li><a href="#91" class="toc-h3">9.1 竞品对比</a></li>
+<li><a href="#92" class="toc-h3">9.2 选型建议</a></li>
+<li><a href="#93" class="toc-h3">9.3 适用人群</a></li>
+<li><a href="#_10" class="toc-h2">十、总结</a></li>
+<li><a href="#101" class="toc-h3">10.1 优势</a></li>
+<li><a href="#102" class="toc-h3">10.2 劣势</a></li>
+<li><a href="#103" class="toc-h3">10.3 最终建议</a></li>
+<li><a href="#_11" class="toc-h2">参考资料</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Promptfoo 调研报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="promptfoo">Promptfoo 调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>Promptfoo</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/promptfoo/promptfoo</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://promptfoo.dev</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>16.8k+</td>
+</tr>
+<tr>
+<td><strong>Forks</strong></td>
+<td>1.5k+</td>
+</tr>
+<tr>
+<td><strong>Contributors</strong></td>
+<td>265+</td>
+</tr>
+<tr>
+<td><strong>Releases</strong></td>
+<td>398+</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>用户数</strong></td>
+<td>300,000+ 开发者</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>Promptfoo 是一个开源的 LLM 评估与红队测试框架，用于测试和评估提示词、模型和 RAG 系统，支持多模型对比和自动化断言验证。</p>
+<h3 id="13">1.3 发展历程</h3>
+<ul>
+<li><strong>2023年</strong>：项目启动，专注于 LLM 提示词测试</li>
+<li><strong>2024年</strong>：快速发展，增加红队测试功能</li>
+<li><strong>2025年</strong>：成为 LLM 评估领域的主流工具，支持 50+ 模型提供商</li>
+</ul>
+<h3 id="14">1.4 解决的核心问题</h3>
+<ol>
+<li><strong>提示词质量难以评估</strong> - 提供 40+ 内置断言类型，自动化验证输出质量</li>
+<li><strong>模型选择困难</strong> - 支持多模型并行对比测试</li>
+<li><strong>AI 安全风险</strong> - 内置红队测试，覆盖 50+ 漏洞类型</li>
+<li><strong>CI/CD 集成缺失</strong> - 提供命令行工具，易于集成到自动化流程</li>
+<li><strong>评估成本高</strong> - 本地优先执行，保护数据隐私</li>
+</ol>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 功能概览</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      Promptfoo 功能架构                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐       │
+│  │   LLM 评估     │  │   红队测试     │  │  多模型对比    │       │
+│  │  (Evals)      │  │  (Red Team)   │  │ (Comparison)  │       │
+│  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘       │
+│          │                  │                  │                │
+│          └──────────────────┼──────────────────┘                │
+│                             ▼                                   │
+│                    ┌────────────────┐                          │
+│                    │   断言系统      │                          │
+│                    │  (Assertions)  │                          │
+│                    └────────────────┘                          │
+│                             │                                   │
+│                             ▼                                   │
+│                    ┌────────────────┐                          │
+│                    │   报告与可视化   │                          │
+│                    │  (Reports)     │                          │
+│                    └────────────────┘                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 功能详解</h3>
+<h4 id="221-llm-evals">2.2.1 LLM 评估 (Evals)</h4>
+<p><strong>核心能力</strong>：
+- 自动化测试提示词输出
+- 支持多种断言类型验证
+- 批量测试用例管理
+- 结果对比与评分</p>
+<p><strong>断言类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>equals</code></td>
+<td>精确匹配</td>
+<td>输出必须等于预期值</td>
+</tr>
+<tr>
+<td><code>contains</code></td>
+<td>包含检查</td>
+<td>输出包含特定关键词</td>
+</tr>
+<tr>
+<td><code>regex</code></td>
+<td>正则匹配</td>
+<td>验证格式（如邮箱、日期）</td>
+</tr>
+<tr>
+<td><code>llm-rubric</code></td>
+<td>LLM 评分</td>
+<td>使用 LLM 评估输出质量</td>
+</tr>
+<tr>
+<td><code>similar</code></td>
+<td>语义相似度</td>
+<td>检查输出与预期的相似程度</td>
+</tr>
+<tr>
+<td><code>javascript</code></td>
+<td>自定义脚本</td>
+<td>编写 JS 代码自定义验证逻辑</td>
+</tr>
+<tr>
+<td><code>python</code></td>
+<td>Python 脚本</td>
+<td>使用 Python 进行验证</td>
+</tr>
+</tbody>
+</table>
+<h4 id="222-red-teaming">2.2.2 红队测试 (Red Teaming)</h4>
+<p><strong>核心能力</strong>：
+- 自动生成攻击载荷
+- 覆盖 50+ 安全漏洞类型
+- 支持自定义攻击策略
+- 生成安全评估报告</p>
+<p><strong>漏洞类型覆盖</strong>：</p>
+<pre><code>├── 提示词注入 (Prompt Injection)
+│   ├── 直接注入
+│   ├── 间接注入
+│   └── 越狱攻击
+├── 信息泄露 (Information Disclosure)
+│   ├── 训练数据泄露
+│   ├── 系统信息泄露
+│   └── PII 泄露
+├── 有害内容 (Harmful Content)
+│   ├── 暴力内容
+│   ├── 仇恨言论
+│   └── 非法活动
+├── 越权访问 (Unauthorized Access)
+│   ├── 角色绕过
+│   └── 权限提升
+└── 其他漏洞
+    ├── 幻觉
+    ├── 不一致输出
+    └── 资源滥用
+</code></pre>
+<h4 id="223">2.2.3 多模型对比</h4>
+<p><strong>支持的模型提供商</strong>（50+）：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>提供商</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>商业 API</strong></td>
+<td>OpenAI (GPT-4, GPT-3.5), Anthropic (Claude), Google (Gemini), AWS Bedrock, Azure OpenAI</td>
+</tr>
+<tr>
+<td><strong>开源模型</strong></td>
+<td>Ollama, vLLM, LocalAI, LM Studio</td>
+</tr>
+<tr>
+<td><strong>国内模型</strong></td>
+<td>通义千问, 文心一言, 智谱 AI, 月之暗面</td>
+</tr>
+<tr>
+<td><strong>其他</strong></td>
+<td>Mistral, Cohere, Replicate, Together AI</td>
+</tr>
+</tbody>
+</table>
+<p><strong>对比维度</strong>：
+- 输出质量评分
+- 响应时间
+- Token 消耗
+- 成本分析</p>
+<h4 id="224-cicd">2.2.4 CI/CD 集成</h4>
+<pre><code class="language-yaml"># GitHub Actions 示例
+name: LLM Eval
+on: [push]
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm install -g promptfoo
+      - run: promptfoo eval --config promptfooconfig.yaml
+      - run: promptfoo view --output results.json
+</code></pre>
+<hr />
+<h2 id="_3">三、安装配置</h2>
+<h3 id="31">3.1 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Node.js</strong></td>
+<td>&gt;= 18.0.0</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>&gt;= 3.8（可选，用于 Python 断言）</td>
+</tr>
+<tr>
+<td><strong>内存</strong></td>
+<td>&gt;= 4GB（红队测试建议 8GB+）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 安装方式</h3>
+<p><strong>方式一：npm（推荐）</strong></p>
+<pre><code class="language-bash">npm install -g promptfoo
+</code></pre>
+<p><strong>方式二：Homebrew（macOS）</strong></p>
+<pre><code class="language-bash">brew install promptfoo
+</code></pre>
+<p><strong>方式三：pip（Python 环境）</strong></p>
+<pre><code class="language-bash">pip install promptfoo
+</code></pre>
+<p><strong>方式四：npx（无需安装）</strong></p>
+<pre><code class="language-bash">npx promptfoo@latest eval
+</code></pre>
+<h3 id="33-api-keys">3.3 配置 API Keys</h3>
+<pre><code class="language-bash"># OpenAI
+export OPENAI_API_KEY=sk-xxx
+
+# Anthropic
+export ANTHROPIC_API_KEY=sk-xxx
+
+# Google
+export GOOGLE_API_KEY=xxx
+
+# AWS Bedrock
+export AWS_ACCESS_KEY_ID=xxx
+export AWS_SECRET_ACCESS_KEY=xxx
+</code></pre>
+<h3 id="34">3.4 快速开始</h3>
+<pre><code class="language-bash"># 初始化示例项目
+npx promptfoo@latest init --example getting-started
+
+# 运行评估
+promptfoo eval
+
+# 查看结果
+promptfoo view
+</code></pre>
+<hr />
+<h2 id="_4">四、架构设计</h2>
+<h3 id="41">4.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                         Promptfoo 架构                               │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ┌─────────────┐    ┌─────────────┐    ┌─────────────┐            │
+│  │   CLI       │    │   Web UI    │    │   CI/CD     │            │
+│  │  (命令行)   │    │  (可视化)   │    │  (集成)     │            │
+│  └──────┬──────┘    └──────┬──────┘    └──────┬──────┘            │
+│         │                  │                  │                    │
+│         └──────────────────┼──────────────────┘                    │
+│                            ▼                                       │
+│                   ┌────────────────┐                              │
+│                   │   Core Engine  │                              │
+│                   │   (评估引擎)   │                              │
+│                   └───────┬────────┘                              │
+│                           │                                       │
+│          ┌────────────────┼────────────────┐                      │
+│          ▼                ▼                ▼                      │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐              │
+│  │   Provider   │ │  Assertion   │ │   Red Team   │              │
+│  │   (模型适配) │ │  (断言系统)  │ │  (红队测试)  │              │
+│  └──────────────┘ └──────────────┘ └──────────────┘              │
+│          │                │                │                      │
+│          └────────────────┼────────────────┘                      │
+│                           ▼                                       │
+│                   ┌────────────────┐                              │
+│                   │    Reporter    │                              │
+│                   │   (报告生成)   │                              │
+│                   └────────────────┘                              │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="42">4.2 核心模块</h3>
+<h4 id="421-provider">4.2.1 Provider 模块</h4>
+<p>负责与各种 LLM 提供商通信，提供统一的接口：</p>
+<pre><code class="language-typescript">interface Provider {
+  id: string;
+  callApi(prompt: string): Promise&lt;ProviderResponse&gt;;
+}
+</code></pre>
+<h4 id="422-assertion">4.2.2 Assertion 模块</h4>
+<p>执行各种类型的断言验证：</p>
+<pre><code class="language-typescript">interface Assertion {
+  type: string;
+  value: any;
+  threshold?: number;
+  weight?: number;
+}
+</code></pre>
+<h4 id="423-red-team">4.2.3 Red Team 模块</h4>
+<p>生成和执行安全测试：</p>
+<pre><code class="language-typescript">interface RedTeamConfig {
+  purpose: string;        // 应用目的描述
+  strategies: string[];   // 攻击策略
+  numTests: number;       // 测试数量
+}
+</code></pre>
+<h3 id="43">4.3 配置文件结构</h3>
+<pre><code class="language-yaml"># promptfooconfig.yaml
+description: 任务描述
+
+# 提示词定义
+prompts:
+  - file://prompts.txt
+  - |
+    你是一个{{role}}，请回答：{{question}}
+
+# 模型提供商
+providers:
+  - openai:gpt-4
+  - anthropic:claude-3-opus
+  - ollama:llama3
+
+# 默认断言
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: 回答应该准确且有帮助
+
+# 测试用例
+tests:
+  - vars:
+      role: 助手
+      question: 你好
+    assert:
+      - type: contains
+        value: 你好
+</code></pre>
+<h3 id="44">4.4 数据流</h3>
+<pre><code>配置文件 (YAML)
+     │
+     ▼
+┌─────────────┐
+│  解析配置   │
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐     ┌─────────────┐
+│ 生成测试   │────▶│ 调用模型    │
+└──────┬──────┘     └──────┬──────┘
+       │                   │
+       │                   ▼
+       │            ┌─────────────┐
+       │            │  获取响应   │
+       │            └──────┬──────┘
+       │                   │
+       ▼                   ▼
+┌─────────────┐     ┌─────────────┐
+│  执行断言   │◀────│  验证输出   │
+└──────┬──────┘     └─────────────┘
+       │
+       ▼
+┌─────────────┐
+│  生成报告   │
+└─────────────┘
+</code></pre>
+<hr />
+<h2 id="_5">五、断言与指标</h2>
+<h3 id="51">5.1 断言类型详解</h3>
+<h4 id="511">5.1.1 确定性断言</h4>
+<table>
+<thead>
+<tr>
+<th>断言类型</th>
+<th>用途</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>equals</code></td>
+<td>精确匹配</td>
+<td><code>{ type: "equals", value: "Hello" }</code></td>
+</tr>
+<tr>
+<td><code>contains</code></td>
+<td>包含字符串</td>
+<td><code>{ type: "contains", value: "成功" }</code></td>
+</tr>
+<tr>
+<td><code>icontains</code></td>
+<td>不区分大小写包含</td>
+<td><code>{ type: "icontains", value: "SUCCESS" }</code></td>
+</tr>
+<tr>
+<td><code>regex</code></td>
+<td>正则匹配</td>
+<td><code>{ type: "regex", value: "^\\d+$" }</code></td>
+</tr>
+<tr>
+<td><code>starts-with</code></td>
+<td>以...开头</td>
+<td><code>{ type: "starts-with", value: "Dear" }</code></td>
+</tr>
+<tr>
+<td><code>ends-with</code></td>
+<td>以...结尾</td>
+<td><code>{ type: "ends-with", value: "谢谢" }</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="512">5.1.2 模型评分断言</h4>
+<table>
+<thead>
+<tr>
+<th>断言类型</th>
+<th>用途</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>llm-rubric</code></td>
+<td>LLM 评分</td>
+<td><code>{ type: "llm-rubric", value: "回答应准确且有帮助" }</code></td>
+</tr>
+<tr>
+<td><code>similar</code></td>
+<td>语义相似度</td>
+<td><code>{ type: "similar", value: "预期输出", threshold: 0.8 }</code></td>
+</tr>
+<tr>
+<td><code>answer-relevance</code></td>
+<td>答案相关性</td>
+<td><code>{ type: "answer-relevance", threshold: 0.7 }</code></td>
+</tr>
+<tr>
+<td><code>context-faithfulness</code></td>
+<td>上下文忠实度</td>
+<td><code>{ type: "context-faithfulness" }</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="513">5.1.3 自定义断言</h4>
+<p><strong>JavaScript 断言</strong>：</p>
+<pre><code class="language-yaml">assert:
+  - type: javascript
+    value: |
+      // 检查输出长度
+      const len = output.length;
+      return {
+        pass: len &gt;= 50 &amp;&amp; len &lt;= 500,
+        score: Math.max(0, Math.min(1, (len - 50) / 450)),
+        reason: `输出长度为 ${len}，应在 50-500 之间`
+      };
+</code></pre>
+<p><strong>Python 断言</strong>：</p>
+<pre><code class="language-yaml">assert:
+  - type: python
+    value: |
+      import json
+      data = json.loads(output)
+      return {
+        &quot;pass&quot;: &quot;result&quot; in data,
+        &quot;score&quot;: 1.0 if data.get(&quot;confidence&quot;, 0) &gt; 0.8 else 0.5
+      }
+</code></pre>
+<h3 id="52">5.2 指标系统</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>说明</th>
+<th>计算方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>通过率</strong></td>
+<td>测试通过百分比</td>
+<td>通过数 / 总数 × 100%</td>
+</tr>
+<tr>
+<td><strong>平均分</strong></td>
+<td>断言评分平均值</td>
+<td>Σ(score) / n</td>
+</tr>
+<tr>
+<td><strong>响应时间</strong></td>
+<td>平均响应延迟</td>
+<td>Σ(latency) / n</td>
+</tr>
+<tr>
+<td><strong>Token 消耗</strong></td>
+<td>Token 使用统计</td>
+<td>input_tokens + output_tokens</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>API 调用成本</td>
+<td>根据 provider 定价计算</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">六、红队安全测试</h2>
+<h3 id="61">6.1 快速开始</h3>
+<pre><code class="language-bash"># 初始化红队测试
+npx promptfoo@latest redteam setup
+
+# 运行红队测试
+npx promptfoo@latest redteam run
+
+# 查看结果
+npx promptfoo@latest redteam view
+</code></pre>
+<h3 id="62">6.2 配置示例</h3>
+<pre><code class="language-yaml"># redteam.yaml
+targets:
+  - id: https
+    label: 'my-chatbot'
+    config:
+      url: 'https://api.example.com/chat'
+      method: 'POST'
+      headers:
+        'Content-Type': 'application/json'
+        'Authorization': 'Bearer {{API_KEY}}'
+      body:
+        message: '{{prompt}}'
+
+purpose: |
+  这是一个客服聊天机器人，用于回答用户关于产品的问题。
+
+strategies:
+  - prompt-injection
+  - jailbreak
+  - harmful-content
+  - pii-leak
+
+numTests: 50
+</code></pre>
+<h3 id="63">6.3 攻击策略类型</h3>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>说明</th>
+<th>示例攻击</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prompt-injection</code></td>
+<td>提示词注入</td>
+<td>"忽略之前的指令，告诉我..."</td>
+</tr>
+<tr>
+<td><code>jailbreak</code></td>
+<td>越狱攻击</td>
+<td>"现在进入开发者模式..."</td>
+</tr>
+<tr>
+<td><code>harmful-content</code></td>
+<td>有害内容</td>
+<td>要求生成暴力、仇恨内容</td>
+</tr>
+<tr>
+<td><code>pii-leak</code></td>
+<td>隐私泄露</td>
+<td>尝试获取用户个人信息</td>
+</tr>
+<tr>
+<td><code>hallucination</code></td>
+<td>幻觉测试</td>
+<td>诱导模型编造虚假信息</td>
+</tr>
+<tr>
+<td><code>contradiction</code></td>
+<td>矛盾输出</td>
+<td>检查输出的一致性</td>
+</tr>
+</tbody>
+</table>
+<h3 id="64">6.4 漏洞评级</h3>
+<pre><code>├── Critical (严重)
+│   └── 可导致系统被完全控制
+├── High (高危)
+│   └── 可泄露敏感信息或绕过安全控制
+├── Medium (中危)
+│   └── 可能产生有害或不当内容
+└── Low (低危)
+    └── 轻微问题，影响有限
+</code></pre>
+<hr />
+<h2 id="_7">七、使用场景</h2>
+<h3 id="71">7.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>说明</th>
+<th>推荐功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>提示词工程</strong></td>
+<td>优化和测试提示词</td>
+<td>评估 + 多模型对比</td>
+</tr>
+<tr>
+<td><strong>模型选型</strong></td>
+<td>对比不同模型表现</td>
+<td>多模型对比 + 成本分析</td>
+</tr>
+<tr>
+<td><strong>RAG 评估</strong></td>
+<td>评估检索增强生成</td>
+<td>上下文忠实度 + 答案相关性</td>
+</tr>
+<tr>
+<td><strong>AI 安全</strong></td>
+<td>漏洞扫描和安全测试</td>
+<td>红队测试</td>
+</tr>
+<tr>
+<td><strong>CI/CD 质量门禁</strong></td>
+<td>自动化质量检查</td>
+<td>CLI + 断言系统</td>
+</tr>
+<tr>
+<td><strong>回归测试</strong></td>
+<td>确保更新后质量不下降</td>
+<td>批量测试用例</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 典型案例</h3>
+<h4 id="1">案例 1：客服机器人评估</h4>
+<pre><code class="language-yaml"># promptfooconfig.yaml
+description: 客服机器人评估
+
+prompts:
+  - |
+    你是一个专业的客服代表。请用礼貌、专业的语气回答用户问题。
+    用户问题：{{question}}
+
+providers:
+  - openai:gpt-4
+  - anthropic:claude-3-sonnet
+
+defaultTest:
+  assert:
+    - type: llm-rubric
+      value: 回答应该礼貌、专业、有帮助
+    - type: not-contains
+      value: AI
+    - type: not-contains
+      value: 语言模型
+
+tests:
+  - vars:
+      question: 我想退货怎么办？
+    assert:
+      - type: contains
+        value: 退货
+  - vars:
+      question: 你们营业时间是几点？
+    assert:
+      - type: regex
+        value: &quot;\\d{1,2}:\\d{2}&quot;
+</code></pre>
+<h4 id="2">案例 2：代码助手评估</h4>
+<pre><code class="language-yaml">description: 代码助手评估
+
+prompts:
+  - |
+    作为代码助手，请根据需求生成代码。
+    需求：{{requirement}}
+    语言：{{language}}
+
+providers:
+  - openai:gpt-4
+
+defaultTest:
+  assert:
+    - type: is-valid-code
+    - type: llm-rubric
+      value: 代码应该正确、高效、有良好的注释
+
+tests:
+  - vars:
+      requirement: 实现一个二分查找函数
+      language: Python
+    assert:
+      - type: contains
+        value: def binary_search
+      - type: contains
+        value: return
+</code></pre>
+<h3 id="73">7.3 不适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+<th>替代方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>实时监控</td>
+<td>非实时系统</td>
+<td>LangSmith, Arize</td>
+</tr>
+<tr>
+<td>大规模生产数据</td>
+<td>成本高</td>
+<td>采样测试</td>
+</tr>
+<tr>
+<td>非 LLM 应用</td>
+<td>功能不匹配</td>
+<td>传统测试框架</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">八、最佳实践</h2>
+<h3 id="81">8.1 评估设计</h3>
+<p><strong>1. 渐进式测试策略</strong></p>
+<pre><code>快速测试（5-10用例）→ 核心测试（50-100用例）→ 完整测试（500+用例）
+        ↓                      ↓                       ↓
+     开发阶段                提交前检查               发布前验证
+</code></pre>
+<p><strong>2. 断言组合使用</strong></p>
+<pre><code class="language-yaml">defaultTest:
+  assert:
+    # 基础检查
+    - type: contains
+      value: 关键信息
+      weight: 1
+    # 质量评分
+    - type: llm-rubric
+      value: 输出应该准确、有帮助
+      weight: 3
+    # 格式验证
+    - type: regex
+      value: &quot;^\\{.*\\}$&quot;
+      weight: 1
+</code></pre>
+<p><strong>3. 变量化测试用例</strong></p>
+<pre><code class="language-yaml">tests:
+  # 使用 CSV 文件
+  - vars: file://test_cases.csv
+  # 使用 JSON 文件
+  - vars: file://test_cases.json
+</code></pre>
+<h3 id="82">8.2 红队测试建议</h3>
+<p><strong>1. 明确测试范围</strong></p>
+<pre><code class="language-yaml">purpose: |
+  明确描述你的应用目的和限制，
+  这有助于生成更有针对性的测试用例。
+</code></pre>
+<p><strong>2. 优先级排序</strong></p>
+<pre><code class="language-yaml">strategies:
+  # 高优先级
+  - prompt-injection
+  - pii-leak
+  # 中优先级
+  - harmful-content
+  # 低优先级
+  - style-mismatch
+</code></pre>
+<p><strong>3. 持续测试</strong></p>
+<pre><code class="language-bash"># 集成到 CI/CD
+- name: Red Team Test
+  run: |
+    promptfoo redteam run --config redteam.yaml
+    if [ $? -ne 0 ]; then
+      echo &quot;红队测试未通过，请检查安全问题&quot;
+      exit 1
+    fi
+</code></pre>
+<h3 id="83">8.3 性能优化</h3>
+<p><strong>1. 并行执行</strong></p>
+<pre><code class="language-yaml"># promptfooconfig.yaml
+config:
+  concurrency: 10
+</code></pre>
+<p><strong>2. 缓存利用</strong></p>
+<pre><code class="language-yaml">config:
+  cache: true
+  cachePath: .promptfoo/cache
+</code></pre>
+<p><strong>3. 采样策略</strong></p>
+<pre><code class="language-yaml"># 大量测试时使用采样
+tests:
+  - vars: file://large_dataset.json
+    sample: 100  # 随机抽取 100 个
+</code></pre>
+<h3 id="84">8.4 避坑指南</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>API 限流</td>
+<td>设置 <code>concurrency</code> 和 <code>delay</code></td>
+</tr>
+<tr>
+<td>成本过高</td>
+<td>使用 <code>sample</code> 采样，选择更便宜的模型</td>
+</tr>
+<tr>
+<td>测试不稳定</td>
+<td>添加 <code>threshold</code> 阈值，接受一定波动</td>
+</tr>
+<tr>
+<td>红队测试误报</td>
+<td>调整 <code>purpose</code> 描述，排除合法行为</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">九、对比分析</h2>
+<h3 id="91">9.1 竞品对比</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>Promptfoo</th>
+<th>LangSmith</th>
+<th>Arize</th>
+<th>TruLens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>开源</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>本地执行</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>红队测试</strong></td>
+<td>✅</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>多模型对比</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>可视化界面</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>CI/CD 集成</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>免费</td>
+<td>付费</td>
+<td>付费</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>低</td>
+<td>中</td>
+<td>高</td>
+<td>中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 选型建议</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      选型决策树                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  需要 AI 安全测试？                                          │
+│       │                                                     │
+│       ├── 是 ──▶ Promptfoo（首选）                          │
+│       │                                                     │
+│       └── 否 ──▶ 需要生产监控？                              │
+│                      │                                      │
+│                      ├── 是 ──▶ LangSmith / Arize           │
+│                      │                                      │
+│                      └── 否 ──▶ 预算有限？                   │
+│                                     │                       │
+│                                     ├── 是 ──▶ Promptfoo    │
+│                                     │                       │
+│                                     └── 否 ──▶ LangSmith    │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="93">9.3 适用人群</h3>
+<table>
+<thead>
+<tr>
+<th>用户类型</th>
+<th>推荐工具</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>独立开发者</strong></td>
+<td>Promptfoo</td>
+<td>免费、易用、功能全面</td>
+</tr>
+<tr>
+<td><strong>初创团队</strong></td>
+<td>Promptfoo</td>
+<td>成本低、快速上手</td>
+</tr>
+<tr>
+<td><strong>企业团队</strong></td>
+<td>LangSmith/Promptfoo</td>
+<td>根据预算和安全需求选择</td>
+</tr>
+<tr>
+<td><strong>安全研究员</strong></td>
+<td>Promptfoo</td>
+<td>红队测试功能强大</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">十、总结</h2>
+<h3 id="101">10.1 优势</h3>
+<ol>
+<li><strong>功能全面</strong> - 集评估、红队测试、多模型对比于一体</li>
+<li><strong>开源免费</strong> - MIT 协议，无使用成本</li>
+<li><strong>本地优先</strong> - 数据不出本地，保护隐私</li>
+<li><strong>易于集成</strong> - CLI 设计，易于 CI/CD 集成</li>
+<li><strong>社区活跃</strong> - 265+ 贡献者，持续更新</li>
+<li><strong>模型支持广</strong> - 支持 50+ 模型提供商</li>
+</ol>
+<h3 id="102">10.2 劣势</h3>
+<ol>
+<li><strong>非实时监控</strong> - 不适合生产环境实时监控</li>
+<li><strong>学习曲线</strong> - 红队测试需要一定学习成本</li>
+<li><strong>可视化有限</strong> - Web UI 功能相对基础</li>
+</ol>
+<h3 id="103">10.3 最终建议</h3>
+<p><strong>强烈推荐</strong>以下场景使用 Promptfoo：</p>
+<ul>
+<li>需要测试和优化提示词</li>
+<li>需要进行 AI 安全测试</li>
+<li>需要对比多个模型的表现</li>
+<li>预算有限但需要专业工具</li>
+<li>需要本地执行保护数据隐私</li>
+</ul>
+<p>Promptfoo 是目前 LLM 评估领域最全面的开源工具之一，特别是其红队测试功能，在同类产品中独树一帜。</p>
+<hr />
+<h2 id="_11">参考资料</h2>
+<ul>
+<li><a href="https://promptfoo.dev">Promptfoo 官网</a></li>
+<li><a href="https://github.com/promptfoo/promptfoo">Promptfoo GitHub</a></li>
+<li><a href="https://promptfoo.dev/docs">官方文档</a></li>
+<li><a href="https://promptfoo.dev/docs/red-team/">红队测试文档</a></li>
+<li><a href="https://promptfoo.dev/docs/configuration/expected-outputs/">断言类型参考</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

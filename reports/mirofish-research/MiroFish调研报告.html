@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiroFish 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub 开源项目 666ghj/MiroFish 的深度技术调研 | 调研日期：2026-03-17</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 发展历程</a></li>
+<li><a href="#14" class="toc-h3">1.4 核心价值</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心功能详解</a></li>
+<li><a href="#221-agent" class="toc-h4">2.2.1 大规模 Agent 模拟</a></li>
+<li><a href="#222-graphrag" class="toc-h4">2.2.2 GraphRAG 知识注入</a></li>
+<li><a href="#223" class="toc-h4">2.2.3 双平台并行模拟</a></li>
+<li><a href="#224-reportagent" class="toc-h4">2.2.4 ReportAgent 深度交互</a></li>
+<li><a href="#_3" class="toc-h2">三、技术架构</a></li>
+<li><a href="#31" class="toc-h3">3.1 整体架构</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心模块说明</a></li>
+<li><a href="#environment-server" class="toc-h4">Environment Server (环境服务器)</a></li>
+<li><a href="#recommendation-system" class="toc-h4">Recommendation System (推荐系统)</a></li>
+<li><a href="#agent-module-agent" class="toc-h4">Agent Module (Agent 模块)</a></li>
+<li><a href="#scalable-inferencer" class="toc-h4">Scalable Inferencer (可扩展推理器)</a></li>
+<li><a href="#33" class="toc-h3">3.3 数据流</a></li>
+<li><a href="#oasis" class="toc-h2">四、OASIS 框架</a></li>
+<li><a href="#41" class="toc-h3">4.1 框架介绍</a></li>
+<li><a href="#42-oasis" class="toc-h3">4.2 OASIS 核心特性</a></li>
+<li><a href="#43-oasis-vs-mirofish" class="toc-h3">4.3 OASIS vs MiroFish 关系</a></li>
+<li><a href="#_4" class="toc-h2">五、使用场景</a></li>
+<li><a href="#51" class="toc-h3">5.1 适用场景</a></li>
+<li><a href="#52" class="toc-h3">5.2 典型用例</a></li>
+<li><a href="#1" class="toc-h4">用例 1：新品发布舆情预测</a></li>
+<li><a href="#2" class="toc-h4">用例 2：危机事件应对演练</a></li>
+<li><a href="#53" class="toc-h3">5.3 不适用场景</a></li>
+<li><a href="#_5" class="toc-h2">六、对比分析</a></li>
+<li><a href="#61-multi-agent" class="toc-h3">6.1 与其他 Multi-Agent 框架对比</a></li>
+<li><a href="#62" class="toc-h3">6.2 技术栈对比</a></li>
+<li><a href="#63" class="toc-h3">6.3 选型建议</a></li>
+<li><a href="#_6" class="toc-h2">七、安装配置</a></li>
+<li><a href="#71" class="toc-h3">7.1 环境要求</a></li>
+<li><a href="#72" class="toc-h3">7.2 安装步骤</a></li>
+<li><a href="#73" class="toc-h3">7.3 配置说明</a></li>
+<li><a href="#_7" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81-agent" class="toc-h3">8.1 Agent 人设设计</a></li>
+<li><a href="#82" class="toc-h3">8.2 模拟参数调优</a></li>
+<li><a href="#83" class="toc-h3">8.3 结果解读</a></li>
+<li><a href="#_8" class="toc-h2">九、总结</a></li>
+<li><a href="#91" class="toc-h3">9.1 优势</a></li>
+<li><a href="#92" class="toc-h3">9.2 劣势</a></li>
+<li><a href="#93" class="toc-h3">9.3 最终评价</a></li>
+<li><a href="#_9" class="toc-h2">十、参考资料</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>MiroFish 调研报告</h1>
+                        <div class="article-meta">基于 GitHub 开源项目 666ghj/MiroFish 的深度技术调研<br>调研日期：2026-03-17</div>
+                    </header>
+                    <h1 id="mirofish">MiroFish 调研报告</h1>
+<blockquote>
+<p>基于 GitHub 开源项目 666ghj/MiroFish 的深度技术调研</p>
+<p>调研日期：2026-03-17</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>MiroFish (迷鱼)</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/666ghj/MiroFish</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>666ghj (独立开发者)</td>
+</tr>
+<tr>
+<td><strong>技术基础</strong></td>
+<td>OASIS (CAMEL-AI)</td>
+</tr>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>群体智能预测引擎</td>
+</tr>
+<tr>
+<td><strong>开源状态</strong></td>
+<td>开源</td>
+</tr>
+<tr>
+<td><strong>融资情况</strong></td>
+<td>盛大集团 3000 万人民币天使投资</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>MiroFish 是一个基于 OASIS 框架构建的群体智能预测引擎，能够模拟数百万个具有独立人格和社交关系的 AI Agent，通过构建高保真平行数字世界来预测社会趋势和舆情走向。</p>
+<h3 id="13">1.3 发展历程</h3>
+<pre><code>2024 年
+├── BettaFish (微舆) 发布 - 舆情分析工具
+├── MiroFish 开发启动 - 基于群体智能的预测引擎
+└── 获得盛大集团 3000 万天使投资
+
+2025 年
+├── 集成 OASIS 框架 (CAMEL-AI)
+├── 支持 GraphRAG 知识图谱
+└── GitHub 开源发布
+</code></pre>
+<h3 id="14">1.4 核心价值</h3>
+<ul>
+<li><strong>预测能力</strong>：通过大规模 Agent 模拟预测舆情和社会趋势</li>
+<li><strong>数字孪生</strong>：构建现实世界的高保真平行数字世界</li>
+<li><strong>深度洞察</strong>：理解群体行为背后的驱动因素</li>
+<li><strong>交互探索</strong>：可与模拟世界和报告 Agent 对话</li>
+</ul>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 功能概览</h3>
+<table>
+<thead>
+<tr>
+<th>功能模块</th>
+<th>描述</th>
+<th>应用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>图谱构建</strong></td>
+<td>从现实数据提取种子，构建知识图谱</td>
+<td>数据驱动的模拟初始化</td>
+</tr>
+<tr>
+<td><strong>人设生成</strong></td>
+<td>为每个 Agent 生成独立人格和背景</td>
+<td>真实的群体行为模拟</td>
+</tr>
+<tr>
+<td><strong>社交模拟</strong></td>
+<td>模拟社交平台上的互动行为</td>
+<td>舆情传播分析</td>
+</tr>
+<tr>
+<td><strong>趋势预测</strong></td>
+<td>预测话题热度和舆情走向</td>
+<td>危机预警、市场预测</td>
+</tr>
+<tr>
+<td><strong>报告生成</strong></td>
+<td>自动生成分析报告</td>
+<td>决策支持</td>
+</tr>
+<tr>
+<td><strong>深度互动</strong></td>
+<td>与模拟世界对话探索</td>
+<td>因果分析、假设验证</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 核心功能详解</h3>
+<h4 id="221-agent">2.2.1 大规模 Agent 模拟</h4>
+<pre><code>规模能力：
+├── 支持同时运行 1,000,000+ 个 Agent
+├── 每个 Agent 具有独立的人格特征
+├── 基于真实人口统计数据建模
+└── 动态社交网络演化
+</code></pre>
+<p><strong>Agent 特征维度</strong>：
+- 人口统计信息（年龄、性别、职业、地区）
+- 心理特征（性格、价值观、兴趣）
+- 社交关系（关注/被关注关系）
+- 行为模式（活跃时间、互动偏好）</p>
+<h4 id="222-graphrag">2.2.2 GraphRAG 知识注入</h4>
+<pre><code>知识图谱构建：
+┌─────────────────────────────────────────────┐
+│  现实数据源                                  │
+│  ├── 新闻报道                                │
+│  ├── 社交媒体                                │
+│  ├── 用户画像                                │
+│  └── 历史事件                                │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│  GraphRAG 处理                               │
+│  ├── 实体抽取                                │
+│  ├── 关系抽取                                │
+│  ├── 知识融合                                │
+│  └── 图谱存储                                │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│  Agent 记忆注入                              │
+│  ├── 个体记忆 (Personal Memory)              │
+│  ├── 群体记忆 (Collective Memory)            │
+│  └── 时序记忆 (Episodic Memory)              │
+└─────────────────────────────────────────────┘
+</code></pre>
+<h4 id="223">2.2.3 双平台并行模拟</h4>
+<p>MiroFish 支持同时在多个社交平台进行模拟：</p>
+<table>
+<thead>
+<tr>
+<th>平台类型</th>
+<th>模拟内容</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>微博类</strong></td>
+<td>短文本、转发、评论</td>
+<td>舆情爆发快、传播广</td>
+</tr>
+<tr>
+<td><strong>推特类</strong></td>
+<td>国际化、话题标签</td>
+<td>跨文化、实时性强</td>
+</tr>
+<tr>
+<td><strong>论坛类</strong></td>
+<td>深度讨论、主题帖</td>
+<td>观点沉淀、意见领袖</td>
+</tr>
+</tbody>
+</table>
+<h4 id="224-reportagent">2.2.4 ReportAgent 深度交互</h4>
+<pre><code>交互模式：
+┌─────────────────────────────────────────────┐
+│           ReportAgent                        │
+│  ├── 分析模拟结果                            │
+│  ├── 生成结构化报告                          │
+│  └── 回答用户问题                            │
+└──────────────────┬──────────────────────────┘
+                   │
+        ┌──────────┴──────────┐
+        ▼                     ▼
+┌───────────────┐     ┌───────────────┐
+│  与模拟世界对话  │     │  与报告Agent对话 │
+│  - 探索特定话题  │     │  - 深入分析原因  │
+│  - 追踪个体Agent │     │  - 验证假设     │
+│  - 观察传播路径  │     │  - 获取洞察     │
+└───────────────┘     └───────────────┘
+</code></pre>
+<hr />
+<h2 id="_3">三、技术架构</h2>
+<h3 id="31">3.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                          MiroFish 系统架构                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌────────────┐  ┌────────────┐  ┌────────────┐  ┌────────────┐        │
+│  │  前端界面   │  │  可视化层  │  │  交互层    │  │  报告层    │        │
+│  │  (React)   │  │ (D3/Chart) │  │  (Chat)    │  │ (Markdown) │        │
+│  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘        │
+│        │               │               │               │                │
+│        └───────────────┴───────────────┴───────────────┘                │
+│                                │                                         │
+│  ┌─────────────────────────────┴─────────────────────────────────────┐  │
+│  │                        API Gateway (FastAPI)                        │  │
+│  └─────────────────────────────┬─────────────────────────────────────┘  │
+│                                │                                         │
+│  ┌─────────────────────────────┼─────────────────────────────────────┐  │
+│  │                             │            OASIS 框架层               │  │
+│  │  ┌──────────────┐  ┌────────┴────────┐  ┌──────────────┐          │  │
+│  │  │ Environment  │  │ Recommendation  │  │    Agent     │          │  │
+│  │  │    Server    │  │     System      │  │   Module     │          │  │
+│  │  └──────────────┘  └─────────────────┘  └──────────────┘          │  │
+│  │  ┌──────────────┐  ┌─────────────────┐  ┌──────────────┐          │  │
+│  │  │ Time Engine  │  │   Scalable      │  │   GraphRAG   │          │  │
+│  │  │              │  │   Inferencer    │  │              │          │  │
+│  │  └──────────────┘  └─────────────────┘  └──────────────┘          │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                │                                         │
+│  ┌─────────────────────────────┴─────────────────────────────────────┐  │
+│  │                         基础设施层                                  │  │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐          │  │
+│  │  │  Redis   │  │ MongoDB  │  │ Neo4j    │  │   LLM    │          │  │
+│  │  │ (Cache)  │  │  (Log)   │  │ (Graph)  │  │  (GPT-4) │          │  │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘          │  │
+│  └───────────────────────────────────────────────────────────────────┘  │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 核心模块说明</h3>
+<h4 id="environment-server">Environment Server (环境服务器)</h4>
+<pre><code class="language-python"># 环境服务器负责管理模拟环境
+class EnvironmentServer:
+    &quot;&quot;&quot;
+    功能：
+    - 维护模拟世界的状态
+    - 管理社交图谱
+    - 处理 Agent 交互
+    - 记录历史数据
+    &quot;&quot;&quot;
+    def __init__(self, config):
+        self.social_graph = SocialGraph()
+        self.content_store = ContentStore()
+        self.time_manager = TimeManager()
+
+    def step(self, actions):
+        &quot;&quot;&quot;执行一个时间步的所有动作&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="recommendation-system">Recommendation System (推荐系统)</h4>
+<pre><code class="language-python"># 推荐系统决定 Agent 看到什么内容
+class RecommendationSystem:
+    &quot;&quot;&quot;
+    功能：
+    - 基于兴趣推荐内容
+    - 基于社交关系推荐
+    - 模拟算法偏见
+    - 控制信息流
+    &quot;&quot;&quot;
+    def get_feed(self, agent_id, context):
+        &quot;&quot;&quot;为 Agent 生成个性化信息流&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="agent-module-agent">Agent Module (Agent 模块)</h4>
+<pre><code class="language-python"># Agent 模块定义个体行为
+class Agent:
+    &quot;&quot;&quot;
+    特征：
+    - 独立的人格系统
+    - 记忆和知识库
+    - 决策和行为生成
+    - 社交能力
+    &quot;&quot;&quot;
+    def __init__(self, profile, memory, personality):
+        self.profile = profile          # 人口统计
+        self.memory = memory            # GraphRAG 记忆
+        self.personality = personality  # 大五人格
+
+    def decide(self, observation):
+        &quot;&quot;&quot;基于观察做出决策&quot;&quot;&quot;
+        pass
+
+    def act(self, decision):
+        &quot;&quot;&quot;执行决策，生成行为&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="scalable-inferencer">Scalable Inferencer (可扩展推理器)</h4>
+<pre><code class="language-python"># 可扩展推理器支持大规模并行推理
+class ScalableInferencer:
+    &quot;&quot;&quot;
+    特点：
+    - 支持百万级 Agent 并行
+    - 批量 LLM 调用优化
+    - 分布式部署支持
+    - 成本控制
+    &quot;&quot;&quot;
+    def batch_infer(self, agent_states):
+        &quot;&quot;&quot;批量推理优化&quot;&quot;&quot;
+        pass
+</code></pre>
+<h3 id="33">3.3 数据流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        MiroFish 数据流                                   │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  1. 图谱构建阶段                                                          │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐              │
+│  │ 现实数据 │ -&gt; │ 实体抽取 │ -&gt; │ 关系抽取 │ -&gt; │ 图谱构建 │              │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘              │
+│                                                                          │
+│  2. 环境搭建阶段                                                          │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐              │
+│  │ 人口数据 │ -&gt; │ 人设生成 │ -&gt; │ 关系建立 │ -&gt; │ 环境初始化│              │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘              │
+│                                                                          │
+│  3. 模拟运行阶段                                                          │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐              │
+│  │ 时间推进 │ -&gt; │ Agent观察│ -&gt; │ 决策推理 │ -&gt; │ 行为执行 │              │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘              │
+│       │                                                 │               │
+│       └─────────────────────────────────────────────────┘               │
+│                        循环                                               │
+│                                                                          │
+│  4. 报告生成阶段                                                          │
+│  ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐              │
+│  │ 数据聚合 │ -&gt; │ 趋势分析 │ -&gt; │ 洞察提取 │ -&gt; │ 报告生成 │              │
+│  └─────────┘    └─────────┘    └─────────┘    └─────────┘              │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="oasis">四、OASIS 框架</h2>
+<h3 id="41">4.1 框架介绍</h3>
+<p>OASIS (Open Agent Social Interaction Simulations) 是 CAMEL-AI 团队开发的开源社交模拟框架，MiroFish 基于此框架构建。</p>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>开发者</strong></td>
+<td>CAMEL-AI</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/camel-ai/oasis</td>
+</tr>
+<tr>
+<td><strong>论文</strong></td>
+<td>OASIS: Open Agent Social Interaction Simulations</td>
+</tr>
+<tr>
+<td><strong>定位</strong></td>
+<td>社交媒体模拟通用框架</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-oasis">4.2 OASIS 核心特性</h3>
+<pre><code>OASIS 框架能力：
+├── 可扩展性
+│   ├── 支持 1,000,000+ Agent
+│   └── 分布式部署
+├── 真实性
+│   ├── 基于真实人口数据
+│   ├── 真实社交图谱
+│   └── 真实行为模式
+├── 完整性
+│   ├── 多平台支持
+│   ├── 完整社交功能
+│   └── 时间动态演化
+└── 开放性
+    ├── 模块化设计
+    ├── 插件扩展
+    └── 研究友好
+</code></pre>
+<h3 id="43-oasis-vs-mirofish">4.3 OASIS vs MiroFish 关系</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                         MiroFish                                 │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │  增强功能：                                                 │  │
+│  │  ├── GraphRAG 知识注入                                      │  │
+│  │  ├── 中文语境优化                                           │  │
+│  │  ├── 舆情预测模型                                           │  │
+│  │  ├── 报告生成 Agent                                         │  │
+│  │  └── 用户交互界面                                           │  │
+│  └───────────────────────────────────────────────────────────┘  │
+│                              │                                   │
+│                              ▼                                   │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                      OASIS 框架                             │  │
+│  │  ├── Environment Server                                     │  │
+│  │  ├── Recommendation System                                  │  │
+│  │  ├── Agent Module                                           │  │
+│  │  ├── Time Engine                                            │  │
+│  │  └── Scalable Inferencer                                    │  │
+│  └───────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_4">五、使用场景</h2>
+<h3 id="51">5.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+<th>价值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>舆情预测</strong></td>
+<td>预测话题传播和舆论走向</td>
+<td>危机预警、公关策略</td>
+</tr>
+<tr>
+<td><strong>政策模拟</strong></td>
+<td>模拟政策发布后的社会反应</td>
+<td>政策优化、风险评估</td>
+</tr>
+<tr>
+<td><strong>市场研究</strong></td>
+<td>模拟消费者群体行为</td>
+<td>产品定位、营销策略</td>
+</tr>
+<tr>
+<td><strong>危机演练</strong></td>
+<td>模拟危机事件传播</td>
+<td>应急预案、响应训练</td>
+</tr>
+<tr>
+<td><strong>学术研究</strong></td>
+<td>社会行为、传播学研究</td>
+<td>理论验证、数据生成</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 典型用例</h3>
+<h4 id="1">用例 1：新品发布舆情预测</h4>
+<pre><code>输入：
+- 产品信息
+- 目标用户群体画像
+- 初始传播策略
+
+模拟过程：
+1. 构建目标用户群体的数字孪生
+2. 模拟产品信息在社交网络传播
+3. 观察 Agent 的反应和互动
+4. 分析舆情走向和关键节点
+
+输出：
+- 预计传播范围
+- 潜在负面反应
+- 关键意见领袖识别
+- 优化建议
+</code></pre>
+<h4 id="2">用例 2：危机事件应对演练</h4>
+<pre><code>输入：
+- 危机事件描述
+- 企业/机构背景
+- 应对方案选项
+
+模拟过程：
+1. 注入危机事件到模拟世界
+2. 观察不同应对方案的效果
+3. 分析舆论演化路径
+4. 识别关键时间窗口
+
+输出：
+- 各方案效果对比
+- 最佳响应时机
+- 风险点预警
+- 沟通策略建议
+</code></pre>
+<h3 id="53">5.3 不适用场景</h3>
+<ul>
+<li><strong>需要精确预测的场景</strong>：模拟结果为概率性预测，非确定性</li>
+<li><strong>实时响应场景</strong>：大规模模拟需要较长时间</li>
+<li><strong>小规模群体</strong>：小群体用传统方法更高效</li>
+<li><strong>完全封闭系统</strong>：需要外部数据输入</li>
+</ul>
+<hr />
+<h2 id="_5">六、对比分析</h2>
+<h3 id="61-multi-agent">6.1 与其他 Multi-Agent 框架对比</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>MiroFish</th>
+<th>LangGraph</th>
+<th>CrewAI</th>
+<th>AutoGen</th>
+<th>OpenAI Swarm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>群体智能预测</td>
+<td>工作流编排</td>
+<td>团队协作</td>
+<td>多 Agent 对话</td>
+<td>轻量级 Swarm</td>
+</tr>
+<tr>
+<td><strong>Agent 规模</strong></td>
+<td>1,000,000+</td>
+<td>10-100</td>
+<td>3-10</td>
+<td>2-10</td>
+<td>10-100</td>
+</tr>
+<tr>
+<td><strong>社交模拟</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><strong>人设系统</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐</td>
+</tr>
+<tr>
+<td><strong>知识注入</strong></td>
+<td>GraphRAG</td>
+<td>向量库</td>
+<td>向量库</td>
+<td>向量库</td>
+<td>无内置</td>
+</tr>
+<tr>
+<td><strong>可视化</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐</td>
+<td>⭐</td>
+</tr>
+<tr>
+<td><strong>开箱即用</strong></td>
+<td>⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>中文支持</strong></td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 技术栈对比</h3>
+<pre><code>                    MiroFish          行业通用方案
+                    ─────────         ──────────────
+框架层              OASIS             LangGraph/CrewAI
+知识层              GraphRAG          Vector RAG
+人格系统            大五人格 + 人口统计  简单 Prompt
+社交网络            动态图谱           静态拓扑
+推理优化            批量推理           单次推理
+规模                百万级             十/百级
+</code></pre>
+<h3 id="63">6.3 选型建议</h3>
+<table>
+<thead>
+<tr>
+<th>需求场景</th>
+<th>推荐选择</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>大规模社交模拟</td>
+<td>MiroFish</td>
+<td>专为社交模拟设计，支持百万 Agent</td>
+</tr>
+<tr>
+<td>工作流自动化</td>
+<td>LangGraph</td>
+<td>灵活的图编排，适合复杂流程</td>
+</tr>
+<tr>
+<td>快速原型开发</td>
+<td>CrewAI</td>
+<td>开箱即用，学习曲线平缓</td>
+</tr>
+<tr>
+<td>研究对话 Agent</td>
+<td>AutoGen</td>
+<td>对话机制完善，研究友好</td>
+</tr>
+<tr>
+<td>简单任务分发</td>
+<td>OpenAI Swarm</td>
+<td>轻量级，易于上手</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">七、安装配置</h2>
+<h3 id="71">7.1 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>版本要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node.js</td>
+<td>18+</td>
+<td>前端运行环境</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>≥3.11, ≤3.12</td>
+<td>后端运行环境</td>
+</tr>
+<tr>
+<td>uv</td>
+<td>最新版</td>
+<td>Python 包管理器</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>6.0+</td>
+<td>缓存和消息队列</td>
+</tr>
+<tr>
+<td>MongoDB</td>
+<td>5.0+</td>
+<td>日志和状态存储</td>
+</tr>
+<tr>
+<td>Neo4j</td>
+<td>4.4+</td>
+<td>知识图谱存储</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 安装步骤</h3>
+<pre><code class="language-bash"># 1. 克隆仓库
+git clone https://github.com/666ghj/MiroFish.git
+cd MiroFish
+
+# 2. 安装前端依赖
+cd frontend
+npm install
+
+# 3. 安装后端依赖 (使用 uv)
+cd ../backend
+uv pip install -r requirements.txt
+
+# 4. 配置环境变量
+cp .env.example .env
+# 编辑 .env 文件，填入：
+# - OPENAI_API_KEY
+# - REDIS_URL
+# - MONGODB_URL
+# - NEO4J_URL
+
+# 5. 启动服务
+# 启动后端
+cd backend
+uvicorn main:app --reload
+
+# 启动前端 (新终端)
+cd frontend
+npm run dev
+</code></pre>
+<h3 id="73">7.3 配置说明</h3>
+<pre><code class="language-yaml"># config.yaml 示例
+simulation:
+  max_agents: 100000        # 最大 Agent 数量
+  time_step: 3600           # 时间步长（秒）
+  platforms:                # 模拟平台
+    - weibo
+    - twitter
+
+agent:
+  personality_model: &quot;big5&quot; # 人格模型
+  memory_type: &quot;graphrag&quot;   # 记忆类型
+
+llm:
+  provider: &quot;openai&quot;
+  model: &quot;gpt-4-turbo&quot;
+  temperature: 0.7
+
+inference:
+  batch_size: 100           # 批量推理大小
+  max_concurrent: 50        # 最大并发数
+</code></pre>
+<hr />
+<h2 id="_7">八、最佳实践</h2>
+<h3 id="81-agent">8.1 Agent 人设设计</h3>
+<pre><code class="language-python"># 好的人设设计应该包含多个维度
+agent_profile = {
+    # 人口统计
+    &quot;demographics&quot;: {
+        &quot;age&quot;: 28,
+        &quot;gender&quot;: &quot;female&quot;,
+        &quot;occupation&quot;: &quot;software_engineer&quot;,
+        &quot;location&quot;: &quot;beijing&quot;
+    },
+
+    # 心理特征 (大五人格)
+    &quot;personality&quot;: {
+        &quot;openness&quot;: 0.8,        # 开放性
+        &quot;conscientiousness&quot;: 0.7, # 尽责性
+        &quot;extraversion&quot;: 0.5,    # 外向性
+        &quot;agreeableness&quot;: 0.6,   # 宜人性
+        &quot;neuroticism&quot;: 0.3      # 神经质
+    },
+
+    # 兴趣标签
+    &quot;interests&quot;: [&quot;technology&quot;, &quot;gaming&quot;, &quot;coffee&quot;],
+
+    # 行为模式
+    &quot;behavior&quot;: {
+        &quot;active_hours&quot;: [9, 23],  # 活跃时间
+        &quot;post_frequency&quot;: 3,       # 日均发帖
+        &quot;interaction_style&quot;: &quot;thoughtful&quot;  # 互动风格
+    }
+}
+</code></pre>
+<h3 id="82">8.2 模拟参数调优</h3>
+<pre><code>参数调优建议：
+
+1. Agent 数量
+   - 测试阶段：1,000 - 10,000
+   - 生产环境：100,000 - 1,000,000
+   - 注意：数量越大，成本越高
+
+2. 模拟时长
+   - 短期事件：7-30 天虚拟时间
+   - 长期趋势：90-180 天虚拟时间
+   - 建议：先短后长，逐步验证
+
+3. 采样策略
+   - 全量采样：结果准确，成本高
+   - 分层采样：代表性采样，性价比高
+   - 建议：先用分层采样验证，再全量确认
+</code></pre>
+<h3 id="83">8.3 结果解读</h3>
+<pre><code>解读模拟结果的注意事项：
+
+1. 概率性结果
+   - 模拟结果是概率预测，非确定性
+   - 多次运行取平均
+   - 关注趋势而非精确数值
+
+2. 偏差来源
+   - 人设数据偏差
+   - LLM 固有偏见
+   - 推荐算法模拟偏差
+   - 需要交叉验证
+
+3. 关键指标
+   - 传播速度 (Reach Rate)
+   - 情感分布 (Sentiment Distribution)
+   - 关键节点 (Key Influencers)
+   - 舆论转折点 (Tipping Points)
+</code></pre>
+<hr />
+<h2 id="_8">九、总结</h2>
+<h3 id="91">9.1 优势</h3>
+<table>
+<thead>
+<tr>
+<th>优势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>规模优势</strong></td>
+<td>支持百万级 Agent，行业领先</td>
+</tr>
+<tr>
+<td><strong>真实性</strong></td>
+<td>基于真实数据建模，高保真模拟</td>
+</tr>
+<tr>
+<td><strong>知识驱动</strong></td>
+<td>GraphRAG 注入领域知识</td>
+</tr>
+<tr>
+<td><strong>可交互</strong></td>
+<td>支持与模拟世界对话探索</td>
+</tr>
+<tr>
+<td><strong>开源</strong></td>
+<td>完全开源，可自由定制</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 劣势</h3>
+<table>
+<thead>
+<tr>
+<th>劣势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>需要理解 OASIS 框架和 GraphRAG</td>
+</tr>
+<tr>
+<td><strong>资源需求</strong></td>
+<td>大规模模拟需要大量计算资源</td>
+</tr>
+<tr>
+<td><strong>LLM 成本</strong></td>
+<td>百万级 Agent 推理成本较高</td>
+</tr>
+<tr>
+<td><strong>部署复杂</strong></td>
+<td>依赖多个基础设施组件</td>
+</tr>
+<tr>
+<td><strong>文档</strong></td>
+<td>相比成熟框架文档较少</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 最终评价</h3>
+<pre><code>推荐指数：⭐⭐⭐⭐ (4/5)
+
+适合人群：
+- 需要进行大规模社交模拟的研究者
+- 舆情分析和预测从业者
+- 对数字孪生技术感兴趣的开发者
+- 社会科学计算研究者
+
+不建议人群：
+- 只需要简单 Agent 协作的场景
+- 预算有限的个人开发者
+- 需要开箱即用解决方案的团队
+</code></pre>
+<hr />
+<h2 id="_9">十、参考资料</h2>
+<ul>
+<li><a href="https://github.com/666ghj/MiroFish">MiroFish GitHub</a></li>
+<li><a href="https://github.com/camel-ai/oasis">OASIS GitHub</a></li>
+<li><a href="https://www.camel-ai.org/">CAMEL-AI 官网</a></li>
+<li><a href="https://arxiv.org/abs/2411.11581">OASIS 论文</a></li>
+<li><a href="https://arxiv.org/abs/2404.16130">GraphRAG 论文</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

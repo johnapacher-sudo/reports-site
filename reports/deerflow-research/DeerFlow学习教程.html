@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeerFlow 2.0 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速开始</a></li>
+<li><a href="#11-deerflow" class="toc-h3">1.1 什么是 DeerFlow？</a></li>
+<li><a href="#12" class="toc-h3">1.2 核心能力</a></li>
+<li><a href="#13-5" class="toc-h3">1.3 5 分钟上手</a></li>
+<li><a href="#_3" class="toc-h2">二、安装配置</a></li>
+<li><a href="#21" class="toc-h3">2.1 系统要求</a></li>
+<li><a href="#22-docker" class="toc-h3">2.2 Docker 安装（推荐）</a></li>
+<li><a href="#23" class="toc-h3">2.3 本地开发安装</a></li>
+<li><a href="#24" class="toc-h3">2.4 配置文件</a></li>
+<li><a href="#25" class="toc-h3">2.5 推荐模型配置</a></li>
+<li><a href="#_4" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31-lead-agent" class="toc-h3">3.1 Lead Agent</a></li>
+<li><a href="#32-sub-agent" class="toc-h3">3.2 Sub-Agent</a></li>
+<li><a href="#33-sandbox" class="toc-h3">3.3 沙箱 (Sandbox)</a></li>
+<li><a href="#34-skills" class="toc-h3">3.4 Skills</a></li>
+<li><a href="#skills" class="toc-h2">四、Skills 开发</a></li>
+<li><a href="#41-skill" class="toc-h3">4.1 创建自定义 Skill</a></li>
+<li><a href="#42-skill" class="toc-h3">4.2 Skill 模板</a></li>
+<li><a href="#43-skills" class="toc-h3">4.3 内置 Skills 使用</a></li>
+<li><a href="#mcp-server" class="toc-h2">五、MCP Server 集成</a></li>
+<li><a href="#51-mcp-server" class="toc-h3">5.1 添加 MCP Server</a></li>
+<li><a href="#52-oauth" class="toc-h3">5.2 OAuth 认证</a></li>
+<li><a href="#53-mcp-server" class="toc-h3">5.3 常用 MCP Server</a></li>
+<li><a href="#sub-agent" class="toc-h2">六、Sub-Agent 编排</a></li>
+<li><a href="#61" class="toc-h3">6.1 自动编排</a></li>
+<li><a href="#62" class="toc-h3">6.2 手动控制</a></li>
+<li><a href="#63-sub-agent" class="toc-h3">6.3 Sub-Agent 隔离</a></li>
+<li><a href="#_5" class="toc-h2">七、记忆系统</a></li>
+<li><a href="#71" class="toc-h3">7.1 记忆结构</a></li>
+<li><a href="#72" class="toc-h3">7.2 查看记忆</a></li>
+<li><a href="#73" class="toc-h3">7.3 记忆更新</a></li>
+<li><a href="#74" class="toc-h3">7.4 记忆配置</a></li>
+<li><a href="#im" class="toc-h2">八、IM 渠道集成</a></li>
+<li><a href="#81-telegram" class="toc-h3">8.1 Telegram 集成</a></li>
+<li><a href="#82-slack" class="toc-h3">8.2 Slack 集成</a></li>
+<li><a href="#83" class="toc-h3">8.3 飞书集成</a></li>
+<li><a href="#84" class="toc-h3">8.4 命令列表</a></li>
+<li><a href="#_6" class="toc-h2">九、进阶主题</a></li>
+<li><a href="#91" class="toc-h3">9.1 自定义工具</a></li>
+<li><a href="#92" class="toc-h3">9.2 自定义中间件</a></li>
+<li><a href="#93" class="toc-h3">9.3 自定义沙箱</a></li>
+<li><a href="#94-k8s" class="toc-h3">9.4 K8s 部署</a></li>
+<li><a href="#_7" class="toc-h2">十、常见问题</a></li>
+<li><a href="#q1-docker" class="toc-h3">Q1: Docker 启动失败？</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 模型调用失败？</a></li>
+<li><a href="#q3-skill" class="toc-h3">Q3: Skill 没有被触发？</a></li>
+<li><a href="#q4-sub-agent" class="toc-h3">Q4: Sub-Agent 超时？</a></li>
+<li><a href="#q5" class="toc-h3">Q5: 记忆没有更新？</a></li>
+<li><a href="#_8" class="toc-h2">十一、速查表</a></li>
+<li><a href="#_9" class="toc-h3">常用命令</a></li>
+<li><a href="#im_1" class="toc-h3">IM 命令</a></li>
+<li><a href="#_10" class="toc-h3">配置文件</a></li>
+<li><a href="#_11" class="toc-h3">目录结构</a></li>
+<li><a href="#_12" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>DeerFlow 2.0 学习教程</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="deerflow-20">DeerFlow 2.0 学习教程</h1>
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速开始">快速开始</a></li>
+<li><a href="#二安装配置">安装配置</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四skills-开发">Skills 开发</a></li>
+<li><a href="#五mcp-server-集成">MCP Server 集成</a></li>
+<li><a href="#六sub-agent-编排">Sub-Agent 编排</a></li>
+<li><a href="#七记忆系统">记忆系统</a></li>
+<li><a href="#八im-渠道集成">IM 渠道集成</a></li>
+<li><a href="#九进阶主题">进阶主题</a></li>
+<li><a href="#十常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速开始</h2>
+<h3 id="11-deerflow">1.1 什么是 DeerFlow？</h3>
+<p>DeerFlow 是字节跳动开源的 <strong>SuperAgent Harness（超级智能体运行时）</strong>：</p>
+<pre><code>传统框架 (Framework)
+├── 提供构建块
+├── 你自己组装
+└── 需要大量胶水代码
+
+DeerFlow (Harness)
+├── 开箱即用
+├── 电池内置
+└── 约定优于配置
+</code></pre>
+<h3 id="12">1.2 核心能力</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>自主规划</strong></td>
+<td>Agent 自动分解任务、规划执行</td>
+</tr>
+<tr>
+<td><strong>沙箱执行</strong></td>
+<td>安全隔离的代码执行环境</td>
+</tr>
+<tr>
+<td><strong>长期记忆</strong></td>
+<td>跨会话的持久化记忆</td>
+</tr>
+<tr>
+<td><strong>Sub-Agent</strong></td>
+<td>并行子智能体协作</td>
+</tr>
+<tr>
+<td><strong>Skills</strong></td>
+<td>Markdown 定义的能力扩展</td>
+</tr>
+<tr>
+<td><strong>MCP 支持</strong></td>
+<td>原生支持 MCP 协议</td>
+</tr>
+</tbody>
+</table>
+<h3 id="13-5">1.3 5 分钟上手</h3>
+<pre><code class="language-bash"># 1. 克隆仓库
+git clone https://github.com/bytedance/deer-flow.git
+cd deer-flow
+
+# 2. 生成配置
+make config
+
+# 3. Docker 启动（推荐）
+make docker-init
+make docker-start
+
+# 4. 访问 Web UI
+open http://localhost:2026
+
+# 5. 开始对话
+# 输入: &quot;帮我研究一下 LangGraph 框架的架构和特点&quot;
+</code></pre>
+<hr />
+<h2 id="_3">二、安装配置</h2>
+<h3 id="21">2.1 系统要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Docker</strong></td>
+<td>20.10+（推荐）</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>3.12+（本地开发）</td>
+</tr>
+<tr>
+<td><strong>Node.js</strong></td>
+<td>22+（前端开发）</td>
+</tr>
+<tr>
+<td><strong>内存</strong></td>
+<td>建议 8GB+</td>
+</tr>
+<tr>
+<td><strong>磁盘</strong></td>
+<td>10GB+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-docker">2.2 Docker 安装（推荐）</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/bytedance/deer-flow.git
+cd deer-flow
+
+# 生成配置文件
+make config
+
+# 初始化 Docker 环境
+make docker-init
+
+# 启动服务
+make docker-start
+
+# 查看日志
+make docker-logs
+
+# 停止服务
+make docker-stop
+</code></pre>
+<h3 id="23">2.3 本地开发安装</h3>
+<pre><code class="language-bash"># 检查依赖
+make check
+
+# 安装依赖
+make install
+
+# 启动开发服务器
+make dev
+
+# 或分别启动前后端
+make backend-dev  # 后端 :8001
+make frontend-dev # 前端 :3000
+</code></pre>
+<h3 id="24">2.4 配置文件</h3>
+<p><strong><code>.env</code> 配置</strong>：</p>
+<pre><code class="language-bash"># LLM 配置
+OPENAI_API_KEY=your-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-4
+
+# 或使用 DeepSeek
+DEEPSEEK_API_KEY=your-deepseek-key
+DEEPSEEK_MODEL=deepseek-chat
+
+# 或使用火山引擎
+VOLCENGINE_API_KEY=your-volcengine-key
+VOLCENGINE_MODEL=Doubao-Seed-2.0-Code
+
+# 沙箱配置
+SANDBOX_TYPE=docker  # local | docker | k8s
+
+# 记忆配置
+MEMORY_ENABLED=true
+MEMORY_MAX_TOKENS=2000
+
+# MCP 配置
+MCP_CONFIG_PATH=./mcp_config.json
+</code></pre>
+<p><strong><code>mcp_config.json</code> 示例</strong>：</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;filesystem&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;-y&quot;, &quot;@modelcontextprotocol/server-filesystem&quot;, &quot;./workspace&quot;]
+    },
+    &quot;web-search&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;https://api.tavily.com/mcp&quot;
+    }
+  }
+}
+</code></pre>
+<h3 id="25">2.5 推荐模型配置</h3>
+<pre><code class="language-yaml"># config/models.yaml
+
+# 推荐模型
+models:
+  - name: doubao-seed
+    provider: volcengine
+    model: Doubao-Seed-2.0-Code
+    api_key: ${VOLCENGINE_API_KEY}
+
+  - name: deepseek
+    provider: deepseek
+    model: deepseek-chat
+    api_key: ${DEEPSEEK_API_KEY}
+
+  - name: kimi
+    provider: moonshot
+    model: moonshot-v1-128k
+    api_key: ${MOONSHOT_API_KEY}
+</code></pre>
+<hr />
+<h2 id="_4">三、核心概念</h2>
+<h3 id="31-lead-agent">3.1 Lead Agent</h3>
+<p>Lead Agent 是 DeerFlow 的核心，负责：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Lead Agent 职责                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. 理解用户意图                                                 │
+│     └── 解析用户请求，理解任务目标                               │
+│                                                                 │
+│  2. 任务分解                                                     │
+│     └── 将复杂任务分解为可执行的子任务                           │
+│                                                                 │
+│  3. Sub-Agent 编排                                               │
+│     └── 创建和管理 Sub-Agents                                    │
+│     └── 分配任务，控制并发                                       │
+│                                                                 │
+│  4. 结果综合                                                     │
+│     └── 收集 Sub-Agents 结果                                     │
+│     └── 整合生成最终答案                                         │
+│                                                                 │
+│  5. 记忆管理                                                     │
+│     └── 更新用户记忆                                             │
+│     └── 注入相关上下文                                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32-sub-agent">3.2 Sub-Agent</h3>
+<p>Sub-Agent 是隔离的执行单元：</p>
+<pre><code class="language-python"># Sub-Agent 特点
+├── 隔离上下文（看不到其他 Agent）
+├── 独立的工具集
+├── 独立的状态
+├── 明确的终止条件
+└── 超时控制
+
+# 状态流转
+PENDING -&gt; RUNNING -&gt; COMPLETED
+                   -&gt; FAILED
+                   -&gt; TIMED_OUT
+</code></pre>
+<p><strong>并发控制</strong>：</p>
+<pre><code class="language-python"># Sub-Agent 并发限制
+MIN_SUBAGENT_LIMIT = 2
+MAX_SUBAGENT_LIMIT = 4
+
+# 超出限制时的多批次执行
+Turn 1: 启动 Sub-Agent 1-3 -&gt; 等待结果
+Turn 2: 启动下一批 -&gt; 等待结果
+...
+最终: 综合所有结果
+</code></pre>
+<h3 id="33-sandbox">3.3 沙箱 (Sandbox)</h3>
+<p>三种沙箱实现：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    沙箱实现对比                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Local Sandbox                                                  │
+│  ├── 直接在主机执行                                              │
+│  ├── 适合: 开发调试                                              │
+│  └── 风险: 无隔离                                               │
+│                                                                 │
+│  Docker Sandbox (推荐)                                          │
+│  ├── 容器隔离                                                    │
+│  ├── HTTP API 调用                                              │
+│  ├── 暖池设计 (LRU 淘汰)                                        │
+│  └── 适合: 生产环境                                              │
+│                                                                 │
+│  K8s Sandbox                                                    │
+│  ├── Kubernetes Pods                                            │
+│  ├── PersistentVolume 挂载                                      │
+│  ├── 通过 Provisioner 管理                                       │
+│  └── 适合: 大规模生产                                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="34-skills">3.4 Skills</h3>
+<p>Skill = 目录 + SKILL.md</p>
+<pre><code>skills/
+└── my-skill/
+    ├── SKILL.md          # Skill 定义
+    ├── templates/        # 模板文件
+    └── scripts/          # 脚本
+</code></pre>
+<p><strong>SKILL.md 格式</strong>：</p>
+<pre><code class="language-markdown">---
+name: my-skill
+description: 简短描述（用于匹配）...
+---
+
+# My Skill
+
+## 概述
+详细说明...
+
+## 使用方法
+...
+
+## 示例
+...
+</code></pre>
+<hr />
+<h2 id="skills">四、Skills 开发</h2>
+<h3 id="41-skill">4.1 创建自定义 Skill</h3>
+<pre><code class="language-bash"># 创建 Skill 目录
+mkdir -p skills/my-skill
+
+# 创建 SKILL.md
+cat &gt; skills/my-skill/SKILL.md &lt;&lt; 'EOF'
+---
+name: code-review
+description: 用于代码审查任务，自动检测代码问题和改进建议...
+---
+
+# Code Review Skill
+
+## 概述
+这是一个专业的代码审查技能，能够：
+
+1. 检测代码质量问题
+2. 发现潜在 Bug
+3. 提供改进建议
+
+## 审查流程
+
+### 步骤 1: 静态分析
+- 检查代码风格
+- 检测重复代码
+- 分析复杂度
+
+### 步骤 2: 安全检查
+- SQL 注入风险
+- XSS 漏洞
+- 敏感信息泄露
+
+### 步骤 3: 改进建议
+- 性能优化
+- 可读性改进
+- 最佳实践
+
+## 输出格式
+- 问题列表
+- 严重程度
+- 修复建议
+EOF
+</code></pre>
+<h3 id="42-skill">4.2 Skill 模板</h3>
+<pre><code class="language-markdown"># SKILL.md 模板
+
+---
+name: skill-name
+description: 简短描述，用于任务匹配（约 100 词）
+---
+
+# Skill Name
+
+## 概述
+详细描述这个 Skill 的用途和能力。
+
+## 前置条件
+- 需要什么环境
+- 需要什么配置
+
+## 执行步骤
+
+### 阶段 1: 准备
+...
+
+### 阶段 2: 执行
+...
+
+### 阶段 3: 输出
+...
+
+## 示例
+
+输入:
+</code></pre>
+<p>示例输入</p>
+<pre><code>
+输出:
+</code></pre>
+<p>示例输出</p>
+<pre><code>
+## 注意事项
+- 注意点 1
+- 注意点 2
+</code></pre>
+<h3 id="43-skills">4.3 内置 Skills 使用</h3>
+<p><strong>Deep Research Skill</strong>：</p>
+<pre><code>用户: 帮我研究一下多智能体框架的对比
+
+# DeerFlow 自动调用 deep-research skill
+# 系统化地研究多个角度
+# 生成结构化报告
+</code></pre>
+<p><strong>Data Analysis Skill</strong>：</p>
+<pre><code>用户: 分析这个 sales.csv 文件，告诉我销售趋势
+
+# 自动使用 DuckDB 分析
+# 生成统计结果和图表
+</code></pre>
+<p><strong>Frontend Design Skill</strong>：</p>
+<pre><code>用户: 帮我创建一个现代化的登录页面
+
+# 生成高质量前端代码
+# 包含响应式设计
+</code></pre>
+<hr />
+<h2 id="mcp-server">五、MCP Server 集成</h2>
+<h3 id="51-mcp-server">5.1 添加 MCP Server</h3>
+<p><strong>stdio 模式（本地工具）</strong>：</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;filesystem&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [
+        &quot;-y&quot;,
+        &quot;@modelcontextprotocol/server-filesystem&quot;,
+        &quot;/path/to/allowed/dir&quot;
+      ]
+    },
+    &quot;sqlite&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;uvx&quot;,
+      &quot;args&quot;: [&quot;mcp-server-sqlite&quot;, &quot;--db-path&quot;, &quot;/path/to/db.sqlite&quot;]
+    }
+  }
+}
+</code></pre>
+<p><strong>HTTP 模式（远程服务）</strong>：</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;tavily&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;https://api.tavily.com/mcp&quot;,
+      &quot;headers&quot;: {
+        &quot;Authorization&quot;: &quot;Bearer ${TAVILY_API_KEY}&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="52-oauth">5.2 OAuth 认证</h3>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;github&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;https://api.github.com/mcp&quot;,
+      &quot;oauth&quot;: {
+        &quot;type&quot;: &quot;refresh_token&quot;,
+        &quot;client_id&quot;: &quot;your-client-id&quot;,
+        &quot;client_secret&quot;: &quot;your-client-secret&quot;,
+        &quot;refresh_token&quot;: &quot;your-refresh-token&quot;,
+        &quot;token_url&quot;: &quot;https://github.com/login/oauth/access_token&quot;,
+        &quot;refresh_skew_seconds&quot;: 60
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="53-mcp-server">5.3 常用 MCP Server</h3>
+<table>
+<thead>
+<tr>
+<th>Server</th>
+<th>功能</th>
+<th>类型</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@modelcontextprotocol/server-filesystem</code></td>
+<td>文件系统访问</td>
+<td>stdio</td>
+</tr>
+<tr>
+<td><code>@modelcontextprotocol/server-sqlite</code></td>
+<td>SQLite 数据库</td>
+<td>stdio</td>
+</tr>
+<tr>
+<td><code>@modelcontextprotocol/server-github</code></td>
+<td>GitHub API</td>
+<td>stdio</td>
+</tr>
+<tr>
+<td><code>mcp-server-brave-search</code></td>
+<td>Brave 搜索</td>
+<td>stdio</td>
+</tr>
+<tr>
+<td>Tavily MCP</td>
+<td>网络搜索</td>
+<td>http</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sub-agent">六、Sub-Agent 编排</h2>
+<h3 id="61">6.1 自动编排</h3>
+<p>DeerFlow 自动进行 Sub-Agent 编排：</p>
+<pre><code>用户任务: &quot;研究 AI Agent 框架并写一份对比报告&quot;
+
+# DeerFlow 自动:
+1. 分析任务，识别需要研究的框架
+2. 创建多个 Sub-Agents
+   - Sub-Agent 1: 研究 AutoGen
+   - Sub-Agent 2: 研究 CrewAI
+   - Sub-Agent 3: 研究 LangGraph
+3. 并行执行（最多 4 个）
+4. 综合结果，生成报告
+</code></pre>
+<h3 id="62">6.2 手动控制</h3>
+<pre><code class="language-python"># 通过配置控制 Sub-Agent 行为
+subagent_config = {
+    &quot;max_concurrent&quot;: 3,      # 最大并发数
+    &quot;timeout&quot;: 300,           # 超时时间（秒）
+    &quot;max_iterations&quot;: 10,     # 最大迭代次数
+}
+</code></pre>
+<h3 id="63-sub-agent">6.3 Sub-Agent 隔离</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Sub-Agent 上下文隔离                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   Lead Agent                                                    │
+│   ├── 可以看到所有 Sub-Agents 结果                              │
+│   └── 可以访问全局记忆                                          │
+│                                                                 │
+│   Sub-Agent 1          Sub-Agent 2          Sub-Agent 3        │
+│   ├── 独立上下文        ├── 独立上下文        ├── 独立上下文      │
+│   ├── 看不到 Agent 2    ├── 看不到 Agent 1    ├── 看不到 Agent 1 │
+│   └── 看不到 Agent 3    └── 看不到 Agent 3    └── 看不到 Agent 2 │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_5">七、记忆系统</h2>
+<h3 id="71">7.1 记忆结构</h3>
+<pre><code class="language-python">memory = {
+    &quot;version&quot;: &quot;1.0&quot;,
+
+    # 用户画像
+    &quot;user&quot;: {
+        &quot;workContext&quot;: {
+            &quot;role&quot;: &quot;软件工程师&quot;,
+            &quot;company&quot;: &quot;某科技公司&quot;,
+            &quot;techStack&quot;: [&quot;Python&quot;, &quot;Go&quot;, &quot;Kubernetes&quot;]
+        },
+        &quot;personalContext&quot;: {
+            &quot;language&quot;: &quot;中文&quot;,
+            &quot;preferences&quot;: [&quot;简洁代码&quot;, &quot;测试驱动开发&quot;]
+        },
+        &quot;topOfMind&quot;: {
+            &quot;currentProject&quot;: &quot;重构支付系统&quot;,
+            &quot;deadline&quot;: &quot;2026-04-01&quot;
+        }
+    },
+
+    # 时间线
+    &quot;history&quot;: {
+        &quot;recentMonths&quot;: [...],
+        &quot;earlierContext&quot;: [...],
+        &quot;longTermBackground&quot;: [...]
+    },
+
+    # 结构化事实
+    &quot;facts&quot;: [
+        {&quot;type&quot;: &quot;preference&quot;, &quot;content&quot;: &quot;偏好微服务架构&quot;, &quot;confidence&quot;: 0.9},
+        {&quot;type&quot;: &quot;knowledge&quot;, &quot;content&quot;: &quot;精通分布式系统&quot;, &quot;confidence&quot;: 0.85},
+    ]
+}
+</code></pre>
+<h3 id="72">7.2 查看记忆</h3>
+<pre><code class="language-bash"># 通过 IM 命令
+/memory
+
+# 或通过 API
+curl http://localhost:8001/api/memory
+</code></pre>
+<h3 id="73">7.3 记忆更新</h3>
+<p>记忆更新是自动的：</p>
+<pre><code>对话完成
+    ↓
+MemoryMiddleware.after_agent
+    ↓
+MemoryUpdateQueue（防抖 30s）
+    ↓
+去重
+    ↓
+LLM 提取 Facts
+    ↓
+原子写入文件
+</code></pre>
+<h3 id="74">7.4 记忆配置</h3>
+<pre><code class="language-yaml">memory:
+  enabled: true
+  max_injection_tokens: 2000  # 注入到上下文的最大 Token
+  max_facts: 100              # 最大 Facts 数量
+  confidence_threshold: 0.7   # Facts 置信度阈值
+  update_debounce: 30         # 更新防抖（秒）
+</code></pre>
+<hr />
+<h2 id="im">八、IM 渠道集成</h2>
+<h3 id="81-telegram">8.1 Telegram 集成</h3>
+<pre><code class="language-yaml"># config/channels.yaml
+channels:
+  telegram:
+    enabled: true
+    bot_token: ${TELEGRAM_BOT_TOKEN}
+</code></pre>
+<p><strong>步骤</strong>：</p>
+<ol>
+<li>通过 @BotFather 创建 Bot</li>
+<li>获取 Bot Token</li>
+<li>配置到 <code>TELEGRAM_BOT_TOKEN</code></li>
+<li>启动服务</li>
+<li>向 Bot 发送消息</li>
+</ol>
+<h3 id="82-slack">8.2 Slack 集成</h3>
+<pre><code class="language-yaml">channels:
+  slack:
+    enabled: true
+    bot_token: ${SLACK_BOT_TOKEN}
+    app_token: ${SLACK_APP_TOKEN}
+</code></pre>
+<p><strong>步骤</strong>：</p>
+<ol>
+<li>创建 Slack App</li>
+<li>启用 Socket Mode</li>
+<li>获取 Bot Token 和 App Token</li>
+<li>配置 OAuth Scopes</li>
+<li>安装到工作区</li>
+</ol>
+<h3 id="83">8.3 飞书集成</h3>
+<pre><code class="language-yaml">channels:
+  feishu:
+    enabled: true
+    app_id: ${FEISHU_APP_ID}
+    app_secret: ${FEISHU_APP_SECRET}
+</code></pre>
+<h3 id="84">8.4 命令列表</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/new</code></td>
+<td>开始新对话</td>
+<td><code>/new</code></td>
+</tr>
+<tr>
+<td><code>/status</code></td>
+<td>显示线程状态</td>
+<td><code>/status</code></td>
+</tr>
+<tr>
+<td><code>/models</code></td>
+<td>列出可用模型</td>
+<td><code>/models</code></td>
+</tr>
+<tr>
+<td><code>/memory</code></td>
+<td>查看记忆</td>
+<td><code>/memory</code></td>
+</tr>
+<tr>
+<td><code>/help</code></td>
+<td>显示帮助</td>
+<td><code>/help</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">九、进阶主题</h2>
+<h3 id="91">9.1 自定义工具</h3>
+<pre><code class="language-python"># backend/src/tools/custom_tool.py
+
+from langchain_core.tools import tool
+
+@tool
+def analyze_code(code: str) -&gt; str:
+    &quot;&quot;&quot;分析代码质量，返回改进建议。
+
+    Args:
+        code: 要分析的代码字符串
+
+    Returns:
+        分析结果和建议
+    &quot;&quot;&quot;
+    # 实现分析逻辑
+    issues = []
+
+    # 检查代码长度
+    if len(code) &gt; 500:
+        issues.append(&quot;代码过长，建议拆分&quot;)
+
+    # 检查命名
+    # ...
+
+    return &quot;\n&quot;.join(issues) if issues else &quot;代码质量良好&quot;
+</code></pre>
+<h3 id="92">9.2 自定义中间件</h3>
+<pre><code class="language-python"># backend/src/agents/middlewares/custom_middleware.py
+
+from langchain.agents.middleware import AgentMiddleware
+
+class LoggingMiddleware(AgentMiddleware):
+    &quot;&quot;&quot;日志记录中间件&quot;&quot;&quot;
+
+    async def before_agent(self, state, config):
+        # 执行前记录
+        print(f&quot;开始执行: {state.get('input', '')}&quot;)
+        return state
+
+    async def after_agent(self, state, config):
+        # 执行后记录
+        print(f&quot;执行完成: {state.get('output', '')[:100]}...&quot;)
+        return state
+</code></pre>
+<h3 id="93">9.3 自定义沙箱</h3>
+<pre><code class="language-python"># backend/src/sandbox/custom_sandbox.py
+
+from backend.src.sandbox.base import Sandbox
+
+class CustomSandbox(Sandbox):
+    &quot;&quot;&quot;自定义沙箱实现&quot;&quot;&quot;
+
+    def execute_command(self, command: str) -&gt; str:
+        # 实现命令执行
+        pass
+
+    def read_file(self, path: str) -&gt; str:
+        # 实现文件读取
+        pass
+
+    def write_file(self, path: str, content: str) -&gt; None:
+        # 实现文件写入
+        pass
+
+    def list_dir(self, path: str, max_depth: int = 2) -&gt; list[str]:
+        # 实现目录列表
+        pass
+</code></pre>
+<h3 id="94-k8s">9.4 K8s 部署</h3>
+<pre><code class="language-yaml"># k8s/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deerflow
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: deerflow
+  template:
+    metadata:
+      labels:
+        app: deerflow
+    spec:
+      containers:
+      - name: deerflow
+        image: deerflow:latest
+        ports:
+        - containerPort: 2026
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: deerflow-secrets
+              key: openai-api-key
+</code></pre>
+<hr />
+<h2 id="_7">十、常见问题</h2>
+<h3 id="q1-docker">Q1: Docker 启动失败？</h3>
+<pre><code class="language-bash"># 检查 Docker 状态
+docker info
+
+# 查看日志
+make docker-logs
+
+# 重新初始化
+make docker-stop
+make docker-init
+make docker-start
+</code></pre>
+<h3 id="q2">Q2: 模型调用失败？</h3>
+<pre><code class="language-bash"># 检查 API Key
+echo $OPENAI_API_KEY
+
+# 测试 API 连接
+curl https://api.openai.com/v1/models \
+  -H &quot;Authorization: Bearer $OPENAI_API_KEY&quot;
+
+# 检查配置
+cat .env | grep API_KEY
+</code></pre>
+<h3 id="q3-skill">Q3: Skill 没有被触发？</h3>
+<ol>
+<li>检查 Skill 描述是否匹配任务</li>
+<li>确认 Skill 文件格式正确</li>
+<li>查看 debug 日志</li>
+</ol>
+<pre><code class="language-bash"># 启用 debug 日志
+LOG_LEVEL=debug make dev
+</code></pre>
+<h3 id="q4-sub-agent">Q4: Sub-Agent 超时？</h3>
+<pre><code class="language-yaml"># 增加超时时间
+subagent:
+  timeout: 600  # 10 分钟
+  max_iterations: 20
+</code></pre>
+<h3 id="q5">Q5: 记忆没有更新？</h3>
+<ol>
+<li>检查记忆是否启用</li>
+<li>确认置信度阈值</li>
+<li>查看更新日志</li>
+</ol>
+<pre><code class="language-bash"># 查看记忆文件
+cat ~/.deerflow/memory.json
+</code></pre>
+<hr />
+<h2 id="_8">十一、速查表</h2>
+<h3 id="_9">常用命令</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make config</code></td>
+<td>生成配置</td>
+</tr>
+<tr>
+<td><code>make docker-init</code></td>
+<td>初始化 Docker</td>
+</tr>
+<tr>
+<td><code>make docker-start</code></td>
+<td>启动服务</td>
+</tr>
+<tr>
+<td><code>make docker-stop</code></td>
+<td>停止服务</td>
+</tr>
+<tr>
+<td><code>make docker-logs</code></td>
+<td>查看日志</td>
+</tr>
+<tr>
+<td><code>make dev</code></td>
+<td>本地开发</td>
+</tr>
+</tbody>
+</table>
+<h3 id="im_1">IM 命令</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/new</code></td>
+<td>新对话</td>
+</tr>
+<tr>
+<td><code>/status</code></td>
+<td>线程状态</td>
+</tr>
+<tr>
+<td><code>/memory</code></td>
+<td>查看记忆</td>
+</tr>
+<tr>
+<td><code>/models</code></td>
+<td>可用模型</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_10">配置文件</h3>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>.env</code></td>
+<td>环境变量</td>
+</tr>
+<tr>
+<td><code>mcp_config.json</code></td>
+<td>MCP 配置</td>
+</tr>
+<tr>
+<td><code>config/models.yaml</code></td>
+<td>模型配置</td>
+</tr>
+<tr>
+<td><code>config/channels.yaml</code></td>
+<td>渠道配置</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">目录结构</h3>
+<table>
+<thead>
+<tr>
+<th>目录</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>backend/</code></td>
+<td>Python 后端</td>
+</tr>
+<tr>
+<td><code>frontend/</code></td>
+<td>Next.js 前端</td>
+</tr>
+<tr>
+<td><code>skills/</code></td>
+<td>Skill 定义</td>
+</tr>
+<tr>
+<td><code>docker/</code></td>
+<td>Docker 配置</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_12">参考资源</h2>
+<ul>
+<li><strong>GitHub 仓库</strong>：https://github.com/bytedance/deer-flow</li>
+<li><strong>官方网站</strong>：https://deerflow.tech</li>
+<li><strong>架构文档</strong>：backend/docs/ARCHITECTURE.md</li>
+<li><strong>API 文档</strong>：backend/docs/API.md</li>
+<li><strong>MCP 指南</strong>：backend/docs/MCP_SERVER.md</li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-22</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

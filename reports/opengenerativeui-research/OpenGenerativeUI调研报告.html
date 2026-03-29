@@ -1,0 +1,1768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenGenerativeUI 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 项目定位</a></li>
+<li><a href="#13-claude-ui" class="toc-h3">1.3 与 Claude 生成式 UI 的关系</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能特性</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 生成内容类型</a></li>
+<li><a href="#23" class="toc-h3">2.3 渲染特性</a></li>
+<li><a href="#_3" class="toc-h2">三、技术架构</a></li>
+<li><a href="#31" class="toc-h3">3.1 整体架构</a></li>
+<li><a href="#32-turborepo-monorepo" class="toc-h3">3.2 Turborepo Monorepo 结构</a></li>
+<li><a href="#33" class="toc-h3">3.3 技术栈详解</a></li>
+<li><a href="#34" class="toc-h3">3.4 核心工作流程</a></li>
+<li><a href="#copilotkit" class="toc-h2">四、CopilotKit 核心模式</a></li>
+<li><a href="#41-hook" class="toc-h3">4.1 四大核心 Hook</a></li>
+<li><a href="#42" class="toc-h3">4.2 模式详解</a></li>
+<li><a href="#421-usecomponent-ui" class="toc-h4">4.2.1 useComponent（生成式 UI）</a></li>
+<li><a href="#422-usefrontendtool" class="toc-h4">4.2.2 useFrontendTool（前端工具）</a></li>
+<li><a href="#423-usehumanintheloop" class="toc-h4">4.2.3 useHumanInTheLoop（人机协作）</a></li>
+<li><a href="#_4" class="toc-h2">五、与相关技术的关系</a></li>
+<li><a href="#51-copilotkit" class="toc-h3">5.1 CopilotKit 概述</a></li>
+<li><a href="#52-langgraph" class="toc-h3">5.2 LangGraph 集成</a></li>
+<li><a href="#53-ag-ui" class="toc-h3">5.3 AG-UI 协议</a></li>
+<li><a href="#_5" class="toc-h2">六、竞品对比</a></li>
+<li><a href="#61" class="toc-h3">6.1 市场定位对比</a></li>
+<li><a href="#62" class="toc-h3">6.2 技术对比</a></li>
+<li><a href="#63" class="toc-h3">6.3 核心优势</a></li>
+<li><a href="#_6" class="toc-h2">七、使用场景</a></li>
+<li><a href="#71" class="toc-h3">7.1 典型应用场景</a></li>
+<li><a href="#72" class="toc-h3">7.2 行业应用</a></li>
+<li><a href="#_7" class="toc-h2">八、部署与运行</a></li>
+<li><a href="#81" class="toc-h3">8.1 快速开始</a></li>
+<li><a href="#82" class="toc-h3">8.2 可用命令</a></li>
+<li><a href="#83" class="toc-h3">8.3 服务端口</a></li>
+<li><a href="#84" class="toc-h3">8.4 环境要求</a></li>
+<li><a href="#_8" class="toc-h2">九、发展前景</a></li>
+<li><a href="#91" class="toc-h3">9.1 技术趋势</a></li>
+<li><a href="#92" class="toc-h3">9.2 潜在应用</a></li>
+<li><a href="#93" class="toc-h3">9.3 挑战与机遇</a></li>
+<li><a href="#_9" class="toc-h2">十、总结</a></li>
+<li><a href="#101" class="toc-h3">10.1 核心价值</a></li>
+<li><a href="#102" class="toc-h3">10.2 适用人群</a></li>
+<li><a href="#103" class="toc-h3">10.3 推荐指数</a></li>
+<li><a href="#_10" class="toc-h2">参考资料</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenGenerativeUI 深度调研报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="opengenerativeui">OpenGenerativeUI 深度调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>详情</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>OpenGenerativeUI</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>CopilotKit</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/CopilotKit/OpenGenerativeUI</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>MIT License</td>
+</tr>
+<tr>
+<td><strong>发布时间</strong></td>
+<td>2026年3月</td>
+</tr>
+<tr>
+<td><strong>定位</strong></td>
+<td>开源生成式 UI 框架</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 项目定位</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    OpenGenerativeUI 定位                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   &quot;开源版本的 Claude 生成式 UI 功能&quot;                                    │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   AI Agent 生成的不只是文字，而是完全交互式的可视化组件          │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   核心能力：                                                            │
+│   • 算法可视化 — 二分搜索、BFS/DFS、排序算法                           │
+│   • 3D 动画 — 交互式 WebGL/CSS3D 场景                                   │
+│   • 图表与图形 — 饼图、柱状图、网络图                                   │
+│   • 交互式组件 — 表单、模拟器、数学绘图                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="13-claude-ui">1.3 与 Claude 生成式 UI 的关系</h3>
+<p>OpenGenerativeUI 是 <strong>CopilotKit</strong> 发布的开源版本，复刻了 <strong>Claude AI</strong> 的交互式可视化内容生成功能：</p>
+<table>
+<thead>
+<tr>
+<th>对比维度</th>
+<th>Claude 原生功能</th>
+<th>OpenGenerativeUI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>可用性</strong></td>
+<td>仅 Claude 内部</td>
+<td>开源自托管</td>
+</tr>
+<tr>
+<td><strong>定制性</strong></td>
+<td>受限</td>
+<td>完全可定制</td>
+</tr>
+<tr>
+<td><strong>集成</strong></td>
+<td>无法集成到自有应用</td>
+<td>可集成到任何 React 应用</td>
+</tr>
+<tr>
+<td><strong>成本</strong></td>
+<td>订阅费用</td>
+<td>开源免费</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、核心功能特性</h2>
+<h3 id="21">2.1 功能概览</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    OpenGenerativeUI 功能矩阵                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐     │
+│   │   算法可视化    │   │   图表生成      │   │   3D 动画       │     │
+│   ├─────────────────┤   ├─────────────────┤   ├─────────────────┤     │
+│   │ • 二分搜索      │   │ • 饼图          │   │ • WebGL 场景    │     │
+│   │ • BFS/DFS       │   │ • 柱状图        │   │ • CSS3D 动画    │     │
+│   │ • 排序算法      │   │ • 折线图        │   │ • 交互式控制    │     │
+│   │ • 路径查找      │   │ • 网络图        │   │ • 粒子系统      │     │
+│   └─────────────────┘   └─────────────────┘   └─────────────────┘     │
+│                                                                         │
+│   ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐     │
+│   │   交互式组件    │   │   数据可视化    │   │   数学绘图      │     │
+│   ├─────────────────┤   ├─────────────────┤   ├─────────────────┤     │
+│   │ • 表单          │   │ • 仪表盘        │   │ • 函数图形      │     │
+│   │ • 模拟器        │   │ • KPI 卡片      │   │ • 方程求解器    │     │
+│   │ • 步进器        │   │ • 数据表格      │   │ • 统计图表      │     │
+│   │ • 选择器        │   │ • 排序/过滤     │   │ • 几何图形      │     │
+│   └─────────────────┘   └─────────────────┘   └─────────────────┘     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 生成内容类型</h3>
+<p>根据用户请求，AI Agent 自动选择合适的可视化类型：</p>
+<table>
+<thead>
+<tr>
+<th>用户询问类型</th>
+<th>输出类型</th>
+<th>技术方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>物理原理如何工作</td>
+<td>说明性图解</td>
+<td>SVG</td>
+</tr>
+<tr>
+<td>抽象概念解释</td>
+<td>交互式说明</td>
+<td>HTML + SVG</td>
+</tr>
+<tr>
+<td>流程/步骤</td>
+<td>流程图</td>
+<td>SVG</td>
+</tr>
+<tr>
+<td>架构/层次</td>
+<td>结构图</td>
+<td>SVG</td>
+</tr>
+<tr>
+<td>数据库模式/ERD</td>
+<td>关系图</td>
+<td>Mermaid</td>
+</tr>
+<tr>
+<td>时间趋势</td>
+<td>折线图</td>
+<td>Chart.js</td>
+</tr>
+<tr>
+<td>分类对比</td>
+<td>柱状图</td>
+<td>Chart.js</td>
+</tr>
+<tr>
+<td>占比分析</td>
+<td>环形图</td>
+<td>Chart.js</td>
+</tr>
+<tr>
+<td>KPI/指标</td>
+<td>仪表盘</td>
+<td>HTML 卡片</td>
+</tr>
+<tr>
+<td>UI 设计</td>
+<td>原型图</td>
+<td>HTML</td>
+</tr>
+<tr>
+<td>选项比较</td>
+<td>对比卡片</td>
+<td>HTML Grid</td>
+</tr>
+<tr>
+<td>循环流程</td>
+<td>步进器</td>
+<td>HTML Stepper</td>
+</tr>
+<tr>
+<td>物理/数学</td>
+<td>模拟</td>
+<td>Canvas + JS</td>
+</tr>
+<tr>
+<td>函数/方程</td>
+<td>绘图器</td>
+<td>SVG + JS</td>
+</tr>
+<tr>
+<td>数据探索</td>
+<td>可排序表格</td>
+<td>HTML + JS</td>
+</tr>
+<tr>
+<td>创意/装饰</td>
+<td>艺术插图</td>
+<td>SVG</td>
+</tr>
+<tr>
+<td>3D 可视化</td>
+<td>3D 场景</td>
+<td>Three.js</td>
+</tr>
+<tr>
+<td>音乐/音频</td>
+<td>合成器</td>
+<td>Tone.js</td>
+</tr>
+<tr>
+<td>网络/图</td>
+<td>力导向图</td>
+<td>D3.js</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23">2.3 渲染特性</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      渲染特性                                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   1. 沙箱安全                                                           │
+│      ┌───────────────────────────────────────────────────────────┐     │
+│      │   所有内容在沙箱 iframe 中渲染，确保安全性                  │     │
+│      └───────────────────────────────────────────────────────────┘     │
+│                                                                         │
+│   2. 自动主题适配                                                       │
+│      ┌───────────────────────────────────────────────────────────┐     │
+│      │   自动支持 Light/Dark 主题，无需手动配置                   │     │
+│      └───────────────────────────────────────────────────────────┘     │
+│                                                                         │
+│   3. 渐进式显示动画                                                     │
+│      ┌───────────────────────────────────────────────────────────┐     │
+│      │   骨架屏加载 → 内容平滑淡入                                 │     │
+│      └───────────────────────────────────────────────────────────┘     │
+│                                                                         │
+│   4. 响应式尺寸                                                         │
+│      ┌───────────────────────────────────────────────────────────┐     │
+│      │   ResizeObserver 自动报告内容高度，无缝自适应              │     │
+│      └───────────────────────────────────────────────────────────┘     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_3">三、技术架构</h2>
+<h3 id="31">3.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    OpenGenerativeUI 技术架构                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                     用户层                                      │  │
+│   │   ┌─────────────────────────────────────────────────────────┐  │  │
+│   │   │   用户发送 Prompt（如：&quot;可视化二分搜索算法&quot;）           │  │  │
+│   │   └─────────────────────────────────────────────────────────┘  │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                   前端层 (Next.js 16)                           │  │
+│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │  │
+│   │   │ CopilotKit  │  │  React 19   │  │ Tailwind 4  │           │  │
+│   │   │   Chat UI   │  │  组件系统   │  │  样式系统   │           │  │
+│   │   └─────────────┘  └─────────────┘  └─────────────┘           │  │
+│   │   ┌─────────────────────────────────────────────────────────┐  │  │
+│   │   │  useComponent (widgetRenderer) - 接收 HTML 并渲染       │  │  │
+│   │   └─────────────────────────────────────────────────────────┘  │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                   Agent 层 (LangGraph)                          │  │
+│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │  │
+│   │   │  GPT-5.4    │  │ CopilotKit  │  │  LangGraph  │           │  │
+│   │   │   模型      │  │  Middleware │  │   工作流    │           │  │
+│   │   └─────────────┘  └─────────────┘  └─────────────┘           │  │
+│   │   ┌─────────────────────────────────────────────────────────┐  │  │
+│   │   │  决策：返回文本 / 调用工具 / 渲染可视化组件              │  │  │
+│   │   └─────────────────────────────────────────────────────────┘  │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                   渲染层                                        │  │
+│   │   ┌─────────────────────────────────────────────────────────┐  │  │
+│   │   │   沙箱 Iframe ← HTML/SVG 内容 → 自动主题/尺寸/动画      │  │  │
+│   │   └─────────────────────────────────────────────────────────┘  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32-turborepo-monorepo">3.2 Turborepo Monorepo 结构</h3>
+<pre><code>OpenGenerativeUI/
+├── apps/
+│   ├── app/                    # Next.js 16 前端
+│   │   ├── src/
+│   │   ├── public/
+│   │   └── package.json
+│   │
+│   └── agent/                  # LangGraph Python Agent
+│       ├── src/
+│       ├── .env
+│       └── requirements.txt
+│
+├── packages/                   # 共享包（如有）
+│
+├── Makefile                    # 构建命令
+├── turbo.json                  # Turborepo 配置
+├── pnpm-workspace.yaml         # pnpm 工作区
+└── package.json
+</code></pre>
+<h3 id="33">3.3 技术栈详解</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>技术</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>前端框架</strong></td>
+<td>Next.js</td>
+<td>16</td>
+<td>React 全栈框架</td>
+</tr>
+<tr>
+<td><strong>UI 框架</strong></td>
+<td>React</td>
+<td>19</td>
+<td>组件化 UI</td>
+</tr>
+<tr>
+<td><strong>样式</strong></td>
+<td>Tailwind CSS</td>
+<td>4</td>
+<td>原子化 CSS</td>
+</tr>
+<tr>
+<td><strong>AI 框架</strong></td>
+<td>CopilotKit</td>
+<td>v2</td>
+<td>生成式 UI 核心</td>
+</tr>
+<tr>
+<td><strong>Agent 框架</strong></td>
+<td>LangGraph</td>
+<td>-</td>
+<td>Python Agent 工作流</td>
+</tr>
+<tr>
+<td><strong>模型</strong></td>
+<td>GPT-5.4</td>
+<td>-</td>
+<td>OpenAI 最新模型</td>
+</tr>
+<tr>
+<td><strong>构建工具</strong></td>
+<td>Turborepo</td>
+<td>-</td>
+<td>Monorepo 管理</td>
+</tr>
+<tr>
+<td><strong>图表库</strong></td>
+<td>Recharts</td>
+<td>-</td>
+<td>React 图表组件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34">3.4 核心工作流程</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      核心工作流程                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   Step 1: 用户发送 Prompt                                               │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   CopilotKit Chat UI 接收用户输入                                │  │
+│   │   例如：&quot;帮我可视化二分搜索算法&quot;                                 │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   Step 2: Agent 决策                                                    │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   LangGraph Agent 分析请求：                                    │  │
+│   │   • 返回文本？                                                  │  │
+│   │   • 调用工具？                                                  │  │
+│   │   • 渲染可视化组件？ ✓                                          │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   Step 3: 生成 HTML/SVG                                                 │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   Agent 生成完整的 HTML + SVG + JavaScript 代码                 │  │
+│   │   包含：交互逻辑、动画、样式                                     │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   Step 4: 前端渲染                                                      │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   widgetRenderer (useComponent) 接收 HTML                       │  │
+│   │   在沙箱 iframe 中渲染                                          │  │
+│   │   显示骨架屏 → 内容淡入                                         │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                    │                                    │
+│                                    ▼                                    │
+│   Step 5: 自动适配                                                      │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   ResizeObserver 报告高度                                       │  │
+│   │   自动适配 Light/Dark 主题                                      │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="copilotkit">四、CopilotKit 核心模式</h2>
+<h3 id="41-hook">4.1 四大核心 Hook</h3>
+<p>OpenGenerativeUI 基于 CopilotKit 提供的四种核心模式：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    CopilotKit 核心 Hooks                                │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   1. useComponent (生成式 UI)                                           │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   用于：动态生成可视化组件                                       │  │
+│   │   示例：饼图、柱状图、widget 渲染器                               │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   2. useFrontendTool (前端工具)                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   用于：AI 直接操作前端 UI                                       │  │
+│   │   示例：主题切换、表单填充                                        │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   3. useHumanInTheLoop (人机协作)                                       │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   用于：需要人工确认的流程                                       │  │
+│   │   示例：会议调度、审批流程                                        │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   4. useDefaultRenderTool (工具状态渲染)                                │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   用于：显示工具执行状态                                         │  │
+│   │   示例：加载中、成功、失败                                        │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="42">4.2 模式详解</h3>
+<h4 id="421-usecomponent-ui">4.2.1 useComponent（生成式 UI）</h4>
+<pre><code class="language-typescript">// 示例：Widget 渲染器
+const widgetRenderer = useComponent({
+  name: &quot;renderWidget&quot;,
+  render: ({ html }) =&gt; {
+    return (
+      &lt;div className=&quot;widget-container&quot;&gt;
+        &lt;iframe
+          srcDoc={html}
+          sandbox=&quot;allow-scripts&quot;
+          className=&quot;w-full border-0&quot;
+        /&gt;
+      &lt;/div&gt;
+    );
+  },
+});
+</code></pre>
+<p><strong>应用场景</strong>：
+- 动态图表生成
+- 算法可视化
+- 交互式组件</p>
+<h4 id="422-usefrontendtool">4.2.2 useFrontendTool（前端工具）</h4>
+<pre><code class="language-typescript">// 示例：主题切换
+const themeToggle = useFrontendTool({
+  name: &quot;toggleTheme&quot;,
+  handler: (theme: &quot;light&quot; | &quot;dark&quot;) =&gt; {
+    document.documentElement.classList.toggle(&quot;dark&quot;, theme === &quot;dark&quot;);
+  },
+});
+</code></pre>
+<p><strong>应用场景</strong>：
+- 主题切换
+- 表单自动填充
+- UI 状态更新</p>
+<h4 id="423-usehumanintheloop">4.2.3 useHumanInTheLoop（人机协作）</h4>
+<pre><code class="language-typescript">// 示例：会议调度
+const meetingScheduler = useHumanInTheLoop({
+  name: &quot;scheduleMeeting&quot;,
+  render: ({ proposal, onConfirm, onReject }) =&gt; (
+    &lt;div className=&quot;meeting-card&quot;&gt;
+      &lt;h3&gt;{proposal.title}&lt;/h3&gt;
+      &lt;p&gt;时间：{proposal.time}&lt;/p&gt;
+      &lt;div className=&quot;actions&quot;&gt;
+        &lt;button onClick={onConfirm}&gt;确认&lt;/button&gt;
+        &lt;button onClick={onReject}&gt;拒绝&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  ),
+});
+</code></pre>
+<p><strong>应用场景</strong>：
+- 需要确认的操作
+- 多选项决策
+- 敏感操作授权</p>
+<hr />
+<h2 id="_4">五、与相关技术的关系</h2>
+<h3 id="51-copilotkit">5.1 CopilotKit 概述</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      CopilotKit 生态                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   定位：&quot;Agents 和生成式 UI 的前端栈&quot;                                   │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                    CopilotKit 核心能力                           │  │
+│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │  │
+│   │   │  AI Chat    │  │ Generative  │  │   Canvas    │           │  │
+│   │   │  聊天界面   │  │     UI      │  │   Apps      │           │  │
+│   │   └─────────────┘  └─────────────┘  └─────────────┘           │  │
+│   │   ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │  │
+│   │   │  Context    │  │  Agent      │  │    MCP      │           │  │
+│   │   │  Awareness  │  │  Control    │  │   Server    │           │  │
+│   │   └─────────────┘  └─────────────┘  └─────────────┘           │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   支持的 Agent 框架：                                                   │
+│   • LangGraph                                                          │
+│   • CrewAI                                                             │
+│   • LangChain                                                          │
+│                                                                         │
+│   支持的 LLM：                                                          │
+│   • GPT-4 / GPT-5.4                                                    │
+│   • Claude                                                             │
+│   • Llama                                                              │
+│   • 其他 OpenAI 兼容模型                                                │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52-langgraph">5.2 LangGraph 集成</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    LangGraph 集成架构                                    │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   LangGraph 是 Agent 编排框架，用于构建有状态的 AI Agent：              │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   Agent 工作流                                                   │  │
+│   │                                                                  │  │
+│   │   ┌─────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐    │  │
+│   │   │  输入   │ → │  理解   │ → │  决策   │ → │  执行   │    │  │
+│   │   │  节点   │    │  节点   │    │  节点   │    │  节点   │    │  │
+│   │   └─────────┘    └─────────┘    └─────────┘    └─────────┘    │  │
+│   │        ↑                                            │          │  │
+│   │        └────────────────────────────────────────────┘          │  │
+│   │                         状态循环                               │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   OpenGenerativeUI 使用 LangGraph：                                     │
+│   • 管理对话状态                                                        │
+│   • 编排工具调用                                                        │
+│   • 控制生成流程                                                        │
+│   • 处理错误恢复                                                        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="53-ag-ui">5.3 AG-UI 协议</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      AG-UI 协议                                         │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   AG-UI (Agent-User Interaction) 协议：                                 │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   应用 (React) ←────── 双向通信 ──────→ Agent Backend            │  │
+│   │                                                                  │  │
+│   │   • 事件驱动通信                                                 │  │
+│   │   • 标准化的消息格式                                             │  │
+│   │   • 工具调用协议                                                 │  │
+│   │   • 状态同步机制                                                 │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   CopilotKit 是 AG-UI 协议的参考实现                                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_5">六、竞品对比</h2>
+<h3 id="61">6.1 市场定位对比</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>定位</th>
+<th>开源</th>
+<th>主要特点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenGenerativeUI</strong></td>
+<td>生成式 UI 框架</td>
+<td>✅ MIT</td>
+<td>CopilotKit + LangGraph</td>
+</tr>
+<tr>
+<td><strong>Claude 原生</strong></td>
+<td>AI 对话 + 可视化</td>
+<td>❌</td>
+<td>闭源，功能受限</td>
+</tr>
+<tr>
+<td><strong>OpenUI</strong></td>
+<td>生成式 UI 框架</td>
+<td>✅ MIT</td>
+<td>紧凑流式语言</td>
+</tr>
+<tr>
+<td><strong>v0.dev</strong></td>
+<td>UI 生成</td>
+<td>❌</td>
+<td>Vercel 闭源产品</td>
+</tr>
+<tr>
+<td><strong>Streamlit</strong></td>
+<td>数据应用</td>
+<td>✅ Apache</td>
+<td>Python 数据可视化</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 技术对比</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OpenGenerativeUI</th>
+<th>OpenUI</th>
+<th>v0.dev</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>技术栈</strong></td>
+<td>React + Python</td>
+<td>React + Rust</td>
+<td>Next.js</td>
+</tr>
+<tr>
+<td><strong>Agent 支持</strong></td>
+<td>✅ LangGraph</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>自托管</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>实时交互</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>❌</td>
+</tr>
+<tr>
+<td><strong>沙箱安全</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>主题适配</strong></td>
+<td>✅ 自动</td>
+<td>⚠️ 手动</td>
+<td>⚠️ 手动</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 核心优势</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                    OpenGenerativeUI 核心优势                            │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   1. 完全开源                                                           │
+│      • MIT 协议，可商用                                                 │
+│      • 完全自托管，数据安全                                             │
+│                                                                         │
+│   2. Agent 原生支持                                                     │
+│      • 内置 LangGraph 集成                                              │
+│      • 支持复杂工作流                                                   │
+│                                                                         │
+│   3. 企业级渲染                                                         │
+│      • 沙箱 iframe 安全隔离                                             │
+│      • 自动主题/尺寸适配                                                │
+│      • 渐进式加载动画                                                   │
+│                                                                         │
+│   4. 开发者友好                                                         │
+│      • React 19 + Next.js 16                                            │
+│      • TypeScript 支持                                                  │
+│      • Turborepo Monorepo                                               │
+│                                                                         │
+│   5. 丰富的可视化类型                                                   │
+│      • 20+ 可视化类型                                                   │
+│      • 智能类型选择                                                     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_6">七、使用场景</h2>
+<h3 id="71">7.1 典型应用场景</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      典型应用场景                                        │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   1. 教育平台                                                           │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   • 算法可视化教学                                               │  │
+│   │   • 数学概念演示                                                 │  │
+│   │   • 物理模拟实验                                                 │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   2. 数据分析                                                           │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   • 自动生成报表                                                 │  │
+│   │   • 交互式数据探索                                               │  │
+│   │   • KPI 仪表盘                                                   │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   3. 产品演示                                                           │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   • 架构图生成                                                   │  │
+│   │   • 流程图绘制                                                   │  │
+│   │   • 原型快速生成                                                 │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   4. AI 助手                                                            │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │   • 智能客服界面                                                 │  │
+│   │   • 决策支持系统                                                 │  │
+│   │   • 人机协作流程                                                 │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="72">7.2 行业应用</h3>
+<table>
+<thead>
+<tr>
+<th>行业</th>
+<th>应用示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>教育</strong></td>
+<td>算法可视化、数学绘图、物理模拟</td>
+</tr>
+<tr>
+<td><strong>金融</strong></td>
+<td>数据仪表盘、趋势图表、风险评估</td>
+</tr>
+<tr>
+<td><strong>医疗</strong></td>
+<td>数据可视化、诊断流程、患者管理</td>
+</tr>
+<tr>
+<td><strong>电商</strong></td>
+<td>销售分析、用户画像、库存管理</td>
+</tr>
+<tr>
+<td><strong>制造</strong></td>
+<td>生产流程、质量控制、设备监控</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">八、部署与运行</h2>
+<h3 id="81">8.1 快速开始</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/CopilotKit/OpenGenerativeUI.git
+cd OpenGenerativeUI
+
+# 安装依赖 + 创建环境变量模板
+make setup
+
+# 配置 API Key
+# 编辑 apps/agent/.env，填入 OpenAI API Key
+
+# 启动所有服务
+make dev
+</code></pre>
+<h3 id="82">8.2 可用命令</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>make setup</code></td>
+<td>安装依赖，创建 .env 模板</td>
+</tr>
+<tr>
+<td><code>make dev</code></td>
+<td>启动所有服务</td>
+</tr>
+<tr>
+<td><code>make dev-app</code></td>
+<td>仅启动 Next.js 前端</td>
+</tr>
+<tr>
+<td><code>make dev-agent</code></td>
+<td>仅启动 LangGraph Agent</td>
+</tr>
+<tr>
+<td><code>make dev-mcp</code></td>
+<td>仅启动 MCP 服务器</td>
+</tr>
+<tr>
+<td><code>make build</code></td>
+<td>构建所有应用</td>
+</tr>
+<tr>
+<td><code>make lint</code></td>
+<td>代码检查</td>
+</tr>
+<tr>
+<td><code>make clean</code></td>
+<td>清理构建产物</td>
+</tr>
+<tr>
+<td><code>make help</code></td>
+<td>显示所有命令</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83">8.3 服务端口</h3>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>端口</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>App (前端)</strong></td>
+<td>3000</td>
+<td>Next.js 应用</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>8123</td>
+<td>LangGraph Agent 服务</td>
+</tr>
+</tbody>
+</table>
+<h3 id="84">8.4 环境要求</h3>
+<table>
+<thead>
+<tr>
+<th>依赖</th>
+<th>版本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Node.js</td>
+<td>18+</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.10+</td>
+</tr>
+<tr>
+<td>pnpm</td>
+<td>8+</td>
+</tr>
+<tr>
+<td>OpenAI API Key</td>
+<td>必需</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">九、发展前景</h2>
+<h3 id="91">9.1 技术趋势</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      生成式 UI 发展趋势                                  │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   传统 UI 开发                                                          │
+│   ┌─────────┐                                                          │
+│   │  设计师 │ → 设计稿 → 开发 → 测试 → 部署                           │
+│   └─────────┘                                                          │
+│        ↓                                                                │
+│   生成式 UI                                                             │
+│   ┌─────────┐                                                          │
+│   │  用户   │ → 自然语言 → AI 生成 → 即时渲染                         │
+│   └─────────┘                                                          │
+│                                                                         │
+│   趋势：                                                                │
+│   • 从静态 UI 到动态生成                                                │
+│   • 从手动开发到 AI 辅助                                                │
+│   • 从单一形态到个性化适配                                              │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="92">9.2 潜在应用</h3>
+<table>
+<thead>
+<tr>
+<th>方向</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>低代码平台</strong></td>
+<td>自然语言生成应用界面</td>
+</tr>
+<tr>
+<td><strong>数据可视化</strong></td>
+<td>自动生成数据分析报告</td>
+</tr>
+<tr>
+<td><strong>教育科技</strong></td>
+<td>个性化学习内容生成</td>
+</tr>
+<tr>
+<td><strong>企业应用</strong></td>
+<td>动态表单、流程图、报表</td>
+</tr>
+<tr>
+<td><strong>游戏开发</strong></td>
+<td>动态 UI、关卡编辑器</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 挑战与机遇</h3>
+<table>
+<thead>
+<tr>
+<th>挑战</th>
+<th>机遇</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>生成质量稳定性</td>
+<td>快速原型开发</td>
+</tr>
+<tr>
+<td>安全性控制</td>
+<td>降低开发门槛</td>
+</tr>
+<tr>
+<td>性能优化</td>
+<td>个性化体验</td>
+</tr>
+<tr>
+<td>多模态支持</td>
+<td>无障碍设计</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">十、总结</h2>
+<h3 id="101">10.1 核心价值</h3>
+<p>OpenGenerativeUI 作为<strong>开源生成式 UI 框架</strong>，核心价值在于：</p>
+<ol>
+<li><strong>开源自托管</strong>：MIT 协议，完全可控</li>
+<li><strong>Agent 原生</strong>：内置 LangGraph 集成</li>
+<li><strong>企业级渲染</strong>：沙箱安全、主题适配、渐进加载</li>
+<li><strong>丰富可视化</strong>：20+ 可视化类型，智能选择</li>
+<li><strong>开发者友好</strong>：现代技术栈，完善文档</li>
+</ol>
+<h3 id="102">10.2 适用人群</h3>
+<table>
+<thead>
+<tr>
+<th>人群</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>前端开发者</strong></td>
+<td>快速构建 AI 增强应用</td>
+</tr>
+<tr>
+<td><strong>AI 工程师</strong></td>
+<td>可视化 Agent 输出</td>
+</tr>
+<tr>
+<td><strong>产品经理</strong></td>
+<td>快速原型验证</td>
+</tr>
+<tr>
+<td><strong>数据分析师</strong></td>
+<td>自动生成可视化报告</td>
+</tr>
+<tr>
+<td><strong>教育工作者</strong></td>
+<td>制作交互式教学内容</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103">10.3 推荐指数</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                      推荐指数                                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   开源性：★★★★★ (MIT 协议，完全开源)                                   │
+│   易用性：★★★★☆ (完善的 Makefile，清晰的文档)                          │
+│   实用性：★★★★☆ (丰富的可视化类型，实际可用)                           │
+│   扩展性：★★★★☆ (React 组件化，易于扩展)                               │
+│   活跃度：★★★★☆ (CopilotKit 团队维护，持续更新)                        │
+│                                                                         │
+│   综合评分：★★★★☆ (4.2/5)                                              │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_10">参考资料</h2>
+<ul>
+<li><a href="https://github.com/CopilotKit/OpenGenerativeUI">GitHub - CopilotKit/OpenGenerativeUI</a></li>
+<li><a href="https://www.copilotkit.ai/">CopilotKit 官网</a></li>
+<li><a href="https://docs.copilotkit.ai/">CopilotKit 文档</a></li>
+<li><a href="https://www.langchain.com/langgraph">LangGraph 官网</a></li>
+<li><a href="https://docs.langchain.com/langsmith/generative-ui-react">LangChain 生成式 UI 文档</a></li>
+<li><a href="https://github.com/copilotkit/copilotkit">CopilotKit GitHub</a></li>
+<li><a href="https://www.copilotkit.ai/">AG-UI 协议</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

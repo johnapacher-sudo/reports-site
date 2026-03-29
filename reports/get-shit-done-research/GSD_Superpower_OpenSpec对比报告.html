@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD vs Superpower vs OpenSpec 对比报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">深度对比三大 AI 编码工作流工具</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、工具概览</a></li>
+<li><a href="#11" class="toc-h3">1.1 快速对比表</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话定位</a></li>
+<li><a href="#_2" class="toc-h2">二、核心理念对比</a></li>
+<li><a href="#21-gsd" class="toc-h3">2.1 GSD: 元提示 + 上下文工程</a></li>
+<li><a href="#22-superpower-agent" class="toc-h3">2.2 Superpower: Agent 技能增强</a></li>
+<li><a href="#23-openspec" class="toc-h3">2.3 OpenSpec: 规范驱动开发</a></li>
+<li><a href="#_3" class="toc-h2">三、功能对比</a></li>
+<li><a href="#31" class="toc-h3">3.1 功能矩阵</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心功能详解</a></li>
+<li><a href="#gsd" class="toc-h4">GSD 核心功能</a></li>
+<li><a href="#superpower" class="toc-h4">Superpower 核心功能</a></li>
+<li><a href="#openspec" class="toc-h4">OpenSpec 核心功能</a></li>
+<li><a href="#_4" class="toc-h2">四、工作流对比</a></li>
+<li><a href="#41-gsd" class="toc-h3">4.1 GSD 工作流</a></li>
+<li><a href="#42-superpower" class="toc-h3">4.2 Superpower 工作流</a></li>
+<li><a href="#43-openspec" class="toc-h3">4.3 OpenSpec 工作流</a></li>
+<li><a href="#_5" class="toc-h2">五、适用场景对比</a></li>
+<li><a href="#51-gsd" class="toc-h3">5.1 GSD 最佳场景</a></li>
+<li><a href="#52-superpower" class="toc-h3">5.2 Superpower 最佳场景</a></li>
+<li><a href="#53-openspec" class="toc-h3">5.3 OpenSpec 最佳场景</a></li>
+<li><a href="#_6" class="toc-h2">六、技术架构对比</a></li>
+<li><a href="#61-gsd" class="toc-h3">6.1 GSD 架构</a></li>
+<li><a href="#62-superpower" class="toc-h3">6.2 Superpower 架构</a></li>
+<li><a href="#63-openspec" class="toc-h3">6.3 OpenSpec 架构</a></li>
+<li><a href="#_7" class="toc-h2">七、优劣势分析</a></li>
+<li><a href="#71-gsd" class="toc-h3">7.1 GSD</a></li>
+<li><a href="#72-superpower" class="toc-h3">7.2 Superpower</a></li>
+<li><a href="#73-openspec" class="toc-h3">7.3 OpenSpec</a></li>
+<li><a href="#_8" class="toc-h2">八、选型建议</a></li>
+<li><a href="#81" class="toc-h3">8.1 决策树</a></li>
+<li><a href="#82" class="toc-h3">8.2 推荐组合</a></li>
+<li><a href="#83" class="toc-h3">8.3 组合使用建议</a></li>
+<li><a href="#_9" class="toc-h2">九、总结</a></li>
+<li><a href="#91" class="toc-h3">9.1 核心差异总结</a></li>
+<li><a href="#92" class="toc-h3">9.2 最终建议</a></li>
+<li><a href="#_10" class="toc-h2">十、参考资源</a></li>
+<li><a href="#gsd_1" class="toc-h3">GSD</a></li>
+<li><a href="#superpower_1" class="toc-h3">Superpower</a></li>
+<li><a href="#openspec_1" class="toc-h3">OpenSpec</a></li>
+<li><a href="#_11" class="toc-h3">对比文章</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD vs Superpower vs OpenSpec 对比报告</h1>
+                        <div class="article-meta">深度对比三大 AI 编码工作流工具</div>
+                    </header>
+                    <h1 id="gsd-vs-superpower-vs-openspec">GSD vs Superpower vs OpenSpec 对比报告</h1>
+<blockquote>
+<p>深度对比三大 AI 编码工作流工具</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、工具概览</h2>
+<h3 id="11">1.1 快速对比表</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>GSD</th>
+<th>Superpower</th>
+<th>OpenSpec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>全称</strong></td>
+<td>Get Shit Done</td>
+<td>Superpowers</td>
+<td>OpenSpec</td>
+</tr>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>元提示 + 上下文工程</td>
+<td>Agent 技能增强</td>
+<td>规范驱动开发</td>
+</tr>
+<tr>
+<td><strong>主要用途</strong></td>
+<td>项目全生命周期管理</td>
+<td>增强 Claude Code 智能度</td>
+<td>功能迭代开发</td>
+</tr>
+<tr>
+<td><strong>安装方式</strong></td>
+<td><code>npx get-shit-done-cc</code></td>
+<td>Claude Code 插件</td>
+<td>手动配置</td>
+</tr>
+<tr>
+<td><strong>依赖</strong></td>
+<td>Node.js</td>
+<td>Claude Code</td>
+<td>任意 AI 助手</td>
+</tr>
+<tr>
+<td><strong>复杂度</strong></td>
+<td>中等</td>
+<td>低</td>
+<td>低-中</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>平缓</td>
+<td>很平</td>
+<td>平缓</td>
+</tr>
+<tr>
+<td><strong>维护状态</strong></td>
+<td>活跃</td>
+<td>活跃</td>
+<td>活跃</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话定位</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>定位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GSD</strong></td>
+<td>"从想法到产品的完整工作流系统，解决上下文腐烂问题"</td>
+</tr>
+<tr>
+<td><strong>Superpower</strong></td>
+<td>"让 Claude Code 变得更聪明的技能插件"</td>
+</tr>
+<tr>
+<td><strong>OpenSpec</strong></td>
+<td>"灵活、迭代式的规范驱动开发框架"</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、核心理念对比</h2>
+<h3 id="21-gsd">2.1 GSD: 元提示 + 上下文工程</h3>
+<pre><code>核心理念: &quot;The complexity is in the system, not in your workflow.&quot;
+         复杂性在系统中，而不是在你的工作流中。
+
+核心问题: 上下文腐烂 (Context Rot)
+         - 随着上下文窗口填满，输出质量下降
+         - 每个 Plan 在全新的上下文窗口中执行
+         - 保持主会话上下文清洁 (30-40%)
+</code></pre>
+<p><strong>工作流</strong>:</p>
+<pre><code>讨论 → 计划 → 执行 → 验证
+  ↓       ↓       ↓       ↓
+/gsd:discuss → /gsd:plan → /gsd:execute → /gsd:verify
+</code></pre>
+<h3 id="22-superpower-agent">2.2 Superpower: Agent 技能增强</h3>
+<pre><code>核心理念: &quot;Makes Claude Code smarter, especially when running it in planning.&quot;
+         让 Claude Code 变得更聪明，特别是在规划模式下。
+
+核心方法: 提供专业的 Agent 技能
+         - 增强规划能力
+         - 提供专业领域知识
+         - 优化决策过程
+</code></pre>
+<p><strong>特点</strong>:
+- 作为 Claude Code 的插件运行
+- 增强而非替代现有工作流
+- 专注于提升智能度</p>
+<h3 id="23-openspec">2.3 OpenSpec: 规范驱动开发</h3>
+<pre><code>核心理念: &quot;Fluid not rigid, iterative not waterfall,
+          easy not complex, built for brownfield not just greenfield&quot;
+         流动而非僵化，迭代而非瀑布，
+         简单而非复杂，适用于棕地项目而非仅限绿地。
+
+核心方法: 规范即真理 (Specification as Source of Truth)
+         - /opsx:propose  提出变更
+         - /opsx:apply    应用变更
+         - /opsx:archive  归档规范
+</code></pre>
+<p><strong>特点</strong>:
+- 支持 20+ AI 助手
+- 适合现有项目 (brownfield)
+- 迭代式开发</p>
+<hr />
+<h2 id="_3">三、功能对比</h2>
+<h3 id="31">3.1 功能矩阵</h3>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th style="text-align: center;">GSD</th>
+<th style="text-align: center;">Superpower</th>
+<th style="text-align: center;">OpenSpec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目管理</strong></td>
+<td style="text-align: center;">✅ 完整</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">⚠️ 部分</td>
+</tr>
+<tr>
+<td><strong>任务规划</strong></td>
+<td style="text-align: center;">✅ 多阶段</td>
+<td style="text-align: center;">✅ 增强</td>
+<td style="text-align: center;">✅ 规范</td>
+</tr>
+<tr>
+<td><strong>代码执行</strong></td>
+<td style="text-align: center;">✅ 原子提交</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td><strong>上下文管理</strong></td>
+<td style="text-align: center;">✅ 自动</td>
+<td style="text-align: center;">⚠️ 依赖 Claude</td>
+<td style="text-align: center;">⚠️ 手动</td>
+</tr>
+<tr>
+<td><strong>多 Agent</strong></td>
+<td style="text-align: center;">✅ 并行</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><strong>验证机制</strong></td>
+<td style="text-align: center;">✅ 自动+手动</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">⚠️ 规范验证</td>
+</tr>
+<tr>
+<td><strong>模板系统</strong></td>
+<td style="text-align: center;">✅ 预定义</td>
+<td style="text-align: center;">✅ 技能库</td>
+<td style="text-align: center;">❌</td>
+</tr>
+<tr>
+<td><strong>进度追踪</strong></td>
+<td style="text-align: center;">✅ STATE.md</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: center;">✅ 规范状态</td>
+</tr>
+<tr>
+<td><strong>离线支持</strong></td>
+<td style="text-align: center;">⚠️ 部分</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: center;">✅</td>
+</tr>
+<tr>
+<td><strong>跨平台</strong></td>
+<td style="text-align: center;">✅ 多运行时</td>
+<td style="text-align: center;">❌ Claude only</td>
+<td style="text-align: center;">✅ 20+ 助手</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 核心功能详解</h3>
+<h4 id="gsd">GSD 核心功能</h4>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/gsd:new-project</code></td>
+<td>完整初始化：提问 → 研究 → 需求 → 路线图</td>
+</tr>
+<tr>
+<td><code>/gsd:discuss-phase</code></td>
+<td>在计划前捕获实现决策</td>
+</tr>
+<tr>
+<td><code>/gsd:plan-phase</code></td>
+<td>研究阶段 + 计划 + 验证</td>
+</tr>
+<tr>
+<td><code>/gsd:execute-phase</code></td>
+<td>并行分波执行所有计划</td>
+</tr>
+<tr>
+<td><code>/gsd:verify-work</code></td>
+<td>手动用户验收测试</td>
+</tr>
+<tr>
+<td><code>/gsd:quick</code></td>
+<td>快速模式执行临时任务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>特色</strong>:
+- 原子 Git 提交（每个任务独立提交）
+- 多 Agent 并行执行
+- 自动上下文管理</p>
+<h4 id="superpower">Superpower 核心功能</h4>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>规划增强</td>
+<td>更智能的任务分解</td>
+</tr>
+<tr>
+<td>领域知识</td>
+<td>专业领域的最佳实践</td>
+</tr>
+<tr>
+<td>决策优化</td>
+<td>更好的技术选型建议</td>
+</tr>
+</tbody>
+</table>
+<p><strong>特色</strong>:
+- 插件化设计
+- 轻量级集成
+- 无缝增强现有流程</p>
+<h4 id="openspec">OpenSpec 核心功能</h4>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/opsx:propose</code></td>
+<td>提出功能规范或变更</td>
+</tr>
+<tr>
+<td><code>/opsx:apply</code></td>
+<td>根据规范实现代码</td>
+</tr>
+<tr>
+<td><code>/opsx:archive</code></td>
+<td>归档已完成的规范</td>
+</tr>
+</tbody>
+</table>
+<p><strong>特色</strong>:
+- 规范版本控制
+- 支持现有项目
+- 跨 AI 助手兼容</p>
+<hr />
+<h2 id="_4">四、工作流对比</h2>
+<h3 id="41-gsd">4.1 GSD 工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      GSD 工作流程                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. 初始化项目                                                  │
+│     /gsd:new-project                                           │
+│     ↓                                                          │
+│     提问 → 研究 → 需求 → 路线图                                  │
+│                                                                 │
+│  2. 循环执行每个阶段                                            │
+│     ┌─────────────────────────────────────────┐                │
+│     │  /gsd:discuss-phase N   捕获实现决策     │                │
+│     │           ↓                             │                │
+│     │  /gsd:plan-phase N      研究 + 计划     │                │
+│     │           ↓                             │                │
+│     │  /gsd:execute-phase N   执行所有计划    │                │
+│     │           ↓                             │                │
+│     │  /gsd:verify-work N     用户验收测试    │                │
+│     └─────────────────────────────────────────┘                │
+│                                                                 │
+│  3. 完成里程碑                                                  │
+│     /gsd:complete-milestone                                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>关键特点</strong>:
+- 完整的项目生命周期管理
+- 每个阶段都有独立的上下文
+- 支持暂停和恢复</p>
+<h3 id="42-superpower">4.2 Superpower 工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Superpower 工作流程                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  正常使用 Claude Code                                           │
+│     ↓                                                          │
+│  Superpower 自动增强                                            │
+│     ↓                                                          │
+│  更智能的规划和决策                                              │
+│                                                                 │
+│  示例:                                                          │
+│  用户: &quot;帮我重构这个模块&quot;                                        │
+│     ↓                                                          │
+│  Superpower:                                                    │
+│  - 分析代码结构                                                  │
+│  - 提供专业建议                                                  │
+│  - 生成优化方案                                                  │
+│     ↓                                                          │
+│  Claude Code 执行                                                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>关键特点</strong>:
+- 无缝集成，不改变用户习惯
+- 自动增强，无需额外命令
+- 专注提升输出质量</p>
+<h3 id="43-openspec">4.3 OpenSpec 工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     OpenSpec 工作流程                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  1. 提出规范                                                    │
+│     /opsx:propose &quot;添加用户认证功能&quot;                             │
+│     ↓                                                          │
+│     生成规范文档                                                │
+│                                                                 │
+│  2. 实现规范                                                    │
+│     /opsx:apply                                                │
+│     ↓                                                          │
+│     根据规范编写代码                                            │
+│                                                                 │
+│  3. 归档规范                                                    │
+│     /opsx:archive                                               │
+│     ↓                                                          │
+│     规范存档，作为历史记录                                       │
+│                                                                 │
+│  循环迭代...                                                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>关键特点</strong>:
+- 规范优先，代码跟随
+- 迭代式，非瀑布式
+- 适合现有项目渐进改进</p>
+<hr />
+<h2 id="_5">五、适用场景对比</h2>
+<h3 id="51-gsd">5.1 GSD 最佳场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">适用度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>新项目开发</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>完整的项目生命周期管理</td>
+</tr>
+<tr>
+<td><strong>复杂功能</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>多阶段、多 Agent 协作</td>
+</tr>
+<tr>
+<td><strong>长期项目</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>状态持久化，支持中断恢复</td>
+</tr>
+<tr>
+<td><strong>现有项目</strong></td>
+<td style="text-align: center;">⭐⭐⭐</td>
+<td>支持 but 需要适配</td>
+</tr>
+<tr>
+<td><strong>快速原型</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>Quick 模式支持</td>
+</tr>
+<tr>
+<td><strong>简单任务</strong></td>
+<td style="text-align: center;">⭐⭐</td>
+<td>可能过度工程化</td>
+</tr>
+</tbody>
+</table>
+<p><strong>典型用户</strong>:
+- 独立开发者
+- 小团队
+- 需要可靠 AI 辅助的人</p>
+<h3 id="52-superpower">5.2 Superpower 最佳场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">适用度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>日常开发</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>无缝增强现有工作流</td>
+</tr>
+<tr>
+<td><strong>代码重构</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>专业建议和优化</td>
+</tr>
+<tr>
+<td><strong>技术选型</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>更好的决策支持</td>
+</tr>
+<tr>
+<td><strong>新项目</strong></td>
+<td style="text-align: center;">⭐⭐⭐</td>
+<td>可以但不专门针对</td>
+</tr>
+<tr>
+<td><strong>学习探索</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>获得专业指导</td>
+</tr>
+<tr>
+<td><strong>团队协作</strong></td>
+<td style="text-align: center;">⭐⭐⭐</td>
+<td>无特殊协作功能</td>
+</tr>
+</tbody>
+</table>
+<p><strong>典型用户</strong>:
+- Claude Code 日常用户
+- 想要更智能输出的开发者
+- 不想改变工作流的人</p>
+<h3 id="53-openspec">5.3 OpenSpec 最佳场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th style="text-align: center;">适用度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>现有项目改进</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>专为 brownfield 设计</td>
+</tr>
+<tr>
+<td><strong>功能迭代</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>迭代式开发流程</td>
+</tr>
+<tr>
+<td><strong>团队规范</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>规范版本控制</td>
+</tr>
+<tr>
+<td><strong>多 AI 助手</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐⭐</td>
+<td>支持 20+ 助手</td>
+</tr>
+<tr>
+<td><strong>新项目</strong></td>
+<td style="text-align: center;">⭐⭐⭐</td>
+<td>可以但非核心场景</td>
+</tr>
+<tr>
+<td><strong>快速迭代</strong></td>
+<td style="text-align: center;">⭐⭐⭐⭐</td>
+<td>流程轻量</td>
+</tr>
+</tbody>
+</table>
+<p><strong>典型用户</strong>:
+- 使用多种 AI 助手的团队
+- 现有项目维护者
+- 规范驱动的倡导者</p>
+<hr />
+<h2 id="_6">六、技术架构对比</h2>
+<h3 id="61-gsd">6.1 GSD 架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                        GSD 架构                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  用户命令 (如 /gsd:new-project)                                  │
+│      │                                                          │
+│      ↓                                                          │
+│  编排器 (Orchestrator)                                          │
+│      │                                                          │
+│      ├──→ 研究 Agent (并行)                                     │
+│      ├──→ 规划 Agent                                            │
+│      ├──→ 执行 Agent (并行)                                     │
+│      └──→ 验证 Agent                                            │
+│                                                                 │
+│  上下文管理:                                                     │
+│  - 主会话保持 30-40%                                             │
+│  - 每个 Plan 独立上下文                                          │
+│  - 200k tokens 纯用于实现                                        │
+│                                                                 │
+│  状态文件:                                                       │
+│  - PROJECT.md    项目愿景                                        │
+│  - REQUIREMENTS.md 需求                                         │
+│  - ROADMAP.md    路线图                                          │
+│  - STATE.md      状态和决策                                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="62-superpower">6.2 Superpower 架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Superpower 架构                               │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Claude Code                                                     │
+│      │                                                          │
+│      ↓                                                          │
+│  Superpower 插件层                                               │
+│      │                                                          │
+│      ├──→ 规划增强模块                                           │
+│      ├──→ 领域知识库                                             │
+│      └──→ 决策优化器                                             │
+│                                                                 │
+│  工作方式:                                                       │
+│  - 拦截用户输入                                                  │
+│  - 增强上下文                                                    │
+│  - 提供专业建议                                                  │
+│  - 返回增强后的输出                                              │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="63-openspec">6.3 OpenSpec 架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     OpenSpec 架构                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  任意 AI 助手 (Claude, GPT, Gemini...)                           │
+│      │                                                          │
+│      ↓                                                          │
+│  OpenSpec 规范层                                                 │
+│      │                                                          │
+│      ├──→ /opsx:propose  生成规范                                │
+│      ├──→ /opsx:apply    读取规范 → 生成代码                     │
+│      └──→ /opsx:archive  归档规范                                │
+│                                                                 │
+│  规范文件:                                                       │
+│  - specs/        规范目录                                        │
+│  - spec.md       当前规范                                        │
+│  - archive/      归档规范                                        │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_7">七、优劣势分析</h2>
+<h3 id="71-gsd">7.1 GSD</h3>
+<p><strong>优势</strong>:
+- ✅ 完整的项目生命周期管理
+- ✅ 解决上下文腐烂问题
+- ✅ 多 Agent 并行执行
+- ✅ 原子 Git 提交
+- ✅ 丰富的命令系统
+- ✅ 支持中断恢复</p>
+<p><strong>劣势</strong>:
+- ❌ 学习曲线相对较陡
+- ❌ 对于简单任务可能过度
+- ❌ 依赖 Node.js 生态
+- ❌ 主要针对新项目</p>
+<h3 id="72-superpower">7.2 Superpower</h3>
+<p><strong>优势</strong>:
+- ✅ 无缝集成，不改变习惯
+- ✅ 学习曲线极低
+- ✅ 自动增强输出质量
+- ✅ 轻量级设计</p>
+<p><strong>劣势</strong>:
+- ❌ 仅支持 Claude Code
+- ❌ 功能相对有限
+- ❌ 缺乏项目管理能力
+- ❌ 无状态持久化</p>
+<h3 id="73-openspec">7.3 OpenSpec</h3>
+<p><strong>优势</strong>:
+- ✅ 支持 20+ AI 助手
+- ✅ 适合现有项目
+- ✅ 迭代式，非瀑布式
+- ✅ 规范版本控制
+- ✅ 流程简单灵活</p>
+<p><strong>劣势</strong>:
+- ❌ 需要手动配置
+- ❌ 缺乏自动化验证
+- ❌ 无多 Agent 支持
+- ❌ 社区相对较小</p>
+<hr />
+<h2 id="_8">八、选型建议</h2>
+<h3 id="81">8.1 决策树</h3>
+<pre><code>开始选型
+    │
+    ├── 你使用多种 AI 助手吗？
+    │   ├── 是 → OpenSpec
+    │   └── 否 ↓
+    │
+    ├── 你主要在现有项目上工作吗？
+    │   ├── 是 → OpenSpec 或 Superpower
+    │   └── 否 ↓
+    │
+    ├── 你需要完整的项目管理吗？
+    │   ├── 是 → GSD
+    │   └── 否 ↓
+    │
+    ├── 你想要无缝增强现有工作流吗？
+    │   ├── 是 → Superpower
+    │   └── 否 ↓
+    │
+    └── 你需要处理复杂、长期的项目吗？
+        ├── 是 → GSD
+        └── 否 → Superpower 或 OpenSpec
+</code></pre>
+<h3 id="82">8.2 推荐组合</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>推荐工具</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>独立开发者新项目</strong></td>
+<td>GSD</td>
+<td>完整生命周期管理</td>
+</tr>
+<tr>
+<td><strong>团队现有项目维护</strong></td>
+<td>OpenSpec</td>
+<td>适合 brownfield</td>
+</tr>
+<tr>
+<td><strong>日常编码增强</strong></td>
+<td>Superpower</td>
+<td>无缝集成</td>
+</tr>
+<tr>
+<td><strong>复杂功能开发</strong></td>
+<td>GSD</td>
+<td>多 Agent 协作</td>
+</tr>
+<tr>
+<td><strong>快速原型验证</strong></td>
+<td>Superpower + GSD Quick</td>
+<td>灵活组合</td>
+</tr>
+<tr>
+<td><strong>跨平台团队</strong></td>
+<td>OpenSpec</td>
+<td>多助手支持</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83">8.3 组合使用建议</h3>
+<pre><code>GSD + Superpower:
+- GSD 管理项目流程
+- Superpower 增强每个步骤的输出质量
+
+OpenSpec + Superpower:
+- OpenSpec 管理规范
+- Superpower 增强实现质量
+
+不建议: GSD + OpenSpec
+- 功能重叠较多
+- 可能造成混乱
+</code></pre>
+<hr />
+<h2 id="_9">九、总结</h2>
+<h3 id="91">9.1 核心差异总结</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GSD</th>
+<th>Superpower</th>
+<th>OpenSpec</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定位</strong></td>
+<td>项目管理系统</td>
+<td>能力增强插件</td>
+<td>规范驱动框架</td>
+</tr>
+<tr>
+<td><strong>范围</strong></td>
+<td>全生命周期</td>
+<td>单次交互</td>
+<td>功能迭代</td>
+</tr>
+<tr>
+<td><strong>平台</strong></td>
+<td>多运行时</td>
+<td>Claude only</td>
+<td>跨平台</td>
+</tr>
+<tr>
+<td><strong>复杂度</strong></td>
+<td>中</td>
+<td>低</td>
+<td>低-中</td>
+</tr>
+<tr>
+<td><strong>最适合</strong></td>
+<td>新项目</td>
+<td>日常开发</td>
+<td>现有项目</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 最终建议</h3>
+<pre><code>如果你是独立开发者，想要从零开始一个新项目:
+  → 选择 GSD
+
+如果你是 Claude Code 日常用户，想要更智能的输出:
+  → 选择 Superpower
+
+如果你维护现有项目，或使用多种 AI 助手:
+  → 选择 OpenSpec
+
+如果你想要最佳体验:
+  → GSD + Superpower 组合使用
+</code></pre>
+<hr />
+<h2 id="_10">十、参考资源</h2>
+<h3 id="gsd_1">GSD</h3>
+<ul>
+<li>GitHub: https://github.com/glittercowboy/get-shit-done</li>
+<li>NPM: https://www.npmjs.com/package/get-shit-done-cc</li>
+</ul>
+<h3 id="superpower_1">Superpower</h3>
+<ul>
+<li>GitHub: https://github.com/obra/superpowers</li>
+</ul>
+<h3 id="openspec_1">OpenSpec</h3>
+<ul>
+<li>GitHub: https://github.com/Fission-AI/OpenSpec</li>
+</ul>
+<h3 id="_11">对比文章</h3>
+<ul>
+<li>Medium: "Comparison of Spec-driven AI Coding Workflows"</li>
+</ul>
+<hr />
+<p><em>调研日期: 2026-03-17</em>
+<em>报告版本: 1.0</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

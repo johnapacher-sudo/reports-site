@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightpanda 调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**"Not a Chromium fork. Not a WebKit patch. A new browser, written in Zig."**</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 核心定位</a></li>
+<li><a href="#14" class="toc-h3">1.4 设计理念</a></li>
+<li><a href="#_2" class="toc-h2">二、核心功能</a></li>
+<li><a href="#21" class="toc-h3">2.1 功能概览</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心特性详解</a></li>
+<li><a href="#1" class="toc-h4">特性 1: 极致性能</a></li>
+<li><a href="#2-cdp" class="toc-h4">特性 2: CDP 协议支持</a></li>
+<li><a href="#3-zig-dom" class="toc-h4">特性 3: Zig 原生 DOM</a></li>
+<li><a href="#_3" class="toc-h2">三、技术架构</a></li>
+<li><a href="#31" class="toc-h3">3.1 整体架构</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心组件</a></li>
+<li><a href="#zig-v8-fork" class="toc-h4">zig-v8-fork</a></li>
+<li><a href="#zig-js-runtime" class="toc-h4">zig-js-runtime</a></li>
+<li><a href="#33" class="toc-h3">3.3 目录结构</a></li>
+<li><a href="#34-zig" class="toc-h3">3.4 为什么选择 Zig？</a></li>
+<li><a href="#_4" class="toc-h2">四、安装与使用</a></li>
+<li><a href="#41" class="toc-h3">4.1 安装方式</a></li>
+<li><a href="#1_1" class="toc-h4">方式 1: 下载预构建二进制</a></li>
+<li><a href="#2-docker" class="toc-h4">方式 2: Docker</a></li>
+<li><a href="#3" class="toc-h4">方式 3: 从源码构建</a></li>
+<li><a href="#42" class="toc-h3">4.2 基本使用</a></li>
+<li><a href="#_5" class="toc-h4">抓取网页</a></li>
+<li><a href="#cdp" class="toc-h4">启动 CDP 服务器</a></li>
+<li><a href="#43-puppeteer" class="toc-h3">4.3 与 Puppeteer 集成</a></li>
+<li><a href="#44-playwright" class="toc-h3">4.4 与 Playwright 集成</a></li>
+<li><a href="#_6" class="toc-h2">五、对比分析</a></li>
+<li><a href="#51-lightpanda-vs-chrome-vs-puppeteer-vs-playwright" class="toc-h3">5.1 Lightpanda vs Chrome vs Puppeteer vs Playwright</a></li>
+<li><a href="#52" class="toc-h3">5.2 适用场景对比</a></li>
+<li><a href="#53" class="toc-h3">5.3 性能基准测试</a></li>
+<li><a href="#_7" class="toc-h2">六、使用场景</a></li>
+<li><a href="#61" class="toc-h3">6.1 适用场景</a></li>
+<li><a href="#62" class="toc-h3">6.2 不适用场景</a></li>
+<li><a href="#63" class="toc-h3">6.3 典型用例</a></li>
+<li><a href="#_8" class="toc-h2">七、生态系统</a></li>
+<li><a href="#71" class="toc-h3">7.1 相关项目</a></li>
+<li><a href="#72" class="toc-h3">7.2 社区活跃度</a></li>
+<li><a href="#_9" class="toc-h2">八、最佳实践</a></li>
+<li><a href="#81" class="toc-h3">8.1 推荐做法</a></li>
+<li><a href="#82" class="toc-h3">8.2 避坑指南</a></li>
+<li><a href="#_10" class="toc-h2">九、总结</a></li>
+<li><a href="#91" class="toc-h3">9.1 优势</a></li>
+<li><a href="#92" class="toc-h3">9.2 劣势</a></li>
+<li><a href="#93" class="toc-h3">9.3 最终评价</a></li>
+<li><a href="#_11" class="toc-h2">参考资料</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Lightpanda 调研报告</h1>
+                        <div class="article-meta">**"Not a Chromium fork. Not a WebKit patch. A new browser, written in Zig."**</div>
+                    </header>
+                    <h1 id="lightpanda">Lightpanda 调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>项目信息</th>
+<th>详情</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>Lightpanda Browser</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>Lightpanda.io 团队</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/lightpanda-io/browser</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://lightpanda.io</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>AGPL-3.0</td>
+</tr>
+<tr>
+<td><strong>编程语言</strong></td>
+<td>Zig</td>
+</tr>
+<tr>
+<td><strong>JavaScript 引擎</strong></td>
+<td>V8</td>
+</tr>
+<tr>
+<td><strong>当前状态</strong></td>
+<td>活跃开发中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p><strong>Lightpanda</strong> 是一个从零开始用 Zig 编写的开源无头浏览器，专为 AI Agent、LLM 训练、网页抓取和自动化而设计，比 Chrome 快 11 倍，内存占用低 9 倍。</p>
+<h3 id="13">1.3 核心定位</h3>
+<blockquote>
+<p><strong>"Not a Chromium fork. Not a WebKit patch. A new browser, written in Zig."</strong></p>
+</blockquote>
+<p>Lightpanda 不是 Chromium 的分支，也不是 WebKit 的补丁，而是一个<strong>全新的浏览器引擎</strong>。</p>
+<h3 id="14">1.4 设计理念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Lightpanda 设计理念                            │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ❌ No CSS engine                                               │
+│  ❌ No layout engine                                             │
+│  ❌ No image decoder                                             │
+│  ❌ No GPU compositor                                            │
+│  ❌ No UI code                                                   │
+│                                                                 │
+│  ✅ JavaScript execution                                         │
+│  ✅ DOM manipulation                                             │
+│  ✅ Network layer                                                │
+│  ✅ CDP (Chrome DevTools Protocol)                               │
+│                                                                 │
+│  目标: 极致轻量，极致快速，专为机器/自动化设计                    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_2">二、核心功能</h2>
+<h3 id="21">2.1 功能概览</h3>
+<table>
+<thead>
+<tr>
+<th>功能模块</th>
+<th>状态</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>JavaScript 执行</strong></td>
+<td>✅ 完整</td>
+<td>内置 V8 引擎</td>
+</tr>
+<tr>
+<td><strong>DOM 操作</strong></td>
+<td>✅ 完整</td>
+<td>Zig 原生实现</td>
+</tr>
+<tr>
+<td><strong>CDP 支持</strong></td>
+<td>✅ 完整</td>
+<td>兼容 Playwright/Puppeteer</td>
+</tr>
+<tr>
+<td><strong>Web APIs</strong></td>
+<td>🔄 部分</td>
+<td>持续开发中</td>
+</tr>
+<tr>
+<td><strong>CSS 引擎</strong></td>
+<td>❌ 无</td>
+<td>设计上排除</td>
+</tr>
+<tr>
+<td><strong>布局引擎</strong></td>
+<td>❌ 无</td>
+<td>设计上排除</td>
+</tr>
+<tr>
+<td><strong>图形渲染</strong></td>
+<td>❌ 无</td>
+<td>设计上排除</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22">2.2 核心特性详解</h3>
+<h4 id="1">特性 1: 极致性能</h4>
+<p><strong>性能对比 (Puppeteer 请求 100 页面，AWS EC2 m5.large)</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>Lightpanda</th>
+<th>Chrome</th>
+<th>提升幅度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>执行时间</strong></td>
+<td>2.3 秒</td>
+<td>25+ 秒</td>
+<td><strong>11x 更快</strong></td>
+</tr>
+<tr>
+<td><strong>内存占用 (100 并行)</strong></td>
+<td>24 MB</td>
+<td>207 MB</td>
+<td><strong>9x 更低</strong></td>
+</tr>
+<tr>
+<td><strong>启动时间</strong></td>
+<td>毫秒级</td>
+<td>秒级</td>
+<td><strong>即时启动</strong></td>
+</tr>
+</tbody>
+</table>
+<h4 id="2-cdp">特性 2: CDP 协议支持</h4>
+<p>Lightpanda 完全支持 Chrome DevTools Protocol，可与以下工具无缝集成：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    CDP 生态系统                                  │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐         │
+│  │  Playwright   │   │  Puppeteer   │   │  chromedp    │         │
+│  │              │   │              │   │  (Go)        │         │
+│  └──────────────┘   └──────────────┘   └──────────────┘         │
+│         │                   │                   │                 │
+│         └───────────────────┼───────────────────┘                │
+│                             │                                    │
+│                             ▼                                    │
+│                   ┌──────────────────┐                           │
+│                   │       CDP        │                           │
+│                   │    Protocol      │                           │
+│                   └──────────────────┘                           │
+│                             │                                    │
+│                             ▼                                    │
+│                   ┌──────────────────┐                           │
+│                   │   Lightpanda     │                           │
+│                   │    Browser       │                           │
+│                   └──────────────────┘                           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="3-zig-dom">特性 3: Zig 原生 DOM</h4>
+<p>Lightpanda 的 DOM 实现经历了从 LibDOM 到 Zig 的迁移：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>实现</th>
+<th>优势</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>早期</strong></td>
+<td>LibDOM (C 库)</td>
+<td>功能完整</td>
+</tr>
+<tr>
+<td><strong>现在</strong></td>
+<td>Zig 原生实现</td>
+<td>更好的内聚性、性能优化</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Zig DOM 的优势</strong>:
+- Events 事件处理
+- Custom Elements 自定义元素
+- ShadowDOM 支持
+- 与 V8 更紧密的集成</p>
+<hr />
+<h2 id="_3">三、技术架构</h2>
+<h3 id="31">3.1 整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      Lightpanda 架构                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    客户端层                               │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐   │   │
+│  │  │Playwright│ │Puppeteer │ │ chromedp │ │ 自定义   │   │   │
+│  │  │          │ │          │ │  (Go)    │ │ CDP 客户端│   │   │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼ (CDP Protocol)                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    CDP Server 层                          │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ WebSocket    │ │ HTTP Server  │ │ JSON-RPC     │    │   │
+│  │  │ Handler      │ │              │ │ Handler      │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    浏览器核心层                           │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ DOM Engine   │ │ JS Engine    │ │ Network      │    │   │
+│  │  │ (Zig)        │ │ (V8)         │ │ Layer        │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    基础设施层                            │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐    │   │
+│  │  │ zig-v8-fork  │ │zig-js-runtime│ │ Libcurl      │    │   │
+│  │  │ (V8 绑定)    │ │ (运行时抽象) │ │ (HTTP)       │    │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 核心组件</h3>
+<h4 id="zig-v8-fork">zig-v8-fork</h4>
+<p>V8 的 Zig 绑定库，提供:
+- 从官方源码构建 V8
+- C 语言绑定
+- Zig API 封装</p>
+<h4 id="zig-js-runtime">zig-js-runtime</h4>
+<p>JavaScript 运行时抽象层:
+- 简化 JS 引擎集成
+- 语言绑定管理
+- 与 V8 的高级抽象</p>
+<h3 id="33">3.3 目录结构</h3>
+<pre><code>lightpanda-io/browser/
+├── src/
+│   ├── browser/           # 浏览器核心
+│   ├── dom/               # DOM 实现 (Zig)
+│   ├── cdp/               # CDP 服务器
+│   ├── net/               # 网络层
+│   └── js/                # JS 桥接
+│
+├── tests/                 # 测试
+├── examples/              # 示例
+└── docs/                  # 文档
+</code></pre>
+<h3 id="34-zig">3.4 为什么选择 Zig？</h3>
+<table>
+<thead>
+<tr>
+<th>原因</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>简洁性</strong></td>
+<td>比 C++ 和 Rust 更简单</td>
+</tr>
+<tr>
+<td><strong>高性能</strong></td>
+<td>与 C/C++ 相当的性能</td>
+</tr>
+<tr>
+<td><strong>安全性</strong></td>
+<td>比 C 更好的工具链和内存安全</td>
+</tr>
+<tr>
+<td><strong>显式内存管理</strong></td>
+<td>精细控制内存使用</td>
+</tr>
+<tr>
+<td><strong>Comptime</strong></td>
+<td>强大的编译时元编程</td>
+</tr>
+<tr>
+<td><strong>现代系统级语言</strong></td>
+<td>实际性能提升同时简化开发</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">四、安装与使用</h2>
+<h3 id="41">4.1 安装方式</h3>
+<h4 id="1_1">方式 1: 下载预构建二进制</h4>
+<p><strong>Linux x86_64</strong>:</p>
+<pre><code class="language-bash">curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux &amp;&amp; \
+chmod a+x ./lightpanda
+</code></pre>
+<p><strong>macOS aarch64</strong>:</p>
+<pre><code class="language-bash">curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos &amp;&amp; \
+chmod a+x ./lightpanda
+</code></pre>
+<h4 id="2-docker">方式 2: Docker</h4>
+<pre><code class="language-bash"># 拉取镜像并启动 (暴露 CDP 端口 9222)
+docker run -d --name lightpanda -p 9222:9222 lightpanda/browser:nightly
+</code></pre>
+<h4 id="3">方式 3: 从源码构建</h4>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/lightpanda-io/browser.git
+cd browser
+
+# 需要 Zig 0.13+
+zig build
+</code></pre>
+<h3 id="42">4.2 基本使用</h3>
+<h4 id="_5">抓取网页</h4>
+<pre><code class="language-bash"># 抓取并输出页面内容
+./lightpanda fetch --obey_robots --log_format pretty --log_level info https://example.com
+</code></pre>
+<h4 id="cdp">启动 CDP 服务器</h4>
+<pre><code class="language-bash"># 启动 CDP 服务器 (默认端口 9222)
+./lightpanda serve
+
+# 指定端口
+./lightpanda serve --port 8080
+</code></pre>
+<h3 id="43-puppeteer">4.3 与 Puppeteer 集成</h3>
+<pre><code class="language-javascript">const puppeteer = require('puppeteer');
+
+// 连接到 Lightpanda
+const browser = await puppeteer.connect({
+  browserURL: 'http://localhost:9222'
+});
+
+const page = await browser.newPage();
+await page.goto('https://example.com');
+
+const content = await page.content();
+console.log(content);
+
+await browser.close();
+</code></pre>
+<h3 id="44-playwright">4.4 与 Playwright 集成</h3>
+<pre><code class="language-javascript">const { chromium } = require('playwright');
+
+// 连接到 Lightpanda
+const browser = await chromium.connectOverCDP('http://localhost:9222');
+
+const page = await browser.newPage();
+await page.goto('https://example.com');
+
+const title = await page.title();
+console.log(title);
+
+await browser.close();
+</code></pre>
+<hr />
+<h2 id="_6">五、对比分析</h2>
+<h3 id="51-lightpanda-vs-chrome-vs-puppeteer-vs-playwright">5.1 Lightpanda vs Chrome vs Puppeteer vs Playwright</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Lightpanda</th>
+<th>Chrome Headless</th>
+<th>Puppeteer</th>
+<th>Playwright</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>类型</strong></td>
+<td>独立浏览器</td>
+<td>完整浏览器</td>
+<td>自动化库</td>
+<td>自动化库</td>
+</tr>
+<tr>
+<td><strong>渲染引擎</strong></td>
+<td>无 (设计排除)</td>
+<td>Blink</td>
+<td>Blink</td>
+<td>Blink/WebKit</td>
+</tr>
+<tr>
+<td><strong>JS 引擎</strong></td>
+<td>V8</td>
+<td>V8</td>
+<td>V8</td>
+<td>V8</td>
+</tr>
+<tr>
+<td><strong>编程语言</strong></td>
+<td>Zig</td>
+<td>C++</td>
+<td>TypeScript</td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>内存占用</strong></td>
+<td>~24 MB</td>
+<td>~207 MB</td>
+<td>高</td>
+<td>高</td>
+</tr>
+<tr>
+<td><strong>启动速度</strong></td>
+<td>毫秒级</td>
+<td>秒级</td>
+<td>秒级</td>
+<td>秒级</td>
+</tr>
+<tr>
+<td><strong>执行速度</strong></td>
+<td>11x 更快</td>
+<td>基准</td>
+<td>快</td>
+<td>快</td>
+</tr>
+<tr>
+<td><strong>CDP 支持</strong></td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>跨浏览器</strong></td>
+<td>❌ 单一</td>
+<td>❌ Chrome</td>
+<td>❌ Chrome</td>
+<td>✅ 多浏览器</td>
+</tr>
+<tr>
+<td><strong>CSS/布局</strong></td>
+<td>❌ 无</td>
+<td>✅ 完整</td>
+<td>✅ 完整</td>
+<td>✅ 完整</td>
+</tr>
+<tr>
+<td><strong>截图</strong></td>
+<td>❌ 无</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><strong>PDF 生成</strong></td>
+<td>❌ 无</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 适用场景对比</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      场景选择指南                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  需要 CSS 布局或截图?                                           │
+│  │                                                              │
+│  ├── 是 ──→ 【Playwright】 或 【Puppeteer】                     │
+│  │                                                              │
+│  └── 否 ──→ 需要极致性能和低内存?                               │
+│              │                                                   │
+│              ├── 是 ──→ 【Lightpanda】                           │
+│              │                                                   │
+│              └── 否 ──→ 需要跨浏览器测试?                         │
+│                         │                                       │
+│                         ├── 是 ──→ 【Playwright】               │
+│                         │                                       │
+│                         └── 否 ──→ 【Puppeteer】                │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="53">5.3 性能基准测试</h3>
+<p><strong>测试条件</strong>: Puppeteer 请求 100 页面，AWS EC2 m5.large</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>Lightpanda</th>
+<th>Chrome</th>
+<th>比率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>单页加载</strong></td>
+<td>23ms</td>
+<td>250ms</td>
+<td>11x</td>
+</tr>
+<tr>
+<td><strong>100 页并行</strong></td>
+<td>2.3s</td>
+<td>25s+</td>
+<td>11x</td>
+</tr>
+<tr>
+<td><strong>100 并行内存</strong></td>
+<td>24 MB</td>
+<td>207 MB</td>
+<td>9x</td>
+</tr>
+<tr>
+<td><strong>启动时间</strong></td>
+<td>&lt;100ms</td>
+<td>1-2s</td>
+<td>10x+</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">六、使用场景</h2>
+<h3 id="61">6.1 适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+<th>推荐指数</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI Agent 自动化</strong></td>
+<td>AI Agent 执行网页操作</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>LLM 训练数据收集</strong></td>
+<td>大规模网页内容抓取</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>网页抓取</strong></td>
+<td>高并发数据提取</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>自动化测试</strong></td>
+<td>JS 执行验证</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>API 测试</strong></td>
+<td>前端 API 调用测试</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>SEO 分析</strong></td>
+<td>页面结构分析</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 不适用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>截图/PDF 生成</strong></td>
+<td>无渲染引擎</td>
+</tr>
+<tr>
+<td><strong>视觉回归测试</strong></td>
+<td>无布局引擎</td>
+</tr>
+<tr>
+<td><strong>CSS 验证</strong></td>
+<td>无 CSS 引擎</td>
+</tr>
+<tr>
+<td><strong>响应式测试</strong></td>
+<td>无视口渲染</td>
+</tr>
+</tbody>
+</table>
+<h3 id="63">6.3 典型用例</h3>
+<p><strong>用例 1: AI Agent 网页操作</strong></p>
+<pre><code>AI Agent ──→ Lightpanda CDP ──→ 执行 JS ──→ 获取数据
+     │
+     └── 低内存、高并发
+</code></pre>
+<p><strong>用例 2: LLM 训练数据收集</strong></p>
+<pre><code>目标网站 ──→ Lightpanda 抓取 ──→ 提取内容 ──→ 存入训练集
+                    │
+                    └── 大规模并行，低资源消耗
+</code></pre>
+<p><strong>用例 3: 现有自动化工具迁移</strong></p>
+<pre><code>Puppeteer 脚本 ──→ 修改连接地址 ──→ Lightpanda
+       │
+       └── 无需重写代码，直接提速
+</code></pre>
+<hr />
+<h2 id="_8">七、生态系统</h2>
+<h3 id="71">7.1 相关项目</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>描述</th>
+<th>GitHub</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>zig-v8-fork</strong></td>
+<td>V8 的 Zig 绑定</td>
+<td><a href="https://github.com/lightpanda-io/zig-v8-fork">lightpanda-io/zig-v8-fork</a></td>
+</tr>
+<tr>
+<td><strong>zig-js-runtime</strong></td>
+<td>JS 运行时抽象</td>
+<td><a href="https://github.com/lightpanda-io/zig-js-runtime">lightpanda-io/zig-js-runtime</a></td>
+</tr>
+<tr>
+<td><strong>lightpanda-ruby</strong></td>
+<td>Ruby 客户端</td>
+<td><a href="https://github.com/marcoroth/lightpanda-ruby">marcoroth/lightpanda-ruby</a></td>
+</tr>
+<tr>
+<td><strong>gomcp</strong></td>
+<td>MCP 服务器</td>
+<td><a href="https://mcpservers.org/en/servers/lightpanda-io/gomcp">Lightpanda Go MCP</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 社区活跃度</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitHub Stars</strong></td>
+<td>快速增长中</td>
+</tr>
+<tr>
+<td><strong>Discord</strong></td>
+<td>活跃社区</td>
+</tr>
+<tr>
+<td><strong>贡献者</strong></td>
+<td>持续增加</td>
+</tr>
+<tr>
+<td><strong>更新频率</strong></td>
+<td>频繁更新</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">八、最佳实践</h2>
+<h3 id="81">8.1 推荐做法</h3>
+<ol>
+<li>
+<p><strong>使用 Docker 部署</strong>
+   <code>bash
+   docker run -d --name lightpanda -p 9222:9222 lightpanda/browser:nightly</code></p>
+</li>
+<li>
+<p><strong>批量任务并行化</strong></p>
+</li>
+<li>利用低内存优势</li>
+<li>
+<p>可运行更多并行实例</p>
+</li>
+<li>
+<p><strong>复用现有 Puppeteer 代码</strong></p>
+</li>
+<li>只需修改连接方式</li>
+<li>无需重写业务逻辑</li>
+</ol>
+<h3 id="82">8.2 避坑指南</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>需要截图</strong></td>
+<td>使用 Playwright/Puppeteer</td>
+</tr>
+<tr>
+<td><strong>CSS 依赖</strong></td>
+<td>检查页面是否依赖 CSS 渲染</td>
+</tr>
+<tr>
+<td><strong>复杂交互</strong></td>
+<td>确认 Web API 支持状态</td>
+</tr>
+<tr>
+<td><strong>内存不足</strong></td>
+<td>减少并行数或增加系统内存</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">九、总结</h2>
+<h3 id="91">9.1 优势</h3>
+<table>
+<thead>
+<tr>
+<th>优势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>极致性能</strong></td>
+<td>11x 更快的执行速度</td>
+</tr>
+<tr>
+<td><strong>低内存</strong></td>
+<td>9x 更低的内存占用</td>
+</tr>
+<tr>
+<td><strong>即时启动</strong></td>
+<td>毫秒级启动时间</td>
+</tr>
+<tr>
+<td><strong>CDP 兼容</strong></td>
+<td>无缝对接现有工具</td>
+</tr>
+<tr>
+<td><strong>轻量设计</strong></td>
+<td>无渲染引擎的开销</td>
+</tr>
+<tr>
+<td><strong>Zig 优势</strong></td>
+<td>现代、安全、高性能</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92">9.2 劣势</h3>
+<table>
+<thead>
+<tr>
+<th>劣势</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>无渲染</strong></td>
+<td>不支持截图、PDF</td>
+</tr>
+<tr>
+<td><strong>无 CSS 引擎</strong></td>
+<td>不处理样式计算</td>
+</tr>
+<tr>
+<td><strong>新项目</strong></td>
+<td>生态还在发展中</td>
+</tr>
+<tr>
+<td><strong>Web API 不完整</strong></td>
+<td>部分功能开发中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 最终评价</h3>
+<p>Lightpanda 是无头浏览器领域的创新突破，通过舍弃不必要的渲染组件，实现了极致的性能和资源效率。对于 AI Agent、网页抓取和自动化场景，它是理想的选择。</p>
+<p><strong>推荐指数</strong>: ⭐⭐⭐⭐⭐ (5/5) - 特定场景</p>
+<p><strong>适用人群</strong>:
+- AI Agent 开发者
+- 大规模网页抓取
+- LLM 训练数据收集
+- 自动化测试工程师</p>
+<hr />
+<h2 id="_11">参考资料</h2>
+<ul>
+<li><a href="https://github.com/lightpanda-io/browser">Lightpanda GitHub</a></li>
+<li><a href="https://lightpanda.io">Lightpanda 官网</a></li>
+<li><a href="https://lightpanda.io/blog/posts/why-we-built-lightpanda-in-zig">Why We Built in Zig</a></li>
+<li><a href="https://github.com/lightpanda-io/zig-js-runtime">zig-js-runtime</a></li>
+<li><a href="https://github.com/lightpanda-io/zig-v8-fork">zig-v8-fork</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

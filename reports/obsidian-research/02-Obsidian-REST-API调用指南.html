@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian REST API 调用指南</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">更新日期: 2026-03-14 | 文档版本: 1.0 | 插件: Local REST API</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、插件概述</a></li>
+<li><a href="#11-local-rest-api" class="toc-h3">1.1 什么是 Local REST API？</a></li>
+<li><a href="#12" class="toc-h3">1.2 能做什么？</a></li>
+<li><a href="#_3" class="toc-h2">二、安装配置</a></li>
+<li><a href="#21" class="toc-h3">2.1 安装插件</a></li>
+<li><a href="#22-api-key" class="toc-h3">2.2 获取 API Key</a></li>
+<li><a href="#23" class="toc-h3">2.3 证书信任</a></li>
+<li><a href="#_4" class="toc-h2">三、认证方式</a></li>
+<li><a href="#31" class="toc-h3">3.1 请求头认证</a></li>
+<li><a href="#32" class="toc-h3">3.2 交互式文档认证</a></li>
+<li><a href="#api" class="toc-h2">四、API 端点详解</a></li>
+<li><a href="#41-url" class="toc-h3">4.1 基础 URL</a></li>
+<li><a href="#42" class="toc-h3">4.2 系统端点</a></li>
+<li><a href="#43-active" class="toc-h3">4.3 当前文件端点 (/active)</a></li>
+<li><a href="#44-vault" class="toc-h3">4.4 仓库文件端点 (/vault)</a></li>
+<li><a href="#45-periodic" class="toc-h3">4.5 周期性笔记端点 (/periodic)</a></li>
+<li><a href="#46-search" class="toc-h3">4.6 搜索端点 (/search)</a></li>
+<li><a href="#47-commands" class="toc-h3">4.7 命令端点 (/commands)</a></li>
+<li><a href="#48-open" class="toc-h3">4.8 打开文件端点 (/open)</a></li>
+<li><a href="#_5" class="toc-h2">五、调用示例</a></li>
+<li><a href="#51" class="toc-h3">5.1 获取服务器信息</a></li>
+<li><a href="#52" class="toc-h3">5.2 创建新笔记</a></li>
+<li><a href="#53" class="toc-h3">5.3 读取笔记内容</a></li>
+<li><a href="#54" class="toc-h3">5.4 追加内容到笔记</a></li>
+<li><a href="#55-patch" class="toc-h3">5.5 部分更新笔记 (PATCH)</a></li>
+<li><a href="#56" class="toc-h3">5.6 列出目录内容</a></li>
+<li><a href="#57" class="toc-h3">5.7 搜索笔记</a></li>
+<li><a href="#58" class="toc-h3">5.8 获取周期性笔记</a></li>
+<li><a href="#59" class="toc-h3">5.9 追加到今日日记</a></li>
+<li><a href="#510" class="toc-h3">5.10 执行命令</a></li>
+<li><a href="#_6" class="toc-h2">六、脚本自动化</a></li>
+<li><a href="#61-python" class="toc-h3">6.1 Python 脚本示例</a></li>
+<li><a href="#62-shell" class="toc-h3">6.2 Shell 脚本示例</a></li>
+<li><a href="#63-nodejs" class="toc-h3">6.3 Node.js 脚本示例</a></li>
+<li><a href="#_7" class="toc-h2">七、与其他工具集成</a></li>
+<li><a href="#71-claude-code" class="toc-h3">7.1 与 Claude Code 集成</a></li>
+<li><a href="#72-shortcuts-macos" class="toc-h3">7.2 与 Shortcuts (macOS) 集成</a></li>
+<li><a href="#73-raycast" class="toc-h3">7.3 与 Raycast 集成</a></li>
+<li><a href="#74-obsidian-web" class="toc-h3">7.4 与 Obsidian Web 扩展集成</a></li>
+<li><a href="#_8" class="toc-h2">八、错误处理</a></li>
+<li><a href="#_9" class="toc-h2">九、安全注意事项</a></li>
+<li><a href="#_10" class="toc-h2">十、参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Obsidian REST API 调用指南</h1>
+                        <div class="article-meta">更新日期: 2026-03-14<br>文档版本: 1.0<br>插件: Local REST API</div>
+                    </header>
+                    <h1 id="obsidian-rest-api">Obsidian REST API 调用指南</h1>
+<blockquote>
+<p>更新日期: 2026-03-14
+文档版本: 1.0
+插件: Local REST API</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一插件概述">插件概述</a></li>
+<li><a href="#二安装配置">安装配置</a></li>
+<li><a href="#三认证方式">认证方式</a></li>
+<li><a href="#四api-端点详解">API 端点详解</a></li>
+<li><a href="#五调用示例">调用示例</a></li>
+<li><a href="#六脚本自动化">脚本自动化</a></li>
+<li><a href="#七与其他工具集成">与其他工具集成</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、插件概述</h2>
+<h3 id="11-local-rest-api">1.1 什么是 Local REST API？</h3>
+<p><strong>Local REST API</strong> 是 Obsidian 的社区插件，为 Obsidian 提供完整的 REST API 接口：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>协议</strong></td>
+<td>HTTPS（自签名证书）</td>
+</tr>
+<tr>
+<td><strong>认证</strong></td>
+<td>API Key</td>
+</tr>
+<tr>
+<td><strong>端口</strong></td>
+<td>默认 27124</td>
+</tr>
+<tr>
+<td><strong>下载量</strong></td>
+<td>260,000+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 能做什么？</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                Local REST API 功能                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📝 笔记操作                                                 │
+│     ├── 读取笔记内容                                         │
+│     ├── 创建新笔记                                           │
+│     ├── 更新笔记内容                                         │
+│     ├── 删除笔记                                             │
+│     └── 追加内容到笔记                                       │
+│                                                             │
+│  📂 文件夹操作                                               │
+│     ├── 列出文件夹内容                                       │
+│     └── 遍历仓库结构                                         │
+│                                                             │
+│  🔄 周期性笔记                                               │
+│     ├── 日记/周记/月记                                       │
+│     └── 按日期操作                                           │
+│                                                             │
+│  🔍 搜索                                                     │
+│     ├── 全文搜索                                             │
+│     └── 简单文本搜索                                         │
+│                                                             │
+│  ⚡ 命令执行                                                 │
+│     ├── 获取命令列表                                         │
+│     └── 执行命令                                             │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_3">二、安装配置</h2>
+<h3 id="21">2.1 安装插件</h3>
+<ol>
+<li>打开 Obsidian 设置 → 第三方插件</li>
+<li>浏览社区插件</li>
+<li>搜索 "Local REST API"</li>
+<li>安装并启用</li>
+</ol>
+<h3 id="22-api-key">2.2 获取 API Key</h3>
+<ol>
+<li>打开设置 → Local REST API</li>
+<li>找到 <strong>API Key</strong> 字段</li>
+<li>复制保存 API Key</li>
+</ol>
+<pre><code>┌─────────────────────────────────────────┐
+│  Local REST API 设置                     │
+├─────────────────────────────────────────┤
+│                                         │
+│  API Key: ***************************** │
+│  [重新生成]                             │
+│                                         │
+│  Host: 127.0.0.1                        │
+│  Port: 27124                            │
+│                                         │
+│  ☑ 启用 HTTPS                           │
+│  ☑ 启用 API                             │
+│                                         │
+└─────────────────────────────────────────┘
+</code></pre>
+<h3 id="23">2.3 证书信任</h3>
+<p>首次使用会生成自签名证书，需要添加信任：</p>
+<p><strong>macOS</strong>:</p>
+<pre><code class="language-bash"># 导出证书
+curl -k https://127.0.0.1:27124/obsidian-local-rest-api.crt -o obsidian.crt
+
+# 添加到钥匙串
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain obsidian.crt
+</code></pre>
+<p><strong>或直接在浏览器访问</strong>:</p>
+<pre><code>https://127.0.0.1:27124/
+</code></pre>
+<p>然后手动信任证书。</p>
+<hr />
+<h2 id="_4">三、认证方式</h2>
+<h3 id="31">3.1 请求头认证</h3>
+<p>所有 API 请求必须携带 API Key：</p>
+<pre><code class="language-bash">curl -X GET https://127.0.0.1:27124/ \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot;
+</code></pre>
+<h3 id="32">3.2 交互式文档认证</h3>
+<p>访问 <code>https://127.0.0.1:27124/</code> 打开 Swagger UI：</p>
+<ol>
+<li>点击 <strong>Authorize</strong> 按钮</li>
+<li>输入 API Key</li>
+<li>点击 Authorize 确认</li>
+</ol>
+<hr />
+<h2 id="api">四、API 端点详解</h2>
+<h3 id="41-url">4.1 基础 URL</h3>
+<pre><code>https://127.0.0.1:27124
+</code></pre>
+<h3 id="42">4.2 系统端点</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/</code></td>
+<td>GET</td>
+<td>获取服务器信息</td>
+</tr>
+<tr>
+<td><code>/openapi.yaml</code></td>
+<td>GET</td>
+<td>获取 OpenAPI 文档</td>
+</tr>
+<tr>
+<td><code>/obsidian-local-rest-api.crt</code></td>
+<td>GET</td>
+<td>获取证书</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43-active">4.3 当前文件端点 (<code>/active</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/active/</code></td>
+<td>GET</td>
+<td>获取当前打开文件的内容</td>
+</tr>
+<tr>
+<td><code>/active/</code></td>
+<td>POST</td>
+<td>追加内容到当前文件</td>
+</tr>
+<tr>
+<td><code>/active/</code></td>
+<td>PUT</td>
+<td>替换当前文件内容</td>
+</tr>
+<tr>
+<td><code>/active/</code></td>
+<td>PATCH</td>
+<td>部分更新当前文件</td>
+</tr>
+<tr>
+<td><code>/active/</code></td>
+<td>DELETE</td>
+<td>删除当前文件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="44-vault">4.4 仓库文件端点 (<code>/vault</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/vault/</code></td>
+<td>GET</td>
+<td>列出根目录文件</td>
+</tr>
+<tr>
+<td><code>/vault/{path}</code></td>
+<td>GET</td>
+<td>获取指定文件内容</td>
+</tr>
+<tr>
+<td><code>/vault/{path}</code></td>
+<td>PUT</td>
+<td>创建或替换文件</td>
+</tr>
+<tr>
+<td><code>/vault/{path}</code></td>
+<td>POST</td>
+<td>追加内容到文件</td>
+</tr>
+<tr>
+<td><code>/vault/{path}</code></td>
+<td>PATCH</td>
+<td>部分更新文件</td>
+</tr>
+<tr>
+<td><code>/vault/{path}</code></td>
+<td>DELETE</td>
+<td>删除文件</td>
+</tr>
+<tr>
+<td><code>/vault/{dir}/</code></td>
+<td>GET</td>
+<td>列出目录内容</td>
+</tr>
+</tbody>
+</table>
+<h3 id="45-periodic">4.5 周期性笔记端点 (<code>/periodic</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/periodic/{period}/</code></td>
+<td>GET</td>
+<td>获取当前周期笔记</td>
+</tr>
+<tr>
+<td><code>/periodic/{period}/</code></td>
+<td>POST</td>
+<td>追加到当前周期笔记</td>
+</tr>
+<tr>
+<td><code>/periodic/{period}/{year}/{month}/{day}/</code></td>
+<td>GET</td>
+<td>获取指定日期笔记</td>
+</tr>
+</tbody>
+</table>
+<p><strong>period 可选值</strong>: <code>daily</code>, <code>weekly</code>, <code>monthly</code>, <code>quarterly</code>, <code>yearly</code></p>
+<h3 id="46-search">4.6 搜索端点 (<code>/search</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/search/</code></td>
+<td>POST</td>
+<td>高级搜索</td>
+</tr>
+<tr>
+<td><code>/search/simple/</code></td>
+<td>POST</td>
+<td>简单文本搜索</td>
+</tr>
+</tbody>
+</table>
+<h3 id="47-commands">4.7 命令端点 (<code>/commands</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/commands/</code></td>
+<td>GET</td>
+<td>获取所有可用命令</td>
+</tr>
+<tr>
+<td><code>/commands/{commandId}/</code></td>
+<td>POST</td>
+<td>执行指定命令</td>
+</tr>
+</tbody>
+</table>
+<h3 id="48-open">4.8 打开文件端点 (<code>/open</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>端点</th>
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/open/{filename}</code></td>
+<td>POST</td>
+<td>在 Obsidian 中打开文件</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">五、调用示例</h2>
+<h3 id="51">5.1 获取服务器信息</h3>
+<pre><code class="language-bash">curl -X GET https://127.0.0.1:27124/ \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+</code></pre>
+<p><strong>响应</strong>:</p>
+<pre><code class="language-json">{
+  &quot;obsidianVersion&quot;: &quot;1.5.0&quot;,
+  &quot;pluginVersion&quot;: &quot;3.4.6&quot;
+}
+</code></pre>
+<h3 id="52">5.2 创建新笔记</h3>
+<pre><code class="language-bash">curl -X PUT &quot;https://127.0.0.1:27124/vault/Notes/NewNote.md&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: text/markdown&quot; \
+  -k \
+  -d &quot;# 新笔记
+
+这是通过 API 创建的笔记内容。
+
+## 标题二
+
+更多内容...&quot;
+</code></pre>
+<h3 id="53">5.3 读取笔记内容</h3>
+<pre><code class="language-bash">curl -X GET &quot;https://127.0.0.1:27124/vault/Notes/NewNote.md&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+</code></pre>
+<p><strong>响应</strong>:</p>
+<pre><code class="language-markdown"># 新笔记
+
+这是通过 API 创建的笔记内容。
+
+## 标题二
+
+更多内容...
+</code></pre>
+<h3 id="54">5.4 追加内容到笔记</h3>
+<pre><code class="language-bash">curl -X POST &quot;https://127.0.0.1:27124/vault/Notes/NewNote.md&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: text/markdown&quot; \
+  -k \
+  -d &quot;
+
+## 追加的内容
+
+这部分是通过 POST 请求追加的。&quot;
+</code></pre>
+<h3 id="55-patch">5.5 部分更新笔记 (PATCH)</h3>
+<pre><code class="language-bash"># 在指定位置插入内容
+curl -X PATCH &quot;https://127.0.0.1:27124/vault/Notes/NewNote.md&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -k \
+  -d '{
+    &quot;operation&quot;: &quot;append&quot;,
+    &quot;target&quot;: &quot;heading&quot;,
+    &quot;targetValue&quot;: &quot;标题二&quot;,
+    &quot;content&quot;: &quot;\n这是插入到标题二下方的内容&quot;
+  }'
+</code></pre>
+<h3 id="56">5.6 列出目录内容</h3>
+<pre><code class="language-bash">curl -X GET &quot;https://127.0.0.1:27124/vault/Notes/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+</code></pre>
+<p><strong>响应</strong>:</p>
+<pre><code class="language-json">{
+  &quot;files&quot;: [
+    &quot;NewNote.md&quot;,
+    &quot;AnotherNote.md&quot;
+  ],
+  &quot;folders&quot;: [
+    &quot;SubFolder&quot;
+  ]
+}
+</code></pre>
+<h3 id="57">5.7 搜索笔记</h3>
+<pre><code class="language-bash"># 简单搜索
+curl -X POST &quot;https://127.0.0.1:27124/search/simple/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -k \
+  -d '{
+    &quot;query&quot;: &quot;关键词&quot;
+  }'
+</code></pre>
+<pre><code class="language-bash"># 高级搜索
+curl -X POST &quot;https://127.0.0.1:27124/search/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: application/json&quot; \
+  -k \
+  -d '{
+    &quot;query&quot;: &quot;tag:#工作&quot;,
+    &quot;contextLength&quot;: 100
+  }'
+</code></pre>
+<h3 id="58">5.8 获取周期性笔记</h3>
+<pre><code class="language-bash"># 获取今日日记
+curl -X GET &quot;https://127.0.0.1:27124/periodic/daily/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+
+# 获取指定日期日记
+curl -X GET &quot;https://127.0.0.1:27124/periodic/daily/2026/03/14/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+</code></pre>
+<h3 id="59">5.9 追加到今日日记</h3>
+<pre><code class="language-bash">curl -X POST &quot;https://127.0.0.1:27124/periodic/daily/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -H &quot;Content-Type: text/markdown&quot; \
+  -k \
+  -d &quot;
+
+## 14:30 会议记录
+
+- 讨论了项目进度
+- 下周需要完成原型
+&quot;
+</code></pre>
+<h3 id="510">5.10 执行命令</h3>
+<pre><code class="language-bash"># 获取命令列表
+curl -X GET &quot;https://127.0.0.1:27124/commands/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+
+# 执行命令
+curl -X POST &quot;https://127.0.0.1:27124/commands/editor:save-file/&quot; \
+  -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \
+  -k
+</code></pre>
+<hr />
+<h2 id="_6">六、脚本自动化</h2>
+<h3 id="61-python">6.1 Python 脚本示例</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+Obsidian REST API Python 客户端
+&quot;&quot;&quot;
+
+import requests
+from datetime import datetime
+
+class ObsidianClient:
+    def __init__(self, api_key: str, host: str = &quot;127.0.0.1&quot;, port: int = 27124):
+        self.base_url = f&quot;https://{host}:{port}&quot;
+        self.headers = {&quot;Authorization&quot;: f&quot;Bearer {api_key}&quot;}
+        self.verify = False  # 自签名证书
+
+    def _request(self, method: str, endpoint: str, **kwargs):
+        url = f&quot;{self.base_url}{endpoint}&quot;
+        kwargs[&quot;headers&quot;] = {**self.headers, **kwargs.get(&quot;headers&quot;, {})}
+        kwargs[&quot;verify&quot;] = self.verify
+        response = requests.request(method, url, **kwargs)
+        response.raise_for_status()
+        return response
+
+    def get_note(self, path: str) -&gt; str:
+        &quot;&quot;&quot;读取笔记内容&quot;&quot;&quot;
+        response = self._request(&quot;GET&quot;, f&quot;/vault/{path}&quot;)
+        return response.text
+
+    def create_note(self, path: str, content: str) -&gt; bool:
+        &quot;&quot;&quot;创建或更新笔记&quot;&quot;&quot;
+        self._request(&quot;PUT&quot;, f&quot;/vault/{path}&quot;,
+                     headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                     data=content)
+        return True
+
+    def append_note(self, path: str, content: str) -&gt; bool:
+        &quot;&quot;&quot;追加内容到笔记&quot;&quot;&quot;
+        self._request(&quot;POST&quot;, f&quot;/vault/{path}&quot;,
+                     headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                     data=content)
+        return True
+
+    def append_daily(self, content: str) -&gt; bool:
+        &quot;&quot;&quot;追加到今日日记&quot;&quot;&quot;
+        self._request(&quot;POST&quot;, &quot;/periodic/daily/&quot;,
+                     headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                     data=content)
+        return True
+
+    def search(self, query: str) -&gt; list:
+        &quot;&quot;&quot;搜索笔记&quot;&quot;&quot;
+        response = self._request(&quot;POST&quot;, &quot;/search/simple/&quot;,
+                     json={&quot;query&quot;: query})
+        return response.json()
+
+    def list_directory(self, path: str = &quot;&quot;) -&gt; dict:
+        &quot;&quot;&quot;列出目录内容&quot;&quot;&quot;
+        endpoint = f&quot;/vault/{path}/&quot; if path else &quot;/vault/&quot;
+        response = self._request(&quot;GET&quot;, endpoint)
+        return response.json()
+
+
+# 使用示例
+if __name__ == &quot;__main__&quot;:
+    # 初始化客户端
+    client = ObsidianClient(api_key=&quot;YOUR_API_KEY&quot;)
+
+    # 创建新笔记
+    client.create_note(&quot;Notes/API测试.md&quot;, f&quot;&quot;&quot;# API 测试笔记
+
+创建时间: {datetime.now().strftime(&quot;%Y-%m-%d %H:%M:%S&quot;)}
+
+这是一个通过 Python 脚本创建的笔记。
+&quot;&quot;&quot;)
+
+    # 追加到今日日记
+    client.append_daily(f&quot;&quot;&quot;
+## {datetime.now().strftime(&quot;%H:%M&quot;)} 自动记录
+
+- 完成了 API 测试
+- 创建了测试笔记
+&quot;&quot;&quot;)
+
+    # 搜索笔记
+    results = client.search(&quot;API&quot;)
+    print(f&quot;找到 {len(results)} 条结果&quot;)
+</code></pre>
+<h3 id="62-shell">6.2 Shell 脚本示例</h3>
+<pre><code class="language-bash">#!/bin/bash
+# obsidian-cli.sh - Obsidian REST API 命令行工具
+
+API_KEY=&quot;YOUR_API_KEY&quot;
+BASE_URL=&quot;https://127.0.0.1:27124&quot;
+
+# 通用请求函数
+obs_request() {
+    local method=$1
+    local endpoint=$2
+    local data=$3
+    local content_type=${4:-&quot;application/json&quot;}
+
+    curl -X &quot;$method&quot; &quot;$BASE_URL$endpoint&quot; \
+        -H &quot;Authorization: Bearer $API_KEY&quot; \
+        -H &quot;Content-Type: $content_type&quot; \
+        -k \
+        ${data:+-d &quot;$data&quot;}
+}
+
+# 创建笔记
+create_note() {
+    local path=$1
+    local content=$2
+    obs_request &quot;PUT&quot; &quot;/vault/$path&quot; &quot;$content&quot; &quot;text/markdown&quot;
+}
+
+# 读取笔记
+read_note() {
+    local path=$1
+    obs_request &quot;GET&quot; &quot;/vault/$path&quot;
+}
+
+# 追加到日记
+append_daily() {
+    local content=$1
+    obs_request &quot;POST&quot; &quot;/periodic/daily/&quot; &quot;$content&quot; &quot;text/markdown&quot;
+}
+
+# 搜索
+search() {
+    local query=$1
+    obs_request &quot;POST&quot; &quot;/search/simple/&quot; &quot;{\&quot;query\&quot;:\&quot;$query\&quot;}&quot;
+}
+
+# 命令行入口
+case &quot;$1&quot; in
+    create)
+        create_note &quot;$2&quot; &quot;$3&quot;
+        ;;
+    read)
+        read_note &quot;$2&quot;
+        ;;
+    daily)
+        append_daily &quot;$2&quot;
+        ;;
+    search)
+        search &quot;$2&quot;
+        ;;
+    *)
+        echo &quot;用法: $0 {create|read|daily|search} ...&quot;
+        ;;
+esac
+</code></pre>
+<h3 id="63-nodejs">6.3 Node.js 脚本示例</h3>
+<pre><code class="language-javascript">// obsidian-client.js
+const axios = require('axios');
+const https = require('https');
+
+class ObsidianClient {
+    constructor(apiKey, host = '127.0.0.1', port = 27124) {
+        this.client = axios.create({
+            baseURL: `https://${host}:${port}`,
+            headers: { 'Authorization': `Bearer ${apiKey}` },
+            httpsAgent: new https.Agent({ rejectUnauthorized: false })
+        });
+    }
+
+    // 创建笔记
+    async createNote(path, content) {
+        await this.client.put(`/vault/${path}`, content, {
+            headers: { 'Content-Type': 'text/markdown' }
+        });
+    }
+
+    // 读取笔记
+    async getNote(path) {
+        const response = await this.client.get(`/vault/${path}`);
+        return response.data;
+    }
+
+    // 追加到日记
+    async appendDaily(content) {
+        await this.client.post('/periodic/daily/', content, {
+            headers: { 'Content-Type': 'text/markdown' }
+        });
+    }
+
+    // 搜索
+    async search(query) {
+        const response = await this.client.post('/search/simple/', { query });
+        return response.data;
+    }
+}
+
+module.exports = ObsidianClient;
+</code></pre>
+<hr />
+<h2 id="_7">七、与其他工具集成</h2>
+<h3 id="71-claude-code">7.1 与 Claude Code 集成</h3>
+<pre><code class="language-markdown"># 在 Claude Code 中使用
+
+1. 创建 MCP 服务器配置:
+
+{
+  &quot;obsidian&quot;: {
+    &quot;command&quot;: &quot;node&quot;,
+    &quot;args&quot;: [&quot;/path/to/obsidian-mcp-server.js&quot;],
+    &quot;env&quot;: {
+      &quot;OBSIDIAN_API_KEY&quot;: &quot;your-api-key&quot;,
+      &quot;OBSIDIAN_PORT&quot;: &quot;27124&quot;
+    }
+  }
+}
+
+2. Claude Code 可以直接读写你的 Obsidian 笔记
+</code></pre>
+<h3 id="72-shortcuts-macos">7.2 与 Shortcuts (macOS) 集成</h3>
+<pre><code>创建快捷指令:
+1. 获取剪贴板内容
+2. 请求 REST API (POST /periodic/daily/)
+3. 显示确认通知
+</code></pre>
+<h3 id="73-raycast">7.3 与 Raycast 集成</h3>
+<pre><code class="language-javascript">// Raycast Extension
+import { showToast, Toast } from &quot;@raycast/api&quot;;
+
+export default async function AppendToDaily() {
+    const content = &quot;## 自动记录\n\n来自 Raycast&quot;;
+
+    await fetch(&quot;https://127.0.0.1:27124/periodic/daily/&quot;, {
+        method: &quot;POST&quot;,
+        headers: {
+            &quot;Authorization&quot;: &quot;Bearer YOUR_API_KEY&quot;,
+            &quot;Content-Type&quot;: &quot;text/markdown&quot;
+        },
+        body: content
+    });
+
+    showToast(Toast.Style.Success, &quot;已追加到日记&quot;);
+}
+</code></pre>
+<h3 id="74-obsidian-web">7.4 与 Obsidian Web 扩展集成</h3>
+<p><strong>Obsidian Web</strong> 是配套的浏览器扩展：</p>
+<ol>
+<li>安装 <a href="https://github.com/coddingtonbear/obsidian-web">Obsidian Web</a></li>
+<li>配置 API Key</li>
+<li>在浏览器中一键保存网页到 Obsidian</li>
+</ol>
+<hr />
+<h2 id="_8">八、错误处理</h2>
+<table>
+<thead>
+<tr>
+<th>HTTP 状态码</th>
+<th>说明</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>200</td>
+<td>成功</td>
+<td>-</td>
+</tr>
+<tr>
+<td>400</td>
+<td>请求格式错误</td>
+<td>检查请求参数</td>
+</tr>
+<tr>
+<td>401</td>
+<td>认证失败</td>
+<td>检查 API Key</td>
+</tr>
+<tr>
+<td>404</td>
+<td>文件不存在</td>
+<td>检查文件路径</td>
+</tr>
+<tr>
+<td>500</td>
+<td>服务器错误</td>
+<td>检查 Obsidian 状态</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_9">九、安全注意事项</h2>
+<ol>
+<li><strong>API Key 保密</strong></li>
+<li>不要将 API Key 提交到版本控制</li>
+<li>
+<p>定期重新生成 API Key</p>
+</li>
+<li>
+<p><strong>网络限制</strong></p>
+</li>
+<li>默认仅监听 127.0.0.1</li>
+<li>
+<p>如需远程访问，使用 VPN 或 SSH 隧道</p>
+</li>
+<li>
+<p><strong>证书管理</strong></p>
+</li>
+<li>自签名证书需要手动信任</li>
+<li>生产环境建议使用正式证书</li>
+</ol>
+<hr />
+<h2 id="_10">十、参考资源</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/coddingtonbear/obsidian-local-rest-api</li>
+<li><strong>交互式文档</strong>: https://coddingtonbear.github.io/obsidian-local-rest-api/</li>
+<li><strong>插件市场</strong>: https://obsidian.md/plugins?id=obsidian-local-rest-api</li>
+</ul>
+<hr />
+<p><em>文档生成时间: 2026-03-14</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

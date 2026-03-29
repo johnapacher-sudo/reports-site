@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiroFish 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始掌握 MiroFish 群体智能预测引擎 | 教程日期：2026-03-17</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13" class="toc-h3">1.3 安装步骤</a></li>
+<li><a href="#docker" class="toc-h4">方式一：Docker 部署（推荐）</a></li>
+<li><a href="#_3" class="toc-h4">方式二：手动安装</a></li>
+<li><a href="#14" class="toc-h3">1.4 环境变量配置</a></li>
+<li><a href="#15" class="toc-h3">1.5 验证安装</a></li>
+<li><a href="#_4" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21-hello-world" class="toc-h3">2.1 Hello World：创建第一个模拟</a></li>
+<li><a href="#22-web" class="toc-h3">2.2 通过 Web 界面使用</a></li>
+<li><a href="#_5" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31" class="toc-h3">3.1 概念图谱</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心概念详解</a></li>
+<li><a href="#simulation" class="toc-h4">Simulation (模拟)</a></li>
+<li><a href="#environment" class="toc-h4">Environment (环境)</a></li>
+<li><a href="#agent" class="toc-h4">Agent (智能体)</a></li>
+<li><a href="#event" class="toc-h4">Event (事件)</a></li>
+<li><a href="#33" class="toc-h3">3.3 术语表</a></li>
+<li><a href="#_6" class="toc-h2">四、功能详解</a></li>
+<li><a href="#41-agent" class="toc-h3">4.1 Agent 人设生成</a></li>
+<li><a href="#_7" class="toc-h4">功能概述</a></li>
+<li><a href="#_8" class="toc-h4">原理说明</a></li>
+<li><a href="#_9" class="toc-h4">基础用法</a></li>
+<li><a href="#_10" class="toc-h4">进阶用法</a></li>
+<li><a href="#42-graphrag" class="toc-h3">4.2 GraphRAG 知识注入</a></li>
+<li><a href="#_11" class="toc-h4">功能概述</a></li>
+<li><a href="#_12" class="toc-h4">原理说明</a></li>
+<li><a href="#_13" class="toc-h4">基础用法</a></li>
+<li><a href="#_14" class="toc-h4">进阶用法</a></li>
+<li><a href="#43" class="toc-h3">4.3 社交网络构建</a></li>
+<li><a href="#_15" class="toc-h4">功能概述</a></li>
+<li><a href="#_16" class="toc-h4">原理说明</a></li>
+<li><a href="#_17" class="toc-h4">基础用法</a></li>
+<li><a href="#_18" class="toc-h4">进阶用法</a></li>
+<li><a href="#44" class="toc-h3">4.4 模拟运行与控制</a></li>
+<li><a href="#_19" class="toc-h4">功能概述</a></li>
+<li><a href="#_20" class="toc-h4">基础用法</a></li>
+<li><a href="#_21" class="toc-h4">进阶用法</a></li>
+<li><a href="#45" class="toc-h3">4.5 结果分析与报告</a></li>
+<li><a href="#_22" class="toc-h4">功能概述</a></li>
+<li><a href="#_23" class="toc-h4">基础用法</a></li>
+<li><a href="#_24" class="toc-h4">进阶用法</a></li>
+<li><a href="#_25" class="toc-h2">五、实战案例</a></li>
+<li><a href="#51" class="toc-h3">5.1 案例：新品发布舆情预测</a></li>
+<li><a href="#52" class="toc-h3">5.2 案例：危机公关模拟</a></li>
+<li><a href="#_26" class="toc-h2">六、进阶主题</a></li>
+<li><a href="#61" class="toc-h3">6.1 性能优化</a></li>
+<li><a href="#_27" class="toc-h4">批量推理</a></li>
+<li><a href="#_28" class="toc-h4">分布式部署</a></li>
+<li><a href="#62-agent" class="toc-h3">6.2 自定义 Agent 行为</a></li>
+<li><a href="#63" class="toc-h3">6.3 与外部系统集成</a></li>
+<li><a href="#64" class="toc-h3">6.4 监控和日志</a></li>
+<li><a href="#_29" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1" class="toc-h3">Q1: 模拟速度太慢怎么办？</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 如何确保模拟的可复现性？</a></li>
+<li><a href="#q3-graphrag" class="toc-h3">Q3: GraphRAG 注入失败怎么办？</a></li>
+<li><a href="#q4" class="toc-h3">Q4: 如何处理中文语料？</a></li>
+<li><a href="#q5" class="toc-h3">Q5: 内存不足怎么办？</a></li>
+<li><a href="#_30" class="toc-h2">八、参考资料</a></li>
+<li><a href="#_31" class="toc-h3">官方资源</a></li>
+<li><a href="#_32" class="toc-h3">学术论文</a></li>
+<li><a href="#_33" class="toc-h3">相关技术</a></li>
+<li><a href="#_34" class="toc-h2">学习路线图</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>MiroFish 学习教程</h1>
+                        <div class="article-meta">从零开始掌握 MiroFish 群体智能预测引擎<br>教程日期：2026-03-17</div>
+                    </header>
+                    <h1 id="mirofish">MiroFish 学习教程</h1>
+<blockquote>
+<p>从零开始掌握 MiroFish 群体智能预测引擎</p>
+<p>教程日期：2026-03-17</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四功能详解">功能详解</a></li>
+<li><a href="#五实战案例">实战案例</a></li>
+<li><a href="#六进阶主题">进阶主题</a></li>
+<li><a href="#七常见问题">常见问题</a></li>
+<li><a href="#八参考资料">参考资料</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 MiroFish 前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 编程</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>后端核心语言</td>
+</tr>
+<tr>
+<td>JavaScript/React</td>
+<td>⭐⭐⭐⭐</td>
+<td>前端界面开发</td>
+</tr>
+<tr>
+<td>LLM 基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>理解 Agent 行为</td>
+</tr>
+<tr>
+<td>图数据库</td>
+<td>⭐⭐⭐</td>
+<td>GraphRAG 知识存储</td>
+</tr>
+<tr>
+<td>社交网络分析</td>
+<td>⭐⭐⭐</td>
+<td>理解模拟场景</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>硬件要求：
+├── CPU: 8 核以上 (推荐 16 核)
+├── 内存: 32GB 以上 (推荐 64GB)
+├── 存储: 100GB SSD
+└── GPU: 可选 (加速 LLM 推理)
+
+软件要求：
+├── 操作系统: Linux / macOS
+├── Docker: 用于快速部署
+├── Node.js: 18+
+└── Python: 3.11-3.12
+</code></pre>
+<h3 id="13">1.3 安装步骤</h3>
+<h4 id="docker">方式一：Docker 部署（推荐）</h4>
+<pre><code class="language-bash"># 1. 克隆仓库
+git clone https://github.com/666ghj/MiroFish.git
+cd MiroFish
+
+# 2. 配置环境变量
+cp .env.example .env
+# 编辑 .env，填入必要配置
+
+# 3. 启动所有服务
+docker-compose up -d
+
+# 4. 查看日志
+docker-compose logs -f
+</code></pre>
+<h4 id="_3">方式二：手动安装</h4>
+<pre><code class="language-bash"># 1. 安装 Python 包管理器 uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 2. 克隆仓库
+git clone https://github.com/666ghj/MiroFish.git
+cd MiroFish
+
+# 3. 安装后端依赖
+cd backend
+uv venv
+source .venv/bin/activate  # Linux/macOS
+uv pip install -r requirements.txt
+
+# 4. 安装前端依赖
+cd ../frontend
+npm install
+
+# 5. 配置环境变量
+cp ../.env.example ../.env
+# 编辑 .env 文件
+</code></pre>
+<h3 id="14">1.4 环境变量配置</h3>
+<pre><code class="language-bash"># .env 文件示例
+
+# ===== LLM 配置 =====
+OPENAI_API_KEY=sk-xxx
+OPENAI_BASE_URL=https://api.openai.com/v1  # 可选，用于代理
+
+# ===== 数据库配置 =====
+REDIS_URL=redis://localhost:6379/0
+MONGODB_URL=mongodb://localhost:27017/mirofish
+NEO4J_URL=bolt://localhost:7687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=password
+
+# ===== 服务配置 =====
+API_HOST=0.0.0.0
+API_PORT=8000
+FRONTEND_PORT=3000
+
+# ===== 模拟配置 =====
+MAX_AGENTS=10000
+DEFAULT_TIME_STEP=3600
+</code></pre>
+<h3 id="15">1.5 验证安装</h3>
+<pre><code class="language-bash"># 检查后端服务
+curl http://localhost:8000/health
+
+# 预期输出
+{&quot;status&quot;: &quot;healthy&quot;, &quot;version&quot;: &quot;1.0.0&quot;}
+
+# 检查前端服务
+curl http://localhost:3000
+
+# 预期输出
+&lt;!DOCTYPE html&gt;...
+</code></pre>
+<hr />
+<h2 id="_4">二、快速开始</h2>
+<h3 id="21-hello-world">2.1 Hello World：创建第一个模拟</h3>
+<pre><code class="language-python"># examples/01_hello_world.py
+
+from mirofish import Simulation, Agent, Environment
+
+# 1. 创建环境
+env = Environment(
+    name=&quot;hello_world&quot;,
+    platform=&quot;weibo&quot;  # 模拟微博平台
+)
+
+# 2. 创建 Agent
+agents = []
+for i in range(10):
+    agent = Agent(
+        id=f&quot;agent_{i}&quot;,
+        profile={
+            &quot;name&quot;: f&quot;用户{i}&quot;,
+            &quot;age&quot;: 20 + i * 3,
+            &quot;interests&quot;: [&quot;科技&quot;, &quot;游戏&quot;]
+        }
+    )
+    agents.append(agent)
+
+# 3. 添加 Agent 到环境
+env.add_agents(agents)
+
+# 4. 创建模拟
+sim = Simulation(
+    environment=env,
+    duration=7,  # 模拟 7 天
+    time_step=3600  # 每小时一步
+)
+
+# 5. 注入初始事件
+sim.inject_event(
+    content=&quot;今天发布了一款革命性的 AI 产品！&quot;,
+    source=&quot;agent_0&quot;
+)
+
+# 6. 运行模拟
+results = sim.run()
+
+# 7. 查看结果
+print(f&quot;总互动数: {results.total_interactions}&quot;)
+print(f&quot;传播范围: {results.reach}&quot;)
+print(f&quot;情感分布: {results.sentiment}&quot;)
+</code></pre>
+<h3 id="22-web">2.2 通过 Web 界面使用</h3>
+<ol>
+<li>访问 <code>http://localhost:3000</code></li>
+<li>点击「新建模拟」</li>
+<li>配置模拟参数</li>
+<li>点击「开始模拟」</li>
+<li>查看实时可视化结果</li>
+</ol>
+<hr />
+<h2 id="_5">三、核心概念</h2>
+<h3 id="31">3.1 概念图谱</h3>
+<pre><code>                        ┌─────────────────┐
+                        │   Simulation    │
+                        │    (模拟)        │
+                        └────────┬────────┘
+                                 │
+            ┌────────────────────┼────────────────────┐
+            │                    │                    │
+            ▼                    ▼                    ▼
+    ┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+    │  Environment  │    │     Agent     │    │    Event      │
+    │   (环境)       │    │   (智能体)    │    │   (事件)       │
+    └───────────────┘    └───────────────┘    └───────────────┘
+            │                    │                    │
+            │            ┌───────┴───────┐            │
+            │            │               │            │
+            ▼            ▼               ▼            ▼
+    ┌───────────────┐ ┌───────┐   ┌───────────┐ ┌───────────┐
+    │   Platform    │ │Profile│   │Personality│ │  Content  │
+    │   (平台)       │ │ (画像) │   │  (人格)   │ │  (内容)   │
+    └───────────────┘ └───────┘   └───────────┘ └───────────┘
+</code></pre>
+<h3 id="32">3.2 核心概念详解</h3>
+<h4 id="simulation">Simulation (模拟)</h4>
+<p>模拟是 MiroFish 的顶层概念，代表一次完整的模拟实验。</p>
+<pre><code class="language-python">class Simulation:
+    &quot;&quot;&quot;
+    模拟配置：
+    - environment: 模拟环境
+    - duration: 模拟时长（虚拟天数）
+    - time_step: 时间步长（秒）
+    - seed: 随机种子（可复现）
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        environment: Environment,
+        duration: int = 30,
+        time_step: int = 3600,
+        seed: int = None
+    ):
+        pass
+
+    def run(self) -&gt; SimulationResult:
+        &quot;&quot;&quot;运行模拟，返回结果&quot;&quot;&quot;
+        pass
+
+    def pause(self):
+        &quot;&quot;&quot;暂停模拟&quot;&quot;&quot;
+        pass
+
+    def resume(self):
+        &quot;&quot;&quot;恢复模拟&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="environment">Environment (环境)</h4>
+<p>环境定义了 Agent 生活的数字世界。</p>
+<pre><code class="language-python">class Environment:
+    &quot;&quot;&quot;
+    环境属性：
+    - name: 环境名称
+    - platform: 平台类型 (weibo/twitter/reddit)
+    - agents: Agent 列表
+    - social_graph: 社交图谱
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        name: str,
+        platform: str = &quot;weibo&quot;
+    ):
+        pass
+
+    def add_agents(self, agents: List[Agent]):
+        &quot;&quot;&quot;添加 Agent 到环境&quot;&quot;&quot;
+        pass
+
+    def get_feed(self, agent_id: str) -&gt; List[Content]:
+        &quot;&quot;&quot;获取 Agent 的信息流&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="agent">Agent (智能体)</h4>
+<p>Agent 是模拟中的个体，具有独立的人格和行为。</p>
+<pre><code class="language-python">class Agent:
+    &quot;&quot;&quot;
+    Agent 组成：
+    - id: 唯一标识
+    - profile: 人口统计画像
+    - personality: 人格特征 (大五人格)
+    - memory: 记忆系统 (GraphRAG)
+    - state: 当前状态
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        id: str,
+        profile: dict,
+        personality: dict = None,
+        memory: Memory = None
+    ):
+        pass
+
+    def observe(self, environment) -&gt; Observation:
+        &quot;&quot;&quot;观察环境，获取信息&quot;&quot;&quot;
+        pass
+
+    def decide(self, observation) -&gt; Decision:
+        &quot;&quot;&quot;基于观察做出决策&quot;&quot;&quot;
+        pass
+
+    def act(self, decision) -&gt; Action:
+        &quot;&quot;&quot;执行决策，生成行为&quot;&quot;&quot;
+        pass
+</code></pre>
+<h4 id="event">Event (事件)</h4>
+<p>事件是注入到模拟中的外部刺激。</p>
+<pre><code class="language-python">class Event:
+    &quot;&quot;&quot;
+    事件类型：
+    - POST: 发布内容
+    - TREND: 热门话题
+    - NEWS: 新闻事件
+    - POLICY: 政策变化
+    &quot;&quot;&quot;
+    def __init__(
+        self,
+        type: str,
+        content: str,
+        source: str,
+        timestamp: datetime = None
+    ):
+        pass
+</code></pre>
+<h3 id="33">3.3 术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>英文</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>智能体</td>
+<td>Agent</td>
+<td>模拟中的个体，具有独立人格和行为</td>
+</tr>
+<tr>
+<td>环境</td>
+<td>Environment</td>
+<td>Agent 生活的数字世界</td>
+</tr>
+<tr>
+<td>模拟</td>
+<td>Simulation</td>
+<td>一次完整的模拟实验</td>
+</tr>
+<tr>
+<td>人设</td>
+<td>Profile</td>
+<td>Agent 的人口统计信息</td>
+</tr>
+<tr>
+<td>人格</td>
+<td>Personality</td>
+<td>Agent 的心理特征（大五人格）</td>
+</tr>
+<tr>
+<td>记忆</td>
+<td>Memory</td>
+<td>Agent 的知识库和经验</td>
+</tr>
+<tr>
+<td>信息流</td>
+<td>Feed</td>
+<td>Agent 看到的内容列表</td>
+</tr>
+<tr>
+<td>事件</td>
+<td>Event</td>
+<td>注入模拟的外部刺激</td>
+</tr>
+<tr>
+<td>社交图谱</td>
+<td>Social Graph</td>
+<td>Agent 之间的关系网络</td>
+</tr>
+<tr>
+<td>时间步</td>
+<td>Time Step</td>
+<td>模拟的最小时间单位</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">四、功能详解</h2>
+<h3 id="41-agent">4.1 Agent 人设生成</h3>
+<h4 id="_7">功能概述</h4>
+<p>MiroFish 支持基于真实数据生成 Agent 人设，确保模拟的真实性。</p>
+<h4 id="_8">原理说明</h4>
+<pre><code>人设生成流程：
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  人口数据    │ --&gt; │  采样策略    │ --&gt; │  人设模板    │
+│  (统计)     │     │  (分层)      │     │  (LLM生成)  │
+└─────────────┘     └─────────────┘     └─────────────┘
+</code></pre>
+<h4 id="_9">基础用法</h4>
+<pre><code class="language-python">from mirofish import AgentGenerator
+
+# 创建人设生成器
+generator = AgentGenerator(
+    population_data=&quot;data/china_population.json&quot;,
+    llm_model=&quot;gpt-4-turbo&quot;
+)
+
+# 生成单个 Agent
+agent = generator.generate(
+    demographics={
+        &quot;age_range&quot;: (25, 35),
+        &quot;gender&quot;: &quot;female&quot;,
+        &quot;city&quot;: &quot;北京&quot;
+    }
+)
+
+print(agent.profile)
+# {
+#     &quot;name&quot;: &quot;李明&quot;,
+#     &quot;age&quot;: 28,
+#     &quot;gender&quot;: &quot;female&quot;,
+#     &quot;occupation&quot;: &quot;产品经理&quot;,
+#     &quot;education&quot;: &quot;硕士&quot;,
+#     &quot;interests&quot;: [&quot;科技&quot;, &quot;阅读&quot;, &quot;健身&quot;]
+# }
+
+# 批量生成 Agent
+agents = generator.batch_generate(
+    count=1000,
+    distribution={
+        &quot;age&quot;: &quot;realistic&quot;,  # 按真实人口分布
+        &quot;gender&quot;: &quot;balanced&quot;,
+        &quot;region&quot;: &quot;weighted&quot;
+    }
+)
+</code></pre>
+<h4 id="_10">进阶用法</h4>
+<pre><code class="language-python"># 自定义人格模板
+personality_template = &quot;&quot;&quot;
+你是一个{age}岁的{occupation}，居住在{city}。
+你的兴趣是{interests}。
+你的性格特点：{traits}
+请生成一个符合以上特征的社交媒体用户画像。
+&quot;&quot;&quot;
+
+# 使用自定义模板
+agent = generator.generate(
+    template=personality_template,
+    variables={
+        &quot;age&quot;: 30,
+        &quot;occupation&quot;: &quot;软件工程师&quot;,
+        &quot;city&quot;: &quot;深圳&quot;,
+        &quot;interests&quot;: &quot;编程、游戏、咖啡&quot;,
+        &quot;traits&quot;: &quot;理性、好奇、幽默&quot;
+    }
+)
+
+# 注入领域知识
+agent = generator.generate_with_knowledge(
+    demographics={&quot;age&quot;: 25, &quot;city&quot;: &quot;上海&quot;},
+    knowledge_base=&quot;data/tech_industry.json&quot;
+)
+</code></pre>
+<h3 id="42-graphrag">4.2 GraphRAG 知识注入</h3>
+<h4 id="_11">功能概述</h4>
+<p>将领域知识注入到 Agent 的记忆系统中，使其具备专业知识背景。</p>
+<h4 id="_12">原理说明</h4>
+<pre><code>GraphRAG 注入流程：
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  知识文档    │ --&gt; │  实体抽取    │ --&gt; │  关系抽取    │
+└─────────────┘     └─────────────┘     └─────────────┘
+                                              │
+                                              ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│  Agent 记忆  │ &lt;-- │  向量嵌入    │ &lt;-- │  知识图谱    │
+└─────────────┘     └─────────────┘     └─────────────┘
+</code></pre>
+<h4 id="_13">基础用法</h4>
+<pre><code class="language-python">from mirofish import KnowledgeInjector
+
+# 创建知识注入器
+injector = KnowledgeInjector(
+    graph_db=&quot;neo4j://localhost:7687&quot;,
+    embedding_model=&quot;text-embedding-3-small&quot;
+)
+
+# 从文档注入知识
+injector.inject_from_documents(
+    documents=[&quot;data/news_1.txt&quot;, &quot;data/news_2.txt&quot;],
+    agent_ids=[&quot;agent_0&quot;, &quot;agent_1&quot;]
+)
+
+# 从 URL 注入知识
+injector.inject_from_url(
+    url=&quot;https://example.com/article&quot;,
+    agent_ids=[&quot;agent_0&quot;]
+)
+</code></pre>
+<h4 id="_14">进阶用法</h4>
+<pre><code class="language-python"># 批量知识注入
+injector.batch_inject(
+    knowledge_base={
+        &quot;tech_news&quot;: [&quot;news1.txt&quot;, &quot;news2.txt&quot;],
+        &quot;product_info&quot;: [&quot;product.md&quot;],
+        &quot;user_reviews&quot;: [&quot;reviews.json&quot;]
+    },
+    distribution={
+        &quot;tech_news&quot;: 0.8,      # 80% 的 Agent 看到科技新闻
+        &quot;product_info&quot;: 1.0,   # 所有 Agent 了解产品信息
+        &quot;user_reviews&quot;: 0.3    # 30% 的 Agent 看到用户评价
+    }
+)
+
+# 动态知识更新
+@sim.on_time_step
+def update_knowledge(sim, step):
+    &quot;&quot;&quot;每个时间步更新知识&quot;&quot;&quot;
+    new_events = fetch_latest_news()
+    injector.inject_from_events(new_events)
+</code></pre>
+<h3 id="43">4.3 社交网络构建</h3>
+<h4 id="_15">功能概述</h4>
+<p>构建 Agent 之间的社交关系网络，模拟真实的社交结构。</p>
+<h4 id="_16">原理说明</h4>
+<pre><code>社交网络模型：
+├── 随机网络 (Erdos-Renyi)
+├── 小世界网络 (Watts-Strogatz)
+├── 无标度网络 (Barabasi-Albert)  ← 默认
+└── 真实网络导入
+</code></pre>
+<h4 id="_17">基础用法</h4>
+<pre><code class="language-python">from mirofish import SocialGraphBuilder
+
+# 创建社交图谱构建器
+builder = SocialGraphBuilder()
+
+# 构建无标度网络
+graph = builder.build(
+    num_agents=1000,
+    model=&quot;barabasi_albert&quot;,
+    avg_connections=50  # 平均每个 Agent 50 个关注
+)
+
+# 查看网络统计
+print(f&quot;平均路径长度: {graph.avg_path_length}&quot;)
+print(f&quot;聚类系数: {graph.clustering_coefficient}&quot;)
+print(f&quot;度分布幂律指数: {graph.power_law_exponent}&quot;)
+</code></pre>
+<h4 id="_18">进阶用法</h4>
+<pre><code class="language-python"># 自定义网络结构
+graph = builder.build_custom(
+    num_agents=1000,
+    influencer_ratio=0.01,    # 1% 的意见领袖
+    avg_connections=50,
+    community_structure=True   # 包含社区结构
+)
+
+# 导入真实网络
+graph = builder.import_from_file(
+    &quot;data/real_social_network.json&quot;,
+    format=&quot;edge_list&quot;
+)
+
+# 动态网络演化
+@sim.on_time_step
+def evolve_network(sim, step):
+    &quot;&quot;&quot;网络随时间演化&quot;&quot;&quot;
+    graph.evolve(
+        new_connection_prob=0.01,
+        break_connection_prob=0.005
+    )
+</code></pre>
+<h3 id="44">4.4 模拟运行与控制</h3>
+<h4 id="_19">功能概述</h4>
+<p>控制模拟的运行、暂停、恢复和监控。</p>
+<h4 id="_20">基础用法</h4>
+<pre><code class="language-python">from mirofish import Simulation
+
+# 创建模拟
+sim = Simulation(
+    environment=env,
+    duration=30,      # 30 天虚拟时间
+    time_step=3600,   # 每小时一步
+    seed=42           # 可复现
+)
+
+# 运行模拟
+results = sim.run()
+
+# 带回调运行
+@sim.on_progress
+def on_progress(sim, progress):
+    print(f&quot;进度: {progress*100:.1f}%&quot;)
+
+@sim.on_event
+def on_event(sim, event):
+    print(f&quot;事件: {event.type} - {event.content}&quot;)
+
+results = sim.run()
+</code></pre>
+<h4 id="_21">进阶用法</h4>
+<pre><code class="language-python"># 分步执行（用于调试）
+sim.start()
+for _ in range(100):
+    sim.step()
+    print(f&quot;当前时间: {sim.current_time}&quot;)
+
+# 暂停和恢复
+sim.start()
+time.sleep(10)
+sim.pause()
+# ... 做一些分析 ...
+sim.resume()
+
+# 检查点保存
+sim.save_checkpoint(&quot;checkpoints/day_7.pkl&quot;)
+
+# 从检查点恢复
+sim = Simulation.load_checkpoint(&quot;checkpoints/day_7.pkl&quot;)
+sim.run()
+</code></pre>
+<h3 id="45">4.5 结果分析与报告</h3>
+<h4 id="_22">功能概述</h4>
+<p>分析模拟结果，生成可视化报告。</p>
+<h4 id="_23">基础用法</h4>
+<pre><code class="language-python">from mirofish import ResultAnalyzer
+
+# 创建分析器
+analyzer = ResultAnalyzer(results)
+
+# 基本统计
+print(f&quot;总互动数: {analyzer.total_interactions()}&quot;)
+print(f&quot;传播范围: {analyzer.reach()}&quot;)
+print(f&quot;平均情感: {analyzer.avg_sentiment()}&quot;)
+
+# 情感分布
+sentiment_dist = analyzer.sentiment_distribution()
+# {&quot;positive&quot;: 0.6, &quot;neutral&quot;: 0.3, &quot;negative&quot;: 0.1}
+
+# 关键意见领袖
+influencers = analyzer.top_influencers(top_n=10)
+
+# 传播路径
+paths = analyzer.propagation_paths(event_id=&quot;event_0&quot;)
+</code></pre>
+<h4 id="_24">进阶用法</h4>
+<pre><code class="language-python"># 生成可视化报告
+report = analyzer.generate_report(
+    output=&quot;reports/simulation_report.html&quot;,
+    include_charts=True,
+    include_network=True
+)
+
+# 导出数据
+analyzer.export_data(
+    format=&quot;csv&quot;,
+    output_dir=&quot;data/results/&quot;
+)
+
+# 与 ReportAgent 对话
+from mirofish import ReportAgent
+
+agent = ReportAgent(results)
+response = agent.chat(&quot;为什么负面情绪在第 3 天突然上升？&quot;)
+print(response)
+</code></pre>
+<hr />
+<h2 id="_25">五、实战案例</h2>
+<h3 id="51">5.1 案例：新品发布舆情预测</h3>
+<p>完整示例：预测一款新手机发布的舆情走向。</p>
+<pre><code class="language-python"># examples/new_product_launch.py
+
+from mirofish import (
+    Simulation, Environment, AgentGenerator,
+    KnowledgeInjector, Event, ResultAnalyzer
+)
+
+# ========== 1. 环境准备 ==========
+
+# 创建环境
+env = Environment(
+    name=&quot;phone_launch&quot;,
+    platform=&quot;weibo&quot;
+)
+
+# ========== 2. 生成 Agent ==========
+
+# 目标用户群体
+target_demographics = {
+    &quot;age_range&quot;: (18, 45),
+    &quot;interests&quot;: [&quot;科技&quot;, &quot;手机&quot;, &quot;数码&quot;],
+    &quot;cities&quot;: [&quot;北京&quot;, &quot;上海&quot;, &quot;广州&quot;, &quot;深圳&quot;, &quot;成都&quot;]
+}
+
+# 生成 10000 个 Agent
+generator = AgentGenerator()
+agents = generator.batch_generate(
+    count=10000,
+    demographics=target_demographics,
+    distribution=&quot;realistic&quot;
+)
+
+env.add_agents(agents)
+
+# ========== 3. 构建社交网络 ==========
+
+from mirofish import SocialGraphBuilder
+
+builder = SocialGraphBuilder()
+graph = builder.build(
+    num_agents=10000,
+    model=&quot;barabasi_albert&quot;,
+    avg_connections=100,
+    influencer_ratio=0.02  # 2% 意见领袖
+)
+
+env.set_social_graph(graph)
+
+# ========== 4. 注入产品知识 ==========
+
+injector = KnowledgeInjector()
+injector.inject_from_documents(
+    documents=[
+        &quot;knowledge/product_specs.md&quot;,
+        &quot;knowledge/brand_history.md&quot;,
+        &quot;knowledge/competitor_comparison.md&quot;
+    ],
+    distribution=0.8  # 80% 的 Agent 了解产品
+)
+
+# ========== 5. 配置模拟 ==========
+
+sim = Simulation(
+    environment=env,
+    duration=14,       # 模拟 14 天
+    time_step=1800,    # 每 30 分钟一步
+    seed=42
+)
+
+# ========== 6. 注入初始事件 ==========
+
+# 发布会事件
+sim.inject_event(Event(
+    type=&quot;POST&quot;,
+    content=&quot;&quot;&quot;
+    【重磅发布】全新旗舰手机 X1 正式发布！
+    - 革命性的 AI 芯片
+    - 超长续航 72 小时
+    - 价格：3999 元起
+    #X1发布会# #科技新品#
+    &quot;&quot;&quot;,
+    source=&quot;official_account&quot;,
+    timestamp=sim.start_time
+))
+
+# ========== 7. 运行模拟 ==========
+
+results = sim.run()
+
+# ========== 8. 分析结果 ==========
+
+analyzer = ResultAnalyzer(results)
+
+print(&quot;=== 舆情分析报告 ===&quot;)
+print(f&quot;传播范围: {analyzer.reach():,} 人&quot;)
+print(f&quot;总互动数: {analyzer.total_interactions():,}&quot;)
+print(f&quot;情感分布: {analyzer.sentiment_distribution()}&quot;)
+print(f&quot;关键意见领袖: {analyzer.top_influencers(5)}&quot;)
+
+# 生成详细报告
+analyzer.generate_report(
+    output=&quot;reports/phone_launch_report.html&quot;
+)
+
+# ========== 9. 与 ReportAgent 对话 ==========
+
+from mirofish import ReportAgent
+
+report_agent = ReportAgent(results)
+
+# 提问分析
+questions = [
+    &quot;发布会后舆情如何变化？&quot;,
+    &quot;哪些话题引发了最多的讨论？&quot;,
+    &quot;负面评价主要集中在哪些方面？&quot;,
+    &quot;意见领袖的态度分布如何？&quot;
+]
+
+for q in questions:
+    answer = report_agent.chat(q)
+    print(f&quot;Q: {q}&quot;)
+    print(f&quot;A: {answer}\n&quot;)
+</code></pre>
+<h3 id="52">5.2 案例：危机公关模拟</h3>
+<p>模拟产品危机事件的传播和应对。</p>
+<pre><code class="language-python"># examples/crisis_simulation.py
+
+from mirofish import Simulation, Environment, Event
+
+env = Environment(name=&quot;crisis_sim&quot;, platform=&quot;weibo&quot;)
+
+# ... 创建 Agent 和网络 ...
+
+sim = Simulation(env, duration=7, time_step=1800)
+
+# ========== 场景：电池爆炸事件 ==========
+
+# Day 1: 危机爆发
+sim.schedule_event(
+    time=&quot;day_1_hour_8&quot;,
+    event=Event(
+        type=&quot;NEWS&quot;,
+        content=&quot;【突发】某用户反馈 X1 手机充电时发生冒烟&quot;,
+        source=&quot;news_media&quot;
+    )
+)
+
+# Day 2: 官方回应（方案A：快速回应）
+sim.schedule_event(
+    time=&quot;day_2_hour_10&quot;,
+    event=Event(
+        type=&quot;OFFICIAL&quot;,
+        content=&quot;&quot;&quot;
+        【官方声明】我们关注到相关反馈，已第一时间联系用户，
+        正在全力调查。请放心，我们将对消费者负责到底。
+        &quot;&quot;&quot;,
+        source=&quot;official_account&quot;
+    ),
+    scenario=&quot;response_a&quot;  # 标记为方案A
+)
+
+# 运行方案A
+results_a = sim.run(scenario=&quot;response_a&quot;)
+
+# ========== 对比方案B：延迟回应 ==========
+
+sim.reset()
+
+# Day 4: 官方回应（方案B：延迟回应）
+sim.schedule_event(
+    time=&quot;day_4_hour_10&quot;,
+    event=Event(
+        type=&quot;OFFICIAL&quot;,
+        content=&quot;【官方声明】针对近期事件，我们已完成初步调查...&quot;,
+        source=&quot;official_account&quot;
+    ),
+    scenario=&quot;response_b&quot;
+)
+
+results_b = sim.run(scenario=&quot;response_b&quot;)
+
+# ========== 对比分析 ==========
+
+from mirofish import ResultAnalyzer
+
+analyzer_a = ResultAnalyzer(results_a)
+analyzer_b = ResultAnalyzer(results_b)
+
+print(&quot;=== 方案对比 ===&quot;)
+print(f&quot;方案A (快速回应):&quot;)
+print(f&quot;  最大负面占比: {analyzer_a.max_negative_ratio():.1%}&quot;)
+print(f&quot;  恢复时间: {analyzer_a.recovery_time()} 天&quot;)
+
+print(f&quot;方案B (延迟回应):&quot;)
+print(f&quot;  最大负面占比: {analyzer_b.max_negative_ratio():.1%}&quot;)
+print(f&quot;  恢复时间: {analyzer_b.recovery_time()} 天&quot;)
+</code></pre>
+<hr />
+<h2 id="_26">六、进阶主题</h2>
+<h3 id="61">6.1 性能优化</h3>
+<h4 id="_27">批量推理</h4>
+<pre><code class="language-python">from mirofish import ScalableInferencer
+
+# 配置批量推理
+inferencer = ScalableInferencer(
+    batch_size=100,
+    max_concurrent=20,
+    cache_enabled=True
+)
+
+# 在模拟中使用
+sim = Simulation(
+    environment=env,
+    inferencer=inferencer
+)
+</code></pre>
+<h4 id="_28">分布式部署</h4>
+<pre><code class="language-yaml"># docker-compose-scale.yml
+version: '3.8'
+
+services:
+  inferencer:
+    image: mirofish/inferencer
+    deploy:
+      replicas: 4  # 4 个推理节点
+    environment:
+      - REDIS_URL=redis://redis:6379
+
+  redis:
+    image: redis:7
+    ports:
+      - &quot;6379:6379&quot;
+</code></pre>
+<h3 id="62-agent">6.2 自定义 Agent 行为</h3>
+<pre><code class="language-python">from mirofish import Agent, AgentBehavior
+
+class CustomAgent(Agent):
+    &quot;&quot;&quot;自定义 Agent 行为&quot;&quot;&quot;
+
+    def decide(self, observation):
+        &quot;&quot;&quot;自定义决策逻辑&quot;&quot;&quot;
+        # 获取相关信息
+        feed = observation.feed
+        personality = self.personality
+
+        # 自定义决策规则
+        if self._is_interested(feed, personality):
+            return self._create_interaction_decision(feed)
+        else:
+            return self._create_skip_decision()
+
+    def _is_interested(self, feed, personality):
+        &quot;&quot;&quot;判断是否感兴趣&quot;&quot;&quot;
+        # 实现自定义逻辑
+        pass
+
+# 注册自定义 Agent
+from mirofish import register_agent_type
+
+register_agent_type(&quot;custom&quot;, CustomAgent)
+
+# 使用自定义 Agent
+agent = CustomAgent(id=&quot;custom_1&quot;, profile={...})
+</code></pre>
+<h3 id="63">6.3 与外部系统集成</h3>
+<pre><code class="language-python">from mirofish import WebhookNotifier
+
+# 配置 Webhook 通知
+notifier = WebhookNotifier(
+    url=&quot;https://your-server.com/webhook&quot;,
+    events=[&quot;simulation.start&quot;, &quot;simulation.complete&quot;, &quot;event.injected&quot;]
+)
+
+sim = Simulation(
+    environment=env,
+    notifier=notifier
+)
+</code></pre>
+<h3 id="64">6.4 监控和日志</h3>
+<pre><code class="language-python">from mirofish import MetricsCollector
+
+# 配置指标收集
+metrics = MetricsCollector(
+    backend=&quot;prometheus&quot;,
+    endpoint=&quot;http://localhost:9090&quot;
+)
+
+sim = Simulation(
+    environment=env,
+    metrics=metrics
+)
+
+# 自定义指标
+@metrics.gauge(&quot;agent_active_count&quot;)
+def count_active_agents(sim):
+    return len([a for a in sim.agents if a.is_active])
+</code></pre>
+<hr />
+<h2 id="_29">七、常见问题</h2>
+<h3 id="q1">Q1: 模拟速度太慢怎么办？</h3>
+<pre><code class="language-python"># 优化策略：
+
+# 1. 减少时间步数
+sim = Simulation(env, time_step=7200)  # 2小时一步
+
+# 2. 启用批量推理
+inferencer = ScalableInferencer(batch_size=200)
+
+# 3. 使用更快的 LLM
+sim = Simulation(env, llm_model=&quot;gpt-3.5-turbo&quot;)
+
+# 4. 减少 Agent 数量（测试阶段）
+agents = generator.batch_generate(count=1000)
+</code></pre>
+<h3 id="q2">Q2: 如何确保模拟的可复现性？</h3>
+<pre><code class="language-python"># 设置随机种子
+sim = Simulation(env, seed=42)
+
+# 保存检查点
+sim.save_checkpoint(&quot;checkpoint.pkl&quot;)
+
+# 记录所有随机决策
+sim = Simulation(env, log_decisions=True)
+</code></pre>
+<h3 id="q3-graphrag">Q3: GraphRAG 注入失败怎么办？</h3>
+<pre><code class="language-bash"># 检查 Neo4j 连接
+curl http://localhost:7474
+
+# 检查嵌入模型
+python -c &quot;from openai import OpenAI; print(OpenAI().embeddings.create)&quot;
+
+# 查看日志
+tail -f logs/mirofish.log
+</code></pre>
+<h3 id="q4">Q4: 如何处理中文语料？</h3>
+<pre><code class="language-python"># 使用中文优化的嵌入模型
+injector = KnowledgeInjector(
+    embedding_model=&quot;text-embedding-3-large&quot;,
+    language=&quot;zh&quot;
+)
+
+# 配置中文分词
+from mirofish import ChineseTokenizer
+injector.set_tokenizer(ChineseTokenizer())
+</code></pre>
+<h3 id="q5">Q5: 内存不足怎么办？</h3>
+<pre><code class="language-python"># 启用流式处理
+sim = Simulation(env, streaming=True)
+
+# 分批加载 Agent
+for batch in agent_batches:
+    env.add_agents(batch)
+    sim.run_steps(100)
+    env.clear_inactive_agents()
+
+# 使用数据库存储
+sim = Simulation(env, storage_backend=&quot;mongodb&quot;)
+</code></pre>
+<hr />
+<h2 id="_30">八、参考资料</h2>
+<h3 id="_31">官方资源</h3>
+<ul>
+<li><a href="https://github.com/666ghj/MiroFish">MiroFish GitHub</a></li>
+<li><a href="https://github.com/camel-ai/oasis">OASIS GitHub</a></li>
+<li><a href="https://docs.camel-ai.org/">CAMEL-AI 文档</a></li>
+</ul>
+<h3 id="_32">学术论文</h3>
+<ul>
+<li><a href="https://arxiv.org/abs/2411.11581">OASIS: Open Agent Social Interaction Simulations</a></li>
+<li><a href="https://arxiv.org/abs/2404.16130">GraphRAG: Unlocking LLM Discovery on Narrative Private Data</a></li>
+<li><a href="https://arxiv.org/abs/2304.03442">Generative Agents: Interactive Simulacra of Human Behavior</a></li>
+</ul>
+<h3 id="_33">相关技术</h3>
+<ul>
+<li><a href="https://langchain-ai.github.io/langgraph/">LangGraph 文档</a></li>
+<li><a href="https://neo4j.com/docs/">Neo4j 图数据库</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Big_Five_personality_traits">大五人格理论</a></li>
+</ul>
+<hr />
+<h2 id="_34">学习路线图</h2>
+<pre><code>Week 1: 基础入门
+├── Day 1-2: 环境搭建，运行 Hello World
+├── Day 3-4: 理解核心概念
+└── Day 5-7: 完成第一个完整模拟
+
+Week 2: 功能深入
+├── Day 1-2: Agent 人设生成
+├── Day 3-4: GraphRAG 知识注入
+└── Day 5-7: 社交网络构建
+
+Week 3: 实战应用
+├── Day 1-3: 新品发布舆情预测案例
+├── Day 4-5: 危机公关模拟案例
+└── Day 6-7: 自定义场景开发
+
+Week 4: 进阶优化
+├── Day 1-2: 性能优化
+├── Day 3-4: 分布式部署
+└── Day 5-7: 生产环境最佳实践
+</code></pre>
+<hr />
+<blockquote>
+<p>教程持续更新中，如有问题请在 GitHub 提 Issue</p>
+</blockquote>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

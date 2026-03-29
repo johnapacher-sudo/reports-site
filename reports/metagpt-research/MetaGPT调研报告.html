@@ -1,0 +1,1754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaGPT 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub 开源项目 FoundationAgents/MetaGPT 的深度技术调研 | 调研日期：2026-03-26</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 核心理念</a></li>
+<li><a href="#14" class="toc-h3">1.4 发展历程</a></li>
+<li><a href="#_2" class="toc-h2">二、核心架构</a></li>
+<li><a href="#21" class="toc-h3">2.1 整体架构图</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心抽象</a></li>
+<li><a href="#message" class="toc-h4">Message（消息）</a></li>
+<li><a href="#role" class="toc-h4">Role（角色）</a></li>
+<li><a href="#environment" class="toc-h4">Environment（环境）</a></li>
+<li><a href="#23" class="toc-h3">2.3 项目结构</a></li>
+<li><a href="#agent" class="toc-h2">三、Agent 角色系统</a></li>
+<li><a href="#31" class="toc-h3">3.1 内置角色</a></li>
+<li><a href="#32" class="toc-h3">3.2 角色定义示例</a></li>
+<li><a href="#productmanager" class="toc-h4">ProductManager</a></li>
+<li><a href="#architect" class="toc-h4">Architect</a></li>
+<li><a href="#engineer" class="toc-h4">Engineer</a></li>
+<li><a href="#33" class="toc-h3">3.3 协作流程</a></li>
+<li><a href="#_3" class="toc-h2">四、动作系统</a></li>
+<li><a href="#41-action" class="toc-h3">4.1 Action 基类</a></li>
+<li><a href="#42" class="toc-h3">4.2 内置动作</a></li>
+<li><a href="#writeprd" class="toc-h4">WritePRD</a></li>
+<li><a href="#writedesign" class="toc-h4">WriteDesign</a></li>
+<li><a href="#writecode" class="toc-h4">WriteCode</a></li>
+<li><a href="#43" class="toc-h3">4.3 自定义动作</a></li>
+<li><a href="#_4" class="toc-h2">五、记忆系统</a></li>
+<li><a href="#51-memory" class="toc-h3">5.1 Memory 结构</a></li>
+<li><a href="#52" class="toc-h3">5.2 记忆架构</a></li>
+<li><a href="#53-knowledge-bank" class="toc-h3">5.3 Knowledge Bank</a></li>
+<li><a href="#54-experience-pool" class="toc-h3">5.4 Experience Pool</a></li>
+<li><a href="#llm" class="toc-h2">六、LLM 集成</a></li>
+<li><a href="#61" class="toc-h3">6.1 支持的提供商</a></li>
+<li><a href="#62" class="toc-h3">6.2 配置示例</a></li>
+<li><a href="#63" class="toc-h3">6.3 代码配置</a></li>
+<li><a href="#rag" class="toc-h2">七、RAG 集成</a></li>
+<li><a href="#71" class="toc-h3">7.1 文档解析</a></li>
+<li><a href="#72-rag" class="toc-h3">7.2 RAG 引擎</a></li>
+<li><a href="#_5" class="toc-h2">八、与其他框架对比</a></li>
+<li><a href="#81-vs-langchain" class="toc-h3">8.1 vs LangChain</a></li>
+<li><a href="#82-vs-autogen" class="toc-h3">8.2 vs AutoGen</a></li>
+<li><a href="#83-vs-agency-swarm" class="toc-h3">8.3 vs Agency Swarm</a></li>
+<li><a href="#84-vs-ruflo" class="toc-h3">8.4 vs RuFlo</a></li>
+<li><a href="#_6" class="toc-h2">九、生产部署</a></li>
+<li><a href="#91" class="toc-h3">9.1 安装</a></li>
+<li><a href="#92-docker" class="toc-h3">9.2 Docker 部署</a></li>
+<li><a href="#93" class="toc-h3">9.3 快速使用</a></li>
+<li><a href="#_7" class="toc-h2">十、学术贡献</a></li>
+<li><a href="#iclr-2024" class="toc-h3">ICLR 2024 论文</a></li>
+<li><a href="#aflow-iclr-2025-oral" class="toc-h3">AFlow (ICLR 2025 Oral)</a></li>
+<li><a href="#_8" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>MetaGPT 深度调研报告</h1>
+                        <div class="article-meta">基于 GitHub 开源项目 FoundationAgents/MetaGPT 的深度技术调研<br>调研日期：2026-03-26</div>
+                    </header>
+                    <h1 id="metagpt">MetaGPT 深度调研报告</h1>
+<blockquote>
+<p>基于 GitHub 开源项目 FoundationAgents/MetaGPT 的深度技术调研</p>
+<p>调研日期：2026-03-26</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>MetaGPT</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/FoundationAgents/MetaGPT</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>FoundationAgents (原 geekan)</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://mgx.dev/</td>
+</tr>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>多 Agent 协作框架 - 首个 AI 软件公司</td>
+</tr>
+<tr>
+<td><strong>开源状态</strong></td>
+<td>MIT License</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td><strong>66,228</strong></td>
+</tr>
+<tr>
+<td><strong>Forks</strong></td>
+<td>8,358</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>Python</td>
+</tr>
+<tr>
+<td><strong>创建时间</strong></td>
+<td>2023-06-30</td>
+</tr>
+<tr>
+<td><strong>最新版本</strong></td>
+<td>v0.8.2</td>
+</tr>
+<tr>
+<td><strong>学术论文</strong></td>
+<td>ICLR 2024</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>MetaGPT 是一个多 Agent 框架，将 <strong>一行需求</strong> 作为输入，输出用户故事、竞品分析、需求文档、数据结构、API 文档等完整软件开发产物。</p>
+<h3 id="13">1.3 核心理念</h3>
+<pre><code>Code = SOP(Team)
+</code></pre>
+<p><strong>解释</strong>：
+- <strong>Team</strong>: 由不同角色的 Agent 组成的团队
+- <strong>SOP</strong>: Standard Operating Procedures（标准作业流程）
+- <strong>Code</strong>: 团队按照 SOP 执行产出的代码</p>
+<h3 id="14">1.4 发展历程</h3>
+<pre><code>2023 年
+├── 2023-06-30: 项目创建
+├── 2023-08: 发布技术论文
+└── 社区快速增长
+
+2024 年
+├── ICLR 2024 论文发表
+├── v0.8.0 版本发布
+└── 功能持续增强
+
+2025 年
+├── 2025-02-19: 发布 MGX (MetaGPT X)
+├── 2025-03-04: Product Hunt 当日第一
+├── 2025-03-10: Product Hunt 本周第一
+└── 2025-01-22: AFlow 论文被 ICLR 2025 接收 (Oral, top 1.8%)
+
+2026 年
+├── 持续维护更新
+└── Stars 突破 66,000
+</code></pre>
+<hr />
+<h2 id="_2">二、核心架构</h2>
+<h3 id="21">2.1 整体架构图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                         MetaGPT Architecture                             │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                    User Requirement (一行需求)                   │  │
+│   └─────────────────────────────┬───────────────────────────────────┘  │
+│                                 │                                       │
+│                                 ▼                                       │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      SoftwareCompany                             │  │
+│   │  ┌─────────────────────────────────────────────────────────┐   │  │
+│   │  │                    Environment                           │   │  │
+│   │  │  • 消息路由                                              │   │  │
+│   │  │  • Agent 协调                                            │   │  │
+│   │  │  • 状态管理                                              │   │  │
+│   │  └─────────────────────────────────────────────────────────┘   │  │
+│   │                              │                                   │  │
+│   │          ┌───────────────────┼───────────────────┐              │  │
+│   │          │                   │                   │              │  │
+│   │          ▼                   ▼                   ▼              │  │
+│   │  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐      │  │
+│   │  │ProductManager│ ──► │  Architect  │ ──► │ProjectManager│     │  │
+│   │  │   (Alice)   │     │   (Bob)     │     │   (Eve)     │      │  │
+│   │  │             │     │             │     │             │      │  │
+│   │  │ WritePRD    │     │ WriteDesign │     │ WriteTasks  │      │  │
+│   │  └─────────────┘     └─────────────┘     └─────────────┘      │  │
+│   │                                                 │               │  │
+│   │                                                 ▼               │  │
+│   │                                          ┌─────────────┐       │  │
+│   │                                          │  Engineer   │       │  │
+│   │                                          │   (Alex)    │       │  │
+│   │                                          │             │       │  │
+│   │                                          │ WriteCode   │       │  │
+│   │                                          └──────┬──────┘       │  │
+│   │                                                 │               │  │
+│   │                                                 ▼               │  │
+│   │                                          ┌─────────────┐       │  │
+│   │                                          │ QaEngineer  │       │  │
+│   │                                          │  (Edward)   │       │  │
+│   │                                          │             │       │  │
+│   │                                          │ WriteTest   │       │  │
+│   │                                          └─────────────┘       │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                    Shared Components                             │  │
+│   │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │  │
+│   │  │   Memory    │ │  Knowledge  │ │ Experience  │ │    LLM    │ │  │
+│   │  │   System    │ │    Bank     │ │    Pool     │ │  Provider │ │  │
+│   │  └─────────────┘ └─────────────┘ └─────────────┘ └───────────┘ │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      Output                                      │  │
+│   │  PRD → System Design → Task List → Code → Tests → Documents     │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 核心抽象</h3>
+<h4 id="message">Message（消息）</h4>
+<pre><code class="language-python">@dataclass
+class Message:
+    &quot;&quot;&quot;Agent 通信的核心消息结构&quot;&quot;&quot;
+    content: str                    # 消息内容
+    instruct_content: BaseModel     # 结构化指令
+    role: str = &quot;user&quot;              # 发送者角色
+    cause_by: Type[Action] = UserRequirement  # 触发动作
+    sent_from: str = &quot;&quot;             # 发送者名称
+    send_to: Set[str] = field(default_factory=set)  # 接收者集合
+</code></pre>
+<h4 id="role">Role（角色）</h4>
+<pre><code class="language-python">class Role:
+    &quot;&quot;&quot;Agent 角色基类&quot;&quot;&quot;
+    name: str                       # 角色名称
+    profile: str                    # 角色简介
+    goal: str                       # 角色目标
+    constraints: List[str]          # 约束条件
+
+    def _watch(self, actions: List[Type[Action]]):
+        &quot;&quot;&quot;监听特定动作&quot;&quot;&quot;
+
+    def _init_actions(self, actions: List[Action]):
+        &quot;&quot;&quot;初始化可执行动作&quot;&quot;&quot;
+
+    async def _observe(self) -&gt; int:
+        &quot;&quot;&quot;观察并处理消息&quot;&quot;&quot;
+
+    async def _act(self) -&gt; Message:
+        &quot;&quot;&quot;执行动作&quot;&quot;&quot;
+</code></pre>
+<h4 id="environment">Environment（环境）</h4>
+<pre><code class="language-python">class Environment:
+    &quot;&quot;&quot;管理 Agent 交互和消息路由&quot;&quot;&quot;
+
+    def __init__(self, context: Context = None):
+        self.roles: Dict[str, Role] = {}    # 角色映射
+        self.history: List[Message] = []     # 消息历史
+
+    def put_message(self, message: Message):
+        &quot;&quot;&quot;路由消息到接收者&quot;&quot;&quot;
+
+    async def run(self, message: Message = None):
+        &quot;&quot;&quot;运行环境循环&quot;&quot;&quot;
+</code></pre>
+<h3 id="23">2.3 项目结构</h3>
+<pre><code>metagpt/
+├── actions/              # 动作定义
+│   ├── project_management.py
+│   ├── write_code.py
+│   ├── write_prd.py
+│   └── write_test.py
+├── base/                 # 基类
+├── configs/              # 配置管理
+├── document_store/       # 文档存储
+├── environment/          # Agent 环境
+├── exp_pool/             # 经验池
+├── learn/                # 学习模块
+├── management/           # 管理工具
+├── memory/               # 记忆系统
+├── prompts/              # 提示词模板
+├── provider/             # LLM 提供商
+├── rag/                  # RAG 检索增强
+├── roles/                # Agent 角色定义
+│   ├── product_manager.py
+│   ├── architect.py
+│   ├── project_manager.py
+│   ├── engineer.py
+│   ├── qa_engineer.py
+│   └── ...
+├── skills/               # 技能模块
+├── strategy/             # 策略模式
+├── tools/                # 工具集成
+├── utils/                # 工具函数
+└── software_company.py   # 主入口
+</code></pre>
+<hr />
+<h2 id="agent">三、Agent 角色系统</h2>
+<h3 id="31">3.1 内置角色</h3>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>名称</th>
+<th>职责</th>
+<th>监听动作</th>
+<th>执行动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ProductManager</strong></td>
+<td>Alice</td>
+<td>需求分析、PRD 编写</td>
+<td>UserRequirement</td>
+<td>WritePRD</td>
+</tr>
+<tr>
+<td><strong>Architect</strong></td>
+<td>Bob</td>
+<td>系统架构设计</td>
+<td>WritePRD</td>
+<td>WriteDesign</td>
+</tr>
+<tr>
+<td><strong>ProjectManager</strong></td>
+<td>Eve</td>
+<td>任务分解、项目管理</td>
+<td>WriteDesign</td>
+<td>WriteTasks</td>
+</tr>
+<tr>
+<td><strong>Engineer</strong></td>
+<td>Alex</td>
+<td>代码实现</td>
+<td>WriteTasks</td>
+<td>WriteCode</td>
+</tr>
+<tr>
+<td><strong>QaEngineer</strong></td>
+<td>Edward</td>
+<td>测试验证</td>
+<td>WriteCode</td>
+<td>WriteTest</td>
+</tr>
+<tr>
+<td><strong>Searcher</strong></td>
+<td>-</td>
+<td>搜索和信息检索</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Sales</strong></td>
+<td>-</td>
+<td>销售相关交互</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>DataAnalyst</strong></td>
+<td>-</td>
+<td>数据分析</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Researcher</strong></td>
+<td>-</td>
+<td>研究任务</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>Teacher</strong></td>
+<td>-</td>
+<td>教育交互</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr>
+<td><strong>CustomerService</strong></td>
+<td>-</td>
+<td>客户支持</td>
+<td>-</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 角色定义示例</h3>
+<h4 id="productmanager">ProductManager</h4>
+<pre><code class="language-python">class ProductManager(Role):
+    &quot;&quot;&quot;产品经理 - 负责需求分析和 PRD 编写&quot;&quot;&quot;
+
+    name: str = &quot;Alice&quot;
+    profile: str = &quot;Product Manager&quot;
+    goal: str = &quot;高效创建全面的产品需求文档&quot;
+    constraints: List[str] = []
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([UserRequirement])  # 监听用户需求
+        self._init_actions([WritePRD])   # 初始化 PRD 编写动作
+
+    async def _act(self) -&gt; Message:
+        &quot;&quot;&quot;执行产品管理动作&quot;&quot;&quot;
+        prd = await self._actions[0].run(self.rc.history)
+        return Message(content=prd, role=self.profile, send_to={&quot;Architect&quot;})
+</code></pre>
+<h4 id="architect">Architect</h4>
+<pre><code class="language-python">class Architect(Role):
+    &quot;&quot;&quot;系统架构师 - 负责系统架构设计&quot;&quot;&quot;
+
+    name: str = &quot;Bob&quot;
+    profile: str = &quot;Architect&quot;
+    goal: str = &quot;设计健壮、可扩展的系统架构&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([WritePRD])      # 监听 PRD 完成
+        self._init_actions([WriteDesign])  # 初始化设计动作
+
+    async def _act(self) -&gt; Message:
+        &quot;&quot;&quot;创建系统设计&quot;&quot;&quot;
+        design = await self._actions[0].run(self.rc.history)
+        return Message(content=design, role=self.profile, send_to={&quot;ProjectManager&quot;})
+</code></pre>
+<h4 id="engineer">Engineer</h4>
+<pre><code class="language-python">class Engineer(Role):
+    &quot;&quot;&quot;软件工程师 - 负责代码实现&quot;&quot;&quot;
+
+    name: str = &quot;Alex&quot;
+    profile: str = &quot;Engineer&quot;
+    goal: str = &quot;编写干净、高效、可维护的代码&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([WriteTasks])     # 监听任务列表
+        self._init_actions([WriteCode])  # 初始化编码动作
+
+    async def _act(self) -&gt; Message:
+        &quot;&quot;&quot;实现代码&quot;&quot;&quot;
+        code = await self._actions[0].run(self.rc.history)
+        return Message(content=code, role=self.profile, send_to={&quot;QaEngineer&quot;})
+</code></pre>
+<h3 id="33">3.3 协作流程</h3>
+<pre><code>用户需求 &quot;创建一个 2048 游戏&quot;
+         │
+         ▼
+    ┌─────────────────┐
+    │ ProductManager  │
+    │    (Alice)      │
+    │                 │
+    │ 分析需求        │
+    │ 编写 PRD        │
+    └────────┬────────┘
+             │ PRD 文档
+             ▼
+    ┌─────────────────┐
+    │   Architect     │
+    │     (Bob)       │
+    │                 │
+    │ 设计架构        │
+    │ 定义组件        │
+    └────────┬────────┘
+             │ 系统设计
+             ▼
+    ┌─────────────────┐
+    │ ProjectManager  │
+    │     (Eve)       │
+    │                 │
+    │ 分解任务        │
+    │ 制定计划        │
+    └────────┬────────┘
+             │ 任务列表
+             ▼
+    ┌─────────────────┐
+    │    Engineer     │
+    │     (Alex)      │
+    │                 │
+    │ 编写代码        │
+    │ 实现功能        │
+    └────────┬────────┘
+             │ 代码
+             ▼
+    ┌─────────────────┐
+    │   QaEngineer    │
+    │    (Edward)     │
+    │                 │
+    │ 编写测试        │
+    │ 验证功能        │
+    └─────────────────┘
+             │
+             ▼
+        完整项目
+</code></pre>
+<hr />
+<h2 id="_3">四、动作系统</h2>
+<h3 id="41-action">4.1 Action 基类</h3>
+<pre><code class="language-python">class Action:
+    &quot;&quot;&quot;动作基类&quot;&quot;&quot;
+
+    name: str = &quot;Action&quot;
+    llm: BaseLLM = None
+
+    def __init__(self, name: str = &quot;&quot;, llm: BaseLLM = None, **kwargs):
+        self.name = name or self.name
+        self.llm = llm
+
+    async def run(self, *args, **kwargs) -&gt; str:
+        &quot;&quot;&quot;执行动作 - 子类实现&quot;&quot;&quot;
+        raise NotImplementedError
+
+    async def aask(self, prompt: str) -&gt; str:
+        &quot;&quot;&quot;向 LLM 发送提示&quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h3 id="42">4.2 内置动作</h3>
+<h4 id="writeprd">WritePRD</h4>
+<pre><code class="language-python">class WritePRD(Action):
+    &quot;&quot;&quot;编写产品需求文档&quot;&quot;&quot;
+    name: str = &quot;WritePRD&quot;
+
+    async def run(self, requirements: str) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        基于以下需求：
+        {requirements}
+
+        编写完整的 PRD，包括：
+        1. 产品概述
+        2. 用户故事
+        3. 功能需求
+        4. 非功能需求
+        5. UI/UX 指南
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h4 id="writedesign">WriteDesign</h4>
+<pre><code class="language-python">class WriteDesign(Action):
+    &quot;&quot;&quot;编写系统设计&quot;&quot;&quot;
+    name: str = &quot;WriteDesign&quot;
+
+    async def run(self, prd: str) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        基于 PRD：
+        {prd}
+
+        设计系统架构，包括：
+        1. 系统架构图
+        2. 组件设计
+        3. 数据流
+        4. API 设计
+        5. 技术选型
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h4 id="writecode">WriteCode</h4>
+<pre><code class="language-python">class WriteCode(Action):
+    &quot;&quot;&quot;编写实现代码&quot;&quot;&quot;
+    name: str = &quot;WriteCode&quot;
+
+    async def run(self, design: str, tasks: str) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        基于设计：
+        {design}
+
+        和任务列表：
+        {tasks}
+
+        实现代码：
+        1. 遵循 Clean Code 原则
+        2. 添加类型注解
+        3. 完善注释
+        4. 错误处理
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h3 id="43">4.3 自定义动作</h3>
+<pre><code class="language-python">from metagpt.actions import Action
+from metagpt.schema import Message
+
+class CustomAction(Action):
+    &quot;&quot;&quot;自定义动作&quot;&quot;&quot;
+    name: str = &quot;CustomAction&quot;
+
+    async def run(self, messages: List[Message]) -&gt; str:
+        &quot;&quot;&quot;执行自定义动作&quot;&quot;&quot;
+        prompt = f&quot;基于: {messages}\n执行自定义操作...&quot;
+        result = await self.llm.aask(prompt)
+        return result
+</code></pre>
+<hr />
+<h2 id="_4">五、记忆系统</h2>
+<h3 id="51-memory">5.1 Memory 结构</h3>
+<pre><code class="language-python">class Memory:
+    &quot;&quot;&quot;Agent 记忆系统&quot;&quot;&quot;
+
+    def __init__(self, capacity: int = 100):
+        self.capacity = capacity
+        self.short_term = deque(maxlen=capacity)  # 短期记忆
+        self.long_term = []                        # 长期记忆
+        self.working_memory = {}                   # 工作记忆
+
+    def add(self, message: Message, important: bool = False):
+        &quot;&quot;&quot;添加消息到记忆&quot;&quot;&quot;
+        self.short_term.append(message)
+        if important:
+            self.long_term.append(message)
+
+    def get_context(self, n: int = 10) -&gt; List[Message]:
+        &quot;&quot;&quot;获取最近上下文&quot;&quot;&quot;
+        return list(self.short_term)[-n:]
+
+    def search(self, query: str) -&gt; List[Message]:
+        &quot;&quot;&quot;搜索相关记忆&quot;&quot;&quot;
+        return [m for m in self.long_term if query in str(m)]
+</code></pre>
+<h3 id="52">5.2 记忆架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Memory Architecture                          │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Working Memory (工作记忆)                   │   │
+│  │  • 当前任务上下文                                        │   │
+│  │  • 临时变量和状态                                        │   │
+│  │  • 最快访问速度                                          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Short-term Memory (短期记忆)                │   │
+│  │  • 最近的对话历史                                        │   │
+│  │  • 有限容量 (默认 100)                                   │   │
+│  │  • FIFO 淘汰策略                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Long-term Memory (长期记忆)                 │   │
+│  │  • 重要决策和结果                                        │   │
+│  │  • 成功模式记录                                          │   │
+│  │  • 持久化存储                                            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="53-knowledge-bank">5.3 Knowledge Bank</h3>
+<pre><code class="language-python">class KnowledgeBank:
+    &quot;&quot;&quot;知识存储库&quot;&quot;&quot;
+
+    def __init__(self, path: Path = DATA_PATH):
+        self.path = path
+        self.documents = {}
+        self.embeddings = {}
+
+    def add_document(self, name: str, content: str):
+        &quot;&quot;&quot;添加文档到知识库&quot;&quot;&quot;
+        self.documents[name] = content
+        self.embeddings[name] = self._embed(content)
+
+    def query(self, query: str, k: int = 5) -&gt; List[str]:
+        &quot;&quot;&quot;查询知识库&quot;&quot;&quot;
+        query_embedding = self._embed(query)
+        scores = {name: self._similarity(query_embedding, emb)
+                  for name, emb in self.embeddings.items()}
+        sorted_docs = sorted(scores.items(), key=lambda x: x[1], reverse=True)
+        return [self.documents[name] for name, _ in sorted_docs[:k]]
+</code></pre>
+<h3 id="54-experience-pool">5.4 Experience Pool</h3>
+<pre><code class="language-python">class ExperiencePool:
+    &quot;&quot;&quot;经验池&quot;&quot;&quot;
+
+    def __init__(self):
+        self.experiences: List[Experience] = []
+        self.successful_patterns = {}
+        self.failed_patterns = {}
+
+@dataclass
+class Experience:
+    &quot;&quot;&quot;单个经验记录&quot;&quot;&quot;
+    context: str          # 上下文
+    action: Action        # 执行动作
+    result: str           # 结果
+    success: bool         # 是否成功
+    feedback: str         # 反馈
+</code></pre>
+<hr />
+<h2 id="llm">六、LLM 集成</h2>
+<h3 id="61">6.1 支持的提供商</h3>
+<table>
+<thead>
+<tr>
+<th>提供商</th>
+<th>模型</th>
+<th>配置方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>GPT-4, GPT-3.5</td>
+<td><code>api_type: "openai"</code></td>
+</tr>
+<tr>
+<td><strong>Azure</strong></td>
+<td>Azure OpenAI</td>
+<td><code>api_type: "azure"</code></td>
+</tr>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td>Claude</td>
+<td><code>api_type: "anthropic"</code></td>
+</tr>
+<tr>
+<td><strong>DeepSeek</strong></td>
+<td>DeepSeek</td>
+<td><code>api_type: "deepseek"</code></td>
+</tr>
+<tr>
+<td><strong>Zhipu AI</strong></td>
+<td>GLM</td>
+<td><code>api_type: "zhipuai"</code></td>
+</tr>
+<tr>
+<td><strong>Spark</strong></td>
+<td>讯飞星火</td>
+<td><code>api_type: "spark"</code></td>
+</tr>
+<tr>
+<td><strong>Qianfan</strong></td>
+<td>百度千帆</td>
+<td><code>api_type: "qianfan"</code></td>
+</tr>
+<tr>
+<td><strong>Tongyi</strong></td>
+<td>阿里通义</td>
+<td><code>api_type: "tongyi"</code></td>
+</tr>
+<tr>
+<td><strong>Yi</strong></td>
+<td>01.AI</td>
+<td><code>api_type: "yi"</code></td>
+</tr>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>本地模型</td>
+<td><code>api_type: "ollama"</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="62">6.2 配置示例</h3>
+<pre><code class="language-yaml"># config.yaml
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;your-api-key&quot;
+  base_url: &quot;https://api.openai.com/v1&quot;
+
+  # 模型参数
+  temperature: 0.7
+  max_tokens: 4096
+  top_p: 1.0
+
+  # 速率限制
+  rate_limit:
+    rpm: 60      # 每分钟请求数
+    tpm: 90000   # 每分钟 Token 数
+
+# 多模型配置
+llms:
+  default:
+    api_type: &quot;openai&quot;
+    model: &quot;gpt-4&quot;
+
+  coding:
+    api_type: &quot;openai&quot;
+    model: &quot;gpt-4-turbo&quot;
+
+  analysis:
+    api_type: &quot;anthropic&quot;
+    model: &quot;claude-3-opus&quot;
+</code></pre>
+<h3 id="63">6.3 代码配置</h3>
+<pre><code class="language-python">from metagpt.config2 import Config
+from metagpt.provider import LLMFactory
+
+# 方式 1: 使用配置文件
+config = Config.from_yaml(&quot;config.yaml&quot;)
+llm = LLMFactory.create(config.llm)
+
+# 方式 2: 使用环境变量
+import os
+os.environ[&quot;OPENAI_API_KEY&quot;] = &quot;your-api-key&quot;
+os.environ[&quot;OPENAI_API_MODEL&quot;] = &quot;gpt-4&quot;
+
+# 方式 3: 编程配置
+from metagpt.provider import OpenAILLM
+
+llm = OpenAILLM(
+    api_key=&quot;your-api-key&quot;,
+    model=&quot;gpt-4&quot;,
+    temperature=0.7
+)
+</code></pre>
+<hr />
+<h2 id="rag">七、RAG 集成</h2>
+<h3 id="71">7.1 文档解析</h3>
+<pre><code class="language-python">from metagpt.rag import DocumentParser, TextSplitter
+
+class DocumentParser:
+    &quot;&quot;&quot;解析各种文档格式&quot;&quot;&quot;
+
+    SUPPORTED_FORMATS = [&quot;.pdf&quot;, &quot;.docx&quot;, &quot;.txt&quot;, &quot;.md&quot;, &quot;.html&quot;]
+
+    def __init__(self):
+        self.parsers = {
+            &quot;.pdf&quot;: PDFParser(),
+            &quot;.docx&quot;: DocxParser(),
+            &quot;.txt&quot;: TextParser(),
+            &quot;.md&quot;: MarkdownParser(),
+        }
+
+    def parse(self, file_path: str) -&gt; List[Document]:
+        &quot;&quot;&quot;解析文档为块&quot;&quot;&quot;
+        ext = Path(file_path).suffix
+        parser = self.parsers.get(ext)
+        if parser:
+            documents = parser.parse(file_path)
+            return self._split_documents(documents)
+</code></pre>
+<h3 id="72-rag">7.2 RAG 引擎</h3>
+<pre><code class="language-python">class RAGEngine:
+    &quot;&quot;&quot;RAG 检索引擎&quot;&quot;&quot;
+
+    def __init__(self,
+                 embedding_model: str = &quot;text-embedding-ada-002&quot;,
+                 vector_store: str = &quot;chroma&quot;):
+        self.embedder = EmbeddingModel(embedding_model)
+        self.vector_store = VectorStore(vector_store)
+
+    async def index_documents(self, documents: List[Document]):
+        &quot;&quot;&quot;索引文档&quot;&quot;&quot;
+        for doc in documents:
+            embedding = await self.embedder.embed(doc.content)
+            self.vector_store.add(
+                embedding=embedding,
+                content=doc.content,
+                metadata=doc.metadata
+            )
+
+    async def retrieve(self, query: str, k: int = 5) -&gt; List[Document]:
+        &quot;&quot;&quot;检索相关文档&quot;&quot;&quot;
+        query_embedding = await self.embedder.embed(query)
+        return self.vector_store.search(query_embedding, k=k)
+
+    async def augment_prompt(self, query: str, system_prompt: str) -&gt; str:
+        &quot;&quot;&quot;增强提示词&quot;&quot;&quot;
+        relevant_docs = await self.retrieve(query)
+        context = &quot;\n&quot;.join([doc.content for doc in relevant_docs])
+
+        return f&quot;&quot;&quot;
+{system_prompt}
+
+相关上下文：
+{context}
+
+用户查询：
+{query}
+&quot;&quot;&quot;
+</code></pre>
+<hr />
+<h2 id="_5">八、与其他框架对比</h2>
+<h3 id="81-vs-langchain">8.1 vs LangChain</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MetaGPT</th>
+<th>LangChain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定位</strong></td>
+<td>软件开发 Agent 团队</td>
+<td>通用 LLM 框架</td>
+</tr>
+<tr>
+<td><strong>Agent 协作</strong></td>
+<td>原生多 Agent SOP</td>
+<td>需要额外组件</td>
+</tr>
+<tr>
+<td><strong>工作流</strong></td>
+<td>预定义 SOP 流程</td>
+<td>灵活链式组合</td>
+</tr>
+<tr>
+<td><strong>输出</strong></td>
+<td>完整软件项目</td>
+<td>单次调用结果</td>
+</tr>
+<tr>
+<td><strong>角色系统</strong></td>
+<td>内置产品/架构/开发</td>
+<td>需要自定义</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-vs-autogen">8.2 vs AutoGen</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MetaGPT</th>
+<th>AutoGen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>协作模式</strong></td>
+<td>SOP 流程驱动</td>
+<td>对话驱动</td>
+</tr>
+<tr>
+<td><strong>角色定义</strong></td>
+<td>明确的职责分工</td>
+<td>灵活定义</td>
+</tr>
+<tr>
+<td><strong>输出格式</strong></td>
+<td>结构化文档/代码</td>
+<td>对话内容</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>软件开发</td>
+<td>通用对话</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-vs-agency-swarm">8.3 vs Agency Swarm</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MetaGPT</th>
+<th>Agency Swarm</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>基础</strong></td>
+<td>自建框架</td>
+<td>OpenAI Agents SDK</td>
+</tr>
+<tr>
+<td><strong>通信</strong></td>
+<td>消息传递</td>
+<td>send_message 工具</td>
+</tr>
+<tr>
+<td><strong>SOP</strong></td>
+<td>核心特性</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>输出</strong></td>
+<td>完整项目</td>
+<td>任务执行结果</td>
+</tr>
+</tbody>
+</table>
+<h3 id="84-vs-ruflo">8.4 vs RuFlo</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>MetaGPT</th>
+<th>RuFlo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>基础</strong></td>
+<td>Python 库</td>
+<td>Claude Code 专用</td>
+</tr>
+<tr>
+<td><strong>Agent 数量</strong></td>
+<td>15+ 角色</td>
+<td>60+ Agent</td>
+</tr>
+<tr>
+<td><strong>自学习</strong></td>
+<td>经验池</td>
+<td>完整学习循环</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td>无</td>
+<td>259 工具</td>
+</tr>
+<tr>
+<td><strong>记忆</strong></td>
+<td>Memory 类</td>
+<td>AgentDB + HNSW</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">九、生产部署</h2>
+<h3 id="91">9.1 安装</h3>
+<pre><code class="language-bash"># 基础安装
+pip install --upgrade metagpt
+
+# 初始化配置
+metagpt --init-config
+</code></pre>
+<h3 id="92-docker">9.2 Docker 部署</h3>
+<pre><code class="language-dockerfile">FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+
+ENV PYTHONUNBUFFERED=1
+ENV METAGPT_WORKDIR=/app/workspace
+
+CMD [&quot;python&quot;, &quot;-m&quot;, &quot;metagpt&quot;]
+</code></pre>
+<pre><code class="language-yaml"># docker-compose.yml
+version: '3.8'
+
+services:
+  metagpt:
+    build: .
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./workspace:/app/workspace
+    ports:
+      - &quot;8000:8000&quot;
+</code></pre>
+<h3 id="93">9.3 快速使用</h3>
+<pre><code class="language-bash"># 命令行
+metagpt &quot;Create a 2048 game&quot;
+
+# Python
+from metagpt.software_company import generate_repo
+
+repo = generate_repo(&quot;Create a 2048 game&quot;)
+print(repo)
+</code></pre>
+<hr />
+<h2 id="_7">十、学术贡献</h2>
+<h3 id="iclr-2024">ICLR 2024 论文</h3>
+<pre><code class="language-bibtex">@inproceedings{hong2024metagpt,
+  title={Meta{GPT}: Meta Programming for A Multi-Agent Collaborative Framework},
+  author={Sirui Hong and Mingchen Zhuge and Jonathan Chen and others},
+  booktitle={The Twelfth International Conference on Learning Representations},
+  year={2024},
+  url={https://openreview.net/forum?id=VtmBAGCN7o}
+}
+</code></pre>
+<h3 id="aflow-iclr-2025-oral">AFlow (ICLR 2025 Oral)</h3>
+<ul>
+<li>论文 "AFlow: Automating Agentic Workflow Generation"</li>
+<li>被接收为 Oral Presentation (top 1.8%)</li>
+</ul>
+<hr />
+<h2 id="_8">参考资源</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/FoundationAgents/MetaGPT</li>
+<li><strong>文档</strong>: https://docs.deepwisdom.ai/main/en/</li>
+<li><strong>MGX 平台</strong>: https://mgx.dev/</li>
+<li><strong>HuggingFace Space</strong>: https://huggingface.co/spaces/deepwisdom/MetaGPT-SoftwareCompany</li>
+<li><strong>Discord</strong>: https://discord.gg/DYn29wFk9z</li>
+<li><strong>Twitter</strong>: https://twitter.com/MetaGPT_</li>
+</ul>
+<hr />
+<p><em>报告生成时间：2026-03-26</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

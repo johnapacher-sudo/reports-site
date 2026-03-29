@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaGPT 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始掌握 MetaGPT - 多 Agent 协作框架 | 教程日期：2026-03-26</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13" class="toc-h3">1.3 安装</a></li>
+<li><a href="#14" class="toc-h3">1.4 初始化配置</a></li>
+<li><a href="#15-api-key" class="toc-h3">1.5 配置 API Key</a></li>
+<li><a href="#16" class="toc-h3">1.6 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21" class="toc-h3">2.1 一行命令创建软件</a></li>
+<li><a href="#22-python" class="toc-h3">2.2 Python 快速使用</a></li>
+<li><a href="#23-softwarecompany" class="toc-h3">2.3 使用 SoftwareCompany</a></li>
+<li><a href="#24" class="toc-h3">2.4 指定输出目录</a></li>
+<li><a href="#_4" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31-code-sopteam" class="toc-h3">3.1 Code = SOP(Team)</a></li>
+<li><a href="#32-role" class="toc-h3">3.2 Role（角色）</a></li>
+<li><a href="#33-action" class="toc-h3">3.3 Action（动作）</a></li>
+<li><a href="#34-message" class="toc-h3">3.4 Message（消息）</a></li>
+<li><a href="#35-environment" class="toc-h3">3.5 Environment（环境）</a></li>
+<li><a href="#_5" class="toc-h2">四、创建自定义角色</a></li>
+<li><a href="#41" class="toc-h3">4.1 定义角色类</a></li>
+<li><a href="#42" class="toc-h3">4.2 使用自定义角色</a></li>
+<li><a href="#43" class="toc-h3">4.3 角色协作</a></li>
+<li><a href="#44" class="toc-h3">4.4 角色目录结构</a></li>
+<li><a href="#_6" class="toc-h2">五、动作系统</a></li>
+<li><a href="#51" class="toc-h3">5.1 创建动作</a></li>
+<li><a href="#52" class="toc-h3">5.2 动作参数</a></li>
+<li><a href="#53-llm" class="toc-h3">5.3 使用 LLM</a></li>
+<li><a href="#54" class="toc-h3">5.4 动作链</a></li>
+<li><a href="#agent" class="toc-h2">六、多 Agent 协作</a></li>
+<li><a href="#61" class="toc-h3">6.1 创建团队</a></li>
+<li><a href="#62" class="toc-h3">6.2 定义协作流程</a></li>
+<li><a href="#63" class="toc-h3">6.3 协作流程图</a></li>
+<li><a href="#64-environment" class="toc-h3">6.4 Environment 管理</a></li>
+<li><a href="#_7" class="toc-h2">七、记忆与知识库</a></li>
+<li><a href="#71-memory" class="toc-h3">7.1 使用 Memory</a></li>
+<li><a href="#72-knowledge-bank" class="toc-h3">7.2 Knowledge Bank</a></li>
+<li><a href="#73-experience-pool" class="toc-h3">7.3 Experience Pool</a></li>
+<li><a href="#llm" class="toc-h2">八、LLM 配置</a></li>
+<li><a href="#81" class="toc-h3">8.1 支持的提供商</a></li>
+<li><a href="#82" class="toc-h3">8.2 配置文件</a></li>
+<li><a href="#83" class="toc-h3">8.3 多模型配置</a></li>
+<li><a href="#84" class="toc-h3">8.4 代码配置</a></li>
+<li><a href="#rag" class="toc-h2">九、RAG 集成</a></li>
+<li><a href="#91" class="toc-h3">9.1 文档解析</a></li>
+<li><a href="#92-rag" class="toc-h3">9.2 RAG 引擎</a></li>
+<li><a href="#93-rag" class="toc-h3">9.3 在角色中使用 RAG</a></li>
+<li><a href="#_8" class="toc-h2">十、生产部署</a></li>
+<li><a href="#101-docker" class="toc-h3">10.1 Docker 部署</a></li>
+<li><a href="#102" class="toc-h3">10.2 配置管理</a></li>
+<li><a href="#103" class="toc-h3">10.3 日志配置</a></li>
+<li><a href="#104" class="toc-h3">10.4 监控和指标</a></li>
+<li><a href="#_9" class="toc-h2">十一、最佳实践</a></li>
+<li><a href="#111" class="toc-h3">11.1 角色设计</a></li>
+<li><a href="#112" class="toc-h3">11.2 提示词设计</a></li>
+<li><a href="#113" class="toc-h3">11.3 错误处理</a></li>
+<li><a href="#114" class="toc-h3">11.4 资源管理</a></li>
+<li><a href="#_10" class="toc-h2">十二、常见问题</a></li>
+<li><a href="#121" class="toc-h3">12.1 安装问题</a></li>
+<li><a href="#122" class="toc-h3">12.2 运行问题</a></li>
+<li><a href="#123" class="toc-h3">12.3 性能问题</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+<li><a href="#_12" class="toc-h3">官方资源</a></li>
+<li><a href="#_13" class="toc-h3">社区资源</a></li>
+<li><a href="#_14" class="toc-h3">学术论文</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>MetaGPT 学习教程</h1>
+                        <div class="article-meta">从零开始掌握 MetaGPT - 多 Agent 协作框架<br>教程日期：2026-03-26</div>
+                    </header>
+                    <h1 id="metagpt">MetaGPT 学习教程</h1>
+<blockquote>
+<p>从零开始掌握 MetaGPT - 多 Agent 协作框架</p>
+<p>教程日期：2026-03-26</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四创建自定义角色">创建自定义角色</a></li>
+<li><a href="#五动作系统">动作系统</a></li>
+<li><a href="#六多-agent-协作">多 Agent 协作</a></li>
+<li><a href="#七记忆与知识库">记忆与知识库</a></li>
+<li><a href="#八llm-配置">LLM 配置</a></li>
+<li><a href="#九rag-集成">RAG 集成</a></li>
+<li><a href="#十生产部署">生产部署</a></li>
+<li><a href="#十一最佳实践">最佳实践</a></li>
+<li><a href="#十二常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 MetaGPT 前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Python 基础</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>Python 3.9+ 异步编程</td>
+</tr>
+<tr>
+<td>LLM 基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>理解大语言模型调用</td>
+</tr>
+<tr>
+<td>Agent 概念</td>
+<td>⭐⭐⭐⭐</td>
+<td>AI Agent 基本概念</td>
+</tr>
+<tr>
+<td>软件开发流程</td>
+<td>⭐⭐⭐</td>
+<td>需求、设计、编码、测试</td>
+</tr>
+<tr>
+<td>Pydantic</td>
+<td>⭐⭐⭐</td>
+<td>数据验证</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>Python 版本：3.9 - 3.11
+操作系统：macOS / Linux / Windows
+
+推荐配置：
+├── 内存：8GB+
+├── 存储：10GB+（用于项目和依赖）
+└── 网络：稳定的 API 访问
+</code></pre>
+<h3 id="13">1.3 安装</h3>
+<pre><code class="language-bash"># 方式 1: pip 安装（推荐）
+pip install --upgrade metagpt
+
+# 方式 2: 从源码安装
+git clone https://github.com/FoundationAgents/MetaGPT.git
+cd MetaGPT
+pip install -e .
+
+# 方式 3: 使用 uv（更快）
+uv pip install metagpt
+</code></pre>
+<h3 id="14">1.4 初始化配置</h3>
+<pre><code class="language-bash"># 生成默认配置文件
+metagpt --init-config
+
+# 配置文件位置
+~/.metagpt/config2.yaml
+</code></pre>
+<h3 id="15-api-key">1.5 配置 API Key</h3>
+<p><strong>方式 1: 环境变量</strong></p>
+<pre><code class="language-bash"># OpenAI
+export OPENAI_API_KEY=&quot;sk-...&quot;
+export OPENAI_API_MODEL=&quot;gpt-4&quot;
+
+# 或其他提供商
+export ANTHROPIC_API_KEY=&quot;sk-ant-...&quot;
+export DEEPSEEK_API_KEY=&quot;...&quot;
+</code></pre>
+<p><strong>方式 2: 配置文件</strong></p>
+<pre><code class="language-yaml"># ~/.metagpt/config2.yaml
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;your-api-key&quot;
+  base_url: &quot;https://api.openai.com/v1&quot;
+  temperature: 0.7
+  max_tokens: 4096
+</code></pre>
+<h3 id="16">1.6 验证安装</h3>
+<pre><code class="language-python"># test_install.py
+from metagpt import UserRequirement
+from metagpt.roles import ProductManager
+
+async def test():
+    pm = ProductManager()
+    result = await pm.run(&quot;创建一个简单的计算器&quot;)
+    print(result)
+
+import asyncio
+asyncio.run(test())
+</code></pre>
+<hr />
+<h2 id="_3">二、快速开始</h2>
+<h3 id="21">2.1 一行命令创建软件</h3>
+<pre><code class="language-bash"># 使用命令行
+metagpt &quot;Create a 2048 game&quot;
+
+# 输出：
+# workspace/
+# └── 2048_game/
+#     ├── docs/
+#     │   ├── prd.md
+#     │   └── design.md
+#     ├── src/
+#     │   └── game.py
+#     └── tests/
+#         └── test_game.py
+</code></pre>
+<h3 id="22-python">2.2 Python 快速使用</h3>
+<pre><code class="language-python">from metagpt.software_company import generate_repo
+
+# 一行代码生成项目
+repo = generate_repo(&quot;Create a snake game&quot;)
+print(repo)
+</code></pre>
+<h3 id="23-softwarecompany">2.3 使用 SoftwareCompany</h3>
+<pre><code class="language-python">from metagpt.roles import ProductManager, Architect, Engineer
+from metagpt.software_company import SoftwareCompany
+
+async def create_software():
+    # 创建软件公司
+    company = SoftwareCompany()
+
+    # 招聘角色
+    company.hire([
+        ProductManager(),
+        Architect(),
+        Engineer()
+    ])
+
+    # 开始项目
+    await company.run(&quot;Create a todo list app&quot;)
+
+import asyncio
+asyncio.run(create_software())
+</code></pre>
+<h3 id="24">2.4 指定输出目录</h3>
+<pre><code class="language-python">from metagpt.software_company import SoftwareCompany
+from metagpt.config2 import Config
+
+# 配置工作目录
+config = Config.default()
+config.workspace.path = &quot;./my_project&quot;
+
+company = SoftwareCompany(config=config)
+await company.run(&quot;Create a blog system&quot;)
+</code></pre>
+<hr />
+<h2 id="_4">三、核心概念</h2>
+<h3 id="31-code-sopteam">3.1 Code = SOP(Team)</h3>
+<p>MetaGPT 的核心理念：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Code = SOP(Team)                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Team (团队)                                                │
+│  ├── ProductManager: 分析需求，编写 PRD                     │
+│  ├── Architect: 设计架构                                    │
+│  ├── ProjectManager: 分解任务                               │
+│  ├── Engineer: 编写代码                                     │
+│  └── QaEngineer: 测试验证                                   │
+│                                                             │
+│  SOP (标准作业流程)                                          │
+│  ├── 需求 → PRD → 设计 → 任务 → 代码 → 测试                │
+│  └── 每个角色监听上游输出，执行自己的动作                    │
+│                                                             │
+│  Code (输出)                                                │
+│  └── 完整的软件项目                                         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32-role">3.2 Role（角色）</h3>
+<p>Role 是 Agent 的抽象，代表团队中的一个角色：</p>
+<pre><code class="language-python">from metagpt.roles import Role
+
+class MyRole(Role):
+    name: str = &quot;MyRole&quot;           # 角色名称
+    profile: str = &quot;Specialist&quot;     # 角色简介
+    goal: str = &quot;完成任务&quot;          # 角色目标
+    constraints: List[str] = []     # 约束条件
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([SomeAction])     # 监听什么动作
+        self._init_actions([MyAction])  # 执行什么动作
+</code></pre>
+<h3 id="33-action">3.3 Action（动作）</h3>
+<p>Action 是角色执行的具体操作：</p>
+<pre><code class="language-python">from metagpt.actions import Action
+
+class MyAction(Action):
+    name: str = &quot;MyAction&quot;
+
+    async def run(self, *args, **kwargs) -&gt; str:
+        &quot;&quot;&quot;执行动作&quot;&quot;&quot;
+        result = await self.llm.aask(&quot;你的提示词&quot;)
+        return result
+</code></pre>
+<h3 id="34-message">3.4 Message（消息）</h3>
+<p>Message 是角色间通信的载体：</p>
+<pre><code class="language-python">from metagpt.schema import Message
+
+message = Message(
+    content=&quot;消息内容&quot;,
+    role=&quot;ProductManager&quot;,
+    cause_by=WritePRD,
+    send_to={&quot;Architect&quot;}
+)
+</code></pre>
+<h3 id="35-environment">3.5 Environment（环境）</h3>
+<p>Environment 管理角色交互和消息路由：</p>
+<pre><code class="language-python">from metagpt.environment import Environment
+
+env = Environment()
+env.add_role(product_manager)
+env.add_role(architect)
+
+await env.run()
+</code></pre>
+<hr />
+<h2 id="_5">四、创建自定义角色</h2>
+<h3 id="41">4.1 定义角色类</h3>
+<pre><code class="language-python">from metagpt.roles import Role
+from metagpt.actions import Action
+from metagpt.schema import Message
+
+# 步骤 1: 定义动作
+class AnalyzeData(Action):
+    &quot;&quot;&quot;数据分析动作&quot;&quot;&quot;
+    name: str = &quot;AnalyzeData&quot;
+
+    async def run(self, data: str) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        分析以下数据：
+        {data}
+
+        提供：
+        1. 数据概览
+        2. 关键洞察
+        3. 建议
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+
+# 步骤 2: 定义角色
+class DataAnalyst(Role):
+    &quot;&quot;&quot;数据分析师角色&quot;&quot;&quot;
+    name: str = &quot;DataAnalyst&quot;
+    profile: str = &quot;Data Analyst&quot;
+    goal: str = &quot;提供专业的数据分析&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([UserRequirement])  # 监听用户需求
+        self._init_actions([AnalyzeData])  # 初始化动作
+
+    async def _act(self) -&gt; Message:
+        &quot;&quot;&quot;执行动作&quot;&quot;&quot;
+        data = self.rc.history[-1].content
+        result = await self._actions[0].run(data)
+        return Message(content=result, role=self.profile)
+</code></pre>
+<h3 id="42">4.2 使用自定义角色</h3>
+<pre><code class="language-python">from metagpt.environment import Environment
+
+async def run_analyst():
+    # 创建角色
+    analyst = DataAnalyst()
+
+    # 创建环境
+    env = Environment()
+    env.add_role(analyst)
+
+    # 发送任务
+    await env.run(
+        Message(content=&quot;分析销售数据&quot;, role=&quot;user&quot;)
+    )
+
+import asyncio
+asyncio.run(run_analyst())
+</code></pre>
+<h3 id="43">4.3 角色协作</h3>
+<pre><code class="language-python">from metagpt.roles import Role
+from metagpt.actions import Action
+
+# 定义动作
+class ResearchTopic(Action):
+    name: str = &quot;ResearchTopic&quot;
+    async def run(self, topic: str) -&gt; str:
+        return await self.llm.aask(f&quot;研究主题: {topic}&quot;)
+
+class WriteReport(Action):
+    name: str = &quot;WriteReport&quot;
+    async def run(self, research: str) -&gt; str:
+        return await self.llm.aask(f&quot;基于研究写报告: {research}&quot;)
+
+# 定义角色
+class Researcher(Role):
+    name: str = &quot;Researcher&quot;
+    profile: str = &quot;Researcher&quot;
+    goal: str = &quot;深入研究主题&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([UserRequirement])
+        self._init_actions([ResearchTopic])
+
+    async def _act(self) -&gt; Message:
+        topic = self.rc.history[-1].content
+        result = await self._actions[0].run(topic)
+        return Message(content=result, role=self.profile, send_to={&quot;Writer&quot;})
+
+class Writer(Role):
+    name: str = &quot;Writer&quot;
+    profile: str = &quot;Writer&quot;
+    goal: str = &quot;撰写专业报告&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([ResearchTopic])
+        self._init_actions([WriteReport])
+
+    async def _act(self) -&gt; Message:
+        research = self.rc.history[-1].content
+        result = await self._actions[0].run(research)
+        return Message(content=result, role=self.profile)
+</code></pre>
+<h3 id="44">4.4 角色目录结构</h3>
+<pre><code>my_agent/
+├── __init__.py
+├── my_agent.py           # 角色定义
+├── actions/
+│   ├── __init__.py
+│   └── my_action.py      # 动作定义
+├── prompts/
+│   └── my_prompt.py      # 提示词模板
+└── tests/
+    └── test_my_agent.py
+</code></pre>
+<hr />
+<h2 id="_6">五、动作系统</h2>
+<h3 id="51">5.1 创建动作</h3>
+<pre><code class="language-python">from metagpt.actions import Action
+from metagpt.schema import Message
+from typing import List
+
+class CodeReview(Action):
+    &quot;&quot;&quot;代码审查动作&quot;&quot;&quot;
+
+    name: str = &quot;CodeReview&quot;
+
+    async def run(self, code: str, language: str = &quot;python&quot;) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        审查以下 {language} 代码：
+
+        ```{language}
+        {code}
+        ```
+
+        提供：
+        1. 代码质量评分 (1-10)
+        2. 发现的问题
+        3. 改进建议
+        4. 安全风险
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h3 id="52">5.2 动作参数</h3>
+<pre><code class="language-python">from pydantic import Field
+
+class GenerateDocs(Action):
+    &quot;&quot;&quot;生成文档动作&quot;&quot;&quot;
+
+    name: str = &quot;GenerateDocs&quot;
+
+    # 定义参数
+    doc_type: str = Field(
+        default=&quot;api&quot;,
+        description=&quot;文档类型：api, user, developer&quot;
+    )
+    format: str = Field(
+        default=&quot;markdown&quot;,
+        description=&quot;输出格式：markdown, html, rst&quot;
+    )
+    include_examples: bool = Field(
+        default=True,
+        description=&quot;是否包含示例&quot;
+    )
+
+    async def run(self, code: str) -&gt; str:
+        prompt = f&quot;&quot;&quot;
+        为以下代码生成 {self.doc_type} 文档：
+        格式：{self.format}
+        包含示例：{self.include_examples}
+
+        代码：
+        {code}
+        &quot;&quot;&quot;
+        return await self.llm.aask(prompt)
+</code></pre>
+<h3 id="53-llm">5.3 使用 LLM</h3>
+<pre><code class="language-python">from metagpt.actions import Action
+
+class SmartAction(Action):
+    &quot;&quot;&quot;智能动作示例&quot;&quot;&quot;
+
+    async def run(self, input_text: str) -&gt; str:
+        # 方式 1: 简单提问
+        result = await self.llm.aask(input_text)
+
+        # 方式 2: 带系统提示
+        result = await self.llm.aask(
+            input_text,
+            system_msgs=[&quot;你是一个专业的技术顾问&quot;]
+        )
+
+        # 方式 3: 带历史上下文
+        result = await self.llm.aask(
+            input_text,
+            system_msgs=[&quot;你是一个助手&quot;],
+            history_messages=self.rc.history
+        )
+
+        return result
+</code></pre>
+<h3 id="54">5.4 动作链</h3>
+<pre><code class="language-python">from metagpt.actions import Action
+
+class ActionChain:
+    &quot;&quot;&quot;动作链&quot;&quot;&quot;
+
+    def __init__(self, actions: List[Action]):
+        self.actions = actions
+
+    async def run(self, initial_input: str) -&gt; str:
+        result = initial_input
+        for action in self.actions:
+            result = await action.run(result)
+        return result
+
+# 使用
+chain = ActionChain([
+    AnalyzeRequirement(),
+    DesignSolution(),
+    ImplementCode(),
+    WriteTests()
+])
+
+result = await chain.run(&quot;创建用户登录功能&quot;)
+</code></pre>
+<hr />
+<h2 id="agent">六、多 Agent 协作</h2>
+<h3 id="61">6.1 创建团队</h3>
+<pre><code class="language-python">from metagpt.roles import ProductManager, Architect, ProjectManager, Engineer, QaEngineer
+from metagpt.software_company import SoftwareCompany
+
+async def create_team():
+    # 创建软件公司
+    company = SoftwareCompany()
+
+    # 招聘团队成员
+    company.hire([
+        ProductManager(),
+        Architect(),
+        ProjectManager(),
+        Engineer(),
+        QaEngineer()
+    ])
+
+    return company
+</code></pre>
+<h3 id="62">6.2 定义协作流程</h3>
+<pre><code class="language-python">from metagpt.roles import Role
+from metagpt.actions import WritePRD, WriteDesign, WriteCode
+
+# ProductManager 监听用户需求，执行 WritePRD
+class ProductManager(Role):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([UserRequirement])
+        self._init_actions([WritePRD])
+
+    async def _act(self) -&gt; Message:
+        prd = await self._actions[0].run(self.rc.history)
+        return Message(content=prd, send_to={&quot;Architect&quot;})
+
+# Architect 监听 WritePRD，执行 WriteDesign
+class Architect(Role):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([WritePRD])
+        self._init_actions([WriteDesign])
+
+    async def _act(self) -&gt; Message:
+        design = await self._actions[0].run(self.rc.history)
+        return Message(content=design, send_to={&quot;ProjectManager&quot;})
+
+# Engineer 监听任务，执行 WriteCode
+class Engineer(Role):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([WriteTasks])
+        self._init_actions([WriteCode])
+
+    async def _act(self) -&gt; Message:
+        code = await self._actions[0].run(self.rc.history)
+        return Message(content=code, send_to={&quot;QaEngineer&quot;})
+</code></pre>
+<h3 id="63">6.3 协作流程图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    协作流程示例                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   用户需求: &quot;创建一个待办事项应用&quot;                              │
+│              │                                                  │
+│              ▼                                                  │
+│   ┌─────────────────┐                                          │
+│   │ ProductManager  │                                          │
+│   │                 │                                          │
+│   │ _watch: UserReq │                                          │
+│   │ _act: WritePRD  │                                          │
+│   └────────┬────────┘                                          │
+│            │ PRD                                                │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │   Architect     │                                          │
+│   │                 │                                          │
+│   │ _watch: WritePRD│                                          │
+│   │ _act: WriteDesign                                         │
+│   └────────┬────────┘                                          │
+│            │ 设计文档                                           │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ ProjectManager  │                                          │
+│   │                 │                                          │
+│   │ _watch: Design  │                                          │
+│   │ _act: WriteTasks│                                          │
+│   └────────┬────────┘                                          │
+│            │ 任务列表                                           │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │    Engineer     │                                          │
+│   │                 │                                          │
+│   │ _watch: Tasks   │                                          │
+│   │ _act: WriteCode │                                          │
+│   └────────┬────────┘                                          │
+│            │ 代码                                               │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │   QaEngineer    │                                          │
+│   │                 │                                          │
+│   │ _watch: Code    │                                          │
+│   │ _act: WriteTest │                                          │
+│   └─────────────────┘                                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="64-environment">6.4 Environment 管理</h3>
+<pre><code class="language-python">from metagpt.environment import Environment
+from metagpt.schema import Message
+
+async def run_team():
+    # 创建环境
+    env = Environment()
+
+    # 添加角色
+    pm = ProductManager()
+    arch = Architect()
+    eng = Engineer()
+
+    env.add_role(pm)
+    env.add_role(arch)
+    env.add_role(eng)
+
+    # 发送初始消息
+    await env.run(
+        Message(content=&quot;创建一个计算器&quot;, role=&quot;user&quot;)
+    )
+
+    # 获取结果
+    for role in env.get_roles():
+        print(f&quot;{role.name}: {role.rc.history}&quot;)
+</code></pre>
+<hr />
+<h2 id="_7">七、记忆与知识库</h2>
+<h3 id="71-memory">7.1 使用 Memory</h3>
+<pre><code class="language-python">from metagpt.memory import Memory
+from metagpt.schema import Message
+
+# 创建记忆
+memory = Memory(capacity=100)
+
+# 添加消息
+memory.add(Message(content=&quot;用户需求: 创建登录功能&quot;, role=&quot;user&quot;))
+memory.add(Message(content=&quot;PRD: ...&quot;, role=&quot;ProductManager&quot;), important=True)
+
+# 获取上下文
+context = memory.get_context(n=10)
+
+# 搜索记忆
+results = memory.search(&quot;登录&quot;)
+</code></pre>
+<h3 id="72-knowledge-bank">7.2 Knowledge Bank</h3>
+<pre><code class="language-python">from metagpt.const import DATA_PATH
+from metagpt.knowledge import KnowledgeBank
+
+# 创建知识库
+kb = KnowledgeBank(path=DATA_PATH / &quot;knowledge&quot;)
+
+# 添加文档
+kb.add_document(
+    name=&quot;api_docs&quot;,
+    content=&quot;API 文档内容...&quot;
+)
+
+# 查询
+results = kb.query(&quot;如何使用用户 API&quot;, k=5)
+</code></pre>
+<h3 id="73-experience-pool">7.3 Experience Pool</h3>
+<pre><code class="language-python">from metagpt.exp_pool import ExperiencePool, Experience
+
+# 创建经验池
+pool = ExperiencePool()
+
+# 记录经验
+experience = Experience(
+    context=&quot;用户登录功能&quot;,
+    action=&quot;WriteCode&quot;,
+    result=&quot;成功实现 JWT 认证&quot;,
+    success=True,
+    feedback=&quot;代码质量高&quot;
+)
+pool.add_experience(experience)
+
+# 查询类似经验
+similar = pool.get_similar_experiences(&quot;用户认证&quot;)
+</code></pre>
+<hr />
+<h2 id="llm">八、LLM 配置</h2>
+<h3 id="81">8.1 支持的提供商</h3>
+<pre><code class="language-python"># OpenAI
+config = {
+    &quot;api_type&quot;: &quot;openai&quot;,
+    &quot;model&quot;: &quot;gpt-4&quot;,
+    &quot;api_key&quot;: &quot;sk-...&quot;
+}
+
+# Azure OpenAI
+config = {
+    &quot;api_type&quot;: &quot;azure&quot;,
+    &quot;model&quot;: &quot;gpt-4&quot;,
+    &quot;api_key&quot;: &quot;...&quot;,
+    &quot;base_url&quot;: &quot;https://your-resource.openai.azure.com&quot;
+}
+
+# Anthropic
+config = {
+    &quot;api_type&quot;: &quot;anthropic&quot;,
+    &quot;model&quot;: &quot;claude-3-opus&quot;,
+    &quot;api_key&quot;: &quot;sk-ant-...&quot;
+}
+
+# DeepSeek
+config = {
+    &quot;api_type&quot;: &quot;deepseek&quot;,
+    &quot;model&quot;: &quot;deepseek-chat&quot;,
+    &quot;api_key&quot;: &quot;...&quot;
+}
+
+# Ollama (本地)
+config = {
+    &quot;api_type&quot;: &quot;ollama&quot;,
+    &quot;model&quot;: &quot;llama3&quot;,
+    &quot;base_url&quot;: &quot;http://localhost:11434&quot;
+}
+</code></pre>
+<h3 id="82">8.2 配置文件</h3>
+<pre><code class="language-yaml"># ~/.metagpt/config2.yaml
+
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;${OPENAI_API_KEY}&quot;  # 支持环境变量
+  base_url: &quot;https://api.openai.com/v1&quot;
+  temperature: 0.7
+  max_tokens: 4096
+  top_p: 1.0
+
+  # 速率限制
+  rate_limit:
+    rpm: 60
+    tpm: 90000
+
+  # 重试配置
+  retry:
+    max_retries: 3
+    delay: 1.0
+</code></pre>
+<h3 id="83">8.3 多模型配置</h3>
+<pre><code class="language-yaml">llms:
+  # 默认模型
+  default:
+    api_type: &quot;openai&quot;
+    model: &quot;gpt-4&quot;
+
+  # 编码专用
+  coding:
+    api_type: &quot;openai&quot;
+    model: &quot;gpt-4-turbo&quot;
+
+  # 分析专用
+  analysis:
+    api_type: &quot;anthropic&quot;
+    model: &quot;claude-3-opus&quot;
+</code></pre>
+<pre><code class="language-python">from metagpt.provider import LLMFactory
+from metagpt.config2 import Config
+
+config = Config.from_yaml(&quot;config.yaml&quot;)
+
+# 使用默认模型
+default_llm = LLMFactory.create(config.llm)
+
+# 使用编码模型
+coding_llm = LLMFactory.create(config.llms[&quot;coding&quot;])
+</code></pre>
+<h3 id="84">8.4 代码配置</h3>
+<pre><code class="language-python">from metagpt.config2 import Config
+from metagpt.provider import OpenAILLM, AnthropicLLM
+
+# 方式 1: 使用配置对象
+config = Config.default()
+config.llm.api_key = &quot;sk-...&quot;
+config.llm.model = &quot;gpt-4&quot;
+
+# 方式 2: 直接创建 LLM
+llm = OpenAILLM(
+    api_key=&quot;sk-...&quot;,
+    model=&quot;gpt-4&quot;,
+    temperature=0.7
+)
+
+# 方式 3: 切换模型
+from metagpt.roles import Role
+
+class MyRole(Role):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # 为角色指定特定模型
+        self.llm = AnthropicLLM(
+            api_key=&quot;sk-ant-...&quot;,
+            model=&quot;claude-3-opus&quot;
+        )
+</code></pre>
+<hr />
+<h2 id="rag">九、RAG 集成</h2>
+<h3 id="91">9.1 文档解析</h3>
+<pre><code class="language-python">from metagpt.rag import DocumentParser, TextSplitter
+
+# 创建解析器
+parser = DocumentParser()
+
+# 解析文档
+documents = parser.parse(&quot;./docs/api.pdf&quot;)
+
+# 文档分块
+splitter = TextSplitter(
+    chunk_size=500,
+    chunk_overlap=50
+)
+chunks = splitter.split(documents)
+</code></pre>
+<h3 id="92-rag">9.2 RAG 引擎</h3>
+<pre><code class="language-python">from metagpt.rag import RAGEngine
+
+# 创建 RAG 引擎
+rag = RAGEngine(
+    embedding_model=&quot;text-embedding-ada-002&quot;,
+    vector_store=&quot;chroma&quot;
+)
+
+# 索引文档
+await rag.index_documents(chunks)
+
+# 检索
+results = await rag.retrieve(&quot;如何使用 API&quot;, k=5)
+
+# 增强提示词
+augmented = await rag.augment_prompt(
+    query=&quot;用户认证流程&quot;,
+    system_prompt=&quot;你是一个技术顾问&quot;
+)
+</code></pre>
+<h3 id="93-rag">9.3 在角色中使用 RAG</h3>
+<pre><code class="language-python">from metagpt.roles import Role
+from metagpt.rag import RAGEngine
+
+class RAGRole(Role):
+    &quot;&quot;&quot;带 RAG 能力的角色&quot;&quot;&quot;
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.rag = RAGEngine()
+
+    async def _act(self):
+        query = self.rc.history[-1].content
+
+        # 使用 RAG 增强上下文
+        augmented_prompt = await self.rag.augment_prompt(
+            query=query,
+            system_prompt=&quot;基于文档回答问题&quot;
+        )
+
+        result = await self.llm.aask(augmented_prompt)
+        return Message(content=result, role=self.profile)
+</code></pre>
+<hr />
+<h2 id="_8">十、生产部署</h2>
+<h3 id="101-docker">10.1 Docker 部署</h3>
+<pre><code class="language-dockerfile"># Dockerfile
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# 安装依赖
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 复制代码
+COPY . .
+
+# 环境变量
+ENV PYTHONUNBUFFERED=1
+ENV METAGPT_WORKDIR=/app/workspace
+
+# 运行
+CMD [&quot;python&quot;, &quot;-m&quot;, &quot;metagpt&quot;]
+</code></pre>
+<pre><code class="language-yaml"># docker-compose.yml
+version: '3.8'
+
+services:
+  metagpt:
+    build: .
+    container_name: metagpt
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      - ./workspace:/app/workspace
+      - ./config:/app/config
+    ports:
+      - &quot;8000:8000&quot;
+</code></pre>
+<h3 id="102">10.2 配置管理</h3>
+<pre><code class="language-python">from metagpt.config2 import Config
+from pydantic import BaseSettings
+
+class Settings(BaseSettings):
+    &quot;&quot;&quot;应用设置&quot;&quot;&quot;
+    openai_api_key: str
+    openai_model: str = &quot;gpt-4&quot;
+    workspace_path: str = &quot;./workspace&quot;
+    log_level: str = &quot;INFO&quot;
+
+    class Config:
+        env_prefix = &quot;METAGPT_&quot;
+
+# 使用
+settings = Settings()
+config = Config.default()
+config.llm.api_key = settings.openai_api_key
+</code></pre>
+<h3 id="103">10.3 日志配置</h3>
+<pre><code class="language-python">import logging
+from metagpt.logs import logger
+
+# 配置日志
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# 使用
+logger.info(&quot;开始执行任务&quot;)
+logger.debug(f&quot;处理消息: {message}&quot;)
+logger.error(f&quot;执行失败: {error}&quot;)
+</code></pre>
+<h3 id="104">10.4 监控和指标</h3>
+<pre><code class="language-python">from metagpt.metrics import TokenMonitor, ExecutionTimer
+
+# Token 监控
+token_monitor = TokenMonitor(max_tokens_per_day=1000000)
+
+if token_monitor.check_limit(1000):
+    result = await llm.aask(prompt)
+    token_monitor.record_usage(1000)
+
+# 执行计时
+timer = ExecutionTimer()
+
+with timer.measure(&quot;code_generation&quot;):
+    code = await engineer.run(task)
+
+print(f&quot;耗时: {timer.get_duration('code_generation')}s&quot;)
+</code></pre>
+<hr />
+<h2 id="_9">十一、最佳实践</h2>
+<h3 id="111">11.1 角色设计</h3>
+<pre><code class="language-python"># 好的做法：单一职责
+class CodeReviewer(Role):
+    &quot;&quot;&quot;只负责代码审查&quot;&quot;&quot;
+    name: str = &quot;CodeReviewer&quot;
+    goal: str = &quot;发现代码问题和改进点&quot;
+
+# 不好的做法：职责过多
+class SuperRole(Role):
+    &quot;&quot;&quot;负责所有事情&quot;&quot;&quot;
+    # 不要这样做
+</code></pre>
+<h3 id="112">11.2 提示词设计</h3>
+<pre><code class="language-python"># 好的做法：结构化提示词
+PROMPT_TEMPLATE = &quot;&quot;&quot;
+你是一个专业的 {role}。
+
+任务：{task}
+
+输入：
+{input}
+
+要求：
+1. {requirement_1}
+2. {requirement_2}
+
+输出格式：
+{output_format}
+&quot;&quot;&quot;
+
+# 不好的做法：模糊提示词
+prompt = &quot;帮我写代码&quot;
+</code></pre>
+<h3 id="113">11.3 错误处理</h3>
+<pre><code class="language-python">from metagpt.exceptions import LLMError, AgentError
+import asyncio
+
+async def safe_run(agent, task):
+    &quot;&quot;&quot;安全执行&quot;&quot;&quot;
+    try:
+        result = await agent.run(task)
+        return result
+    except LLMError as e:
+        print(f&quot;LLM 错误: {e}&quot;)
+        # 重试逻辑
+        for _ in range(3):
+            await asyncio.sleep(1)
+            try:
+                return await agent.run(task)
+            except:
+                continue
+    except AgentError as e:
+        print(f&quot;Agent 错误: {e}&quot;)
+        return None
+</code></pre>
+<h3 id="114">11.4 资源管理</h3>
+<pre><code class="language-python">from metagpt.utils import ResourceMonitor
+
+# 监控资源使用
+monitor = ResourceMonitor()
+
+# 检查内存
+if monitor.memory_usage() &gt; 0.8:
+    print(&quot;内存使用过高&quot;)
+    # 清理记忆
+    agent.memory.clear()
+
+# 检查 Token 使用
+if monitor.token_usage() &gt; 0.9:
+    print(&quot;Token 配额即将耗尽&quot;)
+</code></pre>
+<hr />
+<h2 id="_10">十二、常见问题</h2>
+<h3 id="121">12.1 安装问题</h3>
+<p><strong>Q: 安装失败，提示依赖冲突</strong></p>
+<pre><code class="language-bash"># 使用虚拟环境
+python -m venv venv
+source venv/bin/activate
+pip install metagpt
+
+# 或使用 uv
+uv venv
+source .venv/bin/activate
+uv pip install metagpt
+</code></pre>
+<p><strong>Q: API Key 配置无效</strong></p>
+<pre><code class="language-bash"># 检查环境变量
+echo $OPENAI_API_KEY
+
+# 或检查配置文件
+cat ~/.metagpt/config2.yaml
+</code></pre>
+<h3 id="122">12.2 运行问题</h3>
+<p><strong>Q: Agent 不响应</strong></p>
+<pre><code class="language-python"># 检查是否正确设置了监听
+class MyRole(Role):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._watch([UserRequirement])  # 确保设置了监听
+</code></pre>
+<p><strong>Q: 输出格式不符合预期</strong></p>
+<pre><code class="language-python"># 使用结构化输出
+from pydantic import BaseModel
+
+class OutputFormat(BaseModel):
+    title: str
+    content: str
+    tags: List[str]
+
+class MyAction(Action):
+    async def run(self, input_text: str) -&gt; OutputFormat:
+        result = await self.llm.aask(input_text)
+        return OutputFormat.parse_raw(result)
+</code></pre>
+<h3 id="123">12.3 性能问题</h3>
+<p><strong>Q: 执行速度慢</strong></p>
+<pre><code class="language-python"># 并行执行
+import asyncio
+
+async def parallel_run():
+    tasks = [agent.run(f&quot;任务{i}&quot;) for i in range(5)]
+    results = await asyncio.gather(*tasks)
+    return results
+
+# 使用更快的模型
+config.llm.model = &quot;gpt-4-turbo&quot;
+</code></pre>
+<p><strong>Q: Token 消耗过高</strong></p>
+<pre><code class="language-python"># 减少历史上下文
+memory.get_context(n=5)  # 只保留最近 5 条
+
+# 使用更短的提示词
+# 使用更便宜的模型处理简单任务
+</code></pre>
+<hr />
+<h2 id="_11">参考资源</h2>
+<h3 id="_12">官方资源</h3>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/FoundationAgents/MetaGPT</li>
+<li><strong>文档</strong>: https://docs.deepwisdom.ai/main/en/</li>
+<li><strong>MGX 平台</strong>: https://mgx.dev/</li>
+</ul>
+<h3 id="_13">社区资源</h3>
+<ul>
+<li><strong>Discord</strong>: https://discord.gg/DYn29wFk9z</li>
+<li><strong>Twitter</strong>: https://twitter.com/MetaGPT_</li>
+<li><strong>HuggingFace</strong>: https://huggingface.co/spaces/deepwisdom/MetaGPT-SoftwareCompany</li>
+</ul>
+<h3 id="_14">学术论文</h3>
+<ul>
+<li><strong>ICLR 2024</strong>: <a href="https://openreview.net/forum?id=VtmBAGCN7o">MetaGPT: Meta Programming for A Multi-Agent Collaborative Framework</a></li>
+<li><strong>ICLR 2025 Oral</strong>: <a href="https://arxiv.org/">AFlow: Automating Agentic Workflow Generation</a></li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-26</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

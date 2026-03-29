@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian 基础使用指南</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">更新日期: 2026-03-14 | 文档版本: 1.0</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#obsidian_1" class="toc-h2">一、Obsidian 简介</a></li>
+<li><a href="#11-obsidian" class="toc-h3">1.1 什么是 Obsidian？</a></li>
+<li><a href="#12" class="toc-h3">1.2 核心理念</a></li>
+<li><a href="#13" class="toc-h3">1.3 适用场景</a></li>
+<li><a href="#_2" class="toc-h2">二、安装与配置</a></li>
+<li><a href="#21" class="toc-h3">2.1 下载安装</a></li>
+<li><a href="#22-vault" class="toc-h3">2.2 创建仓库 (Vault)</a></li>
+<li><a href="#23" class="toc-h3">2.3 初始设置</a></li>
+<li><a href="#_3" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31-vault" class="toc-h3">3.1 仓库 (Vault)</a></li>
+<li><a href="#32-note" class="toc-h3">3.2 笔记 (Note)</a></li>
+<li><a href="#33" class="toc-h3">3.3 链接类型</a></li>
+<li><a href="#_4" class="toc-h2">四、基础操作</a></li>
+<li><a href="#41" class="toc-h3">4.1 快捷键</a></li>
+<li><a href="#42" class="toc-h3">4.2 命令面板</a></li>
+<li><a href="#43" class="toc-h3">4.3 文件操作</a></li>
+<li><a href="#markdown" class="toc-h2">五、Markdown 语法</a></li>
+<li><a href="#51" class="toc-h3">5.1 基础语法</a></li>
+<li><a href="#52" class="toc-h3">5.2 代码块</a></li>
+<li><a href="#53" class="toc-h3">5.3 表格</a></li>
+<li><a href="#54" class="toc-h3">5.4 任务列表</a></li>
+<li><a href="#55-callout" class="toc-h3">5.5 Callout (标注框)</a></li>
+<li><a href="#_5" class="toc-h2">六、双向链接</a></li>
+<li><a href="#61" class="toc-h3">6.1 创建链接</a></li>
+<li><a href="#62" class="toc-h3">6.2 反向链接面板</a></li>
+<li><a href="#63" class="toc-h3">6.3 关系图谱</a></li>
+<li><a href="#_6" class="toc-h2">七、插件系统</a></li>
+<li><a href="#71" class="toc-h3">7.1 核心插件</a></li>
+<li><a href="#72" class="toc-h3">7.2 社区插件</a></li>
+<li><a href="#73" class="toc-h3">7.3 必装社区插件推荐</a></li>
+<li><a href="#_7" class="toc-h2">八、同步方案</a></li>
+<li><a href="#81" class="toc-h3">8.1 官方同步</a></li>
+<li><a href="#82" class="toc-h3">8.2 第三方同步方案</a></li>
+<li><a href="#83-git" class="toc-h3">8.3 Git 同步脚本示例</a></li>
+<li><a href="#_8" class="toc-h2">九、最佳实践建议</a></li>
+<li><a href="#91-para" class="toc-h3">9.1 文件夹结构 (PARA 方法)</a></li>
+<li><a href="#92" class="toc-h3">9.2 命名规范</a></li>
+<li><a href="#93" class="toc-h3">9.3 标签系统</a></li>
+<li><a href="#_9" class="toc-h2">十、参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Obsidian 基础使用指南</h1>
+                        <div class="article-meta">更新日期: 2026-03-14<br>文档版本: 1.0</div>
+                    </header>
+                    <h1 id="obsidian">Obsidian 基础使用指南</h1>
+<blockquote>
+<p>更新日期: 2026-03-14
+文档版本: 1.0</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一obsidian-简介">Obsidian 简介</a></li>
+<li><a href="#二安装与配置">安装与配置</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四基础操作">基础操作</a></li>
+<li><a href="#五markdown-语法">Markdown 语法</a></li>
+<li><a href="#六双向链接">双向链接</a></li>
+<li><a href="#七插件系统">插件系统</a></li>
+<li><a href="#八同步方案">同步方案</a></li>
+</ol>
+<hr />
+<h2 id="obsidian_1">一、Obsidian 简介</h2>
+<h3 id="11-obsidian">1.1 什么是 Obsidian？</h3>
+<p><strong>Obsidian</strong> 是一款基于 Markdown 的<strong>双向链接笔记软件</strong>，核心特点：</p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>本地优先</strong></td>
+<td>所有数据存储在本地，完全掌控</td>
+</tr>
+<tr>
+<td><strong>Markdown</strong></td>
+<td>使用标准 Markdown 格式，通用性强</td>
+</tr>
+<tr>
+<td><strong>双向链接</strong></td>
+<td>笔记之间可以相互引用，形成知识网络</td>
+</tr>
+<tr>
+<td><strong>插件生态</strong></td>
+<td>丰富的社区插件，高度可定制</td>
+</tr>
+<tr>
+<td><strong>跨平台</strong></td>
+<td>支持 Windows、macOS、Linux、iOS、Android</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 核心理念</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Obsidian 设计理念                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   📁 本地存储    ──→  数据完全掌控，隐私安全                  │
+│                                                             │
+│   🔗 双向链接    ──→  知识网络，而非孤立笔记                  │
+│                                                             │
+│   🔌 插件系统    ──→  无限扩展可能性                          │
+│                                                             │
+│   📝 Markdown   ──→  通用格式，永不过时                       │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="13">1.3 适用场景</h3>
+<ul>
+<li>📚 个人知识管理 (PKM)</li>
+<li>📝 学术研究与论文写作</li>
+<li>💼 项目管理与任务追踪</li>
+<li>📖 读书笔记与文献管理</li>
+<li>🧠 第二大脑构建</li>
+</ul>
+<hr />
+<h2 id="_2">二、安装与配置</h2>
+<h3 id="21">2.1 下载安装</h3>
+<p><strong>官网</strong>: https://obsidian.md</p>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>下载方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Windows</td>
+<td>官网下载 .exe 安装包</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td>官网下载 .dmg 或 Homebrew</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>AppImage / Flatpak / Snap</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>App Store</td>
+</tr>
+<tr>
+<td>Android</td>
+<td>Google Play / APK</td>
+</tr>
+</tbody>
+</table>
+<p><strong>macOS Homebrew 安装</strong>:</p>
+<pre><code class="language-bash">brew install --cask obsidian
+</code></pre>
+<h3 id="22-vault">2.2 创建仓库 (Vault)</h3>
+<p>首次启动时需要创建或打开仓库：</p>
+<pre><code>┌─────────────────────────────────────────┐
+│           创建新仓库                     │
+├─────────────────────────────────────────┤
+│                                         │
+│  仓库名称: MyVault                      │
+│  存储位置: ~/Documents/MyVault          │
+│                                         │
+│  [创建仓库]                             │
+│                                         │
+└─────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p><strong>注意</strong>: 仓库就是一个普通文件夹，里面存放 Markdown 文件。</p>
+</blockquote>
+<h3 id="23">2.3 初始设置</h3>
+<table>
+<thead>
+<tr>
+<th>设置项</th>
+<th>建议配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>编辑器 &gt; 自动配对括号</td>
+<td>✅ 开启</td>
+</tr>
+<tr>
+<td>编辑器 &gt; 智能缩进</td>
+<td>✅ 开启</td>
+</tr>
+<tr>
+<td>文件与链接 &gt; 默认存放位置</td>
+<td>指定文件夹</td>
+</tr>
+<tr>
+<td>外观 &gt; 主题</td>
+<td>选择喜欢的主题</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">三、核心概念</h2>
+<h3 id="31-vault">3.1 仓库 (Vault)</h3>
+<pre><code>MyVault/                    ← 仓库根目录
+├── .obsidian/              ← Obsidian 配置目录（自动生成）
+│   ├── app.json
+│   ├── appearance.json
+│   ├── community-plugins.json
+│   └── plugins/            ← 插件目录
+│
+├── 00-Inbox/               ← 收件箱
+├── 01-Projects/            ← 项目
+├── 02-Areas/               ← 领域
+├── 03-Resources/           ← 资源
+├── 04-Archives/            ← 归档
+├── Templates/              ← 模板
+└── Daily Notes/            ← 日记
+</code></pre>
+<h3 id="32-note">3.2 笔记 (Note)</h3>
+<p>每个笔记就是一个 <code>.md</code> 文件：</p>
+<pre><code class="language-markdown">---
+title: 笔记标题
+date: 2026-03-14
+tags: [tag1, tag2]
+---
+
+# 笔记标题
+
+笔记内容...
+
+## 相关链接
+- [[相关笔记1]]
+- [[相关笔记2]]
+</code></pre>
+<h3 id="33">3.3 链接类型</h3>
+<table>
+<thead>
+<tr>
+<th>链接类型</th>
+<th>语法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>内部链接</td>
+<td><code>[[笔记名]]</code></td>
+<td>链接到其他笔记</td>
+</tr>
+<tr>
+<td>标题链接</td>
+<td><code>[[笔记名#标题]]</code></td>
+<td>链接到笔记的特定标题</td>
+</tr>
+<tr>
+<td>块链接</td>
+<td><code>[[笔记名^block-id]]</code></td>
+<td>链接到特定块</td>
+</tr>
+<tr>
+<td>外部链接</td>
+<td><code>[显示文本](URL)</code></td>
+<td>链接到网页</td>
+</tr>
+<tr>
+<td>嵌入</td>
+<td><code>![[图片.png]]</code></td>
+<td>嵌入图片或笔记</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_4">四、基础操作</h2>
+<h3 id="41">4.1 快捷键</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>macOS</th>
+<th>Windows/Linux</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>新建笔记</td>
+<td><code>Cmd + N</code></td>
+<td><code>Ctrl + N</code></td>
+</tr>
+<tr>
+<td>快速切换</td>
+<td><code>Cmd + O</code></td>
+<td><code>Ctrl + O</code></td>
+</tr>
+<tr>
+<td>全局搜索</td>
+<td><code>Cmd + Shift + F</code></td>
+<td><code>Ctrl + Shift + F</code></td>
+</tr>
+<tr>
+<td>命令面板</td>
+<td><code>Cmd + P</code></td>
+<td><code>Ctrl + P</code></td>
+</tr>
+<tr>
+<td>图形视图</td>
+<td><code>Cmd + G</code></td>
+<td><code>Ctrl + G</code></td>
+</tr>
+<tr>
+<td>切换编辑/预览</td>
+<td><code>Cmd + E</code></td>
+<td><code>Ctrl + E</code></td>
+</tr>
+<tr>
+<td>返回</td>
+<td><code>Cmd + [</code></td>
+<td><code>Ctrl + [</code></td>
+</tr>
+<tr>
+<td>前进</td>
+<td><code>Cmd + ]</code></td>
+<td><code>Ctrl + ]</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="42">4.2 命令面板</h3>
+<p>按 <code>Cmd/Ctrl + P</code> 打开命令面板，可以执行所有操作：</p>
+<pre><code>┌─────────────────────────────────────────┐
+│  &gt; 搜索命令...                          │
+├─────────────────────────────────────────┤
+│  📝 创建新笔记                          │
+│  📁 新建文件夹                          │
+│  🔍 搜索当前文件                        │
+│  📊 打开关系图谱                        │
+│  ⚙️ 打开设置                            │
+│  ...                                    │
+└─────────────────────────────────────────┘
+</code></pre>
+<h3 id="43">4.3 文件操作</h3>
+<pre><code>创建笔记:
+  1. 快捷键 Cmd/Ctrl + N
+  2. 点击左侧文件列表的&quot;新建笔记&quot;图标
+  3. 右键文件夹 → 新建笔记
+
+移动/重命名:
+  1. 右键文件 → 重命名/移动
+  2. 拖拽文件到目标文件夹
+
+删除:
+  1. 右键文件 → 删除
+  2. 选中文件按 Delete 键
+</code></pre>
+<hr />
+<h2 id="markdown">五、Markdown 语法</h2>
+<h3 id="51">5.1 基础语法</h3>
+<pre><code class="language-markdown"># 一级标题
+## 二级标题
+### 三级标题
+
+**粗体** *斜体* ~~删除线~~ `行内代码`
+
+- 无序列表项 1
+- 无序列表项 2
+
+1. 有序列表项 1
+2. 有序列表项 2
+
+&gt; 引用文本
+
+---
+
+[链接文本](https://example.com)
+
+![图片描述](image.png)
+</code></pre>
+<h3 id="52">5.2 代码块</h3>
+<pre><code class="language-markdown">```python
+def hello():
+    print(&quot;Hello, Obsidian!&quot;)
+```
+</code></pre>
+<h3 id="53">5.3 表格</h3>
+<pre><code class="language-markdown">| 列1 | 列2 | 列3 |
+|-----|-----|-----|
+| A1  | B1  | C1  |
+| A2  | B2  | C2  |
+</code></pre>
+<h3 id="54">5.4 任务列表</h3>
+<pre><code class="language-markdown">- [x] 已完成任务
+- [ ] 未完成任务
+- [ ] 另一个任务
+</code></pre>
+<h3 id="55-callout">5.5 Callout (标注框)</h3>
+<pre><code class="language-markdown">&gt; [!note] 笔记
+&gt; 这是一个笔记标注框
+
+&gt; [!tip] 提示
+&gt; 这是一个提示框
+
+&gt; [!warning] 警告
+&gt; 这是一个警告框
+
+&gt; [!info] 信息
+&gt; 这是一个信息框
+</code></pre>
+<hr />
+<h2 id="_5">六、双向链接</h2>
+<h3 id="61">6.1 创建链接</h3>
+<pre><code class="language-markdown"># 基础链接
+[[目标笔记名称]]
+
+# 带别名的链接
+[[目标笔记|显示文本]]
+
+# 链接到标题
+[[目标笔记#标题名]]
+
+# 链接到块
+[[目标笔记^block-id]]
+</code></pre>
+<h3 id="62">6.2 反向链接面板</h3>
+<p>打开任意笔记时，右侧会显示<strong>反向链接</strong>面板：</p>
+<pre><code>┌─────────────────────────────────────────┐
+│  反向链接                                │
+├─────────────────────────────────────────┤
+│  3 篇笔记链接到本文                      │
+│                                         │
+│  📄 相关笔记1                           │
+│     ...提到了[[本文]]...                │
+│                                         │
+│  📄 相关笔记2                           │
+│     ...参见[[本文]]...                  │
+└─────────────────────────────────────────┘
+</code></pre>
+<h3 id="63">6.3 关系图谱</h3>
+<p>按 <code>Cmd/Ctrl + G</code> 打开关系图谱：</p>
+<pre><code>        ┌──────────┐
+        │  笔记A   │
+        └────┬─────┘
+             │
+    ┌────────┼────────┐
+    │        │        │
+    ▼        ▼        ▼
+┌───────┐ ┌───────┐ ┌───────┐
+│ 笔记B │ │ 笔记C │ │ 笔记D │
+└───────┘ └───┬───┘ └───────┘
+              │
+              ▼
+          ┌───────┐
+          │ 笔记E │
+          └───────┘
+</code></pre>
+<hr />
+<h2 id="_6">七、插件系统</h2>
+<h3 id="71">7.1 核心插件</h3>
+<p>Obsidian 内置以下核心插件：</p>
+<table>
+<thead>
+<tr>
+<th>插件</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>白板</strong></td>
+<td>无限画布，可视化思考</td>
+</tr>
+<tr>
+<td><strong>日记</strong></td>
+<td>自动创建每日笔记</td>
+</tr>
+<tr>
+<td><strong>模板</strong></td>
+<td>插入预定义模板</td>
+</tr>
+<tr>
+<td><strong>大纲</strong></td>
+<td>显示当前笔记大纲</td>
+</tr>
+<tr>
+<td><strong>字数统计</strong></td>
+<td>显示字数信息</td>
+</tr>
+<tr>
+<td><strong>幻灯片</strong></td>
+<td>将笔记转为幻灯片演示</td>
+</tr>
+<tr>
+<td><strong>关系图谱</strong></td>
+<td>可视化笔记关系</td>
+</tr>
+<tr>
+<td><strong>出链</strong></td>
+<td>显示当前笔记的出链和入链</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 社区插件</h3>
+<p><strong>安装步骤</strong>:</p>
+<pre><code>设置 → 第三方插件 → 关闭安全模式 → 浏览 → 搜索插件 → 安装 → 启用
+</code></pre>
+<h3 id="73">7.3 必装社区插件推荐</h3>
+<table>
+<thead>
+<tr>
+<th>插件</th>
+<th>功能</th>
+<th>优先级</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Templater</strong></td>
+<td>高级模板系统，支持脚本</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Dataview</strong></td>
+<td>数据查询与展示</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Local REST API</strong></td>
+<td>REST API 接口</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Calendar</strong></td>
+<td>日历视图</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Periodic Notes</strong></td>
+<td>周期性笔记</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Omnisearch</strong></td>
+<td>全文搜索</td>
+<td>⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Excalidraw</strong></td>
+<td>手绘风格绘图</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Khoj</strong></td>
+<td>AI 助手</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong>Copilot</strong></td>
+<td>AI 对话</td>
+<td>⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">八、同步方案</h2>
+<h3 id="81">8.1 官方同步</h3>
+<p><strong>Obsidian Sync</strong> (付费服务):
+- 端到端加密
+- 版本历史
+- 实时同步
+- 价格: $4/月</p>
+<h3 id="82">8.2 第三方同步方案</h3>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>iCloud</strong></td>
+<td>苹果生态无缝集成</td>
+<td>仅限 Apple 设备</td>
+</tr>
+<tr>
+<td><strong>Dropbox</strong></td>
+<td>稳定可靠</td>
+<td>免费空间有限</td>
+</tr>
+<tr>
+<td><strong>Google Drive</strong></td>
+<td>空间大</td>
+<td>需要第三方工具</td>
+</tr>
+<tr>
+<td><strong>Syncthing</strong></td>
+<td>开源免费，P2P</td>
+<td>配置较复杂</td>
+</tr>
+<tr>
+<td><strong>Git</strong></td>
+<td>版本控制</td>
+<td>需要技术背景</td>
+</tr>
+<tr>
+<td><strong>Remotely Save</strong></td>
+<td>支持 S3/WebDAV</td>
+<td>需配置</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-git">8.3 Git 同步脚本示例</h3>
+<pre><code class="language-bash">#!/bin/bash
+# Obsidian Git 自动同步脚本
+
+VAULT_PATH=&quot;$HOME/Documents/MyVault&quot;
+cd &quot;$VAULT_PATH&quot;
+
+# 自动提交
+git add .
+git commit -m &quot;Auto backup: $(date '+%Y-%m-%d %H:%M:%S')&quot;
+git push
+</code></pre>
+<hr />
+<h2 id="_8">九、最佳实践建议</h2>
+<h3 id="91-para">9.1 文件夹结构 (PARA 方法)</h3>
+<pre><code>MyVault/
+├── 00-Inbox/        ← 快速收集，定期整理
+├── 01-Projects/     ← 当前进行的项目
+├── 02-Areas/        ← 持续关注的领域
+├── 03-Resources/    ← 有价值的资源
+├── 04-Archives/     ← 完成或不再活跃的内容
+├── Templates/       ← 模板文件
+└── Daily/           ← 日记
+</code></pre>
+<h3 id="92">9.2 命名规范</h3>
+<pre><code># 推荐格式
+YYYY-MM-DD-笔记标题.md
+2026-03-14-Obsidian使用指南.md
+
+# 项目笔记
+项目名-模块-功能.md
+MyProject-API-认证设计.md
+
+# 文献笔记
+@作者-年份-标题.md
+@Smith-2024-AI研究.md
+</code></pre>
+<h3 id="93">9.3 标签系统</h3>
+<pre><code class="language-markdown"># 使用标签组织内容
+
+#状态/进行中
+#状态/已完成
+#类型/笔记
+#类型/项目
+#领域/工作
+#领域/学习
+</code></pre>
+<hr />
+<h2 id="_9">十、参考资源</h2>
+<ul>
+<li><strong>官网</strong>: https://obsidian.md</li>
+<li><strong>官方文档</strong>: https://help.obsidian.md</li>
+<li><strong>中文论坛</strong>: https://forum-zh.obsidian.md</li>
+<li><strong>插件市场</strong>: https://obsidian.md/plugins</li>
+<li><strong>PKMer</strong>: https://pkmer.cn</li>
+</ul>
+<hr />
+<p><em>文档生成时间: 2026-03-14</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

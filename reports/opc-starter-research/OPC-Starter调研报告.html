@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPC-Starter 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 项目定位</a></li>
+<li><a href="#_2" class="toc-h2">二、核心特性</a></li>
+<li><a href="#21" class="toc-h3">2.1 特性总览</a></li>
+<li><a href="#22-ai-coding" class="toc-h3">2.2 AI Coding 支持</a></li>
+<li><a href="#agentsmd" class="toc-h4">AGENTS.md 规范</a></li>
+<li><a href="#bmad" class="toc-h4">BMAD 方法论集成</a></li>
+<li><a href="#ai" class="toc-h4">AI 迭代地图</a></li>
+<li><a href="#_3" class="toc-h2">三、技术栈详解</a></li>
+<li><a href="#31" class="toc-h3">3.1 核心技术栈</a></li>
+<li><a href="#32-ui" class="toc-h3">3.2 UI 组件库</a></li>
+<li><a href="#33" class="toc-h3">3.3 测试工具</a></li>
+<li><a href="#_4" class="toc-h2">四、项目结构</a></li>
+<li><a href="#41" class="toc-h3">4.1 目录结构</a></li>
+<li><a href="#42" class="toc-h3">4.2 核心模块</a></li>
+<li><a href="#auth" class="toc-h4">认证模块 (auth/)</a></li>
+<li><a href="#organization" class="toc-h4">组织架构模块 (organization/)</a></li>
+<li><a href="#agent-studio-agent" class="toc-h4">Agent Studio (agent/)</a></li>
+<li><a href="#servicesdata" class="toc-h4">数据服务层 (services/data/)</a></li>
+<li><a href="#_5" class="toc-h2">五、核心功能</a></li>
+<li><a href="#51" class="toc-h3">5.1 认证系统</a></li>
+<li><a href="#52-agent-studio-a2ui" class="toc-h3">5.2 Agent Studio (A2UI)</a></li>
+<li><a href="#53" class="toc-h3">5.3 数据同步</a></li>
+<li><a href="#54" class="toc-h3">5.4 组织架构</a></li>
+<li><a href="#_6" class="toc-h2">六、运行模式</a></li>
+<li><a href="#61-msw-mock-ai-coding" class="toc-h3">6.1 MSW Mock 模式（推荐 AI Coding）</a></li>
+<li><a href="#62-supabase" class="toc-h3">6.2 真实 Supabase 模式</a></li>
+<li><a href="#ai_1" class="toc-h2">七、AI 质量保证</a></li>
+<li><a href="#71" class="toc-h3">7.1 质量检查命令</a></li>
+<li><a href="#72" class="toc-h3">7.2 测试覆盖</a></li>
+<li><a href="#_7" class="toc-h2">八、与其他模板对比</a></li>
+<li><a href="#81-vs-create-react-app" class="toc-h3">8.1 vs Create React App</a></li>
+<li><a href="#82-vs-nextjs" class="toc-h3">8.2 vs Next.js</a></li>
+<li><a href="#83-vs-vite-react-template" class="toc-h3">8.3 vs Vite React Template</a></li>
+<li><a href="#_8" class="toc-h2">九、适用场景</a></li>
+<li><a href="#91" class="toc-h3">9.1 最佳场景</a></li>
+<li><a href="#92" class="toc-h3">9.2 不适用场景</a></li>
+<li><a href="#_9" class="toc-h2">十、路线图</a></li>
+<li><a href="#_10" class="toc-h2">十一、总结</a></li>
+<li><a href="#111" class="toc-h3">11.1 优势</a></li>
+<li><a href="#112" class="toc-h3">11.2 局限</a></li>
+<li><a href="#113" class="toc-h3">11.3 推荐人群</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OPC-Starter 深度调研报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="opc-starter">OPC-Starter 深度调研报告</h1>
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>OPC-Starter</td>
+</tr>
+<tr>
+<td><strong>全称</strong></td>
+<td>一人公司启动器 (AI-Friendly React Boilerplate)</td>
+</tr>
+<tr>
+<td><strong>维护者</strong></td>
+<td>Alibaba（阿里巴巴）</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/alibaba/opc-starter</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>AGPL-3.0</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>创建时间</strong></td>
+<td>2026-01-21</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>7+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 项目定位</h3>
+<p>OPC-Starter 是阿里巴巴开源的<strong>专为 AI Coding 工具优化的现代化 React 启动模板</strong>，主要面向：</p>
+<ul>
+<li>使用 <strong>Cursor</strong>、<strong>Qoder</strong> 等 AI 编码工具的开发者</li>
+<li>一人公司（Solo Entrepreneur）创业者</li>
+<li>追求 AI 辅助开发效率的团队</li>
+</ul>
+<p><strong>核心理念</strong>：
+- <strong>AI-First</strong>：代码结构设计让 AI 更容易理解
+- <strong>BMAD 方法论</strong>：完整的 AI 辅助开发流程支持
+- <strong>开箱即用</strong>：集成认证、组织架构、数据同步等企业级功能</p>
+<hr />
+<h2 id="_2">二、核心特性</h2>
+<h3 id="21">2.1 特性总览</h3>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>🤖 AI Coding 友好</strong></td>
+<td>完整的 BMAD 方法论支持，AI 可理解的代码结构</td>
+</tr>
+<tr>
+<td><strong>⚡ 现代化技术栈</strong></td>
+<td>React 19 + TypeScript 5.9 + Vite 7 + Tailwind CSS 4.1</td>
+</tr>
+<tr>
+<td><strong>🔐 开箱即用认证</strong></td>
+<td>Supabase Auth 集成</td>
+</tr>
+<tr>
+<td><strong>🏢 组织架构管理</strong></td>
+<td>多层级团队、成员权限</td>
+</tr>
+<tr>
+<td><strong>🤖 Agent Studio</strong></td>
+<td>A2UI 动态 UI 协议，自然语言驱动</td>
+</tr>
+<tr>
+<td><strong>📦 数据同步</strong></td>
+<td>IndexedDB 缓存 + Supabase Realtime</td>
+</tr>
+<tr>
+<td><strong>🎨 精美 UI 组件</strong></td>
+<td>基于 Radix UI + shadcn/ui 风格</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-ai-coding">2.2 AI Coding 支持</h3>
+<h4 id="agentsmd">AGENTS.md 规范</h4>
+<p>项目包含 <code>AGENTS.md</code> 文件，定义了 AI 开发规范：</p>
+<ul>
+<li>项目结构说明</li>
+<li>代码风格指南</li>
+<li>模块职责划分</li>
+<li>AI 可理解的上下文</li>
+</ul>
+<h4 id="bmad">BMAD 方法论集成</h4>
+<pre><code>_bmad/
+├── config/           # BMAD 配置
+├── agents/           # Agent 定义
+└── workflows/        # 工作流模板
+</code></pre>
+<h4 id="ai">AI 迭代地图</h4>
+<table>
+<thead>
+<tr>
+<th>想做什么</th>
+<th>从哪里开始</th>
+<th>下一步通常改哪里</th>
+<th>推荐验证</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>启动应用 / 切换 mock</td>
+<td><code>app/src/main.tsx</code></td>
+<td><code>app/.env.test</code>、<code>app/vite.config.ts</code></td>
+<td><code>npm run dev:test</code></td>
+</tr>
+<tr>
+<td>查看应用入口</td>
+<td><code>app/src/App.tsx</code></td>
+<td><code>app/src/config/routes.tsx</code></td>
+<td><code>npm run build</code></td>
+</tr>
+<tr>
+<td>新增页面 / 路由</td>
+<td><code>app/src/config/routes.tsx</code></td>
+<td><code>app/src/pages/</code>、<code>app/src/components/layout/</code></td>
+<td><code>npm run type-check</code></td>
+</tr>
+<tr>
+<td>改数据访问</td>
+<td><code>app/src/services/data/DataService.ts</code></td>
+<td><code>app/src/services/data/adapters/</code>、<code>app/src/stores/</code></td>
+<td><code>npm test</code></td>
+</tr>
+<tr>
+<td>改 Agent Studio</td>
+<td><code>app/src/components/agent/</code></td>
+<td><code>app/src/lib/agent/</code>、<code>app/supabase/functions/ai-assistant/</code></td>
+<td><code>npm run test:tools</code></td>
+</tr>
+<tr>
+<td>改 E2E 测试</td>
+<td><code>app/cypress/e2e/</code></td>
+<td><code>app/cypress/fixtures/users.json</code>、<code>app/cypress/support/</code></td>
+<td><code>npm run test:e2e:headless</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">三、技术栈详解</h2>
+<h3 id="31">3.1 核心技术栈</h3>
+<table>
+<thead>
+<tr>
+<th>技术</th>
+<th>版本</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>React</strong></td>
+<td>19.1</td>
+<td>最新稳定版，支持 Concurrent Features</td>
+</tr>
+<tr>
+<td><strong>TypeScript</strong></td>
+<td>5.9</td>
+<td>严格类型检查</td>
+</tr>
+<tr>
+<td><strong>Vite</strong></td>
+<td>7.1</td>
+<td>极速构建工具</td>
+</tr>
+<tr>
+<td><strong>Tailwind CSS</strong></td>
+<td>4.1</td>
+<td>v4 新语法</td>
+</tr>
+<tr>
+<td><strong>Supabase</strong></td>
+<td>2.80</td>
+<td>Auth + Storage + Realtime</td>
+</tr>
+<tr>
+<td><strong>Zustand</strong></td>
+<td>5.0</td>
+<td>轻量状态管理</td>
+</tr>
+<tr>
+<td><strong>Zod</strong></td>
+<td>4.1</td>
+<td>运行时类型校验</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-ui">3.2 UI 组件库</h3>
+<ul>
+<li><strong>Radix UI</strong>：无样式的可访问性组件</li>
+<li><strong>shadcn/ui 风格</strong>：精美的设计系统</li>
+<li><strong>Lucide Icons</strong>：图标库</li>
+</ul>
+<h3 id="33">3.3 测试工具</h3>
+<ul>
+<li><strong>Vitest</strong>：单元测试</li>
+<li><strong>Cypress</strong>：E2E 测试</li>
+<li><strong>MSW</strong>：API Mock</li>
+</ul>
+<hr />
+<h2 id="_4">四、项目结构</h2>
+<h3 id="41">4.1 目录结构</h3>
+<pre><code>opc-starter/
+├── app/                     # 应用主目录
+│   ├── src/
+│   │   ├── auth/            # 认证模块
+│   │   ├── components/      # React 组件
+│   │   │   ├── agent/       # Agent Studio (A2UI)
+│   │   │   ├── business/    # 业务组件
+│   │   │   ├── layout/      # 布局组件
+│   │   │   ├── organization/ # 组织架构组件
+│   │   │   └── ui/          # 基础 UI 组件
+│   │   ├── hooks/           # 自定义 Hooks
+│   │   ├── lib/             # 库封装
+│   │   │   ├── agent/       # Agent 核心逻辑
+│   │   │   ├── reactive/    # 响应式数据层
+│   │   │   └── supabase/    # Supabase 客户端
+│   │   ├── pages/           # 页面组件
+│   │   ├── services/        # 服务层
+│   │   │   └── data/        # DataService (同步核心)
+│   │   ├── stores/          # Zustand 状态管理
+│   │   ├── types/           # TypeScript 类型
+│   │   └── utils/           # 工具函数
+│   └── supabase/
+│       ├── functions/       # Edge Functions
+│       └── setup.sql        # 数据库 Schema
+├── _bmad/                   # BMAD 方法论配置
+├── docs/                    # 项目文档
+└── AGENTS.md               # AI Coding 指南
+</code></pre>
+<h3 id="42">4.2 核心模块</h3>
+<h4 id="auth">认证模块 (auth/)</h4>
+<ul>
+<li>Supabase Auth 集成</li>
+<li>登录/注册/密码重置</li>
+<li>Session 管理</li>
+<li>路由守卫</li>
+</ul>
+<h4 id="organization">组织架构模块 (organization/)</h4>
+<ul>
+<li>多层级团队管理</li>
+<li>成员角色权限</li>
+<li>组织邀请流程</li>
+</ul>
+<h4 id="agent-studio-agent">Agent Studio (agent/)</h4>
+<ul>
+<li>A2UI 动态 UI 协议</li>
+<li>自然语言驱动的 UI 生成</li>
+<li>LLM 集成（通义千问 DashScope）</li>
+</ul>
+<h4 id="servicesdata">数据服务层 (services/data/)</h4>
+<ul>
+<li>IndexedDB 本地缓存</li>
+<li>Supabase Realtime 同步</li>
+<li>离线优先策略</li>
+<li>冲突解决机制</li>
+</ul>
+<hr />
+<h2 id="_5">五、核心功能</h2>
+<h3 id="51">5.1 认证系统</h3>
+<p><strong>支持的认证方式</strong>：
+- 邮箱/密码登录
+- OAuth 社交登录（可扩展）
+- 匿名访问（MSW 模式）</p>
+<p><strong>测试账号</strong>（MSW 模式）：</p>
+<table>
+<thead>
+<tr>
+<th>邮箱</th>
+<th>密码</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>test@example.com</code></td>
+<td><code>888888</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-agent-studio-a2ui">5.2 Agent Studio (A2UI)</h3>
+<p><strong>A2UI</strong>（AI-to-UI）是一个动态 UI 协议：</p>
+<pre><code>自然语言输入 → LLM 理解 → UI 组件生成 → 实时渲染
+</code></pre>
+<p><strong>工作流程</strong>：
+1. 用户输入自然语言描述
+2. LLM 解析意图并生成 UI Schema
+3. 前端根据 Schema 动态渲染组件
+4. 用户交互反馈</p>
+<p><strong>配置</strong>：</p>
+<pre><code class="language-env">VITE_DASHSCOPE_API_KEY=your_dashscope_api_key
+</code></pre>
+<h3 id="53">5.3 数据同步</h3>
+<p><strong>离线优先策略</strong>：</p>
+<pre><code>┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   UI 组件    │ ←→ │  IndexedDB  │ ←→ │  Supabase   │
+│  (Zustand)  │     │  (本地缓存)  │     │  (云端同步)  │
+└─────────────┘     └─────────────┘     └─────────────┘
+</code></pre>
+<p><strong>同步机制</strong>：
+- 实时订阅（Realtime）
+- 冲突自动解决
+- 断线重连
+- 增量同步</p>
+<h3 id="54">5.4 组织架构</h3>
+<p><strong>多层级结构</strong>：</p>
+<pre><code>Organization
+├── Team A
+│   ├── Member 1
+│   └── Member 2
+└── Team B
+    └── Sub-team
+        └── Member 3
+</code></pre>
+<p><strong>权限模型</strong>：
+- Owner：完全控制
+- Admin：团队管理
+- Member：普通成员
+- Guest：只读访问</p>
+<hr />
+<h2 id="_6">六、运行模式</h2>
+<h3 id="61-msw-mock-ai-coding">6.1 MSW Mock 模式（推荐 AI Coding）</h3>
+<p><strong>特点</strong>：
+- 无需真实后端
+- 快速启动和迭代
+- 适合 AI 辅助开发
+- 完整的功能模拟</p>
+<p><strong>启动命令</strong>：</p>
+<pre><code class="language-bash">VITE_ENABLE_MSW=true npm run dev:test
+</code></pre>
+<h3 id="62-supabase">6.2 真实 Supabase 模式</h3>
+<p><strong>配置步骤</strong>：
+1. 创建 Supabase 项目
+2. 配置环境变量
+3. 运行数据库 Schema
+4. 启动应用</p>
+<p><strong>环境变量</strong>：</p>
+<pre><code class="language-env">VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_DASHSCOPE_API_KEY=your_dashscope_api_key  # 可选
+</code></pre>
+<hr />
+<h2 id="ai_1">七、AI 质量保证</h2>
+<h3 id="71">7.1 质量检查命令</h3>
+<pre><code class="language-bash"># 核心校验（lint + type-check + unit test + build）
+npm run ai:check
+
+# 完整校验（额外包含 E2E）
+./scripts/quality_check.sh
+</code></pre>
+<h3 id="72">7.2 测试覆盖</h3>
+<table>
+<thead>
+<tr>
+<th>测试类型</th>
+<th>工具</th>
+<th>覆盖范围</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>单元测试</td>
+<td>Vitest</td>
+<td>组件、Hooks、工具函数</td>
+</tr>
+<tr>
+<td>集成测试</td>
+<td>Vitest</td>
+<td>服务层、数据同步</td>
+</tr>
+<tr>
+<td>E2E 测试</td>
+<td>Cypress</td>
+<td>完整用户流程</td>
+</tr>
+<tr>
+<td>API Mock</td>
+<td>MSW</td>
+<td>后端接口模拟</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">八、与其他模板对比</h2>
+<h3 id="81-vs-create-react-app">8.1 vs Create React App</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OPC-Starter</th>
+<th>Create React App</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI 支持</strong></td>
+<td>完整 BMAD 集成</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>构建工具</strong></td>
+<td>Vite 7</td>
+<td>Webpack（旧）</td>
+</tr>
+<tr>
+<td><strong>认证</strong></td>
+<td>内置 Supabase</td>
+<td>需自行集成</td>
+</tr>
+<tr>
+<td><strong>状态管理</strong></td>
+<td>Zustand 5</td>
+<td>需自行选择</td>
+</tr>
+<tr>
+<td><strong>UI 组件</strong></td>
+<td>Radix + shadcn 风格</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>测试</strong></td>
+<td>Vitest + Cypress</td>
+<td>Jest</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-vs-nextjs">8.2 vs Next.js</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OPC-Starter</th>
+<th>Next.js</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>渲染模式</strong></td>
+<td>SPA</td>
+<td>SSR/SSG/ISR</td>
+</tr>
+<tr>
+<td><strong>AI 支持</strong></td>
+<td>完整 BMAD 集成</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>后端</strong></td>
+<td>Supabase BaaS</td>
+<td>API Routes</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>低</td>
+<td>中等</td>
+</tr>
+<tr>
+<td><strong>部署</strong></td>
+<td>静态托管</td>
+<td>Vercel/Node.js</td>
+</tr>
+</tbody>
+</table>
+<h3 id="83-vs-vite-react-template">8.3 vs Vite React Template</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OPC-Starter</th>
+<th>Vite React Template</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>功能完整度</strong></td>
+<td>企业级</td>
+<td>基础</td>
+</tr>
+<tr>
+<td><strong>认证</strong></td>
+<td>内置</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>组织架构</strong></td>
+<td>内置</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>AI 工具支持</strong></td>
+<td>专用优化</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>测试</strong></td>
+<td>完整方案</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">九、适用场景</h2>
+<h3 id="91">9.1 最佳场景</h3>
+<ul>
+<li><strong>一人公司/独立开发者</strong>：快速搭建 SaaS 产品</li>
+<li><strong>AI 辅助开发</strong>：使用 Cursor/Qoder 进行开发</li>
+<li><strong>企业内部工具</strong>：需要组织架构和权限管理</li>
+<li><strong>原型开发</strong>：快速验证业务想法</li>
+</ul>
+<h3 id="92">9.2 不适用场景</h3>
+<ul>
+<li>需要 SEO 的公开网站（考虑 Next.js）</li>
+<li>大型电商平台</li>
+<li>复杂的后端业务逻辑</li>
+</ul>
+<hr />
+<h2 id="_9">十、路线图</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v1.0.0</strong></td>
+<td>基础 Boilerplate 发布</td>
+</tr>
+<tr>
+<td><strong>v1.1.0</strong></td>
+<td>主题系统（深色/浅色模式）</td>
+</tr>
+<tr>
+<td><strong>v1.2.0</strong></td>
+<td>多 LLM Provider 支持（OpenAI, Claude, Gemini）</td>
+</tr>
+<tr>
+<td><strong>v1.3.0</strong></td>
+<td>国际化（i18n）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">十一、总结</h2>
+<h3 id="111">11.1 优势</h3>
+<ol>
+<li><strong>AI-First 设计</strong>：专为 AI Coding 工具优化</li>
+<li><strong>现代化技术栈</strong>：React 19 + TypeScript 5.9 + Vite 7</li>
+<li><strong>功能完整</strong>：认证、组织架构、数据同步开箱即用</li>
+<li><strong>BMAD 方法论</strong>：结构化的 AI 辅助开发流程</li>
+<li><strong>高质量代码</strong>：完整测试覆盖和类型检查</li>
+</ol>
+<h3 id="112">11.2 局限</h3>
+<ol>
+<li><strong>AGPL-3.0 许可证</strong>：商业使用需开源</li>
+<li><strong>SPA 架构</strong>：不适合 SEO 场景</li>
+<li><strong>依赖 Supabase</strong>：后端绑定特定 BaaS</li>
+</ol>
+<h3 id="113">11.3 推荐人群</h3>
+<ul>
+<li>独立开发者/创业者</li>
+<li>AI 辅助开发爱好者</li>
+<li>快速原型开发需求</li>
+<li>企业内部工具开发</li>
+</ul>
+<hr />
+<h2 id="_11">参考资源</h2>
+<ul>
+<li><strong>GitHub 仓库</strong>：https://github.com/alibaba/opc-starter</li>
+<li><strong>LobeHub 技能市场</strong>：https://lobehub.com/zh-TW/skills/alibaba-opc-starter-auto-develop</li>
+</ul>
+<hr />
+<p><em>报告生成时间：2026-03-21</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

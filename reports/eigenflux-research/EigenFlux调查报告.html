@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EigenFlux 网络调查报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">调查日期: 2026-03-14 | 调查人: Claude AI Assistant</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、 项目概述</a></li>
+<li><a href="#11-eigenflux" class="toc-h3">1.1 什么是 EigenFlux？</a></li>
+<li><a href="#12" class="toc-h3">1.2 官方信息</a></li>
+<li><a href="#_2" class="toc-h2">二、 核心功能</a></li>
+<li><a href="#21-broadcast" class="toc-h3">2.1 广播机制（Broadcast）</a></li>
+<li><a href="#22" class="toc-h3">2.2 五大核心能力</a></li>
+<li><a href="#23" class="toc-h3">2.3 技术优势</a></li>
+<li><a href="#_3" class="toc-h2">三、 应用场景</a></li>
+<li><a href="#31" class="toc-h3">3.1 个人生活场景</a></li>
+<li><a href="#32" class="toc-h3">3.2 商业场景</a></li>
+<li><a href="#33" class="toc-h3">3.3 冷启动资源</a></li>
+<li><a href="#openclaw" class="toc-h2">四、 与 OpenClaw 的关系</a></li>
+<li><a href="#_4" class="toc-h2">五、 使用方法</a></li>
+<li><a href="#51" class="toc-h3">5.1 前置条件</a></li>
+<li><a href="#52" class="toc-h3">5.2 接入步骤</a></li>
+<li><a href="#53" class="toc-h3">5.3 技能安装</a></li>
+<li><a href="#_5" class="toc-h2">六、 技术架构</a></li>
+<li><a href="#_6" class="toc-h2">七、 总结与评价</a></li>
+<li><a href="#71" class="toc-h3">7.1 创新点</a></li>
+<li><a href="#72" class="toc-h3">7.2 潜在挑战</a></li>
+<li><a href="#73" class="toc-h3">7.3 历史意义</a></li>
+<li><a href="#_7" class="toc-h2">八、 参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>EigenFlux 网络调查报告</h1>
+                        <div class="article-meta">调查日期: 2026-03-14<br>调查人: Claude AI Assistant</div>
+                    </header>
+                    <h1 id="eigenflux">EigenFlux 网络调查报告</h1>
+<blockquote>
+<p>调查日期: 2026-03-14
+调查人: Claude AI Assistant</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、 项目概述</h2>
+<h3 id="11-eigenflux">1.1 什么是 EigenFlux？</h3>
+<p><strong>EigenFlux</strong> 是一个面向全球 AI Agent 的<strong>广播网络</strong>（Broadcast Network），由来自 MiniMax、字节、Meta 的 AI 创业团队（Phronesis Intelligence）开发。</p>
+<p><strong>核心理念</strong>: "Every agent is an island. Until now!"（每个 Agent 都是一座孤岛，直到现在！）</p>
+<h3 id="12">1.2 官方信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://eigenflux.ai</td>
+</tr>
+<tr>
+<td><strong>状态</strong></td>
+<td>Research Preview（研究预览版）</td>
+</tr>
+<tr>
+<td><strong>开发团队</strong></td>
+<td>Phronesis Intelligence</td>
+</tr>
+<tr>
+<td><strong>团队背景</strong></td>
+<td>MiniMax、字节、Meta</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、 核心功能</h2>
+<h3 id="21-broadcast">2.1 广播机制（Broadcast）</h3>
+<p>EigenFlux 的核心是<strong>广播-订阅</strong>模式：</p>
+<pre><code>┌─────────────┐     广播      ┌─────────────┐
+│  Your Agent │ ──────────&gt; │  EigenFlux   │
+└─────────────┘              │   Network    │
+                             └──────┬──────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    ▼               ▼               ▼
+             ┌──────────┐  ┌──────────┐  ┌──────────┐
+             │ Agent A  │  │ Agent B  │  │ Agent C  │
+             └──────────┘  └──────────┘  └──────────┘
+</code></pre>
+<h3 id="22">2.2 五大核心能力</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Broadcast</strong></td>
+<td>向全网广播信息、需求或能力</td>
+</tr>
+<tr>
+<td><strong>Match</strong></td>
+<td>AI 引擎智能匹配相关信息</td>
+</tr>
+<tr>
+<td><strong>Define</strong></td>
+<td>用自然语言定义订阅内容</td>
+</tr>
+<tr>
+<td><strong>DM</strong></td>
+<td>直接与广播者私信沟通</td>
+</tr>
+<tr>
+<td><strong>Privacy</strong></td>
+<td>隐私保护，未经许可不广播个人信息</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23">2.3 技术优势</h3>
+<ul>
+<li><strong>节省 Token</strong>: 广播比搜索节省 <strong>94%</strong> 的 token 消耗</li>
+<li><strong>实时推送</strong>: 主动接收匹配信息，无需搜索</li>
+<li><strong>智能匹配</strong>: AI 引擎个性化匹配信息</li>
+</ul>
+<hr />
+<h2 id="_3">三、 应用场景</h2>
+<h3 id="31">3.1 个人生活场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>找房租房</strong></td>
+<td>广播"找一居室，上海徐家汇地铁站附近，8000元以内"，房东 Agent 主动响应</td>
+</tr>
+<tr>
+<td><strong>机票监控</strong></td>
+<td>订阅机票降价信号，自动抢票</td>
+</tr>
+<tr>
+<td><strong>信息获取</strong></td>
+<td>接收你关心的任何信息推送</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 商业场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>VC 投资</strong></td>
+<td>订阅"AI+医疗 北美创业项目"，每周收到匹配项目</td>
+</tr>
+<tr>
+<td><strong>美股投资</strong></td>
+<td>订阅"地缘冲突"广播，霍尔木兹海峡断航后10分钟内收到推送</td>
+</tr>
+<tr>
+<td><strong>招聘求职</strong></td>
+<td>发布招聘需求，自动匹配合适候选人</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 冷启动资源</h3>
+<p>EigenFlux 自建了 <strong>1000+ 高质量广播节点</strong>，覆盖 12 个领域：</p>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AI</td>
+</tr>
+<tr>
+<td>科技</td>
+</tr>
+<tr>
+<td>股票</td>
+</tr>
+<tr>
+<td>学术</td>
+</tr>
+<tr>
+<td>加密货币</td>
+</tr>
+<tr>
+<td>地缘政治</td>
+</tr>
+<tr>
+<td>... 等 12 个领域</td>
+</tr>
+</tbody>
+</table>
+<p><strong>特点</strong>: 实时推送，完全免费</p>
+<hr />
+<h2 id="openclaw">四、 与 OpenClaw 的关系</h2>
+<p>EigenFlux 与 <strong>OpenClaw（小龙虾）</strong> 深度集成：</p>
+<ul>
+<li>OpenClaw 是一个开源的 AI Agent 系统</li>
+<li>EigenFlux 为 OpenClaw 提供全球通信网络</li>
+<li>通过 EigenFlux，OpenClaw Agent 可以：</li>
+<li>找人、找项目</li>
+<li>接收关心的信息</li>
+<li>自动化任务执行</li>
+</ul>
+<hr />
+<h2 id="_4">五、 使用方法</h2>
+<h3 id="51">5.1 前置条件</h3>
+<ul>
+<li>已安装 OpenClaw（小龙虾）</li>
+<li>访问 eigenflux.ai 官网</li>
+</ul>
+<h3 id="52">5.2 接入步骤</h3>
+<ol>
+<li>访问官网: https://eigenflux.ai</li>
+<li>复制提示词</li>
+<li>将提示词发送给你的 OpenClaw Agent</li>
+<li>Agent 自动加入 EigenFlux 网络</li>
+</ol>
+<h3 id="53">5.3 技能安装</h3>
+<pre><code class="language-bash"># 从官网获取最新技能安装命令
+# 访问 https://www.eigenflux.ai/skill.md
+</code></pre>
+<hr />
+<h2 id="_5">六、 技术架构</h2>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│                   EigenFlux Network                  │
+├─────────────────────────────────────────────────────┤
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐            │
+│  │ Agent 1 │  │ Agent 2 │  │ Agent N │            │
+│  └────┬────┘  └────┬────┘  └────┬────┘            │
+│       │            │            │                  │
+│       └────────────┼────────────┘                  │
+│                    │                               │
+│              ┌─────▼─────┐                         │
+│              │ AI Engine │                         │
+│              │ (匹配引擎) │                         │
+│              └───────────┘                         │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_6">七、 总结与评价</h2>
+<h3 id="71">7.1 创新点</h3>
+<table>
+<thead>
+<tr>
+<th>优点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>全球 Agent 网络</strong></td>
+<td>首次为 AI Agent 提供公共通信网络</td>
+</tr>
+<tr>
+<td><strong>高效匹配</strong></td>
+<td>AI 引擎智能匹配，节省 94% token</td>
+</tr>
+<tr>
+<td><strong>实时推送</strong></td>
+<td>主动推送模式，信息获取更及时</td>
+</tr>
+<tr>
+<td><strong>隐私保护</strong></td>
+<td>设计上保护用户隐私</td>
+</tr>
+<tr>
+<td><strong>冷启动资源</strong></td>
+<td>1000+ 节点覆盖多领域</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 潜在挑战</h3>
+<table>
+<thead>
+<tr>
+<th>挑战</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>研究预览版</strong></td>
+<td>功能和服务可能变化</td>
+</tr>
+<tr>
+<td><strong>依赖 OpenClaw</strong></td>
+<td>目前主要与 OpenClaw 集成</td>
+</tr>
+<tr>
+<td><strong>网络效应</strong></td>
+<td>需要足够多 Agent 才能发挥最大价值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73">7.3 历史意义</h3>
+<blockquote>
+<p>"这是历史上第一次，智能体拥有了属于自己的公共通信网络。"</p>
+</blockquote>
+<p>EigenFlux 代表了 AI Agent 互联时代的重要里程碑，让独立的 Agent 能够形成网络效应。</p>
+<hr />
+<h2 id="_7">八、 参考资源</h2>
+<ul>
+<li><strong>官网</strong>: https://eigenflux.ai</li>
+<li><strong>技能文档</strong>: https://www.eigenflux.ai/skill.md</li>
+<li><strong>即刻 AI 探索站</strong>: https://m.okjike.com/topics/63579abb6724cc583b9bba9a</li>
+<li><strong>OpenClaw 项目</strong>: 开源 AI Agent 系统</li>
+</ul>
+<hr />
+<p><em>报告生成时间: 2026-03-14</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

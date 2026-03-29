@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuFlo 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始掌握 RuFlo - 企业级 AI Agent 编排平台 | 教程日期：2026-03-24</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13-claude-code" class="toc-h3">1.3 安装 Claude Code</a></li>
+<li><a href="#14-ruflo" class="toc-h3">1.4 安装 RuFlo</a></li>
+<li><a href="#15-api-keys" class="toc-h3">1.5 配置 API Keys</a></li>
+<li><a href="#16" class="toc-h3">1.6 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21" class="toc-h3">2.1 第一个任务</a></li>
+<li><a href="#22-swarm" class="toc-h3">2.2 初始化 Swarm</a></li>
+<li><a href="#23-agent" class="toc-h3">2.3 多 Agent 协作</a></li>
+<li><a href="#24-mcp-claude-code" class="toc-h3">2.4 添加 MCP 到 Claude Code</a></li>
+<li><a href="#_4" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31-agent" class="toc-h3">3.1 Agent</a></li>
+<li><a href="#32-swarm" class="toc-h3">3.2 Swarm</a></li>
+<li><a href="#33-sparc" class="toc-h3">3.3 SPARC</a></li>
+<li><a href="#34-memory" class="toc-h3">3.4 Memory</a></li>
+<li><a href="#35-mcp-model-context-protocol" class="toc-h3">3.5 MCP (Model Context Protocol)</a></li>
+<li><a href="#swarm" class="toc-h2">四、Swarm 编排</a></li>
+<li><a href="#41-swarm" class="toc-h3">4.1 创建 Swarm</a></li>
+<li><a href="#42" class="toc-h3">4.2 选择拓扑</a></li>
+<li><a href="#43" class="toc-h3">4.3 配置策略</a></li>
+<li><a href="#44-swarm" class="toc-h3">4.4 Swarm 操作</a></li>
+<li><a href="#45-queen" class="toc-h3">4.5 Queen 模式</a></li>
+<li><a href="#46" class="toc-h3">4.6 共识机制</a></li>
+<li><a href="#sparc" class="toc-h2">五、SPARC 方法论</a></li>
+<li><a href="#51-sparc" class="toc-h3">5.1 SPARC 工作流</a></li>
+<li><a href="#52-sparc" class="toc-h3">5.2 执行 SPARC</a></li>
+<li><a href="#53-tdd" class="toc-h3">5.3 TDD 模式</a></li>
+<li><a href="#54" class="toc-h3">5.4 批量执行</a></li>
+<li><a href="#55" class="toc-h3">5.5 监控进度</a></li>
+<li><a href="#_5" class="toc-h2">六、记忆系统</a></li>
+<li><a href="#61" class="toc-h3">6.1 记忆层次</a></li>
+<li><a href="#62" class="toc-h3">6.2 使用记忆</a></li>
+<li><a href="#63" class="toc-h3">6.3 记忆作用域</a></li>
+<li><a href="#64-hnsw" class="toc-h3">6.4 HNSW 向量搜索</a></li>
+<li><a href="#65" class="toc-h3">6.5 自学习循环</a></li>
+<li><a href="#mcp" class="toc-h2">七、MCP 工具</a></li>
+<li><a href="#71-mcp" class="toc-h3">7.1 核心 MCP 工具</a></li>
+<li><a href="#agent" class="toc-h4">Agent 工具</a></li>
+<li><a href="#swarm_1" class="toc-h4">Swarm 工具</a></li>
+<li><a href="#memory" class="toc-h4">Memory 工具</a></li>
+<li><a href="#72-sparc-mcp" class="toc-h3">7.2 SPARC MCP 工具</a></li>
+<li><a href="#73" class="toc-h3">7.3 安全工具</a></li>
+<li><a href="#74" class="toc-h3">7.4 配置工具组</a></li>
+<li><a href="#agent_1" class="toc-h2">八、自定义 Agent</a></li>
+<li><a href="#81-agent" class="toc-h3">8.1 创建 Agent 定义文件</a></li>
+<li><a href="#82-agent" class="toc-h3">8.2 定义 Agent</a></li>
+<li><a href="#83-agent" class="toc-h3">8.3 注册 Agent</a></li>
+<li><a href="#84-agent" class="toc-h3">8.4 使用自定义 Agent</a></li>
+<li><a href="#85-agent" class="toc-h3">8.5 Agent 模板</a></li>
+<li><a href="#_6" class="toc-h2">九、企业部署</a></li>
+<li><a href="#91-docker" class="toc-h3">9.1 Docker 部署</a></li>
+<li><a href="#92-cloud-run" class="toc-h3">9.2 Cloud Run 部署</a></li>
+<li><a href="#93-kubernetes" class="toc-h3">9.3 Kubernetes 部署</a></li>
+<li><a href="#94" class="toc-h3">9.4 监控和日志</a></li>
+<li><a href="#95" class="toc-h3">9.5 安全配置</a></li>
+<li><a href="#96" class="toc-h3">9.6 高可用配置</a></li>
+<li><a href="#_7" class="toc-h2">十、最佳实践</a></li>
+<li><a href="#101" class="toc-h3">10.1 任务分解</a></li>
+<li><a href="#102" class="toc-h3">10.2 选择合适的拓扑</a></li>
+<li><a href="#103" class="toc-h3">10.3 利用记忆系统</a></li>
+<li><a href="#104" class="toc-h3">10.4 成本优化</a></li>
+<li><a href="#105" class="toc-h3">10.5 安全最佳实践</a></li>
+<li><a href="#106" class="toc-h3">10.6 性能优化</a></li>
+<li><a href="#_8" class="toc-h2">十一、常见问题</a></li>
+<li><a href="#111" class="toc-h3">11.1 安装问题</a></li>
+<li><a href="#112-agent" class="toc-h3">11.2 Agent 问题</a></li>
+<li><a href="#113" class="toc-h3">11.3 记忆问题</a></li>
+<li><a href="#114" class="toc-h3">11.4 性能问题</a></li>
+<li><a href="#115" class="toc-h3">11.5 安全问题</a></li>
+<li><a href="#_9" class="toc-h2">十二、参考资源</a></li>
+<li><a href="#_10" class="toc-h3">官方资源</a></li>
+<li><a href="#_11" class="toc-h3">相关项目</a></li>
+<li><a href="#_12" class="toc-h3">社区资源</a></li>
+<li><a href="#_13" class="toc-h2">十三、版本历史</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>RuFlo 学习教程</h1>
+                        <div class="article-meta">从零开始掌握 RuFlo - 企业级 AI Agent 编排平台<br>教程日期：2026-03-24</div>
+                    </header>
+                    <h1 id="ruflo">RuFlo 学习教程</h1>
+<blockquote>
+<p>从零开始掌握 RuFlo - 企业级 AI Agent 编排平台</p>
+<p>教程日期：2026-03-24</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四swarm-编排">Swarm 编排</a></li>
+<li><a href="#五sparc-方法论">SPARC 方法论</a></li>
+<li><a href="#六记忆系统">记忆系统</a></li>
+<li><a href="#七mcp-工具">MCP 工具</a></li>
+<li><a href="#八自定义-agent">自定义 Agent</a></li>
+<li><a href="#九企业部署">企业部署</a></li>
+<li><a href="#十最佳实践">最佳实践</a></li>
+<li><a href="#十一常见问题">常见问题</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 RuFlo 前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code 基础</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>理解 Claude Code CLI 的基本用法</td>
+</tr>
+<tr>
+<td>命令行基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>能够运行终端命令</td>
+</tr>
+<tr>
+<td>Agent 概念</td>
+<td>⭐⭐⭐⭐</td>
+<td>理解 AI Agent 的基本概念</td>
+</tr>
+<tr>
+<td>MCP 协议</td>
+<td>⭐⭐⭐</td>
+<td>了解 Model Context Protocol</td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td>⭐⭐⭐</td>
+<td>用于自定义开发</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>支持平台：
+├── macOS (x64/arm64) ✅
+├── Linux (x64/arm64) ✅
+└── Windows ❌ (建议使用 WSL2)
+
+必需软件：
+├── Node.js 18+ 或 Bun
+├── Git
+└── Claude Code CLI (最新版)
+</code></pre>
+<h3 id="13-claude-code">1.3 安装 Claude Code</h3>
+<pre><code class="language-bash"># macOS/Linux
+curl -fsSL https://claude.ai/install.sh | bash
+
+# 或通过 npm
+npm install -g @anthropic-ai/claude-code
+</code></pre>
+<h3 id="14-ruflo">1.4 安装 RuFlo</h3>
+<pre><code class="language-bash"># 方式 1: 一键安装 (推荐)
+curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh | bash
+
+# 方式 2: 通过 npx (无需安装)
+npx ruflo@latest init --wizard
+
+# 方式 3: 克隆仓库
+git clone https://github.com/ruvnet/ruflo.git
+cd ruflo &amp;&amp; npm install
+</code></pre>
+<h3 id="15-api-keys">1.5 配置 API Keys</h3>
+<pre><code class="language-bash"># 必需: Anthropic API Key
+export ANTHROPIC_API_KEY=&quot;sk-ant-...&quot;
+
+# 可选: 其他 LLM 提供商 (用于故障转移)
+export OPENAI_API_KEY=&quot;sk-...&quot;
+export GOOGLE_API_KEY=&quot;...&quot;
+export COHERE_API_KEY=&quot;...&quot;
+
+# 可选: 本地模型
+# 安装 Ollama: https://ollama.ai
+ollama pull llama3
+</code></pre>
+<h3 id="16">1.6 验证安装</h3>
+<pre><code class="language-bash"># 检查版本
+npx ruflo@latest --version
+
+# 运行诊断
+npx claude-flow@v3alpha doctor
+
+# 查看 MCP 工具
+npx ruflo@latest mcp list
+</code></pre>
+<hr />
+<h2 id="_3">二、快速开始</h2>
+<h3 id="21">2.1 第一个任务</h3>
+<pre><code class="language-bash"># 使用单个 Agent 执行任务
+npx ruflo@latest --agent coder --task &quot;创建一个简单的 Express.js 服务器&quot;
+
+# 输出示例:
+# ✓ 任务已提交
+# ✓ Agent: coder 已启动
+# ✓ 正在分析任务...
+# ✓ 生成代码...
+# ✓ 创建文件: server.js
+# ✓ 任务完成
+</code></pre>
+<h3 id="22-swarm">2.2 初始化 Swarm</h3>
+<pre><code class="language-bash"># 初始化一个 Swarm
+npx claude-flow@v3alpha swarm init --v3-mode
+
+# 配置选项:
+# - 拓扑类型: hierarchical, mesh, ring, star
+# - 最大 Agent 数: 1-12
+# - 策略: specialized, balanced, adaptive, auto
+</code></pre>
+<h3 id="23-agent">2.3 多 Agent 协作</h3>
+<pre><code class="language-bash"># 使用 SPARC 方法论开发功能
+npx claude-flow sparc run orchestrator &quot;实现用户认证系统，包括注册、登录、JWT 令牌管理&quot;
+
+# 这将:
+# 1. 分析任务需求
+# 2. 分配给合适的 Agent
+# 3. 协调执行顺序
+# 4. 整合结果
+</code></pre>
+<h3 id="24-mcp-claude-code">2.4 添加 MCP 到 Claude Code</h3>
+<pre><code class="language-bash"># 添加 RuFlo MCP 服务器到 Claude Code
+claude mcp add ruflo -- npx -y ruflo@latest mcp start
+
+# 验证 MCP 连接
+claude mcp list
+
+# 现在可以在 Claude Code 中使用所有 259 个工具
+</code></pre>
+<hr />
+<h2 id="_4">三、核心概念</h2>
+<h3 id="31-agent">3.1 Agent</h3>
+<p><strong>Agent</strong> 是 RuFlo 的基本执行单元，每个 Agent 都有特定的专业领域和技能。</p>
+<pre><code>┌─────────────────────────────────────┐
+│              Agent                   │
+├─────────────────────────────────────┤
+│  • Type: coder, tester, reviewer... │
+│  • Capabilities: 特定技能列表        │
+│  • Memory: 独立记忆上下文           │
+│  • State: active, idle, completed   │
+└─────────────────────────────────────┘
+</code></pre>
+<p><strong>核心 Agent 类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>职责</th>
+<th>典型任务</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>coder</code></td>
+<td>代码开发</td>
+<td>功能实现、重构</td>
+</tr>
+<tr>
+<td><code>tester</code></td>
+<td>测试</td>
+<td>单元测试、集成测试</td>
+</tr>
+<tr>
+<td><code>reviewer</code></td>
+<td>代码审查</td>
+<td>代码质量、最佳实践</td>
+</tr>
+<tr>
+<td><code>architect</code></td>
+<td>架构设计</td>
+<td>系统设计、技术方案</td>
+</tr>
+<tr>
+<td><code>researcher</code></td>
+<td>研究</td>
+<td>技术调研、问题分析</td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td>优化</td>
+<td>性能调优、资源优化</td>
+</tr>
+<tr>
+<td><code>documenter</code></td>
+<td>文档</td>
+<td>文档编写、注释</td>
+</tr>
+<tr>
+<td><code>debugger</code></td>
+<td>调试</td>
+<td>Bug 修复、问题排查</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-swarm">3.2 Swarm</h3>
+<p><strong>Swarm</strong> 是多个 Agent 的协作集合，通过特定拓扑结构协调工作。</p>
+<pre><code>┌─────────────────────────────────────┐
+│              Swarm                   │
+├─────────────────────────────────────┤
+│  • Topology: 拓扑结构               │
+│  • Strategy: 协调策略               │
+│  • Agents: Agent 集合               │
+│  • Consensus: 共识机制              │
+└─────────────────────────────────────┘
+</code></pre>
+<p><strong>四种拓扑类型</strong>：</p>
+<pre><code>1. Hierarchical (层级)
+   Queen → Workers
+
+2. Mesh (网格)
+   Agent ↔ Agent (全互联)
+
+3. Ring (环形)
+   Agent → Agent → Agent → ...
+
+4. Star (星形)
+   Hub ↔ Agents
+</code></pre>
+<h3 id="33-sparc">3.3 SPARC</h3>
+<p><strong>SPARC</strong> 是系统化开发方法论：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>英文</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong></td>
+<td>Specification</td>
+<td>规格定义</td>
+</tr>
+<tr>
+<td><strong>P</strong></td>
+<td>Pseudocode</td>
+<td>伪代码设计</td>
+</tr>
+<tr>
+<td><strong>A</strong></td>
+<td>Architecture</td>
+<td>架构设计</td>
+</tr>
+<tr>
+<td><strong>R</strong></td>
+<td>Refinement</td>
+<td>精炼实现</td>
+</tr>
+<tr>
+<td><strong>C</strong></td>
+<td>Completion</td>
+<td>完成交付</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34-memory">3.4 Memory</h3>
+<p><strong>Memory</strong> 是 RuFlo 的知识存储系统：</p>
+<pre><code>Working Memory (工作记忆)
+    ↓
+Episodic Memory (情景记忆)
+    ↓
+Semantic Memory (语义记忆)
+</code></pre>
+<h3 id="35-mcp-model-context-protocol">3.5 MCP (Model Context Protocol)</h3>
+<p><strong>MCP</strong> 是 Claude Code 的工具协议，RuFlo 提供 259 个 MCP 工具：</p>
+<pre><code>Claude Code
+    │
+    ├── MCP Server (RuFlo)
+    │       │
+    │       ├── Agent Tools (7)
+    │       ├── Swarm Tools (4)
+    │       ├── Memory Tools (7)
+    │       ├── Config Tools (6)
+    │       ├── Hooks Tools (40+)
+    │       └── ... (更多)
+</code></pre>
+<hr />
+<h2 id="swarm">四、Swarm 编排</h2>
+<h3 id="41-swarm">4.1 创建 Swarm</h3>
+<pre><code class="language-bash"># CLI 方式
+npx claude-flow@v3alpha swarm init \
+  --topology hierarchical \
+  --max-agents 8 \
+  --strategy specialized
+
+# MCP 方式
+mcp__ruv-swarm__swarm_init({
+  topology: &quot;hierarchical&quot;,
+  maxAgents: 8,
+  strategy: &quot;specialized&quot;
+})
+</code></pre>
+<h3 id="42">4.2 选择拓扑</h3>
+<table>
+<thead>
+<tr>
+<th>拓扑</th>
+<th>适用场景</th>
+<th>优缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>hierarchical</strong></td>
+<td>复杂项目、需要协调</td>
+<td>✅ 清晰协调 ❌ 单点依赖</td>
+</tr>
+<tr>
+<td><strong>mesh</strong></td>
+<td>简单任务、并行执行</td>
+<td>✅ 高可用 ❌ 协调复杂</td>
+</tr>
+<tr>
+<td><strong>ring</strong></td>
+<td>流水线任务</td>
+<td>✅ 顺序清晰 ❌ 延迟累积</td>
+</tr>
+<tr>
+<td><strong>star</strong></td>
+<td>集中控制</td>
+<td>✅ 统一管理 ❌ Hub 瓶颈</td>
+</tr>
+</tbody>
+</table>
+<h3 id="43">4.3 配置策略</h3>
+<pre><code class="language-javascript">// specialized: 每个 Agent 专注特定领域
+strategy: &quot;specialized&quot;  // 推荐用于复杂项目
+
+// balanced: Agent 负载均衡
+strategy: &quot;balanced&quot;     // 推荐用于批量任务
+
+// adaptive: 动态调整策略
+strategy: &quot;adaptive&quot;     // 推荐用于不确定场景
+
+// auto: 自动选择
+strategy: &quot;auto&quot;         // 让系统决定
+</code></pre>
+<h3 id="44-swarm">4.4 Swarm 操作</h3>
+<pre><code class="language-bash"># 启动 Swarm
+npx claude-flow@v3alpha swarm start
+
+# 查看状态
+npx claude-flow@v3alpha swarm status
+
+# 列出 Agent
+npx claude-flow@v3alpha agent list
+
+# 发送任务
+npx claude-flow@v3alpha swarm task &quot;任务描述&quot;
+
+# 停止 Swarm
+npx claude-flow@v3alpha swarm stop
+</code></pre>
+<h3 id="45-queen">4.5 Queen 模式</h3>
+<p><strong>Strategic Queen</strong> (战略型)：</p>
+<pre><code class="language-bash"># 用于研究和架构决策
+npx claude-flow@v3alpha queen spawn --type strategic
+</code></pre>
+<p><strong>Tactical Queen</strong> (战术型)：</p>
+<pre><code class="language-bash"># 用于实现和部署管理
+npx claude-flow@v3alpha queen spawn --type tactical
+</code></pre>
+<p><strong>Adaptive Queen</strong> (自适应型)：</p>
+<pre><code class="language-bash"># 用于优化和动态调整
+npx claude-flow@v3alpha queen spawn --type adaptive
+</code></pre>
+<h3 id="46">4.6 共识机制</h3>
+<pre><code class="language-bash"># 配置共识算法
+export CLAUDE_FLOW_CONSENSUS=majority  # 简单多数
+export CLAUDE_FLOW_CONSENSUS=weighted  # 加权投票
+export CLAUDE_FLOW_CONSENSUS=byzantine # 拜占庭容错
+</code></pre>
+<hr />
+<h2 id="sparc">五、SPARC 方法论</h2>
+<h3 id="51-sparc">5.1 SPARC 工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    SPARC Workflow                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  1. Specification (规格)                                    │
+│     ├── 定义需求和约束                                       │
+│     ├── 建立成功标准                                        │
+│     └── Agent: researcher, analyzer                         │
+│                         │                                   │
+│                         ▼                                   │
+│  2. Architecture (架构)                                     │
+│     ├── 设计系统结构                                        │
+│     ├── 定义接口和数据流                                    │
+│     └── Agent: architect, designer                          │
+│                         │                                   │
+│                         ▼                                   │
+│  3. Refinement (精炼)                                       │
+│     ├── 测试驱动开发                                        │
+│     ├── 迭代实现                                           │
+│     └── Agent: coder, tdd, tester                           │
+│                         │                                   │
+│                         ▼                                   │
+│  4. Review (审查)                                           │
+│     ├── 代码质量审查                                        │
+│     ├── 安全和性能检查                                      │
+│     └── Agent: reviewer, optimizer                          │
+│                         │                                   │
+│                         ▼                                   │
+│  5. Completion (完成)                                       │
+│     ├── 集成和部署                                          │
+│     ├── 文档和发布                                          │
+│     └── Agent: workflow-manager, documenter                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52-sparc">5.2 执行 SPARC</h3>
+<pre><code class="language-bash"># 执行完整 SPARC 流程
+npx claude-flow sparc pipeline &quot;实现 REST API 认证系统&quot;
+
+# 执行特定阶段
+npx claude-flow sparc run specification &quot;分析用户认证需求&quot;
+npx claude-flow sparc run architecture &quot;设计认证系统架构&quot;
+npx claude-flow sparc run refinement &quot;实现认证系统&quot;
+npx claude-flow sparc run review &quot;审查认证系统代码&quot;
+npx claude-flow sparc run completion &quot;部署和文档&quot;
+</code></pre>
+<h3 id="53-tdd">5.3 TDD 模式</h3>
+<pre><code class="language-bash"># 测试驱动开发模式
+npx claude-flow sparc tdd &quot;实现购物车功能&quot;
+
+# 流程:
+# 1. 编写测试用例
+# 2. 运行测试 (失败)
+# 3. 实现功能代码
+# 4. 运行测试 (通过)
+# 5. 重构优化
+# 6. 重复
+</code></pre>
+<h3 id="54">5.4 批量执行</h3>
+<pre><code class="language-bash"># 并行执行多个模式
+npx claude-flow sparc batch &quot;coder,tester,reviewer&quot; &quot;实现用户注册功能&quot;
+
+# Agent 并行工作:
+# - coder: 实现代码
+# - tester: 编写测试
+# - reviewer: 代码审查
+</code></pre>
+<h3 id="55">5.5 监控进度</h3>
+<pre><code class="language-bash"># 实时监控
+npx claude-flow@v3alpha status --watch
+
+# 查看进度
+npx claude-flow@v3alpha progress
+
+# 查看指标
+npx claude-flow@v3alpha metrics
+</code></pre>
+<hr />
+<h2 id="_5">六、记忆系统</h2>
+<h3 id="61">6.1 记忆层次</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    Memory Hierarchy                         │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Working Memory                          │   │
+│  │  • 当前活跃上下文                                    │   │
+│  │  • 快速访问 (亚毫秒级)                               │   │
+│  │  • 1MB 限制                                         │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                              │                              │
+│                              ▼                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Episodic Memory                         │   │
+│  │  • 近期任务历史                                      │   │
+│  │  • 中等保留时间                                      │   │
+│  │  • 任务轨迹记录                                      │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                              │                              │
+│                              ▼                              │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │              Semantic Memory                         │   │
+│  │  • 整合的知识库                                      │   │
+│  │  • 持久化存储                                        │   │
+│  │  • 模式和最佳实践                                    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="62">6.2 使用记忆</h3>
+<pre><code class="language-bash"># 存储模式
+mcp__claude-flow__memory_usage({
+  action: &quot;store&quot;,
+  namespace: &quot;patterns&quot;,
+  key: &quot;auth-jwt-pattern&quot;,
+  value: JSON.stringify({
+    approach: &quot;JWT&quot;,
+    expiry: &quot;24h&quot;,
+    refresh: true
+  })
+})
+
+# 检索模式
+mcp__claude-flow__memory_usage({
+  action: &quot;search&quot;,
+  namespace: &quot;patterns&quot;,
+  query: &quot;authentication patterns&quot;
+})
+
+# 相似度评分:
+# &gt; 0.7: 强匹配，直接使用
+# 0.5-0.7: 部分匹配，需要适配
+# &lt; 0.5: 弱匹配，创建新模式
+</code></pre>
+<h3 id="63">6.3 记忆作用域</h3>
+<pre><code class="language-javascript">// 项目作用域
+scope: &quot;project&quot;  // 当前项目
+
+// 本地作用域
+scope: &quot;local&quot;    // 本地环境
+
+// 用户作用域
+scope: &quot;user&quot;     // 用户全局
+</code></pre>
+<h3 id="64-hnsw">6.4 HNSW 向量搜索</h3>
+<pre><code class="language-bash"># 启用 HNSW 索引
+export CLAUDE_FLOW_HNSW_INDEXING=true
+
+# 配置嵌入维度
+export CLAUDE_FLOW_EMBEDDING_DIMENSIONS=384
+
+# 记忆搜索会使用 HNSW 进行快速向量检索
+# 性能: 150x-12,500x 更快
+</code></pre>
+<h3 id="65">6.5 自学习循环</h3>
+<pre><code>RETRIEVE → JUDGE → DISTILL → CONSOLIDATE → ROUTE
+   │          │          │            │         │
+   ▼          ▼          ▼            ▼         ▼
+ 检索历史   评估质量   提取模式    整合知识   智能路由
+</code></pre>
+<p><strong>启用自学习</strong>：</p>
+<pre><code class="language-bash"># 启用自学习
+export CLAUDE_FLOW_SELF_LEARNING=true
+
+# 配置学习频率
+export CLAUDE_FLOW_LEARNING_INTERVAL=100  # 每 100 个任务学习一次
+</code></pre>
+<hr />
+<h2 id="mcp">七、MCP 工具</h2>
+<h3 id="71-mcp">7.1 核心 MCP 工具</h3>
+<h4 id="agent">Agent 工具</h4>
+<pre><code class="language-javascript">// 生成 Agent
+mcp__ruv-swarm__agent_spawn({
+  type: &quot;coder&quot;,
+  name: &quot;my-coder&quot;,
+  capabilities: [&quot;typescript&quot;, &quot;express&quot;]
+})
+
+// 列出 Agent
+mcp__ruv-swarm__agent_list()
+
+// 查看状态
+mcp__ruv-swarm__agent_status({ id: &quot;agent-id&quot; })
+
+// 停止 Agent
+mcp__ruv-swarm__agent_stop({ id: &quot;agent-id&quot; })
+</code></pre>
+<h4 id="swarm_1">Swarm 工具</h4>
+<pre><code class="language-javascript">// 初始化 Swarm
+mcp__ruv-swarm__swarm_init({
+  topology: &quot;hierarchical&quot;,
+  maxAgents: 8,
+  strategy: &quot;specialized&quot;
+})
+
+// 发送任务
+mcp__ruv-swarm__swarm_task({
+  description: &quot;实现用户认证系统&quot;
+})
+
+// 查看状态
+mcp__ruv-swarm__swarm_status()
+</code></pre>
+<h4 id="memory">Memory 工具</h4>
+<pre><code class="language-javascript">// 存储记忆
+mcp__claude-flow__memory_usage({
+  action: &quot;store&quot;,
+  namespace: &quot;knowledge&quot;,
+  key: &quot;api-design&quot;,
+  value: &quot;{...}&quot;
+})
+
+// 搜索记忆
+mcp__claude-flow__memory_usage({
+  action: &quot;search&quot;,
+  namespace: &quot;knowledge&quot;,
+  query: &quot;API 设计模式&quot;
+})
+
+// 清除记忆
+mcp__claude-flow__memory_usage({
+  action: &quot;clear&quot;,
+  namespace: &quot;knowledge&quot;
+})
+</code></pre>
+<h3 id="72-sparc-mcp">7.2 SPARC MCP 工具</h3>
+<pre><code class="language-javascript">// 执行 SPARC 模式
+mcp__claude-flow__sparc_mode({
+  mode: &quot;orchestrator&quot;,
+  task_description: &quot;协调功能开发&quot;,
+  options: {
+    parallel: true,
+    monitor: true
+  }
+})
+
+// TDD 模式
+mcp__claude-flow__sparc_mode({
+  mode: &quot;tdd&quot;,
+  task_description: &quot;实现购物车功能&quot;
+})
+</code></pre>
+<h3 id="73">7.3 安全工具</h3>
+<pre><code class="language-javascript">// 安全扫描
+mcp__claude-flow__security_scan({
+  depth: &quot;full&quot;
+})
+
+// 输入验证
+mcp__claude-flow__validate_input({
+  input: &quot;user input&quot;,
+  rules: [&quot;no-injection&quot;, &quot;no-xss&quot;]
+})
+</code></pre>
+<h3 id="74">7.4 配置工具组</h3>
+<pre><code class="language-bash"># 开发模式
+export CLAUDE_FLOW_TOOL_MODE=develop
+# 包含: create, implement, test, fix
+
+# 生产模式
+export CLAUDE_FLOW_TOOL_MODE=production
+# 包含: monitor, security, optimize
+
+# 最小模式
+export CLAUDE_FLOW_TOOL_MODE=minimal
+# 仅包含核心工具
+
+# 自定义组
+export CLAUDE_FLOW_TOOL_GROUPS=implement,test,fix,memory
+</code></pre>
+<hr />
+<h2 id="agent_1">八、自定义 Agent</h2>
+<h3 id="81-agent">8.1 创建 Agent 定义文件</h3>
+<p>在项目目录创建 <code>.claude/agents/</code> 文件夹：</p>
+<pre><code class="language-bash">mkdir -p .claude/agents
+</code></pre>
+<h3 id="82-agent">8.2 定义 Agent</h3>
+<p>创建 <code>my-custom-agent.yaml</code>：</p>
+<pre><code class="language-yaml">name: my-custom-agent
+type: specialist
+version: &quot;1.0.0&quot;
+
+description: |
+  专门处理数据转换任务的 Agent
+
+capabilities:
+  - data-transform
+  - format-conversion
+  - validation
+
+priority: high
+
+optimizations:
+  - context-caching
+  - memory-persistence
+
+config:
+  maxRetries: 3
+  timeout: 30000
+
+prompt: |
+  你是一个数据转换专家。
+  你的任务是:
+  1. 分析输入数据格式
+  2. 确定转换策略
+  3. 执行转换
+  4. 验证结果
+
+examples:
+  - input: &quot;CSV to JSON conversion&quot;
+    output: &quot;Convert CSV rows to JSON objects&quot;
+</code></pre>
+<h3 id="83-agent">8.3 注册 Agent</h3>
+<pre><code class="language-bash"># 将 Agent 定义文件放入 .claude/agents/ 目录
+cp my-custom-agent.yaml .claude/agents/
+
+# 重新加载配置
+npx claude-flow@v3alpha config reload
+
+# 验证 Agent 可用
+npx claude-flow@v3alpha agent list
+</code></pre>
+<h3 id="84-agent">8.4 使用自定义 Agent</h3>
+<pre><code class="language-bash"># 通过 CLI
+npx ruflo@latest --agent my-custom-agent --task &quot;转换 CSV 文件&quot;
+
+# 通过 MCP
+mcp__ruv-swarm__agent_spawn({
+  type: &quot;my-custom-agent&quot;,
+  name: &quot;converter&quot;
+})
+</code></pre>
+<h3 id="85-agent">8.5 Agent 模板</h3>
+<p><strong>通用模板</strong>：</p>
+<pre><code class="language-yaml">name: template-agent
+type: specialist
+version: &quot;1.0.0&quot;
+
+description: |
+  Agent 描述 - 用于触发匹配
+
+capabilities:
+  - capability-1
+  - capability-2
+
+priority: medium
+
+optimizations:
+  - flash-attention
+  - token-reduction
+
+config:
+  maxRetries: 3
+  timeout: 60000
+  memoryLimit: 1048576  # 1MB
+
+prompt: |
+  系统提示词...
+
+  任务说明...
+
+  输出格式...
+</code></pre>
+<hr />
+<h2 id="_6">九、企业部署</h2>
+<h3 id="91-docker">9.1 Docker 部署</h3>
+<pre><code class="language-dockerfile"># Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 安装 RuFlo
+RUN npm install -g ruflo@latest
+
+# 配置环境变量
+ENV ANTHROPIC_API_KEY=&quot;&quot;
+ENV CLAUDE_FLOW_LOG_LEVEL=info
+
+# 初始化
+RUN ruflo init
+
+CMD [&quot;ruflo&quot;, &quot;mcp&quot;, &quot;start&quot;]
+</code></pre>
+<pre><code class="language-bash"># 构建镜像
+docker build -t ruflo:latest .
+
+# 运行容器
+docker run -d \
+  --name ruflo-server \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -p 3000:3000 \
+  ruflo:latest
+</code></pre>
+<h3 id="92-cloud-run">9.2 Cloud Run 部署</h3>
+<pre><code class="language-bash"># 一键部署到 Cloud Run
+npx claude-flow deploy --platform cloud-run
+
+# 配置
+gcloud run deploy ruflo \
+  --image gcr.io/project/ruflo \
+  --set-env-vars ANTHROPIC_API_KEY=sk-ant-...
+</code></pre>
+<h3 id="93-kubernetes">9.3 Kubernetes 部署</h3>
+<pre><code class="language-yaml"># deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ruflo
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ruflo
+  template:
+    metadata:
+      labels:
+        app: ruflo
+    spec:
+      containers:
+      - name: ruflo
+        image: ruflo:latest
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: anthropic
+        ports:
+        - containerPort: 3000
+</code></pre>
+<h3 id="94">9.4 监控和日志</h3>
+<pre><code class="language-bash"># 配置日志级别
+export CLAUDE_FLOW_LOG_LEVEL=debug
+
+# 启用监控
+export CLAUDE_FLOW_MONITORING=true
+
+# 查看日志
+npx claude-flow@v3alpha logs --follow
+
+# 导出指标
+npx claude-flow@v3alpha metrics export
+</code></pre>
+<h3 id="95">9.5 安全配置</h3>
+<pre><code class="language-bash"># 启用 AIDefence
+export CLAUDE_FLOW_SECURITY_ENABLED=true
+
+# 配置威胁检测级别
+export CLAUDE_FLOW_SECURITY_LEVEL=high
+
+# 启用输入验证
+export CLAUDE_FLOW_INPUT_VALIDATION=true
+
+# 启用 PII 检测
+export CLAUDE_FLOW_PII_DETECTION=true
+</code></pre>
+<h3 id="96">9.6 高可用配置</h3>
+<pre><code class="language-bash"># 自动扩缩
+export CLAUDE_FLOW_AUTO_SCALE=true
+export CLAUDE_FLOW_MAX_WORKERS=12
+export CLAUDE_FLOW_SCALE_UP_THRESHOLD=2
+export CLAUDE_FLOW_SCALE_DOWN_THRESHOLD=2
+
+# 故障转移
+export CLAUDE_FLOW_FAILOVER=true
+export CLAUDE_FLOW_FAILOVER_PROVIDERS=openai,google
+</code></pre>
+<hr />
+<h2 id="_7">十、最佳实践</h2>
+<h3 id="101">10.1 任务分解</h3>
+<p><strong>好的做法</strong>：</p>
+<pre><code class="language-bash"># 分解大任务为小任务
+npx claude-flow sparc run coder &quot;实现用户注册 API&quot;
+npx claude-flow sparc run coder &quot;实现用户登录 API&quot;
+npx claude-flow sparc run tester &quot;编写认证测试用例&quot;
+</code></pre>
+<p><strong>不好的做法</strong>：</p>
+<pre><code class="language-bash"># 任务太大太模糊
+npx claude-flow sparc run coder &quot;实现整个用户系统&quot;
+</code></pre>
+<h3 id="102">10.2 选择合适的拓扑</h3>
+<table>
+<thead>
+<tr>
+<th>项目复杂度</th>
+<th>推荐拓扑</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>简单 (1-2 天)</td>
+<td>mesh</td>
+<td>快速执行</td>
+</tr>
+<tr>
+<td>中等 (1-2 周)</td>
+<td>hierarchical</td>
+<td>清晰协调</td>
+</tr>
+<tr>
+<td>复杂 (1+ 月)</td>
+<td>hierarchical + Strategic Queen</td>
+<td>专业管理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103">10.3 利用记忆系统</h3>
+<pre><code class="language-bash"># 开始任务前先检索相关模式
+mcp__claude-flow__memory_usage({
+  action: &quot;search&quot;,
+  query: &quot;类似任务的解决方案&quot;
+})
+
+# 任务完成后存储成功模式
+mcp__claude-flow__memory_usage({
+  action: &quot;store&quot;,
+  key: &quot;successful-approach&quot;,
+  value: &quot;{...}&quot;
+})
+</code></pre>
+<h3 id="104">10.4 成本优化</h3>
+<pre><code class="language-bash"># 使用三层模型路由
+export CLAUDE_FLOW_MODEL_ROUTING=true
+
+# 简单任务用 Haiku
+# 复杂任务用 Sonnet/Opus
+# 简单转换用 WASM (&lt;1ms, $0)
+</code></pre>
+<h3 id="105">10.5 安全最佳实践</h3>
+<pre><code class="language-bash"># 1. 始终启用安全扫描
+export CLAUDE_FLOW_SECURITY_ENABLED=true
+
+# 2. 使用环境变量存储 API Keys
+# 不要在代码中硬编码
+
+# 3. 定期审计
+npx claude-flow@v3alpha security audit --depth full
+
+# 4. 最小权限原则
+# 只启用需要的工具组
+export CLAUDE_FLOW_TOOL_GROUPS=implement,test
+</code></pre>
+<h3 id="106">10.6 性能优化</h3>
+<pre><code class="language-bash"># 1. 启用 HNSW 索引
+export CLAUDE_FLOW_HNSW_INDEXING=true
+
+# 2. 使用 Flash Attention
+# 已默认启用
+
+# 3. 配置合适的 Agent 数量
+# 推荐: CPU 核心数 - 1
+
+# 4. 定期清理记忆
+mcp__claude-flow__memory_usage({
+  action: &quot;cleanup&quot;,
+  olderThan: &quot;30d&quot;
+})
+</code></pre>
+<hr />
+<h2 id="_8">十一、常见问题</h2>
+<h3 id="111">11.1 安装问题</h3>
+<p><strong>Q: 安装失败，提示权限错误</strong></p>
+<pre><code class="language-bash"># 使用 sudo 或修改 npm 全局目录
+sudo npm install -g ruflo@latest
+
+# 或修改 npm 全局目录
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+export PATH=~/.npm-global/bin:$PATH
+</code></pre>
+<p><strong>Q: MCP 连接失败</strong></p>
+<pre><code class="language-bash"># 检查 MCP 服务状态
+npx ruflo@latest mcp status
+
+# 重新添加 MCP
+claude mcp remove ruflo
+claude mcp add ruflo -- npx -y ruflo@latest mcp start
+</code></pre>
+<h3 id="112-agent">11.2 Agent 问题</h3>
+<p><strong>Q: Agent 无法启动</strong></p>
+<pre><code class="language-bash"># 检查 API Key
+echo $ANTHROPIC_API_KEY
+
+# 运行诊断
+npx claude-flow@v3alpha doctor --fix
+
+# 查看日志
+npx claude-flow@v3alpha logs --level debug
+</code></pre>
+<p><strong>Q: Agent 执行超时</strong></p>
+<pre><code class="language-yaml"># 在 Agent 配置中增加超时时间
+config:
+  timeout: 120000  # 2 分钟
+</code></pre>
+<h3 id="113">11.3 记忆问题</h3>
+<p><strong>Q: 记忆搜索无结果</strong></p>
+<pre><code class="language-bash"># 检查 HNSW 索引
+export CLAUDE_FLOW_HNSW_INDEXING=true
+
+# 重新构建索引
+npx claude-flow@v3alpha memory rebuild-index
+</code></pre>
+<p><strong>Q: 记忆占用过多空间</strong></p>
+<pre><code class="language-bash"># 清理旧记忆
+mcp__claude-flow__memory_usage({
+  action: &quot;cleanup&quot;,
+  olderThan: &quot;7d&quot;
+})
+
+# 压缩记忆
+npx claude-flow@v3alpha memory compress
+</code></pre>
+<h3 id="114">11.4 性能问题</h3>
+<p><strong>Q: 响应速度慢</strong></p>
+<pre><code class="language-bash"># 检查 Agent 数量
+npx claude-flow@v3alpha agent list
+
+# 减少 Agent 数量
+export CLAUDE_FLOW_MAX_AGENTS=4
+
+# 启用模型路由
+export CLAUDE_FLOW_MODEL_ROUTING=true
+</code></pre>
+<p><strong>Q: Token 消耗过高</strong></p>
+<pre><code class="language-bash"># 启用 Token 减少
+# 已默认启用 32.3% 减少
+
+# 使用更小的模型
+export CLAUDE_FLOW_DEFAULT_MODEL=haiku
+</code></pre>
+<h3 id="115">11.5 安全问题</h3>
+<p><strong>Q: 检测到 Prompt 注入</strong></p>
+<pre><code class="language-bash"># 系统会自动阻止并记录
+# 查看安全日志
+npx claude-flow@v3alpha security logs
+
+# 调整安全级别
+export CLAUDE_FLOW_SECURITY_LEVEL=maximum
+</code></pre>
+<hr />
+<h2 id="_9">十二、参考资源</h2>
+<h3 id="_10">官方资源</h3>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/ruvnet/ruflo</li>
+<li><strong>NPM</strong>: https://www.npmjs.com/package/ruflo</li>
+<li><strong>官网</strong>: https://Cognitum.One</li>
+<li><strong>Agentics Foundation</strong>: https://agentics.org</li>
+</ul>
+<h3 id="_11">相关项目</h3>
+<ul>
+<li><strong>Claude Code</strong>: https://claude.ai/code</li>
+<li><strong>Model Context Protocol</strong>: https://modelcontextprotocol.io</li>
+<li><strong>Anthropic API</strong>: https://docs.anthropic.com</li>
+</ul>
+<h3 id="_12">社区资源</h3>
+<ul>
+<li><strong>GitHub Discussions</strong>: https://github.com/ruvnet/ruflo/discussions</li>
+<li><strong>Issues</strong>: https://github.com/ruvnet/ruflo/issues</li>
+</ul>
+<hr />
+<h2 id="_13">十三、版本历史</h2>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>发布日期</th>
+<th>主要更新</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>v3.5.31</td>
+<td>2026-03-18</td>
+<td>性能优化、安全增强</td>
+</tr>
+<tr>
+<td>v3.5.0</td>
+<td>2026-03-01</td>
+<td>新增 17 SPARC 模式</td>
+</tr>
+<tr>
+<td>v3.4.0</td>
+<td>2026-02-15</td>
+<td>SONA 神经架构</td>
+</tr>
+<tr>
+<td>v3.3.0</td>
+<td>2026-02-01</td>
+<td>HNSW 向量搜索</td>
+</tr>
+<tr>
+<td>v3.0.0</td>
+<td>2026-01-15</td>
+<td>企业版发布</td>
+</tr>
+<tr>
+<td>v2.0.0</td>
+<td>2025-11-01</td>
+<td>Swarm 编排</td>
+</tr>
+<tr>
+<td>v1.0.0</td>
+<td>2025-06-02</td>
+<td>首次发布</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>教程生成时间：2026-03-24</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

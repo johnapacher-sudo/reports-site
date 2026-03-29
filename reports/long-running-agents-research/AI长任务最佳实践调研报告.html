@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 长任务最佳实践调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">调研日期: 2026-03-16 | 核心目标: 构建可靠的长时运行 AI Agent 系统</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、核心挑战</a></li>
+<li><a href="#11" class="toc-h3">1.1 长任务的困境</a></li>
+<li><a href="#12" class="toc-h3">1.2 常见失败模式</a></li>
+<li><a href="#anthropic" class="toc-h2">二、Anthropic 官方方案</a></li>
+<li><a href="#21-agent" class="toc-h3">2.1 双 Agent 架构</a></li>
+<li><a href="#22" class="toc-h3">2.2 关键组件</a></li>
+<li><a href="#feature-list" class="toc-h4">Feature List (功能清单)</a></li>
+<li><a href="#progress-file" class="toc-h4">Progress File (进度文件)</a></li>
+<li><a href="#init-script" class="toc-h4">Init Script (启动脚本)</a></li>
+<li><a href="#23-coding-agent-session" class="toc-h3">2.3 Coding Agent Session 启动流程</a></li>
+<li><a href="#24-agent" class="toc-h3">2.4 Agent 行为规范</a></li>
+<li><a href="#_3" class="toc-h2">三、状态管理策略</a></li>
+<li><a href="#31" class="toc-h3">3.1 状态持久化模式</a></li>
+<li><a href="#32" class="toc-h3">3.2 状态数据结构</a></li>
+<li><a href="#33" class="toc-h3">3.3 状态存储方案</a></li>
+<li><a href="#34-checkpointing" class="toc-h3">3.4 Checkpointing 最佳实践</a></li>
+<li><a href="#_4" class="toc-h2">四、错误恢复与重试机制</a></li>
+<li><a href="#41" class="toc-h3">4.1 重试策略</a></li>
+<li><a href="#exponential-backoff" class="toc-h4">指数退避 (Exponential Backoff)</a></li>
+<li><a href="#_5" class="toc-h4">重试装饰器</a></li>
+<li><a href="#42" class="toc-h3">4.2 故障分类与处理</a></li>
+<li><a href="#43-circuit-breaker" class="toc-h3">4.3 Circuit Breaker (断路器)</a></li>
+<li><a href="#_6" class="toc-h2">五、任务编排模式</a></li>
+<li><a href="#51" class="toc-h3">5.1 工作流模式分类</a></li>
+<li><a href="#52" class="toc-h3">5.2 状态机模式</a></li>
+<li><a href="#53" class="toc-h3">5.3 步骤编排器</a></li>
+<li><a href="#_7" class="toc-h2">六、监控与可观测性</a></li>
+<li><a href="#61" class="toc-h3">6.1 可观测性三支柱</a></li>
+<li><a href="#62" class="toc-h3">6.2 结构化日志</a></li>
+<li><a href="#63" class="toc-h3">6.3 进度仪表盘</a></li>
+<li><a href="#_8" class="toc-h2">七、工具与框架选型</a></li>
+<li><a href="#71" class="toc-h3">7.1 长任务框架对比</a></li>
+<li><a href="#72-temporal" class="toc-h3">7.2 Temporal 示例</a></li>
+<li><a href="#73-langgraph" class="toc-h3">7.3 LangGraph 示例</a></li>
+<li><a href="#_9" class="toc-h2">八、实战操作指南</a></li>
+<li><a href="#81" class="toc-h3">8.1 长任务启动清单</a></li>
+<li><a href="#82" class="toc-h3">8.2 推荐的项目结构</a></li>
+<li><a href="#83" class="toc-h3">8.3 完整启动脚本</a></li>
+<li><a href="#84" class="toc-h3">8.4 监控脚本</a></li>
+<li><a href="#_10" class="toc-h2">九、最佳实践清单</a></li>
+<li><a href="#91" class="toc-h3">9.1 设计原则</a></li>
+<li><a href="#92" class="toc-h3">9.2 检查点策略</a></li>
+<li><a href="#93" class="toc-h3">9.3 错误处理策略</a></li>
+<li><a href="#94-agent" class="toc-h3">9.4 Agent 提示词模板</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+<li><a href="#_12" class="toc-h3">官方文档</a></li>
+<li><a href="#_13" class="toc-h3">框架与工具</a></li>
+<li><a href="#_14" class="toc-h3">社区资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI 长任务最佳实践调研报告</h1>
+                        <div class="article-meta">调研日期: 2026-03-16<br>核心目标: 构建可靠的长时运行 AI Agent 系统</div>
+                    </header>
+                    <h1 id="ai">AI 长任务最佳实践调研报告</h1>
+<blockquote>
+<p>调研日期: 2026-03-16
+核心目标: 构建可靠的长时运行 AI Agent 系统</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一核心挑战">核心挑战</a></li>
+<li><a href="#二anthropic-官方方案">Anthropic 官方方案</a></li>
+<li><a href="#三状态管理策略">状态管理策略</a></li>
+<li><a href="#四错误恢复与重试机制">错误恢复与重试机制</a></li>
+<li><a href="#五任务编排模式">任务编排模式</a></li>
+<li><a href="#六监控与可观测性">监控与可观测性</a></li>
+<li><a href="#七工具与框架选型">工具与框架选型</a></li>
+<li><a href="#八实战操作指南">实战操作指南</a></li>
+<li><a href="#九最佳实践清单">最佳实践清单</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、核心挑战</h2>
+<h3 id="11">1.1 长任务的困境</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        长任务核心问题                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   🧠 Context Window 限制                                                 │
+│      └── 即使有 compaction，仍无法在一个窗口内完成复杂任务                  │
+│                                                                         │
+│   🔌 Session 断连                                                        │
+│      └── 每个 Session 开始时无记忆，需要重建上下文                          │
+│                                                                         │
+│   🎯 进度追踪困难                                                         │
+│      └── Agent 不知道已完成什么，剩余什么                                   │
+│                                                                         │
+│   🐛 中间状态不一致                                                       │
+│      └── 任务中断后，代码/数据可能处于半完成状态                             │
+│                                                                         │
+│   ⏰ 时间跨度大                                                           │
+│      └── 任务可能跨越数小时甚至数天                                         │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="12">1.2 常见失败模式</h3>
+<table>
+<thead>
+<tr>
+<th>失败模式</th>
+<th>描述</th>
+<th>后果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>One-Shot 陷阱</strong></td>
+<td>试图一次完成所有工作</td>
+<td>Context 耗尽，任务半途而废</td>
+</tr>
+<tr>
+<td><strong>虚假完成</strong></td>
+<td>Agent 声称任务完成，实际未完成</td>
+<td>功能缺失，质量不达标</td>
+</tr>
+<tr>
+<td><strong>状态遗忘</strong></td>
+<td>新 Session 忘记之前的决策和进度</td>
+<td>重复工作，决策冲突</td>
+</tr>
+<tr>
+<td><strong>测试不足</strong></td>
+<td>标记完成但未充分验证</td>
+<td>隐藏 Bug，功能不可用</td>
+</tr>
+<tr>
+<td><strong>环境混乱</strong></td>
+<td>中断后代码/环境处于不可用状态</td>
+<td>下次启动需要大量修复工作</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="anthropic">二、Anthropic 官方方案</h2>
+<blockquote>
+<p>来源: <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Effective harnesses for long-running agents</a></p>
+</blockquote>
+<h3 id="21-agent">2.1 双 Agent 架构</h3>
+<p>Anthropic 提出的解决方案包含两个专门的 Agent：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        双 Agent 架构                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   🚀 Initializer Agent (初始化 Agent)                                    │
+│      ├── 只在第一个 Session 运行                                          │
+│      ├── 创建项目基础结构                                                  │
+│      ├── 生成 Feature List (功能清单)                                     │
+│      ├── 创建 init.sh 启动脚本                                           │
+│      ├── 创建 claude-progress.txt 进度文件                               │
+│      └── 提交初始 Git Commit                                             │
+│                                                                         │
+│   🔧 Coding Agent (编码 Agent)                                           │
+│      ├── 每个 Session 开始时运行                                          │
+│      ├── 读取进度文件和 Git 历史了解状态                                    │
+│      ├── 选择一个未完成的功能进行开发                                      │
+│      ├── 实现功能并充分测试                                               │
+│      ├── 更新进度文件和 Feature List                                      │
+│      └── 提交 Git Commit 记录变更                                        │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 关键组件</h3>
+<h4 id="feature-list">Feature List (功能清单)</h4>
+<p>用 JSON 格式记录所有功能及其状态：</p>
+<pre><code class="language-json">{
+  &quot;category&quot;: &quot;functional&quot;,
+  &quot;description&quot;: &quot;New chat button creates a fresh conversation&quot;,
+  &quot;steps&quot;: [
+    &quot;Navigate to main interface&quot;,
+    &quot;Click the 'New Chat' button&quot;,
+    &quot;Verify a new conversation is created&quot;,
+    &quot;Check that chat area shows welcome state&quot;,
+    &quot;Verify conversation appears in sidebar&quot;
+  ],
+  &quot;passes&quot;: false
+}
+</code></pre>
+<p><strong>为什么用 JSON 而非 Markdown？</strong>
+- 模型更不容易随意修改 JSON 文件
+- 结构化数据更易于程序化处理
+- 减少误操作删除内容的风险</p>
+<h4 id="progress-file">Progress File (进度文件)</h4>
+<p><code>claude-progress.txt</code> 记录每个 Session 的工作摘要：</p>
+<pre><code># Progress Log
+
+## Session 2026-03-16 10:30
+- Implemented user authentication
+- Added login/logout functionality
+- Fixed session management bug
+- Status: Auth module complete
+
+## Session 2026-03-16 14:00
+- Started work on chat interface
+- Created message component
+- Pending: WebSocket integration
+</code></pre>
+<h4 id="init-script">Init Script (启动脚本)</h4>
+<p><code>init.sh</code> 确保环境可重复启动：</p>
+<pre><code class="language-bash">#!/bin/bash
+# init.sh - 开发环境启动脚本
+
+# 安装依赖
+npm install
+
+# 设置环境变量
+export NODE_ENV=development
+export DATABASE_URL=postgresql://localhost:5432/dev
+
+# 启动开发服务器
+npm run dev
+
+# 运行基础测试
+npm run test:basic
+</code></pre>
+<h3 id="23-coding-agent-session">2.3 Coding Agent Session 启动流程</h3>
+<pre><code>每个 Session 的标准启动流程：
+
+Step 1: pwd
+        └── 确认当前工作目录
+
+Step 2: 读取进度文件
+        └── 了解最近完成的工作
+
+Step 3: 读取 Git Log
+        └── git log --oneline -20
+
+Step 4: 读取 Feature List
+        └── 找出下一个未完成的功能
+
+Step 5: 运行 init.sh
+        └── 启动开发服务器
+
+Step 6: 基础功能验证
+        └── 使用浏览器自动化测试核心功能
+
+Step 7: 开始开发新功能
+        └── 一次只做一个功能
+</code></pre>
+<h3 id="24-agent">2.4 Agent 行为规范</h3>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>Initializer Agent 行为</th>
+<th>Coding Agent 行为</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>过早声明完成</td>
+<td>创建详细的 Feature List</td>
+<td>开始时读取列表，选择一个功能</td>
+</tr>
+<tr>
+<td>环境状态混乱</td>
+<td>初始化 Git 和进度文件</td>
+<td>开始时读取进度和 Git Log，结束时提交</td>
+</tr>
+<tr>
+<td>功能标记过早完成</td>
+<td>设置 Feature List</td>
+<td>必须充分测试后才能标记 passes: true</td>
+</tr>
+<tr>
+<td>不知道如何运行</td>
+<td>编写 init.sh</td>
+<td>开始时读取并执行 init.sh</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">三、状态管理策略</h2>
+<h3 id="31">3.1 状态持久化模式</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        状态持久化模式                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   📸 Snapshot-Based (快照模式)                                           │
+│      ├── 定期保存完整状态快照                                             │
+│      ├── 恢复时从最近的快照开始                                           │
+│      └── 适合: 有明确检查点的任务                                         │
+│                                                                         │
+│   📝 Log-Based (日志模式)                                                 │
+│      ├── 记录所有状态变更事件                                             │
+│      ├── 通过重放日志重建状态                                             │
+│      └── 适合: 需要完整审计追踪的场景                                     │
+│                                                                         │
+│   🔄 Hybrid (混合模式)                                                    │
+│      ├── 定期快照 + 增量日志                                              │
+│      ├── 快速恢复 + 完整历史                                              │
+│      └── 适合: 大多数生产场景                                             │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="32">3.2 状态数据结构</h3>
+<pre><code class="language-python"># 推荐的状态数据结构
+
+class AgentState:
+    &quot;&quot;&quot;Agent 状态结构&quot;&quot;&quot;
+
+    # 1. 任务元信息
+    task_id: str              # 任务唯一标识
+    task_goal: str            # 任务目标描述
+    created_at: datetime      # 创建时间
+    updated_at: datetime      # 更新时间
+
+    # 2. 执行状态
+    status: str               # pending | running | paused | completed | failed
+    current_step: int         # 当前步骤编号
+    total_steps: int          # 总步骤数
+
+    # 3. 进度追踪
+    completed_steps: list     # 已完成步骤列表
+    pending_steps: list       # 待完成步骤列表
+    failed_steps: list        # 失败步骤列表
+
+    # 4. 上下文数据
+    context: dict             # 任务上下文数据
+    decisions: list           # 决策历史
+    artifacts: dict           # 产出物引用
+
+    # 5. 错误处理
+    errors: list              # 错误历史
+    retry_count: int          # 重试次数
+    last_checkpoint: datetime # 最后检查点时间
+</code></pre>
+<h3 id="33">3.3 状态存储方案</h3>
+<table>
+<thead>
+<tr>
+<th>存储方案</th>
+<th>适用场景</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>文件系统</strong></td>
+<td>单机开发</td>
+<td>简单、无依赖</td>
+<td>不支持分布式</td>
+</tr>
+<tr>
+<td><strong>SQLite</strong></td>
+<td>中等规模</td>
+<td>结构化查询</td>
+<td>单机限制</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>生产环境</td>
+<td>可靠、可扩展</td>
+<td>需要运维</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>高频更新</td>
+<td>快速、支持 TTL</td>
+<td>需要持久化配置</td>
+</tr>
+<tr>
+<td><strong>云存储 (S3)</strong></td>
+<td>大文件/备份</td>
+<td>无限容量</td>
+<td>延迟较高</td>
+</tr>
+</tbody>
+</table>
+<h3 id="34-checkpointing">3.4 Checkpointing 最佳实践</h3>
+<pre><code class="language-python">class CheckpointManager:
+    &quot;&quot;&quot;检查点管理器&quot;&quot;&quot;
+
+    def __init__(self, checkpoint_dir: str, interval: int = 300):
+        self.checkpoint_dir = checkpoint_dir
+        self.interval = interval  # 秒
+        self.last_checkpoint = None
+
+    def should_checkpoint(self) -&gt; bool:
+        &quot;&quot;&quot;判断是否需要创建检查点&quot;&quot;&quot;
+        if self.last_checkpoint is None:
+            return True
+
+        elapsed = time.time() - self.last_checkpoint
+        return elapsed &gt;= self.interval
+
+    def save_checkpoint(self, state: AgentState) -&gt; str:
+        &quot;&quot;&quot;保存检查点&quot;&quot;&quot;
+        checkpoint_id = f&quot;ckpt_{int(time.time())}&quot;
+        checkpoint_path = f&quot;{self.checkpoint_dir}/{checkpoint_id}.json&quot;
+
+        with open(checkpoint_path, 'w') as f:
+            json.dump(state.to_dict(), f)
+
+        self.last_checkpoint = time.time()
+        return checkpoint_id
+
+    def load_latest_checkpoint(self) -&gt; AgentState:
+        &quot;&quot;&quot;加载最新检查点&quot;&quot;&quot;
+        checkpoints = sorted(Path(self.checkpoint_dir).glob(&quot;ckpt_*.json&quot;))
+        if not checkpoints:
+            return None
+
+        with open(checkpoints[-1], 'r') as f:
+            return AgentState.from_dict(json.load(f))
+
+    def cleanup_old_checkpoints(self, keep: int = 5):
+        &quot;&quot;&quot;清理旧检查点&quot;&quot;&quot;
+        checkpoints = sorted(Path(self.checkpoint_dir).glob(&quot;ckpt_*.json&quot;))
+        for ckpt in checkpoints[:-keep]:
+            ckpt.unlink()
+</code></pre>
+<hr />
+<h2 id="_4">四、错误恢复与重试机制</h2>
+<h3 id="41">4.1 重试策略</h3>
+<h4 id="exponential-backoff">指数退避 (Exponential Backoff)</h4>
+<pre><code class="language-python">import random
+import time
+
+def exponential_backoff(
+    attempt: int,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    jitter: bool = True
+) -&gt; float:
+    &quot;&quot;&quot;
+    指数退避算法
+
+    Args:
+        attempt: 当前尝试次数 (从 0 开始)
+        base_delay: 基础延迟 (秒)
+        max_delay: 最大延迟 (秒)
+        jitter: 是否添加随机抖动
+
+    Returns:
+        等待时间 (秒)
+    &quot;&quot;&quot;
+    delay = min(base_delay * (2 ** attempt), max_delay)
+
+    if jitter:
+        # 添加 0.5x - 1.5x 的随机抖动
+        delay = delay * (0.5 + random.random())
+
+    return delay
+
+# 使用示例
+for attempt in range(5):
+    try:
+        result = api_call()
+        break
+    except Exception as e:
+        if attempt == 4:
+            raise
+        wait_time = exponential_backoff(attempt)
+        time.sleep(wait_time)
+</code></pre>
+<h4 id="_5">重试装饰器</h4>
+<pre><code class="language-python">from functools import wraps
+import logging
+
+logger = logging.getLogger(__name__)
+
+def retry(
+    max_attempts: int = 3,
+    base_delay: float = 1.0,
+    max_delay: float = 60.0,
+    exceptions: tuple = (Exception,)
+):
+    &quot;&quot;&quot;
+    重试装饰器
+
+    Args:
+        max_attempts: 最大尝试次数
+        base_delay: 基础延迟
+        max_delay: 最大延迟
+        exceptions: 需要重试的异常类型
+    &quot;&quot;&quot;
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            last_exception = None
+
+            for attempt in range(max_attempts):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    last_exception = e
+
+                    if attempt == max_attempts - 1:
+                        logger.error(f&quot;所有重试失败: {func.__name__}&quot;)
+                        raise
+
+                    wait_time = exponential_backoff(attempt, base_delay, max_delay)
+                    logger.warning(
+                        f&quot;{func.__name__} 失败 (尝试 {attempt + 1}/{max_attempts}), &quot;
+                        f&quot;{wait_time:.1f}秒后重试: {e}&quot;
+                    )
+                    time.sleep(wait_time)
+
+            raise last_exception
+
+        return wrapper
+    return decorator
+
+# 使用示例
+@retry(max_attempts=5, exceptions=(ConnectionError, TimeoutError))
+def call_llm_api(prompt: str) -&gt; str:
+    return api_client.generate(prompt)
+</code></pre>
+<h3 id="42">4.2 故障分类与处理</h3>
+<pre><code class="language-python">from enum import Enum
+from dataclasses import dataclass
+
+class ErrorType(Enum):
+    &quot;&quot;&quot;错误类型分类&quot;&quot;&quot;
+    TRANSIENT = &quot;transient&quot;      # 暂时性错误，可重试
+    PERMANENT = &quot;permanent&quot;      # 永久性错误，需要人工干预
+    RESOURCE = &quot;resource&quot;        # 资源限制，需要等待
+    LOGIC = &quot;logic&quot;              # 逻辑错误，需要修改代码
+
+@dataclass
+class ErrorContext:
+    &quot;&quot;&quot;错误上下文&quot;&quot;&quot;
+    error_type: ErrorType
+    message: str
+    recoverable: bool
+    suggested_action: str
+    retry_after: float | None = None
+
+def classify_error(error: Exception) -&gt; ErrorContext:
+    &quot;&quot;&quot;错误分类器&quot;&quot;&quot;
+    error_str = str(error).lower()
+
+    # Rate Limit
+    if &quot;rate limit&quot; in error_str or &quot;429&quot; in error_str:
+        return ErrorContext(
+            error_type=ErrorType.RESOURCE,
+            message=str(error),
+            recoverable=True,
+            suggested_action=&quot;等待后重试&quot;,
+            retry_after=60.0
+        )
+
+    # Timeout
+    if &quot;timeout&quot; in error_str or &quot;timed out&quot; in error_str:
+        return ErrorContext(
+            error_type=ErrorType.TRANSIENT,
+            message=str(error),
+            recoverable=True,
+            suggested_action=&quot;重试请求&quot;
+        )
+
+    # Auth Error
+    if &quot;unauthorized&quot; in error_str or &quot;401&quot; in error_str or &quot;403&quot; in error_str:
+        return ErrorContext(
+            error_type=ErrorType.PERMANENT,
+            message=str(error),
+            recoverable=False,
+            suggested_action=&quot;检查 API Key 或权限&quot;
+        )
+
+    # Default
+    return ErrorContext(
+        error_type=ErrorType.TRANSIENT,
+        message=str(error),
+        recoverable=True,
+        suggested_action=&quot;重试&quot;
+    )
+</code></pre>
+<h3 id="43-circuit-breaker">4.3 Circuit Breaker (断路器)</h3>
+<pre><code class="language-python">from enum import Enum
+import threading
+import time
+
+class CircuitState(Enum):
+    CLOSED = &quot;closed&quot;      # 正常状态
+    OPEN = &quot;open&quot;          # 断开状态 (拒绝请求)
+    HALF_OPEN = &quot;half_open&quot;  # 半开状态 (试探性恢复)
+
+class CircuitBreaker:
+    &quot;&quot;&quot;
+    断路器模式
+
+    防止级联故障，当错误率达到阈值时自动断开
+    &quot;&quot;&quot;
+
+    def __init__(
+        self,
+        failure_threshold: int = 5,
+        recovery_timeout: float = 30.0,
+        success_threshold: int = 3
+    ):
+        self.failure_threshold = failure_threshold
+        self.recovery_timeout = recovery_timeout
+        self.success_threshold = success_threshold
+
+        self.state = CircuitState.CLOSED
+        self.failure_count = 0
+        self.success_count = 0
+        self.last_failure_time = None
+        self.lock = threading.Lock()
+
+    def can_execute(self) -&gt; bool:
+        &quot;&quot;&quot;检查是否可以执行&quot;&quot;&quot;
+        with self.lock:
+            if self.state == CircuitState.CLOSED:
+                return True
+
+            if self.state == CircuitState.OPEN:
+                # 检查是否可以进入半开状态
+                if time.time() - self.last_failure_time &gt;= self.recovery_timeout:
+                    self.state = CircuitState.HALF_OPEN
+                    self.success_count = 0
+                    return True
+                return False
+
+            # HALF_OPEN
+            return True
+
+    def record_success(self):
+        &quot;&quot;&quot;记录成功&quot;&quot;&quot;
+        with self.lock:
+            if self.state == CircuitState.HALF_OPEN:
+                self.success_count += 1
+                if self.success_count &gt;= self.success_threshold:
+                    self.state = CircuitState.CLOSED
+                    self.failure_count = 0
+
+    def record_failure(self):
+        &quot;&quot;&quot;记录失败&quot;&quot;&quot;
+        with self.lock:
+            self.failure_count += 1
+            self.last_failure_time = time.time()
+
+            if self.failure_count &gt;= self.failure_threshold:
+                self.state = CircuitState.OPEN
+
+# 使用示例
+circuit_breaker = CircuitBreaker()
+
+def call_with_circuit_breaker(func, *args, **kwargs):
+    if not circuit_breaker.can_execute():
+        raise Exception(&quot;Circuit breaker is open&quot;)
+
+    try:
+        result = func(*args, **kwargs)
+        circuit_breaker.record_success()
+        return result
+    except Exception as e:
+        circuit_breaker.record_failure()
+        raise
+</code></pre>
+<hr />
+<h2 id="_6">五、任务编排模式</h2>
+<h3 id="51">5.1 工作流模式分类</h3>
+<blockquote>
+<p>参考: <a href="https://ai-sdk.dev/docs/agents/workflows">AI SDK Workflow Patterns</a></p>
+</blockquote>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        工作流编排模式                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   📦 Sequential (顺序处理)                                               │
+│      Step A → Step B → Step C → Done                                    │
+│      适合: 有明确依赖关系的任务                                           │
+│                                                                         │
+│   🔀 Routing (路由分发)                                                  │
+│      Input → [Classifier] → Agent A / Agent B / Agent C                 │
+│      适合: 需要根据输入选择不同处理逻辑                                    │
+│                                                                         │
+│   ⚡ Parallel (并行处理)                                                 │
+│      Input → [Agent A, Agent B, Agent C] → [Aggregator] → Output        │
+│      适合: 可独立执行的子任务                                             │
+│                                                                         │
+│   🎭 Orchestrator-Worker (编排者-工作者)                                 │
+│      Orchestrator 分解任务 → Workers 执行 → Orchestrator 汇总            │
+│      适合: 大型复杂任务                                                   │
+│                                                                         │
+│   🔄 Evaluator-Optimizer (评估-优化)                                     │
+│      Worker 产出 → Evaluator 评估 → 反馈 → Worker 改进                   │
+│      适合: 需要迭代改进的任务                                             │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52">5.2 状态机模式</h3>
+<pre><code class="language-python">from enum import Enum
+from typing import Callable, Dict, Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+class TaskState(Enum):
+    &quot;&quot;&quot;任务状态&quot;&quot;&quot;
+    PENDING = &quot;pending&quot;
+    INITIALIZING = &quot;initializing&quot;
+    RUNNING = &quot;running&quot;
+    PAUSED = &quot;paused&quot;
+    COMPLETED = &quot;completed&quot;
+    FAILED = &quot;failed&quot;
+    CANCELLED = &quot;cancelled&quot;
+
+class StateMachine:
+    &quot;&quot;&quot;
+    状态机任务编排器
+
+    定义清晰的状态转换规则，确保任务按预期流程执行
+    &quot;&quot;&quot;
+
+    # 允许的状态转换
+    TRANSITIONS: Dict[TaskState, set] = {
+        TaskState.PENDING: {TaskState.INITIALIZING, TaskState.CANCELLED},
+        TaskState.INITIALIZING: {TaskState.RUNNING, TaskState.FAILED, TaskState.CANCELLED},
+        TaskState.RUNNING: {TaskState.PAUSED, TaskState.COMPLETED, TaskState.FAILED, TaskState.CANCELLED},
+        TaskState.PAUSED: {TaskState.RUNNING, TaskState.CANCELLED},
+        TaskState.COMPLETED: set(),
+        TaskState.FAILED: {TaskState.PENDING},  # 允许重试
+        TaskState.CANCELLED: set(),
+    }
+
+    def __init__(self):
+        self.state = TaskState.PENDING
+        self.handlers: Dict[TaskState, Callable] = {}
+        self.history: list = []
+
+    def register_handler(self, state: TaskState, handler: Callable):
+        &quot;&quot;&quot;注册状态处理器&quot;&quot;&quot;
+        self.handlers[state] = handler
+
+    def transition(self, new_state: TaskState) -&gt; bool:
+        &quot;&quot;&quot;状态转换&quot;&quot;&quot;
+        if new_state not in self.TRANSITIONS[self.state]:
+            logger.error(f&quot;无效的状态转换: {self.state} → {new_state}&quot;)
+            return False
+
+        old_state = self.state
+        self.state = new_state
+        self.history.append({
+            &quot;from&quot;: old_state,
+            &quot;to&quot;: new_state,
+            &quot;timestamp&quot;: time.time()
+        })
+
+        logger.info(f&quot;状态转换: {old_state} → {new_state}&quot;)
+        return True
+
+    def execute(self, context: dict) -&gt; dict:
+        &quot;&quot;&quot;执行当前状态的处理逻辑&quot;&quot;&quot;
+        if self.state not in self.handlers:
+            raise ValueError(f&quot;未注册处理器: {self.state}&quot;)
+
+        handler = self.handlers[self.state]
+        return handler(context)
+
+    def can_resume(self) -&gt; bool:
+        &quot;&quot;&quot;是否可以恢复执行&quot;&quot;&quot;
+        return self.state in {TaskState.PAUSED, TaskState.FAILED}
+
+    def get_history(self) -&gt; list:
+        &quot;&quot;&quot;获取状态历史&quot;&quot;&quot;
+        return self.history.copy()
+</code></pre>
+<h3 id="53">5.3 步骤编排器</h3>
+<pre><code class="language-python">from dataclasses import dataclass, field
+from typing import Any, Callable, List, Optional
+import json
+from pathlib import Path
+
+@dataclass
+class Step:
+    &quot;&quot;&quot;任务步骤&quot;&quot;&quot;
+    id: str
+    name: str
+    handler: Callable
+    dependencies: List[str] = field(default_factory=list)
+    retry_count: int = 0
+    max_retries: int = 3
+    timeout: float = 300.0
+    status: str = &quot;pending&quot;  # pending | running | completed | failed | skipped
+
+@dataclass
+class StepResult:
+    &quot;&quot;&quot;步骤执行结果&quot;&quot;&quot;
+    step_id: str
+    success: bool
+    output: Any = None
+    error: Optional[str] = None
+    duration: float = 0.0
+
+class StepOrchestrator:
+    &quot;&quot;&quot;
+    步骤编排器
+
+    管理多步骤任务的执行，支持依赖关系、重试和状态持久化
+    &quot;&quot;&quot;
+
+    def __init__(self, state_file: str = &quot;task_state.json&quot;):
+        self.steps: Dict[str, Step] = {}
+        self.results: Dict[str, StepResult] = {}
+        self.state_file = Path(state_file)
+        self.context: dict = {}
+
+    def add_step(self, step: Step):
+        &quot;&quot;&quot;添加步骤&quot;&quot;&quot;
+        self.steps[step.id] = step
+
+    def load_state(self):
+        &quot;&quot;&quot;加载状态&quot;&quot;&quot;
+        if self.state_file.exists():
+            with open(self.state_file, 'r') as f:
+                data = json.load(f)
+
+            # 恢复步骤状态
+            for step_id, status in data.get(&quot;step_status&quot;, {}).items():
+                if step_id in self.steps:
+                    self.steps[step_id].status = status
+
+            # 恢复上下文
+            self.context = data.get(&quot;context&quot;, {})
+            logger.info(f&quot;已加载状态: {len(self.steps)} 个步骤&quot;)
+
+    def save_state(self):
+        &quot;&quot;&quot;保存状态&quot;&quot;&quot;
+        data = {
+            &quot;step_status&quot;: {
+                step_id: step.status
+                for step_id, step in self.steps.items()
+            },
+            &quot;context&quot;: self.context,
+            &quot;updated_at&quot;: time.time()
+        }
+
+        with open(self.state_file, 'w') as f:
+            json.dump(data, f, indent=2)
+
+    def get_ready_steps(self) -&gt; List[Step]:
+        &quot;&quot;&quot;获取可执行的步骤&quot;&quot;&quot;
+        ready = []
+        for step in self.steps.values():
+            if step.status != &quot;pending&quot;:
+                continue
+
+            # 检查依赖是否完成
+            deps_completed = all(
+                self.steps[dep_id].status == &quot;completed&quot;
+                for dep_id in step.dependencies
+                if dep_id in self.steps
+            )
+
+            if deps_completed:
+                ready.append(step)
+
+        return ready
+
+    def execute_step(self, step: Step) -&gt; StepResult:
+        &quot;&quot;&quot;执行单个步骤&quot;&quot;&quot;
+        import time
+        start_time = time.time()
+
+        try:
+            step.status = &quot;running&quot;
+            self.save_state()
+
+            output = step.handler(self.context)
+
+            step.status = &quot;completed&quot;
+            result = StepResult(
+                step_id=step.id,
+                success=True,
+                output=output,
+                duration=time.time() - start_time
+            )
+
+        except Exception as e:
+            step.retry_count += 1
+
+            if step.retry_count &gt;= step.max_retries:
+                step.status = &quot;failed&quot;
+            else:
+                step.status = &quot;pending&quot;  # 允许重试
+
+            result = StepResult(
+                step_id=step.id,
+                success=False,
+                error=str(e),
+                duration=time.time() - start_time
+            )
+
+        self.results[step.id] = result
+        self.save_state()
+        return result
+
+    def run(self) -&gt; bool:
+        &quot;&quot;&quot;运行整个工作流&quot;&quot;&quot;
+        self.load_state()
+
+        while True:
+            ready_steps = self.get_ready_steps()
+
+            if not ready_steps:
+                # 检查是否全部完成
+                all_done = all(
+                    s.status in (&quot;completed&quot;, &quot;skipped&quot;)
+                    for s in self.steps.values()
+                )
+
+                if all_done:
+                    logger.info(&quot;所有步骤完成&quot;)
+                    return True
+
+                # 检查是否有失败的步骤
+                has_failed = any(
+                    s.status == &quot;failed&quot;
+                    for s in self.steps.values()
+                )
+
+                if has_failed:
+                    logger.error(&quot;存在失败的步骤&quot;)
+                    return False
+
+                # 等待中的步骤
+                logger.info(&quot;等待步骤完成...&quot;)
+                time.sleep(1)
+                continue
+
+            # 执行就绪的步骤
+            for step in ready_steps:
+                logger.info(f&quot;执行步骤: {step.name}&quot;)
+                result = self.execute_step(step)
+
+                if result.success:
+                    logger.info(f&quot;步骤完成: {step.name}&quot;)
+                else:
+                    logger.error(f&quot;步骤失败: {step.name} - {result.error}&quot;)
+
+        return False
+</code></pre>
+<hr />
+<h2 id="_7">六、监控与可观测性</h2>
+<h3 id="61">6.1 可观测性三支柱</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        可观测性三支柱                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   📊 Metrics (指标)                                                      │
+│      ├── 任务完成率                                                      │
+│      ├── 平均执行时间                                                    │
+│      ├── 错误率                                                          │
+│      ├── Token 消耗                                                      │
+│      └── 资源使用率                                                      │
+│                                                                         │
+│   📝 Logs (日志)                                                         │
+│      ├── 结构化日志                                                      │
+│      ├── 任务执行轨迹                                                    │
+│      ├── 错误堆栈                                                        │
+│      └── 决策记录                                                        │
+│                                                                         │
+│   🔍 Traces (追踪)                                                       │
+│      ├── 跨步骤追踪                                                      │
+│      ├── API 调用链                                                      │
+│      ├── 依赖关系图                                                      │
+│      └── 性能瓶颈定位                                                    │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="62">6.2 结构化日志</h3>
+<pre><code class="language-python">import json
+import logging
+from datetime import datetime
+from typing import Any
+
+class StructuredLogger:
+    &quot;&quot;&quot;结构化日志记录器&quot;&quot;&quot;
+
+    def __init__(self, task_id: str, log_file: str = &quot;task.log&quot;):
+        self.task_id = task_id
+        self.log_file = log_file
+        self.handlers = []
+
+    def log(
+        self,
+        level: str,
+        message: str,
+        **kwargs: Any
+    ):
+        &quot;&quot;&quot;记录结构化日志&quot;&quot;&quot;
+        entry = {
+            &quot;timestamp&quot;: datetime.utcnow().isoformat(),
+            &quot;task_id&quot;: self.task_id,
+            &quot;level&quot;: level,
+            &quot;message&quot;: message,
+            **kwargs
+        }
+
+        # 写入文件
+        with open(self.log_file, 'a') as f:
+            f.write(json.dumps(entry) + '\n')
+
+        # 控制台输出
+        log_method = getattr(logging, level.lower(), logging.info)
+        log_method(f&quot;[{self.task_id}] {message}&quot;)
+
+    def info(self, message: str, **kwargs):
+        self.log(&quot;INFO&quot;, message, **kwargs)
+
+    def error(self, message: str, **kwargs):
+        self.log(&quot;ERROR&quot;, message, **kwargs)
+
+    def warning(self, message: str, **kwargs):
+        self.log(&quot;WARNING&quot;, message, **kwargs)
+
+    def step_start(self, step_id: str, step_name: str):
+        &quot;&quot;&quot;记录步骤开始&quot;&quot;&quot;
+        self.log(&quot;INFO&quot;, f&quot;步骤开始: {step_name}&quot;, step_id=step_id, event=&quot;step_start&quot;)
+
+    def step_end(self, step_id: str, step_name: str, success: bool, duration: float):
+        &quot;&quot;&quot;记录步骤结束&quot;&quot;&quot;
+        self.log(
+            &quot;INFO&quot; if success else &quot;ERROR&quot;,
+            f&quot;步骤{'完成' if success else '失败'}: {step_name}&quot;,
+            step_id=step_id,
+            event=&quot;step_end&quot;,
+            success=success,
+            duration_seconds=duration
+        )
+
+    def decision(self, decision: str, reason: str):
+        &quot;&quot;&quot;记录决策&quot;&quot;&quot;
+        self.log(&quot;INFO&quot;, f&quot;决策: {decision}&quot;, event=&quot;decision&quot;, reason=reason)
+
+    def checkpoint(self, checkpoint_id: str, state: dict):
+        &quot;&quot;&quot;记录检查点&quot;&quot;&quot;
+        self.log(&quot;INFO&quot;, f&quot;创建检查点&quot;, event=&quot;checkpoint&quot;, checkpoint_id=checkpoint_id)
+</code></pre>
+<h3 id="63">6.3 进度仪表盘</h3>
+<pre><code class="language-python">from dataclasses import dataclass
+from typing import Dict, List
+import json
+
+@dataclass
+class TaskProgress:
+    &quot;&quot;&quot;任务进度&quot;&quot;&quot;
+    task_id: str
+    status: str
+    total_steps: int
+    completed_steps: int
+    failed_steps: int
+    current_step: str
+    started_at: str
+    estimated_completion: str | None
+    progress_percent: float
+
+class ProgressDashboard:
+    &quot;&quot;&quot;
+    进度仪表盘
+
+    生成任务进度的可视化报告
+    &quot;&quot;&quot;
+
+    def __init__(self, state_file: str):
+        self.state_file = state_file
+
+    def get_progress(self) -&gt; TaskProgress:
+        &quot;&quot;&quot;获取进度信息&quot;&quot;&quot;
+        with open(self.state_file, 'r') as f:
+            state = json.load(f)
+
+        step_status = state.get(&quot;step_status&quot;, {})
+        total = len(step_status)
+        completed = sum(1 for s in step_status.values() if s == &quot;completed&quot;)
+        failed = sum(1 for s in step_status.values() if s == &quot;failed&quot;)
+
+        # 找到当前步骤
+        current = next(
+            (k for k, v in step_status.items() if v == &quot;running&quot;),
+            &quot;N/A&quot;
+        )
+
+        progress = (completed / total * 100) if total &gt; 0 else 0
+
+        return TaskProgress(
+            task_id=state.get(&quot;task_id&quot;, &quot;unknown&quot;),
+            status=state.get(&quot;status&quot;, &quot;unknown&quot;),
+            total_steps=total,
+            completed_steps=completed,
+            failed_steps=failed,
+            current_step=current,
+            started_at=state.get(&quot;started_at&quot;, &quot;unknown&quot;),
+            estimated_completion=None,  # TODO: 实现预估
+            progress_percent=round(progress, 1)
+        )
+
+    def render(self) -&gt; str:
+        &quot;&quot;&quot;渲染进度报告&quot;&quot;&quot;
+        progress = self.get_progress()
+
+        # 进度条
+        bar_length = 40
+        filled = int(bar_length * progress.progress_percent / 100)
+        bar = &quot;█&quot; * filled + &quot;░&quot; * (bar_length - filled)
+
+        return f&quot;&quot;&quot;
+┌─────────────────────────────────────────────────────────────┐
+│                     任务进度报告                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Task ID: {progress.task_id:&lt;42} │
+│  Status: {progress.status:&lt;43} │
+│                                                             │
+│  [{bar}] {progress.progress_percent:.1f}%   │
+│                                                             │
+│  Steps: {progress.completed_steps}/{progress.total_steps} completed, {progress.failed_steps} failed        │
+│  Current: {progress.current_step:&lt;42} │
+│                                                             │
+│  Started: {progress.started_at:&lt;41} │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+&quot;&quot;&quot;
+</code></pre>
+<hr />
+<h2 id="_8">七、工具与框架选型</h2>
+<h3 id="71">7.1 长任务框架对比</h3>
+<table>
+<thead>
+<tr>
+<th>框架</th>
+<th>类型</th>
+<th>特点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Temporal</strong></td>
+<td>工作流引擎</td>
+<td>持久化执行、自动重试、长运行支持</td>
+<td>企业级生产环境</td>
+</tr>
+<tr>
+<td><strong>LangGraph</strong></td>
+<td>Agent 框架</td>
+<td>状态图、检查点、PostgreSQL 持久化</td>
+<td>LLM 工作流</td>
+</tr>
+<tr>
+<td><strong>Inngest</strong></td>
+<td>Serverless</td>
+<td>事件驱动、自动重试、Durable Functions</td>
+<td>Serverless 架构</td>
+</tr>
+<tr>
+<td><strong>Restate</strong></td>
+<td>Durable Execution</td>
+<td>轻量级、支持 LLM、故障恢复</td>
+<td>现代 AI 应用</td>
+</tr>
+<tr>
+<td><strong>Claude Agent SDK</strong></td>
+<td>Agent SDK</td>
+<td>内置 Todo、Compaction、Hooks</td>
+<td>Claude 生态</td>
+</tr>
+<tr>
+<td><strong>自建方案</strong></td>
+<td>自定义</td>
+<td>完全控制、轻量</td>
+<td>学习/简单场景</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72-temporal">7.2 Temporal 示例</h3>
+<pre><code class="language-python"># Temporal 工作流示例
+from datetime import timedelta
+from temporalio import workflow, activity
+
+@workflow.defn
+class LongRunningTaskWorkflow:
+    &quot;&quot;&quot;长任务工作流&quot;&quot;&quot;
+
+    @workflow.run
+    async def run(self, task_config: dict) -&gt; dict:
+        # Step 1: 初始化
+        init_result = await workflow.execute_activity(
+            &quot;initialize_task&quot;,
+            task_config,
+            start_to_close_timeout=timedelta(minutes=5)
+        )
+
+        # Step 2: 执行子任务 (可并行)
+        sub_results = await workflow.execute_activity(
+            &quot;execute_subtasks&quot;,
+            init_result,
+            start_to_close_timeout=timedelta(hours=2)
+        )
+
+        # Step 3: 汇总结果
+        final_result = await workflow.execute_activity(
+            &quot;aggregate_results&quot;,
+            sub_results,
+            start_to_close_timeout=timedelta(minutes=10)
+        )
+
+        return final_result
+
+@activity.defn
+async def initialize_task(config: dict) -&gt; dict:
+    &quot;&quot;&quot;初始化活动&quot;&quot;&quot;
+    # 自动重试、超时处理
+    return {&quot;status&quot;: &quot;initialized&quot;, &quot;config&quot;: config}
+</code></pre>
+<h3 id="73-langgraph">7.3 LangGraph 示例</h3>
+<pre><code class="language-python">from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.postgres import PostgresSaver
+from typing import TypedDict
+
+class AgentState(TypedDict):
+    messages: list
+    current_step: str
+    results: dict
+
+# 定义节点
+def research_node(state: AgentState) -&gt; AgentState:
+    # 研究逻辑
+    return {**state, &quot;current_step&quot;: &quot;research_done&quot;}
+
+def analyze_node(state: AgentState) -&gt; AgentState:
+    # 分析逻辑
+    return {**state, &quot;current_step&quot;: &quot;analysis_done&quot;}
+
+def write_node(state: AgentState) -&gt; AgentState:
+    # 写作逻辑
+    return {**state, &quot;current_step&quot;: &quot;writing_done&quot;}
+
+# 构建图
+workflow = StateGraph(AgentState)
+workflow.add_node(&quot;research&quot;, research_node)
+workflow.add_node(&quot;analyze&quot;, analyze_node)
+workflow.add_node(&quot;write&quot;, write_node)
+
+workflow.add_edge(&quot;research&quot;, &quot;analyze&quot;)
+workflow.add_edge(&quot;analyze&quot;, &quot;write&quot;)
+workflow.add_edge(&quot;write&quot;, END)
+
+workflow.set_entry_point(&quot;research&quot;)
+
+# 添加检查点 (PostgreSQL 持久化)
+checkpointer = PostgresSaver(connection_string)
+app = workflow.compile(checkpointer=checkpointer)
+
+# 运行 (支持恢复)
+result = app.invoke(
+    {&quot;messages&quot;: [], &quot;current_step&quot;: &quot;&quot;, &quot;results&quot;: {}},
+    config={&quot;configurable&quot;: {&quot;thread_id&quot;: &quot;task-123&quot;}}
+)
+</code></pre>
+<hr />
+<h2 id="_9">八、实战操作指南</h2>
+<h3 id="81">8.1 长任务启动清单</h3>
+<p>在启动一个长任务前，确保以下准备工作已完成：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        长任务启动清单                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   📋 任务设计                                                            │
+│   □ 明确定义任务目标和成功标准                                            │
+│   □ 将任务分解为独立、可验证的步骤                                        │
+│   □ 识别步骤间的依赖关系                                                  │
+│   □ 为每个步骤设定超时和重试策略                                          │
+│                                                                         │
+│   💾 状态管理                                                            │
+│   □ 选择状态存储方案 (文件/数据库)                                        │
+│   □ 设计状态数据结构                                                      │
+│   □ 实现检查点保存逻辑                                                    │
+│   □ 实现状态恢复逻辑                                                      │
+│                                                                         │
+│   🛡️ 错误处理                                                            │
+│   □ 分类可能出现的错误                                                    │
+│   □ 实现重试机制 (指数退避)                                               │
+│   □ 实现断路器 (可选)                                                     │
+│   □ 定义失败恢复策略                                                      │
+│                                                                         │
+│   📊 可观测性                                                            │
+│   □ 配置结构化日志                                                        │
+│   □ 实现进度追踪                                                          │
+│   □ 设置告警规则 (可选)                                                   │
+│   □ 准备进度查看方式                                                      │
+│                                                                         │
+│   🧪 测试                                                                │
+│   □ 测试正常执行流程                                                      │
+│   □ 测试中断恢复                                                          │
+│   □ 测试错误处理                                                          │
+│   □ 测试并发场景 (如适用)                                                 │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="82">8.2 推荐的项目结构</h3>
+<pre><code>long-running-task/
+├── task_config.json          # 任务配置
+├── init.sh                   # 初始化脚本
+├── state/
+│   ├── task_state.json       # 任务状态
+│   ├── checkpoints/          # 检查点目录
+│   │   ├── ckpt_1710560000.json
+│   │   └── ckpt_1710560300.json
+│   └── progress.json         # 进度摘要
+├── logs/
+│   ├── task.log              # 结构化日志
+│   └── decisions.log         # 决策记录
+├── artifacts/                # 产出物
+│   ├── report.md
+│   └── data.json
+├── src/
+│   ├── orchestrator.py       # 任务编排器
+│   ├── steps/                # 步骤实现
+│   │   ├── step_1_research.py
+│   │   ├── step_2_analyze.py
+│   │   └── step_3_report.py
+│   ├── state_manager.py      # 状态管理
+│   └── logger.py             # 日志工具
+├── tests/
+│   ├── test_orchestrator.py
+│   └── test_steps.py
+└── requirements.txt
+</code></pre>
+<h3 id="83">8.3 完整启动脚本</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+长任务启动脚本
+
+使用方式:
+    python run_task.py --config task_config.json
+    python run_task.py --config task_config.json --resume
+&quot;&quot;&quot;
+
+import argparse
+import json
+import sys
+from pathlib import Path
+from datetime import datetime
+
+from orchestrator import StepOrchestrator, Step
+from state_manager import CheckpointManager
+from logger import StructuredLogger
+from dashboard import ProgressDashboard
+
+def load_config(config_path: str) -&gt; dict:
+    &quot;&quot;&quot;加载配置&quot;&quot;&quot;
+    with open(config_path, 'r') as f:
+        return json.load(f)
+
+def setup_directories(task_id: str) -&gt; dict:
+    &quot;&quot;&quot;设置目录结构&quot;&quot;&quot;
+    base = Path(&quot;tasks&quot;) / task_id
+    dirs = {
+        &quot;base&quot;: base,
+        &quot;state&quot;: base / &quot;state&quot;,
+        &quot;checkpoints&quot;: base / &quot;state&quot; / &quot;checkpoints&quot;,
+        &quot;logs&quot;: base / &quot;logs&quot;,
+        &quot;artifacts&quot;: base / &quot;artifacts&quot;
+    }
+
+    for d in dirs.values():
+        d.mkdir(parents=True, exist_ok=True)
+
+    return dirs
+
+def create_steps(config: dict) -&gt; list[Step]:
+    &quot;&quot;&quot;创建步骤&quot;&quot;&quot;
+    from steps import (
+        step_1_research,
+        step_2_analyze,
+        step_3_report
+    )
+
+    steps = [
+        Step(
+            id=&quot;research&quot;,
+            name=&quot;信息收集&quot;,
+            handler=step_1_research.execute,
+            max_retries=3,
+            timeout=600.0
+        ),
+        Step(
+            id=&quot;analyze&quot;,
+            name=&quot;数据分析&quot;,
+            handler=step_2_analyze.execute,
+            dependencies=[&quot;research&quot;],
+            max_retries=2,
+            timeout=1200.0
+        ),
+        Step(
+            id=&quot;report&quot;,
+            name=&quot;生成报告&quot;,
+            handler=step_3_report.execute,
+            dependencies=[&quot;analyze&quot;],
+            max_retries=2,
+            timeout=300.0
+        )
+    ]
+
+    return steps
+
+def main():
+    parser = argparse.ArgumentParser(description=&quot;长任务执行器&quot;)
+    parser.add_argument(&quot;--config&quot;, required=True, help=&quot;配置文件路径&quot;)
+    parser.add_argument(&quot;--resume&quot;, action=&quot;store_true&quot;, help=&quot;恢复中断的任务&quot;)
+    args = parser.parse_args()
+
+    # 加载配置
+    config = load_config(args.config)
+    task_id = config.get(&quot;task_id&quot;, f&quot;task_{datetime.now().strftime('%Y%m%d_%H%M%S')}&quot;)
+
+    # 设置目录
+    dirs = setup_directories(task_id)
+
+    # 初始化组件
+    logger = StructuredLogger(
+        task_id,
+        log_file=str(dirs[&quot;logs&quot;] / &quot;task.log&quot;)
+    )
+    checkpoint_mgr = CheckpointManager(
+        checkpoint_dir=str(dirs[&quot;checkpoints&quot;])
+    )
+    orchestrator = StepOrchestrator(
+        state_file=str(dirs[&quot;state&quot;] / &quot;task_state.json&quot;)
+    )
+
+    # 注册步骤
+    for step in create_steps(config):
+        orchestrator.add_step(step)
+
+    logger.info(&quot;任务启动&quot;, config=config, resume=args.resume)
+
+    try:
+        # 执行任务
+        success = orchestrator.run()
+
+        if success:
+            logger.info(&quot;任务完成&quot;)
+            print(&quot;\n✅ 任务完成!&quot;)
+
+            # 显示进度
+            dashboard = ProgressDashboard(orchestrator.state_file)
+            print(dashboard.render())
+        else:
+            logger.error(&quot;任务失败&quot;)
+            print(&quot;\n❌ 任务失败，请检查日志&quot;)
+
+            sys.exit(1)
+
+    except KeyboardInterrupt:
+        logger.warning(&quot;用户中断任务&quot;)
+        orchestrator.save_state()
+        print(&quot;\n⏸️ 任务已暂停，可使用 --resume 恢复&quot;)
+        sys.exit(0)
+
+    except Exception as e:
+        logger.error(f&quot;任务异常: {e}&quot;)
+        orchestrator.save_state()
+        print(f&quot;\n💥 任务异常: {e}&quot;)
+        sys.exit(1)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<h3 id="84">8.4 监控脚本</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+任务监控脚本
+
+使用方式:
+    python monitor.py --task task_20260316_143000
+&quot;&quot;&quot;
+
+import argparse
+import time
+from pathlib import Path
+from dashboard import ProgressDashboard
+import json
+
+def monitor_task(task_dir: str, interval: float = 5.0):
+    &quot;&quot;&quot;监控任务进度&quot;&quot;&quot;
+    state_file = Path(task_dir) / &quot;state&quot; / &quot;task_state.json&quot;
+    log_file = Path(task_dir) / &quot;logs&quot; / &quot;task.log&quot;
+
+    if not state_file.exists():
+        print(f&quot;❌ 任务状态文件不存在: {state_file}&quot;)
+        return
+
+    dashboard = ProgressDashboard(str(state_file))
+
+    print(&quot;🔍 开始监控任务...&quot;)
+    print(&quot;按 Ctrl+C 停止\n&quot;)
+
+    last_lines = 0
+
+    try:
+        while True:
+            # 显示进度
+            print(&quot;\033[2J\033[H&quot;)  # 清屏
+            print(dashboard.render())
+
+            # 显示最近日志
+            if log_file.exists():
+                with open(log_file, 'r') as f:
+                    lines = f.readlines()
+
+                if len(lines) &gt; last_lines:
+                    print(&quot;\n📜 最近日志:&quot;)
+                    for line in lines[-5:]:
+                        try:
+                            entry = json.loads(line)
+                            print(f&quot;  [{entry['level']}] {entry['message']}&quot;)
+                        except:
+                            pass
+                    last_lines = len(lines)
+
+            time.sleep(interval)
+
+    except KeyboardInterrupt:
+        print(&quot;\n👋 监控已停止&quot;)
+
+def main():
+    parser = argparse.ArgumentParser(description=&quot;任务监控器&quot;)
+    parser.add_argument(&quot;--task&quot;, required=True, help=&quot;任务目录&quot;)
+    parser.add_argument(&quot;--interval&quot;, type=float, default=5.0, help=&quot;刷新间隔(秒)&quot;)
+    args = parser.parse_args()
+
+    monitor_task(args.task, args.interval)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<hr />
+<h2 id="_10">九、最佳实践清单</h2>
+<h3 id="91">9.1 设计原则</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        长任务设计原则                                     │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ✅ DO (推荐)                                                          │
+│                                                                         │
+│   1. 小步迭代                                                            │
+│      └── 每个步骤应该是原子性的，可独立验证和恢复                           │
+│                                                                         │
+│   2. 频繁检查点                                                          │
+│      └── 在关键步骤后保存状态，减少恢复时的重复工作                         │
+│                                                                         │
+│   3. 幂等性设计                                                          │
+│      └── 同一步骤多次执行应该产生相同结果                                   │
+│                                                                         │
+│   4. 明确的成功标准                                                      │
+│      └── 每个步骤都有可验证的完成条件                                      │
+│                                                                         │
+│   5. 优雅降级                                                            │
+│      └── 部分失败不影响整体，允许跳过非关键步骤                              │
+│                                                                         │
+│   ❌ DON'T (避免)                                                        │
+│                                                                         │
+│   1. 一步到位                                                            │
+│      └── 避免试图在一个大步骤中完成所有工作                                 │
+│                                                                         │
+│   2. 状态依赖内存                                                        │
+│      └── 所有状态必须持久化，不能依赖进程内存                               │
+│                                                                         │
+│   3. 无限重试                                                            │
+│      └── 设置最大重试次数，避免死循环                                      │
+│                                                                         │
+│   4. 忽略错误                                                            │
+│      └── 记录所有错误，即使选择继续执行                                    │
+│                                                                         │
+│   5. 假设网络稳定                                                        │
+│      └── 所有外部调用都可能失败，需要重试机制                               │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="92">9.2 检查点策略</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>检查点频率</th>
+<th>保留策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>快速任务 (&lt; 10 分钟)</td>
+<td>每步完成后</td>
+<td>保留最近 3 个</td>
+</tr>
+<tr>
+<td>中等任务 (10-60 分钟)</td>
+<td>每步 + 每 5 分钟</td>
+<td>保留最近 10 个</td>
+</tr>
+<tr>
+<td>长时任务 (&gt; 1 小时)</td>
+<td>每步 + 每 10 分钟</td>
+<td>保留最近 20 个</td>
+</tr>
+<tr>
+<td>关键任务</td>
+<td>每步 + 每 2 分钟</td>
+<td>保留所有 + 定期归档</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93">9.3 错误处理策略</h3>
+<table>
+<thead>
+<tr>
+<th>错误类型</th>
+<th>处理方式</th>
+<th>重试次数</th>
+<th>退避策略</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网络超时</td>
+<td>自动重试</td>
+<td>5</td>
+<td>指数退避 (1s → 60s)</td>
+</tr>
+<tr>
+<td>Rate Limit</td>
+<td>等待后重试</td>
+<td>3</td>
+<td>固定等待 (60s)</td>
+</tr>
+<tr>
+<td>认证失败</td>
+<td>立即失败</td>
+<td>0</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>资源不足</td>
+<td>等待后重试</td>
+<td>3</td>
+<td>线性退避 (30s)</td>
+</tr>
+<tr>
+<td>逻辑错误</td>
+<td>记录并跳过</td>
+<td>0</td>
+<td>N/A</td>
+</tr>
+</tbody>
+</table>
+<h3 id="94-agent">9.4 Agent 提示词模板</h3>
+<pre><code class="language-markdown"># 长任务 Agent 提示词模板
+
+## 角色定义
+你是一个长任务执行 Agent，负责完成复杂的、跨多个 Session 的任务。
+
+## 核心原则
+
+1. **增量执行**: 每次只做一个步骤，不要试图一次完成所有工作
+2. **状态持久化**: 每完成一个步骤，必须更新状态文件
+3. **充分测试**: 标记完成前必须验证功能正常
+4. **清晰记录**: 在进度文件中记录所有决策和变更
+
+## Session 启动流程
+
+每个 Session 开始时，按以下步骤操作:
+
+1. 运行 `pwd` 确认工作目录
+2. 读取进度文件 (`progress.md`)
+3. 读取 Git 日志 (`git log --oneline -20`)
+4. 读取功能清单 (`feature_list.json`)
+5. 运行 `init.sh` 启动环境
+6. 执行基础验证测试
+7. 选择下一个未完成的功能
+
+## Session 结束流程
+
+每个 Session 结束前，必须:
+
+1. 确保代码处于可运行状态
+2. 提交 Git Commit (描述性消息)
+3. 更新进度文件
+4. 更新功能清单状态
+
+## 错误处理
+
+遇到错误时:
+1. 记录错误详情到日志
+2. 尝试恢复到上一个稳定状态
+3. 如果无法恢复，保存当前进度并报告
+4. 不要跳过错误，不要标记未完成的功能为完成
+
+## 输出格式
+
+所有输出使用 Markdown 格式，包含:
+- 当前步骤说明
+- 执行的操作
+- 遇到的问题
+- 下一步计划
+</code></pre>
+<hr />
+<h2 id="_11">参考资源</h2>
+<h3 id="_12">官方文档</h3>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Anthropic 长任务 Agent</td>
+<td><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Effective harnesses for long-running agents</a></td>
+</tr>
+<tr>
+<td>Claude Agent SDK</td>
+<td><a href="https://platform.claude.com/docs/en/agent-sdk/python">platform.claude.com</a></td>
+</tr>
+<tr>
+<td>AI SDK Workflows</td>
+<td><a href="https://ai-sdk.dev/docs/agents/workflows">ai-sdk.dev/docs/agents/workflows</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">框架与工具</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Temporal</td>
+<td><a href="https://temporal.io">temporal.io</a></td>
+</tr>
+<tr>
+<td>LangGraph</td>
+<td><a href="https://langchain-ai.github.io/langgraph/">langchain-ai.github.io/langgraph</a></td>
+</tr>
+<tr>
+<td>Inngest</td>
+<td><a href="https://www.inngest.com">inngest.com</a></td>
+</tr>
+<tr>
+<td>Restate</td>
+<td><a href="https://restate.dev">restate.dev</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">社区资源</h3>
+<table>
+<thead>
+<tr>
+<th>资源</th>
+<th>链接</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agent Patterns</td>
+<td><a href="https://thegroundtruth.substack.com/p/ai-agent-patterns">thegroundtruth.substack.com</a></td>
+</tr>
+<tr>
+<td>State Management</td>
+<td><a href="https://nookplot.com/post/QmZWEspzSDEZseAgpRH1rS766VoV5gsy6NW8MNjhdG5oAn">nookplot.com</a></td>
+</tr>
+<tr>
+<td>Durable Execution</td>
+<td><a href="https://restate.dev/blog/durable-ai-loops-fault-tolerance-across-frameworks-and-without-handcuffs/">restate.dev/blog</a></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>报告生成时间: 2026-03-16</em>
+<em>基于 Anthropic 官方文档及社区最佳实践整理</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

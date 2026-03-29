@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Obsidian AI 集成与最佳实践报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">更新日期: 2026-03-14 | 文档版本: 1.0</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#ai" class="toc-h2">一、AI 集成方案概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 集成方式对比</a></li>
+<li><a href="#12" class="toc-h3">1.2 架构图</a></li>
+<li><a href="#claude-code" class="toc-h2">二、Claude Code 集成</a></li>
+<li><a href="#21-mcp" class="toc-h3">2.1 配置 MCP 服务器</a></li>
+<li><a href="#22-claude-code" class="toc-h3">2.2 Claude Code 工作流示例</a></li>
+<li><a href="#23-claude-code" class="toc-h3">2.3 Claude Code 提示词模板</a></li>
+<li><a href="#obsidian-ai_1" class="toc-h2">三、Obsidian AI 插件</a></li>
+<li><a href="#31-ai" class="toc-h3">3.1 主流 AI 插件对比</a></li>
+<li><a href="#32-obsidian-copilot" class="toc-h3">3.2 Obsidian Copilot 配置</a></li>
+<li><a href="#33-khoj-ai" class="toc-h3">3.3 Khoj 本地 AI 配置</a></li>
+<li><a href="#34-smart-connections" class="toc-h3">3.4 Smart Connections 语义链接</a></li>
+<li><a href="#_2" class="toc-h2">四、自动化脚本最佳实践</a></li>
+<li><a href="#41-python" class="toc-h3">4.1 Python 自动化脚本库</a></li>
+<li><a href="#42" class="toc-h3">4.2 定时任务脚本</a></li>
+<li><a href="#templater" class="toc-h2">五、Templater 高级用法</a></li>
+<li><a href="#51" class="toc-h3">5.1 动态模板示例</a></li>
+<li><a href="#52-api" class="toc-h3">5.2 调用外部 API</a></li>
+<li><a href="#53" class="toc-h3">5.3 自动分类模板</a></li>
+<li><a href="#uri-scheme" class="toc-h2">六、URI Scheme 自动化</a></li>
+<li><a href="#61-uri" class="toc-h3">6.1 基础 URI 格式</a></li>
+<li><a href="#62-uri" class="toc-h3">6.2 常用 URI 示例</a></li>
+<li><a href="#63-advanced-uri" class="toc-h3">6.3 Advanced URI 插件</a></li>
+<li><a href="#64-macos-shortcuts" class="toc-h3">6.4 macOS Shortcuts 集成</a></li>
+<li><a href="#_3" class="toc-h2">七、工作流设计建议</a></li>
+<li><a href="#71" class="toc-h3">7.1 知识收集工作流</a></li>
+<li><a href="#72" class="toc-h3">7.2 日记工作流</a></li>
+<li><a href="#73" class="toc-h3">7.3 项目管理工作流</a></li>
+<li><a href="#74-ai" class="toc-h3">7.4 AI 辅助工作流</a></li>
+<li><a href="#_4" class="toc-h2">八、最佳实践总结</a></li>
+<li><a href="#81-para" class="toc-h3">8.1 文件夹结构建议 (PARA + 改进)</a></li>
+<li><a href="#82" class="toc-h3">8.2 命名规范</a></li>
+<li><a href="#83" class="toc-h3">8.3 自动化原则</a></li>
+<li><a href="#_5" class="toc-h2">九、参考资源</a></li>
+<li><a href="#_6" class="toc-h3">官方资源</a></li>
+<li><a href="#_7" class="toc-h3">插件文档</a></li>
+<li><a href="#_8" class="toc-h3">社区资源</a></li>
+<li><a href="#ai_1" class="toc-h3">AI 集成</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Obsidian AI 集成与最佳实践报告</h1>
+                        <div class="article-meta">更新日期: 2026-03-14<br>文档版本: 1.0</div>
+                    </header>
+                    <h1 id="obsidian-ai">Obsidian AI 集成与最佳实践报告</h1>
+<blockquote>
+<p>更新日期: 2026-03-14
+文档版本: 1.0</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一ai-集成方案概述">AI 集成方案概述</a></li>
+<li><a href="#二claude-code-集成">Claude Code 集成</a></li>
+<li><a href="#三obsidian-ai-插件">Obsidian AI 插件</a></li>
+<li><a href="#四自动化脚本最佳实践">自动化脚本最佳实践</a></li>
+<li><a href="#五templater-高级用法">Templater 高级用法</a></li>
+<li><a href="#六uri-scheme-自动化">URI Scheme 自动化</a></li>
+<li><a href="#七工作流设计建议">工作流设计建议</a></li>
+</ol>
+<hr />
+<h2 id="ai">一、AI 集成方案概述</h2>
+<h3 id="11">1.1 集成方式对比</h3>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>优点</th>
+<th>缺点</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Local REST API</strong></td>
+<td>功能完整，支持所有操作</td>
+<td>需要 Obsidian 运行</td>
+<td>脚本自动化、AI Agent</td>
+</tr>
+<tr>
+<td><strong>URI Scheme</strong></td>
+<td>简单快速，无需插件</td>
+<td>功能有限</td>
+<td>快捷操作、跨应用</td>
+</tr>
+<tr>
+<td><strong>Templater</strong></td>
+<td>内置强大，支持 JS</td>
+<td>仅限 Obsidian 内部</td>
+<td>模板自动化</td>
+</tr>
+<tr>
+<td><strong>AI 插件</strong></td>
+<td>开箱即用</td>
+<td>可能收费，依赖外部服务</td>
+<td>日常 AI 辅助</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 架构图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                        Obsidian AI 集成架构                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐              │
+│  │ Claude Code │     │   GPT/Claude │     │  其他 AI    │              │
+│  └──────┬──────┘     └──────┬──────┘     └──────┬──────┘              │
+│         │                   │                   │                      │
+│         └───────────────────┼───────────────────┘                      │
+│                             │                                           │
+│                             ▼                                           │
+│                    ┌────────────────┐                                   │
+│                    │  Local REST API │                                  │
+│                    │   (端口 27124)  │                                  │
+│                    └────────┬───────┘                                   │
+│                             │                                           │
+│         ┌───────────────────┼───────────────────┐                      │
+│         │                   │                   │                      │
+│         ▼                   ▼                   ▼                      │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐              │
+│  │   读取笔记   │     │   写入笔记   │     │   搜索内容   │              │
+│  └─────────────┘     └─────────────┘     └─────────────┘              │
+│                             │                                           │
+│                             ▼                                           │
+│                    ┌────────────────┐                                   │
+│                    │   Obsidian     │                                   │
+│                    │   仓库 (Vault)  │                                  │
+│                    └────────────────┘                                   │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="claude-code">二、Claude Code 集成</h2>
+<h3 id="21-mcp">2.1 配置 MCP 服务器</h3>
+<p><strong>方式一：使用 Local REST API</strong></p>
+<p>创建 MCP 服务器配置文件：</p>
+<pre><code class="language-json">// ~/.claude/claude_desktop_config.json
+{
+  &quot;mcpServers&quot;: {
+    &quot;obsidian&quot;: {
+      &quot;command&quot;: &quot;node&quot;,
+      &quot;args&quot;: [&quot;/path/to/obsidian-mcp/index.js&quot;],
+      &quot;env&quot;: {
+        &quot;OBSIDIAN_API_KEY&quot;: &quot;your-api-key&quot;,
+        &quot;OBSIDIAN_HOST&quot;: &quot;127.0.0.1&quot;,
+        &quot;OBSIDIAN_PORT&quot;: &quot;27124&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<p><strong>方式二：直接 HTTP 调用</strong></p>
+<p>Claude Code 可以直接使用 Bash 工具调用 REST API：</p>
+<pre><code class="language-bash"># Claude Code 执行的命令示例
+curl -X POST &quot;https://127.0.0.1:27124/periodic/daily/&quot; \
+  -H &quot;Authorization: Bearer $OBSIDIAN_API_KEY&quot; \
+  -H &quot;Content-Type: text/markdown&quot; \
+  -k \
+  -d &quot;## AI 自动记录\n\n这是 Claude Code 自动添加的内容&quot;
+</code></pre>
+<h3 id="22-claude-code">2.2 Claude Code 工作流示例</h3>
+<pre><code class="language-markdown"># Claude Code 自动化场景
+
+## 场景 1：自动保存研究笔记
+用户: &quot;帮我把这份研究报告保存到 Obsidian&quot;
+Claude Code:
+1. 调用 REST API 创建笔记
+2. 保存到指定路径
+
+## 场景 2：追加到日记
+用户: &quot;记录一下今天的进展&quot;
+Claude Code:
+1. 调用 /periodic/daily/ 端点
+2. 追加时间戳和内容
+
+## 场景 3：搜索笔记
+用户: &quot;帮我找一下关于机器学习的笔记&quot;
+Claude Code:
+1. 调用 /search/simple/ 端点
+2. 返回匹配结果
+</code></pre>
+<h3 id="23-claude-code">2.3 Claude Code 提示词模板</h3>
+<pre><code class="language-markdown"># 给 Claude Code 的 Obsidian 集成指令
+
+你已连接到我的 Obsidian 仓库，可以通过 Local REST API 操作笔记。
+
+## API 配置
+- Base URL: https://127.0.0.1:27124
+- API Key: 已配置在环境变量中
+
+## 可用操作
+1. 创建笔记: PUT /vault/{path}
+2. 读取笔记: GET /vault/{path}
+3. 追加内容: POST /vault/{path}
+4. 搜索笔记: POST /search/simple/
+5. 追加日记: POST /periodic/daily/
+
+## 使用规范
+- 创建笔记时使用有意义的文件名
+- 内容使用标准 Markdown 格式
+- 追加日记时自动添加时间戳
+- 搜索时使用精准关键词
+</code></pre>
+<hr />
+<h2 id="obsidian-ai_1">三、Obsidian AI 插件</h2>
+<h3 id="31-ai">3.1 主流 AI 插件对比</h3>
+<table>
+<thead>
+<tr>
+<th>插件</th>
+<th>模型支持</th>
+<th>特点</th>
+<th>价格</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Copilot</strong></td>
+<td>OpenAI, Anthropic, Local</td>
+<td>对话式 AI，支持上下文</td>
+<td>免费/付费</td>
+</tr>
+<tr>
+<td><strong>Text Generator</strong></td>
+<td>多模型</td>
+<td>文本生成，模板支持</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>Khoj</strong></td>
+<td>本地模型</td>
+<td>私有化，支持搜索</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>Smart Connections</strong></td>
+<td>Embeddings</td>
+<td>语义链接，推荐相关笔记</td>
+<td>免费</td>
+</tr>
+<tr>
+<td><strong>BMO Chatbot</strong></td>
+<td>Ollama</td>
+<td>本地运行，完全私有</td>
+<td>免费</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32-obsidian-copilot">3.2 Obsidian Copilot 配置</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│  Copilot 插件配置                                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  模型设置:                                                   │
+│  ├── OpenAI: gpt-4-turbo                                    │
+│  ├── Anthropic: claude-sonnet-4.6                           │
+│  └── 自定义: 你的 API 端点                                   │
+│                                                             │
+│  功能:                                                       │
+│  ├── 💬 对话模式 - 和笔记对话                                │
+│  ├── 📝 文本生成 - 续写、改写                                │
+│  ├── 🔍 智能搜索 - 语义搜索                                  │
+│  └── 📊 笔记分析 - 总结、提取                                │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="33-khoj-ai">3.3 Khoj 本地 AI 配置</h3>
+<p><strong>优点</strong>: 完全本地运行，隐私安全</p>
+<ol>
+<li>安装 Khoj 桌面应用</li>
+<li>安装 Obsidian Khoj 插件</li>
+<li>配置模型路径</li>
+</ol>
+<pre><code class="language-yaml"># khoj.yml
+search-type: semantic
+model: llama3
+embeddings-model: all-MiniLM-L6-v2
+</code></pre>
+<h3 id="34-smart-connections">3.4 Smart Connections 语义链接</h3>
+<pre><code>工作原理:
+1. 对所有笔记生成 Embeddings
+2. 建立向量索引
+3. 根据当前笔记推荐相关内容
+
+使用方式:
+- 侧边栏显示&quot;相关笔记&quot;
+- 支持语义搜索
+- 发现隐藏的知识关联
+</code></pre>
+<hr />
+<h2 id="_2">四、自动化脚本最佳实践</h2>
+<h3 id="41-python">4.1 Python 自动化脚本库</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+Obsidian 自动化工具库
+依赖: pip install requests python-dateutil
+&quot;&quot;&quot;
+
+import os
+import json
+import requests
+from datetime import datetime
+from pathlib import Path
+from typing import Optional, List, Dict
+
+class ObsidianVault:
+    &quot;&quot;&quot;Obsidian 仓库自动化工具&quot;&quot;&quot;
+
+    def __init__(self, api_key: str, vault_path: str = None):
+        self.base_url = &quot;https://127.0.0.1:27124&quot;
+        self.headers = {&quot;Authorization&quot;: f&quot;Bearer {api_key}&quot;}
+        self.verify = False
+        self.vault_path = vault_path
+
+    def _request(self, method: str, endpoint: str, **kwargs) -&gt; requests.Response:
+        &quot;&quot;&quot;发送请求&quot;&quot;&quot;
+        url = f&quot;{self.base_url}{endpoint}&quot;
+        kwargs[&quot;headers&quot;] = {**self.headers, **kwargs.get(&quot;headers&quot;, {})}
+        kwargs[&quot;verify&quot;] = self.verify
+        return requests.request(method, url, **kwargs)
+
+    # ========== 笔记操作 ==========
+
+    def create_note(self, path: str, content: str) -&gt; bool:
+        &quot;&quot;&quot;创建笔记&quot;&quot;&quot;
+        resp = self._request(&quot;PUT&quot;, f&quot;/vault/{path}&quot;,
+                           headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                           data=content.encode('utf-8'))
+        return resp.status_code == 204
+
+    def read_note(self, path: str) -&gt; Optional[str]:
+        &quot;&quot;&quot;读取笔记&quot;&quot;&quot;
+        resp = self._request(&quot;GET&quot;, f&quot;/vault/{path}&quot;)
+        return resp.text if resp.status_code == 200 else None
+
+    def append_note(self, path: str, content: str) -&gt; bool:
+        &quot;&quot;&quot;追加内容&quot;&quot;&quot;
+        resp = self._request(&quot;POST&quot;, f&quot;/vault/{path}&quot;,
+                           headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                           data=content.encode('utf-8'))
+        return resp.status_code == 204
+
+    def delete_note(self, path: str) -&gt; bool:
+        &quot;&quot;&quot;删除笔记&quot;&quot;&quot;
+        resp = self._request(&quot;DELETE&quot;, f&quot;/vault/{path}&quot;)
+        return resp.status_code == 204
+
+    # ========== 日记操作 ==========
+
+    def append_daily(self, content: str, date: datetime = None) -&gt; bool:
+        &quot;&quot;&quot;追加到日记&quot;&quot;&quot;
+        endpoint = &quot;/periodic/daily/&quot;
+        if date:
+            endpoint = f&quot;/periodic/daily/{date.year}/{date.month:02d}/{date.day:02d}/&quot;
+
+        timestamp = datetime.now().strftime(&quot;%H:%M&quot;)
+        formatted_content = f&quot;\n## {timestamp}\n{content}&quot;
+
+        resp = self._request(&quot;POST&quot;, endpoint,
+                           headers={&quot;Content-Type&quot;: &quot;text/markdown&quot;},
+                           data=formatted_content.encode('utf-8'))
+        return resp.status_code == 204
+
+    def get_daily(self, date: datetime = None) -&gt; Optional[str]:
+        &quot;&quot;&quot;获取日记内容&quot;&quot;&quot;
+        endpoint = &quot;/periodic/daily/&quot;
+        if date:
+            endpoint = f&quot;/periodic/daily/{date.year}/{date.month:02d}/{date.day:02d}/&quot;
+
+        resp = self._request(&quot;GET&quot;, endpoint)
+        return resp.text if resp.status_code == 200 else None
+
+    # ========== 搜索 ==========
+
+    def search(self, query: str) -&gt; List[Dict]:
+        &quot;&quot;&quot;搜索笔记&quot;&quot;&quot;
+        resp = self._request(&quot;POST&quot;, &quot;/search/simple/&quot;,
+                           json={&quot;query&quot;: query})
+        return resp.json() if resp.status_code == 200 else []
+
+    # ========== 文件夹操作 ==========
+
+    def list_directory(self, path: str = &quot;&quot;) -&gt; Dict:
+        &quot;&quot;&quot;列出目录内容&quot;&quot;&quot;
+        endpoint = f&quot;/vault/{path}/&quot; if path else &quot;/vault/&quot;
+        resp = self._request(&quot;GET&quot;, endpoint)
+        return resp.json() if resp.status_code == 200 else {}
+
+    # ========== 高级功能 ==========
+
+    def quick_capture(self, content: str, title: str = None) -&gt; bool:
+        &quot;&quot;&quot;快速收集到 Inbox&quot;&quot;&quot;
+        if title is None:
+            title = datetime.now().strftime(&quot;%Y-%m-%d %H%M%S&quot;)
+
+        path = f&quot;00-Inbox/{title}.md&quot;
+        full_content = f&quot;# {title}\n\n创建时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n{content}&quot;
+        return self.create_note(path, full_content)
+
+    def log_event(self, event_type: str, description: str) -&gt; bool:
+        &quot;&quot;&quot;记录事件到日志&quot;&quot;&quot;
+        content = f&quot;\n### {event_type}\n时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n{description}\n&quot;
+        return self.append_daily(content)
+
+    def find_backlinks(self, note_path: str) -&gt; List[str]:
+        &quot;&quot;&quot;查找反向链接（简化版）&quot;&quot;&quot;
+        note_name = Path(note_path).stem
+        results = self.search(f&quot;[[{note_name}]]&quot;)
+        return [r.get('path', '') for r in results]
+
+
+# ========== 使用示例 ==========
+
+if __name__ == &quot;__main__&quot;:
+    # 初始化
+    vault = ObsidianVault(api_key=os.environ.get(&quot;OBSIDIAN_API_KEY&quot;))
+
+    # 快速收集
+    vault.quick_capture(&quot;今天学到了 Obsidian REST API 的用法&quot;, &quot;学习笔记&quot;)
+
+    # 追加日记
+    vault.append_daily(&quot;完成了 Obsidian 自动化脚本的编写&quot;)
+
+    # 记录事件
+    vault.log_event(&quot;任务完成&quot;, &quot;Obsidian 研究文档已创建完成&quot;)
+
+    # 搜索
+    results = vault.search(&quot;Obsidian&quot;)
+    print(f&quot;找到 {len(results)} 条相关笔记&quot;)
+</code></pre>
+<h3 id="42">4.2 定时任务脚本</h3>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+Obsidian 定时任务
+配合 cron 或 launchd 使用
+&quot;&quot;&quot;
+
+from datetime import datetime, timedelta
+from obsidian_automation import ObsidianVault
+import os
+
+def daily_summary():
+    &quot;&quot;&quot;每日总结任务&quot;&quot;&quot;
+    vault = ObsidianVault(api_key=os.environ[&quot;OBSIDIAN_API_KEY&quot;])
+
+    # 获取今日日记
+    today_content = vault.get_daily()
+
+    # 追加总结模板
+    summary_template = &quot;&quot;&quot;
+
+---
+
+## 📊 今日总结
+
+**完成事项:**
+- [ ] ...
+
+**明日计划:**
+- [ ] ...
+
+**笔记统计:** 共记录 X 条内容
+&quot;&quot;&quot;
+    vault.append_daily(summary_template)
+
+def weekly_review():
+    &quot;&quot;&quot;每周回顾&quot;&quot;&quot;
+    vault = ObsidianVault(api_key=os.environ[&quot;OBSIDIAN_API_KEY&quot;])
+
+    # 创建周回顾笔记
+    today = datetime.now()
+    week_num = today.isocalendar()[1]
+    path = f&quot;Reviews/{today.year}-W{week_num:02d}.md&quot;
+
+    content = f&quot;&quot;&quot;# 第 {week_num} 周回顾
+
+时间范围: {(today - timedelta(days=today.weekday())).strftime('%Y-%m-%d')} - {today.strftime('%Y-%m-%d')}
+
+## 本周重点
+-
+
+## 完成的项目
+-
+
+## 学到的东西
+-
+
+## 下周计划
+-
+&quot;&quot;&quot;
+    vault.create_note(path, content)
+
+# cron 配置示例
+# 0 21 * * * /usr/bin/python3 /path/to/obsidian_tasks.py daily
+# 0 20 * * 0 /usr/bin/python3 /path/to/obsidian_tasks.py weekly
+</code></pre>
+<hr />
+<h2 id="templater">五、Templater 高级用法</h2>
+<h3 id="51">5.1 动态模板示例</h3>
+<pre><code class="language-markdown">&lt;%*
+// 会议记录模板
+let meetingTitle = await tp.system.prompt(&quot;会议主题&quot;);
+let attendees = await tp.system.prompt(&quot;参会人员（逗号分隔）&quot;);
+let date = tp.date.now(&quot;YYYY-MM-DD&quot;);
+let time = tp.date.now(&quot;HH:mm&quot;);
+
+tR += `# ${meetingTitle}
+
+日期: ${date}
+时间: ${time}
+参会: ${attendees}
+
+## 议程
+1.
+2.
+3.
+
+## 讨论内容
+
+
+## 决议
+-
+
+## 待办事项
+- [ ]
+`;
+%&gt;
+</code></pre>
+<h3 id="52-api">5.2 调用外部 API</h3>
+<pre><code class="language-markdown">&lt;%*
+// 获取天气信息
+let weather = await fetch(&quot;https://api.open-meteo.com/v1/forecast?latitude=39.9&amp;longitude=116.4&amp;current_weather=true&quot;)
+    .then(r =&gt; r.json());
+
+let temp = weather.current_weather.temperature;
+let wind = weather.current_weather.windspeed;
+
+tR += `# 日记 - ${tp.date.now(&quot;YYYY-MM-DD&quot;)}
+
+## 天气
+🌡️ 温度: ${temp}°C
+💨 风速: ${wind} km/h
+
+## 今日事项
+-
+`;
+%&gt;
+</code></pre>
+<h3 id="53">5.3 自动分类模板</h3>
+<pre><code class="language-javascript">&lt;%*
+// 根据关键词自动选择文件夹
+let title = tp.file.title;
+let content = tp.file.content;
+
+// 定义关键词映射
+const categoryMap = {
+    &quot;工作&quot;: &quot;01-Projects&quot;,
+    &quot;学习&quot;: &quot;03-Resources/Learning&quot;,
+    &quot;生活&quot;: &quot;02-Areas/Life&quot;,
+    &quot;想法&quot;: &quot;00-Inbox/Ideas&quot;
+};
+
+// 匹配分类
+let targetFolder = &quot;00-Inbox&quot;;  // 默认
+for (let [keyword, folder] of Object.entries(categoryMap)) {
+    if (title.includes(keyword) || content.includes(keyword)) {
+        targetFolder = folder;
+        break;
+    }
+}
+
+// 移动文件
+await tp.file.move(`/${targetFolder}/${title}`);
+%&gt;
+</code></pre>
+<hr />
+<h2 id="uri-scheme">六、URI Scheme 自动化</h2>
+<h3 id="61-uri">6.1 基础 URI 格式</h3>
+<pre><code>obsidian://动作?参数1=值1&amp;参数2=值2
+</code></pre>
+<h3 id="62-uri">6.2 常用 URI 示例</h3>
+<pre><code class="language-bash"># 打开笔记
+open &quot;obsidian://open?vault=MyVault&amp;file=Notes/MyNote&quot;
+
+# 新建笔记
+open &quot;obsidian://new?vault=MyVault&amp;name=NewNote&amp;content=Hello%20World&quot;
+
+# 搜索
+open &quot;obsidian://search?vault=MyVault&amp;query=关键词&quot;
+
+# 打开今日日记
+open &quot;obsidian://daily?vault=MyVault&quot;
+</code></pre>
+<h3 id="63-advanced-uri">6.3 Advanced URI 插件</h3>
+<p>安装 Advanced URI 插件后，功能更强大：</p>
+<pre><code class="language-bash"># 追加内容到笔记
+open &quot;obsidian://advanced-uri?vault=MyVault&amp;filepath=Notes/MyNote&amp;data=追加的内容&amp;mode=append&quot;
+
+# 执行命令
+open &quot;obsidian://advanced-uri?vault=MyVault&amp;commandid=editor:save-file&quot;
+
+# 打开设置
+open &quot;obsidian://advanced-uri?vault=MyVault&amp;settingid=editor&quot;
+</code></pre>
+<h3 id="64-macos-shortcuts">6.4 macOS Shortcuts 集成</h3>
+<pre><code>创建快捷指令:
+1. &quot;获取剪贴板内容&quot;
+2. &quot;URL&quot; 操作: obsidian://new?vault=MyVault&amp;name=QuickNote&amp;content=[剪贴板内容]
+3. &quot;打开 URL&quot;
+</code></pre>
+<hr />
+<h2 id="_3">七、工作流设计建议</h2>
+<h3 id="71">7.1 知识收集工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                    知识收集工作流                            │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  📱 移动端                                                   │
+│  └── 快速捕获 → 00-Inbox/                                   │
+│                                                             │
+│  💻 浏览器                                                   │
+│  └── Obsidian Web 扩展 → 00-Inbox/WebClips/                 │
+│                                                             │
+│  🤖 AI Agent (Claude Code)                                  │
+│  └── REST API → 00-Inbox/AICaptures/                        │
+│                                                             │
+│  📝 每周整理                                                 │
+│  └── 00-Inbox → 01-Projects/02-Areas/03-Resources           │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="72">7.2 日记工作流</h3>
+<pre><code class="language-markdown"># 日记自动化流程
+
+## 每日自动
+- [x] 早上: Templater 自动创建日记
+- [x] 晚上: 自动追加总结模板
+- [x] AI: 自动提取今日关键词
+
+## 每周
+- [ ] 周日: 自动生成周回顾
+- [ ] AI: 分析本周笔记趋势
+
+## 每月
+- [ ] 月末: 生成本月报告
+- [ ] 归档: 移动到月度文件夹
+</code></pre>
+<h3 id="73">7.3 项目管理工作流</h3>
+<pre><code class="language-markdown"># 项目笔记结构
+
+## 创建项目
+1. Templater 模板创建项目笔记
+2. 自动创建子文件夹
+3. 初始化看板
+
+## 项目进行中
+- REST API 追加进度更新
+- 自动关联相关笔记
+- AI 生成进度报告
+
+## 项目完成
+- 自动移动到 Archives
+- 生成项目总结
+- 更新索引
+</code></pre>
+<h3 id="74-ai">7.4 AI 辅助工作流</h3>
+<pre><code>用户输入 → Claude Code
+              │
+              ├── 理解意图
+              │
+              ├── 搜索相关笔记 (REST API)
+              │
+              ├── 分析内容
+              │
+              ├── 生成/更新笔记
+              │
+              └── 追加到日记
+</code></pre>
+<hr />
+<h2 id="_4">八、最佳实践总结</h2>
+<h3 id="81-para">8.1 文件夹结构建议 (PARA + 改进)</h3>
+<pre><code>MyVault/
+├── 00-Inbox/           ← 快速收集，定期整理
+│   ├── QuickNotes/
+│   ├── WebClips/
+│   └── AICaptures/
+├── 01-Projects/        ← 当前项目
+│   └── ProjectName/
+│       ├── Notes/
+│       ├── Resources/
+│       └── Archive/
+├── 02-Areas/           ← 持续关注领域
+│   ├── Work/
+│   ├── Health/
+│   └── Learning/
+├── 03-Resources/       ← 参考资料
+│   ├── Articles/
+│   ├── Books/
+│   └── Templates/
+├── 04-Archives/        ← 归档
+├── 05-Daily/           ← 日记
+├── 06-Reviews/         ← 回顾
+└── Templates/          ← 模板文件
+</code></pre>
+<h3 id="82">8.2 命名规范</h3>
+<pre><code class="language-markdown"># 推荐命名格式
+
+## 日记
+YYYY-MM-DD.md
+2026-03-14.md
+
+## 项目笔记
+P-项目名-模块-功能.md
+P-MyApp-API-认证.md
+
+## 资源笔记
+R-类型-标题.md
+R-Book-原子习惯.md
+
+## 会议记录
+M-YYYY-MM-DD-主题.md
+M-2026-03-14-产品评审.md
+</code></pre>
+<h3 id="83">8.3 自动化原则</h3>
+<ol>
+<li><strong>最小必要</strong>: 只自动化真正重复的任务</li>
+<li><strong>渐进增强</strong>: 从简单开始，逐步增加复杂度</li>
+<li><strong>可恢复</strong>: 保留撤销和恢复的能力</li>
+<li><strong>可观测</strong>: 记录自动化操作的日志</li>
+</ol>
+<hr />
+<h2 id="_5">九、参考资源</h2>
+<h3 id="_6">官方资源</h3>
+<ul>
+<li><strong>Obsidian 官网</strong>: https://obsidian.md</li>
+<li><strong>插件市场</strong>: https://obsidian.md/plugins</li>
+<li><strong>官方论坛</strong>: https://forum.obsidian.md</li>
+</ul>
+<h3 id="_7">插件文档</h3>
+<ul>
+<li><strong>Local REST API</strong>: https://github.com/coddingtonbear/obsidian-local-rest-api</li>
+<li><strong>Templater</strong>: https://silentvoid13.github.io/Templater/</li>
+<li><strong>Advanced URI</strong>: https://github.com/Vinzent03/obsidian-advanced-uri</li>
+</ul>
+<h3 id="_8">社区资源</h3>
+<ul>
+<li><strong>PKMer</strong>: https://pkmer.cn</li>
+<li><strong>Obsidian 中文论坛</strong>: https://forum-zh.obsidian.md</li>
+</ul>
+<h3 id="ai_1">AI 集成</h3>
+<ul>
+<li><strong>Obsidian Copilot</strong>: https://github.com/logancyang/obsidian-copilot</li>
+<li><strong>Khoj</strong>: https://khoj.dev</li>
+<li><strong>Smart Connections</strong>: https://github.com/brianpetro/obsidian-smart-connections</li>
+</ul>
+<hr />
+<p><em>文档生成时间: 2026-03-14</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

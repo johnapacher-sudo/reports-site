@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuFlo 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub 开源项目 ruvnet/ruflo 的深度技术调研 | 调研日期：2026-03-24</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 技术栈分布</a></li>
+<li><a href="#14" class="toc-h3">1.4 核心价值</a></li>
+<li><a href="#_2" class="toc-h2">二、核心架构</a></li>
+<li><a href="#21" class="toc-h3">2.1 整体架构图</a></li>
+<li><a href="#22-swarm" class="toc-h3">2.2 Swarm 架构模式</a></li>
+<li><a href="#hierarchical-queenworkers" class="toc-h4">Hierarchical (Queen/Workers) 模式</a></li>
+<li><a href="#mesh-peer-to-peer" class="toc-h4">Mesh (Peer-to-Peer) 模式</a></li>
+<li><a href="#_3" class="toc-h4">四种拓扑类型</a></li>
+<li><a href="#sparc" class="toc-h2">三、SPARC 方法论</a></li>
+<li><a href="#31-sparc" class="toc-h3">3.1 什么是 SPARC？</a></li>
+<li><a href="#32-sparc" class="toc-h3">3.2 SPARC 开发阶段</a></li>
+<li><a href="#33-17-sparc" class="toc-h3">3.3 17 种 SPARC 开发模式</a></li>
+<li><a href="#ruvector" class="toc-h2">四、RuVector 智能层</a></li>
+<li><a href="#41" class="toc-h3">4.1 核心组件</a></li>
+<li><a href="#42" class="toc-h3">4.2 自学习循环</a></li>
+<li><a href="#43" class="toc-h3">4.3 记忆架构</a></li>
+<li><a href="#mcp" class="toc-h2">五、MCP 工具集成</a></li>
+<li><a href="#51-259-mcp" class="toc-h3">5.1 259 个 MCP 工具</a></li>
+<li><a href="#52-mcp" class="toc-h3">5.2 核心 MCP 工具</a></li>
+<li><a href="#53" class="toc-h3">5.3 工具组配置</a></li>
+<li><a href="#llm" class="toc-h2">六、多 LLM 支持</a></li>
+<li><a href="#61" class="toc-h3">6.1 支持的提供商</a></li>
+<li><a href="#62-adr-026" class="toc-h3">6.2 三层模型路由 (ADR-026)</a></li>
+<li><a href="#63" class="toc-h3">6.3 自动故障转移</a></li>
+<li><a href="#_4" class="toc-h2">七、企业级安全</a></li>
+<li><a href="#71-aidefence" class="toc-h3">7.1 AIDefence 安全特性</a></li>
+<li><a href="#72" class="toc-h3">7.2 安全架构</a></li>
+<li><a href="#73-claude-flowguidance" class="toc-h3">7.3 @claude-flow/guidance 治理控制</a></li>
+<li><a href="#_5" class="toc-h2">八、性能指标</a></li>
+<li><a href="#81" class="toc-h3">8.1 性能基准</a></li>
+<li><a href="#82" class="toc-h3">8.2 共识机制</a></li>
+<li><a href="#_6" class="toc-h2">九、与其他框架对比</a></li>
+<li><a href="#91-vs-gstack" class="toc-h3">9.1 vs GStack</a></li>
+<li><a href="#92-vs-langchain" class="toc-h3">9.2 vs LangChain</a></li>
+<li><a href="#93-vs-autogen" class="toc-h3">9.3 vs AutoGen</a></li>
+<li><a href="#_7" class="toc-h2">十、安装与快速开始</a></li>
+<li><a href="#101" class="toc-h3">10.1 安装</a></li>
+<li><a href="#102" class="toc-h3">10.2 基本使用</a></li>
+<li><a href="#103" class="toc-h3">10.3 环境变量</a></li>
+<li><a href="#adr" class="toc-h2">十一、架构决策记录 (ADR)</a></li>
+<li><a href="#_8" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>RuFlo 深度调研报告</h1>
+                        <div class="article-meta">基于 GitHub 开源项目 ruvnet/ruflo 的深度技术调研<br>调研日期：2026-03-24</div>
+                    </header>
+                    <h1 id="ruflo">RuFlo 深度调研报告</h1>
+<blockquote>
+<p>基于 GitHub 开源项目 ruvnet/ruflo 的深度技术调研</p>
+<p>调研日期：2026-03-24</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>RuFlo (Claude-Flow)</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/ruvnet/ruflo</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>ruvnet (Agentics Foundation)</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://Cognitum.One</td>
+</tr>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>企业级 AI Agent 编排平台</td>
+</tr>
+<tr>
+<td><strong>开源状态</strong></td>
+<td>MIT License</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>24,166+</td>
+</tr>
+<tr>
+<td><strong>Forks</strong></td>
+<td>2,639</td>
+</tr>
+<tr>
+<td><strong>最新版本</strong></td>
+<td>v3.5.31 (2026-03-18)</td>
+</tr>
+<tr>
+<td><strong>创建时间</strong></td>
+<td>2025-06-02</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>RuFlo 是一个企业级 AI Agent 编排平台，为 Claude Code 提供 <strong>60+ 专业 Agent</strong>、<strong>259 个 MCP 工具</strong>、<strong>自学习神经架构</strong> 和 <strong>Swarm 智能协调</strong>，实现 84.8% SWE-Bench 解决率。</p>
+<h3 id="13">1.3 技术栈分布</h3>
+<table>
+<thead>
+<tr>
+<th>语言</th>
+<th>占比</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>TypeScript</strong></td>
+<td>~66%</td>
+<td>核心框架、Agent 系统</td>
+</tr>
+<tr>
+<td><strong>JavaScript</strong></td>
+<td>~23%</td>
+<td>工具链、脚本</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>~9%</td>
+<td>神经网络、ML 组件</td>
+</tr>
+<tr>
+<td><strong>Shell</strong></td>
+<td>~3%</td>
+<td>安装脚本</td>
+</tr>
+<tr>
+<td><strong>Rust</strong></td>
+<td>&lt;1%</td>
+<td>WASM 高性能内核</td>
+</tr>
+</tbody>
+</table>
+<h3 id="14">1.4 核心价值</h3>
+<ul>
+<li><strong>Swarm 智能</strong>：多 Agent 协调，Hierarchical/Mesh/Ring/Star 拓扑</li>
+<li><strong>自学习系统</strong>：记忆成功模式，自动优化路由</li>
+<li><strong>多 LLM 支持</strong>：Claude、GPT、Gemini、Cohere、Llama，自动故障转移</li>
+<li><strong>企业级安全</strong>：Prompt 注入防护、输入验证、路径遍历防护</li>
+</ul>
+<hr />
+<h2 id="_2">二、核心架构</h2>
+<h3 id="21">2.1 整体架构图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                         RuFlo Architecture                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────────┐     ┌─────────────┐     ┌─────────────┐             │
+│   │   CLI       │     │   MCP       │     │   API       │             │
+│   │  Interface  │     │   Server    │     │  Endpoint   │             │
+│   └──────┬──────┘     └──────┬──────┘     └──────┬──────┘             │
+│          │                   │                   │                      │
+│          └───────────────────┼───────────────────┘                      │
+│                              │                                          │
+│                              ▼                                          │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      Router &amp; Orchestrator                       │  │
+│   │  • Task routing  • Agent selection  • Load balancing            │  │
+│   └─────────────────────────────┬───────────────────────────────────┘  │
+│                                 │                                       │
+│                                 ▼                                       │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      Swarm Coordinator                           │  │
+│   │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐            │  │
+│   │  │ Queen   │  │ Queen   │  │ Queen   │  │  Mesh   │            │  │
+│   │  │Strategic│  │Tactical │  │ Adaptive│  │  P2P    │            │  │
+│   │  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘            │  │
+│   └───────┼─────────────┼─────────────┼─────────────┼───────────────┘  │
+│           │             │             │             │                   │
+│           ▼             ▼             ▼             ▼                   │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                    60+ Specialized Agents                        │  │
+│   │  ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐   │  │
+│   │  │Coder  │ │Tester │ │Reviewer│ │Architect│ │Optimizer│ │...   │   │  │
+│   │  └───────┘ └───────┘ └───────┘ └───────┘ └───────┘ └───────┘   │  │
+│   └─────────────────────────────┬───────────────────────────────────┘  │
+│                                 │                                       │
+│                                 ▼                                       │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                   RuVector Intelligence Layer                    │  │
+│   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │  │
+│   │  │  SONA   │ │  HNSW   │ │Reasoning│ │  EWC++  │ │  LoRA   │   │  │
+│   │  │Neural   │ │ Vector  │ │  Bank   │ │Memory   │ │Adapter  │   │  │
+│   │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │  │
+│   └─────────────────────────────┬───────────────────────────────────┘  │
+│                                 │                                       │
+│                                 ▼                                       │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      LLM Providers                               │  │
+│   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │  │
+│   │  │ Claude  │ │   GPT   │ │ Gemini  │ │ Cohere  │ │  Ollama │   │  │
+│   │  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘   │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      Self-Learning Loop                          │  │
+│   │         RETRIEVE → JUDGE → DISTILL → CONSOLIDATE → ROUTE        │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22-swarm">2.2 Swarm 架构模式</h3>
+<h4 id="hierarchical-queenworkers">Hierarchical (Queen/Workers) 模式</h4>
+<pre><code>                    ┌─────────────────┐
+                    │     Queen       │
+                    │  (Coordinator)  │
+                    └────────┬────────┘
+                             │
+         ┌───────────┬───────┴───────┬───────────┐
+         │           │               │           │
+         ▼           ▼               ▼           ▼
+    ┌─────────┐ ┌─────────┐   ┌─────────┐ ┌─────────┐
+    │ Worker  │ │ Worker  │   │ Worker  │ │ Worker  │
+    │Researcher│ │ Coder  │   │ Tester  │ │Reviewer │
+    └─────────┘ └─────────┘   └─────────┘ └─────────┘
+</code></pre>
+<p><strong>三种 Queen 类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>Queen 类型</th>
+<th>角色</th>
+<th>用例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Strategic</strong></td>
+<td>高层规划与研究</td>
+<td>研究、架构决策、分析</td>
+</tr>
+<tr>
+<td><strong>Tactical</strong></td>
+<td>中层执行管理</td>
+<td>实现、编码、部署</td>
+</tr>
+<tr>
+<td><strong>Adaptive</strong></td>
+<td>动态策略调整</td>
+<td>优化、性能调优</td>
+</tr>
+</tbody>
+</table>
+<p><strong>8 种 Worker 专业化类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Researcher</td>
+<td>分析和调查</td>
+</tr>
+<tr>
+<td>Coder</td>
+<td>实现和开发</td>
+</tr>
+<tr>
+<td>Analyst</td>
+<td>数据处理和指标</td>
+</tr>
+<tr>
+<td>Tester</td>
+<td>质量保证和验证</td>
+</tr>
+<tr>
+<td>Architect</td>
+<td>系统设计和规划</td>
+</tr>
+<tr>
+<td>Reviewer</td>
+<td>代码审查和改进</td>
+</tr>
+<tr>
+<td>Optimizer</td>
+<td>性能增强</td>
+</tr>
+<tr>
+<td>Documenter</td>
+<td>文档生成</td>
+</tr>
+</tbody>
+</table>
+<h4 id="mesh-peer-to-peer">Mesh (Peer-to-Peer) 模式</h4>
+<pre><code>    ┌─────────┐
+    │ Agent A │◄──────────┐
+    └────┬────┘           │
+         │                │
+         ▼                │
+    ┌─────────┐     ┌─────────┐
+    │ Agent B │◄───►│ Agent C │
+    └─────────┘     └─────────┘
+         ▲                │
+         │                │
+    ┌────┴────┐           │
+    │ Agent D │◄──────────┘
+    └─────────┘
+</code></pre>
+<h4 id="_3">四种拓扑类型</h4>
+<table>
+<thead>
+<tr>
+<th>拓扑</th>
+<th>描述</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Hierarchical</strong></td>
+<td>Queen 协调 Workers，防止漂移</td>
+<td>复杂项目、需要协调</td>
+</tr>
+<tr>
+<td><strong>Mesh</strong></td>
+<td>所有 Agent 之间点对点通信</td>
+<td>简单任务、并行执行</td>
+</tr>
+<tr>
+<td><strong>Ring</strong></td>
+<td>顺序 Agent 通信</td>
+<td>流水线任务</td>
+</tr>
+<tr>
+<td><strong>Star</strong></td>
+<td>Hub-and-Spoke 中心协调</td>
+<td>集中控制场景</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="sparc">三、SPARC 方法论</h2>
+<h3 id="31-sparc">3.1 什么是 SPARC？</h3>
+<p><strong>SPARC</strong> = <strong>S</strong>pecification, <strong>P</strong>seudocode, <strong>A</strong>rchitecture, <strong>R</strong>efinement, <strong>C</strong>ompletion</p>
+<p>一种系统化开发方法论，强调：
+- <strong>系统化方法</strong>：从规格到完成的阶段性结构
+- <strong>测试驱动开发</strong>：实现前先写测试
+- <strong>并行执行</strong>：并发 Agent 协调（2.8-4.4x 速度提升）
+- <strong>记忆集成</strong>：Agent 间持久知识共享
+- <strong>质量优先</strong>：全面审查、测试和验证</p>
+<h3 id="32-sparc">3.2 SPARC 开发阶段</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    SPARC Development Phases                      │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Phase 1: Specification (规格)                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ • 定义需求和约束条件                                       │   │
+│  │ • 建立成功标准                                           │   │
+│  │ • Agent: researcher, analyzer, memory-manager            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  Phase 2: Architecture (架构)                                   │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ • 设计系统结构和接口                                       │   │
+│  │ • 创建架构图和数据流                                       │   │
+│  │ • Agent: architect, designer, orchestrator               │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  Phase 3: Refinement (TDD) (精炼)                              │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ • 测试优先的实现方法                                       │   │
+│  │ • 迭代优化代码                                           │   │
+│  │ • Agent: tdd, coder, tester                              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  Phase 4: Review (审查)                                        │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ • 质量、安全、性能审查                                     │   │
+│  │ • 代码审查和优化建议                                       │   │
+│  │ • Agent: reviewer, optimizer, debugger                   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  Phase 5: Completion (完成)                                    │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ • 集成、部署、监控                                        │   │
+│  │ • 文档生成和发布                                          │   │
+│  │ • Agent: workflow-manager, documenter                    │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="33-17-sparc">3.3 17 种 SPARC 开发模式</h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>功能</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>orchestrator</code></td>
+<td>多 Agent 任务编排</td>
+<td>复杂项目管理</td>
+</tr>
+<tr>
+<td><code>swarm-coordinator</code></td>
+<td>Swarm 管理</td>
+<td>Agent 协调</td>
+</tr>
+<tr>
+<td><code>workflow-manager</code></td>
+<td>流程自动化</td>
+<td>CI/CD 流水线</td>
+</tr>
+<tr>
+<td><code>batch-executor</code></td>
+<td>并行任务执行</td>
+<td>批量处理</td>
+</tr>
+<tr>
+<td><code>coder</code></td>
+<td>自主代码生成</td>
+<td>功能开发</td>
+</tr>
+<tr>
+<td><code>tdd</code></td>
+<td>测试驱动开发</td>
+<td>质量优先项目</td>
+</tr>
+<tr>
+<td><code>reviewer</code></td>
+<td>代码质量分析</td>
+<td>代码审查</td>
+</tr>
+<tr>
+<td><code>researcher</code></td>
+<td>深度研究</td>
+<td>技术调研</td>
+</tr>
+<tr>
+<td><code>analyzer</code></td>
+<td>模式识别</td>
+<td>代码分析</td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td>性能优化</td>
+<td>性能调优</td>
+</tr>
+<tr>
+<td><code>designer</code></td>
+<td>UI/UX 设计</td>
+<td>前端开发</td>
+</tr>
+<tr>
+<td><code>innovator</code></td>
+<td>创意问题解决</td>
+<td>创新功能</td>
+</tr>
+<tr>
+<td><code>documenter</code></td>
+<td>文档生成</td>
+<td>项目文档</td>
+</tr>
+<tr>
+<td><code>debugger</code></td>
+<td>问题解决</td>
+<td>Bug 修复</td>
+</tr>
+<tr>
+<td><code>tester</code></td>
+<td>全面测试</td>
+<td>质量保证</td>
+</tr>
+<tr>
+<td><code>memory-manager</code></td>
+<td>知识管理</td>
+<td>记忆系统</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="ruvector">四、RuVector 智能层</h2>
+<h3 id="41">4.1 核心组件</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    RuVector Intelligence Layer                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                      SONA                                │   │
+│  │        Self-Optimizing Neural Architecture               │   │
+│  │  • 学习哪种 Agent 最适合哪种任务                          │   │
+│  │  • &lt;0.05ms 自适应                                        │   │
+│  │  • EWC++ 防止灾难性遗忘                                   │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                      HNSW                                │   │
+│  │     Hierarchical Navigable Small World Vector Search     │   │
+│  │  • 150x-12,500x 更快的向量搜索                           │   │
+│  │  • 384 维嵌入                                            │   │
+│  │  • 亚毫秒级检索                                           │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                  ReasoningBank                           │   │
+│  │              Pattern Storage with Hybrid Search          │   │
+│  │  • BM25 + 语义混合搜索                                    │   │
+│  │  • 轨迹学习                                              │   │
+│  │  • 模式存储和检索                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                    Flash Attention                       │   │
+│  │               Optimized Attention Computation            │   │
+│  │  • 2.49-7.47x 加速                                       │   │
+│  │  • 更高效的注意力计算                                     │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                  LoRA / MicroLoRA                        │   │
+│  │            Low-Rank Adaptation for Fine-tuning           │   │
+│  │  • 128x 压缩                                             │   │
+│  │  • 高效微调                                              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                   Int8 Quantization                      │   │
+│  │              Memory-Efficient Weight Storage             │   │
+│  │  • 3.92x 内存减少                                        │   │
+│  │  • 更小的模型占用                                         │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │                   9 RL Algorithms                        │   │
+│  │      Q-Learning, SARSA, A2C, PPO, DQN, etc.             │   │
+│  │  • 任务特定的学习算法                                     │   │
+│  │  • 强化学习优化                                          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="42">4.2 自学习循环</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Self-Learning Loop                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│    ┌──────────┐     ┌──────────┐     ┌──────────┐             │
+│    │ RETRIEVE │ ──► │  JUDGE   │ ──► │ DISTILL  │             │
+│    │          │     │          │     │          │             │
+│    │ 检索历史 │     │ 评估结果 │     │ 提取模式 │             │
+│    │ 模式    │     │ 质量    │     │ 知识    │             │
+│    └──────────┘     └──────────┘     └──────────┘             │
+│                                            │                    │
+│                                            ▼                    │
+│    ┌──────────┐     ┌──────────┐     ┌──────────┐             │
+│    │  ROUTE   │ ◄── │CONSOLIDATE│ ◄── │          │             │
+│    │          │     │          │     │          │             │
+│    │ 智能路由 │     │ 整合知识 │     │          │             │
+│    │ 任务    │     │ 到记忆  │     │          │             │
+│    └──────────┘     └──────────┘     └──────────┘             │
+│         │                                                       │
+│         ▼                                                       │
+│    ┌──────────────────────────────────────────────────────┐    │
+│    │              学习效果                                  │    │
+│    │  • 记住成功模式                                        │    │
+│    │  • 路由相似任务到最佳 Agent                            │    │
+│    │  • 随时间变得更聪明                                    │    │
+│    └──────────────────────────────────────────────────────┘    │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="43">4.3 记忆架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                      Memory Architecture                        │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Working Memory (工作记忆)                   │   │
+│  │  • 活跃上下文，快速访问                                   │   │
+│  │  • 1MB 限制                                              │   │
+│  │  • 最高优先级                                            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Episodic Memory (情景记忆)                  │   │
+│  │  • 近期模式，中等保留                                     │   │
+│  │  • 任务历史记录                                          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                              │                                  │
+│                              ▼                                  │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              Semantic Memory (语义记忆)                  │   │
+│  │  • 整合知识，持久存储                                     │   │
+│  │  • 长期知识库                                            │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="mcp">五、MCP 工具集成</h2>
+<h3 id="51-259-mcp">5.1 259 个 MCP 工具</h3>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>工具数</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Agent</strong></td>
+<td>7</td>
+<td>Agent 生命周期管理</td>
+</tr>
+<tr>
+<td><strong>Swarm</strong></td>
+<td>4</td>
+<td>多 Agent 协调</td>
+</tr>
+<tr>
+<td><strong>Memory</strong></td>
+<td>7</td>
+<td>AgentDB + HNSW 搜索</td>
+</tr>
+<tr>
+<td><strong>Config</strong></td>
+<td>6</td>
+<td>配置管理</td>
+</tr>
+<tr>
+<td><strong>Hooks</strong></td>
+<td>40+</td>
+<td>自学习自动化</td>
+</tr>
+<tr>
+<td><strong>Task</strong></td>
+<td>6</td>
+<td>任务生命周期</td>
+</tr>
+<tr>
+<td><strong>Session</strong></td>
+<td>5</td>
+<td>会话状态管理</td>
+</tr>
+<tr>
+<td><strong>Hive-mind</strong></td>
+<td>9</td>
+<td>Queen-led 共识</td>
+</tr>
+<tr>
+<td><strong>Workflow</strong></td>
+<td>9</td>
+<td>工作流模板</td>
+</tr>
+<tr>
+<td><strong>Analyze</strong></td>
+<td>4</td>
+<td>代码分析</td>
+</tr>
+<tr>
+<td><strong>Progress</strong></td>
+<td>4</td>
+<td>进度跟踪</td>
+</tr>
+<tr>
+<td><strong>AIDefence</strong></td>
+<td>6</td>
+<td>安全扫描</td>
+</tr>
+<tr>
+<td><strong>AgentDB</strong></td>
+<td>14+</td>
+<td>记忆控制器</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52-mcp">5.2 核心 MCP 工具</h3>
+<pre><code class="language-javascript">// 初始化 Swarm
+mcp__ruv-swarm__swarm_init({
+  topology: &quot;hierarchical&quot;,  // 或 &quot;mesh&quot;, &quot;ring&quot;, &quot;star&quot;
+  maxAgents: 8,
+  strategy: &quot;specialized&quot;    // 或 &quot;balanced&quot;, &quot;adaptive&quot;, &quot;auto&quot;
+})
+
+// 生成 Agent
+mcp__ruv-swarm__agent_spawn({
+  type: &quot;coder&quot;,             // 或 tester, reviewer, architect 等
+  name: &quot;my-coder&quot;
+})
+
+// 执行 SPARC 模式
+mcp__claude-flow__sparc_mode({
+  mode: &quot;orchestrator&quot;,
+  task_description: &quot;coordinate feature development&quot;,
+  options: { parallel: true, monitor: true }
+})
+
+// 记忆搜索
+mcp__claude-flow__memory_usage({
+  action: &quot;search&quot;,
+  namespace: &quot;patterns&quot;,
+  query: &quot;authentication patterns&quot;
+})
+</code></pre>
+<h3 id="53">5.3 工具组配置</h3>
+<pre><code class="language-bash"># 启用特定工具组
+export CLAUDE_FLOW_TOOL_GROUPS=implement,test,fix,memory
+
+# 或使用预设模式
+export CLAUDE_FLOW_TOOL_MODE=develop
+</code></pre>
+<p><strong>可用工具组</strong>：<code>create</code>, <code>issue</code>, <code>branch</code>, <code>implement</code>, <code>test</code>, <code>fix</code>, <code>optimize</code>, <code>monitor</code>, <code>security</code>, <code>memory</code>, <code>all</code>, <code>minimal</code></p>
+<hr />
+<h2 id="llm">六、多 LLM 支持</h2>
+<h3 id="61">6.1 支持的提供商</h3>
+<table>
+<thead>
+<tr>
+<th>提供商</th>
+<th>模型</th>
+<th>用例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Anthropic</strong></td>
+<td>Claude (Opus, Sonnet, Haiku)</td>
+<td>复杂推理、架构设计</td>
+</tr>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td>GPT-4, GPT-5.3</td>
+<td>代码生成、优化</td>
+</tr>
+<tr>
+<td><strong>Google</strong></td>
+<td>Gemini</td>
+<td>替代推理</td>
+</tr>
+<tr>
+<td><strong>Cohere</strong></td>
+<td>Command</td>
+<td>特定任务</td>
+</tr>
+<tr>
+<td><strong>Ollama</strong></td>
+<td>Llama, 本地模型</td>
+<td>本地/私有部署</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-adr-026">6.2 三层模型路由 (ADR-026)</h3>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>处理器</th>
+<th>延迟</th>
+<th>成本</th>
+<th>用例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>1</strong></td>
+<td>Agent Booster (WASM)</td>
+<td>&lt;1ms</td>
+<td>$0</td>
+<td>简单转换 (var-to-const, add-types)</td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>Haiku</td>
+<td>~500ms</td>
+<td>$0.0002</td>
+<td>简单任务, 低复杂度 (&lt;30%)</td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>Sonnet/Opus</td>
+<td>2-5s</td>
+<td>$0.003-0.015</td>
+<td>复杂推理, 架构设计 (&gt;30%)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>成本优势</strong>：
+- 75% 更低的 API 成本
+- 2.5x 更多任务在配额限制内
+- &lt;1ms 简单转换 vs 2-5s LLM</p>
+<h3 id="63">6.3 自动故障转移</h3>
+<pre><code class="language-bash"># 配置多个提供商
+export ANTHROPIC_API_KEY=&quot;sk-ant-...&quot;
+export OPENAI_API_KEY=&quot;sk-...&quot;
+export GOOGLE_API_KEY=&quot;...&quot;
+
+# 如果主提供商不可用，自动切换
+# 智能路由选择满足质量要求的最便宜选项
+</code></pre>
+<hr />
+<h2 id="_4">七、企业级安全</h2>
+<h3 id="71-aidefence">7.1 AIDefence 安全特性</h3>
+<p><strong>威胁检测 (&lt;10ms)</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>威胁类型</th>
+<th>防护措施</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Prompt 注入</td>
+<td>模式检测和阻止</td>
+</tr>
+<tr>
+<td>输入验证</td>
+<td>Zod 边界验证</td>
+</tr>
+<tr>
+<td>路径遍历</td>
+<td>路径规范化检查</td>
+</tr>
+<tr>
+<td>命令注入</td>
+<td>安全执行器</td>
+</tr>
+<tr>
+<td>越狱检测</td>
+<td>行为模式分析</td>
+</tr>
+<tr>
+<td>PII 检测</td>
+<td>敏感信息识别</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 安全架构</h3>
+<pre><code>Input → AIDefence Scan → PII Detection → Injection Check → Jailbreak Detection
+     → Risk Level Decision → Allow / Sanitize / Block → Learning
+</code></pre>
+<h3 id="73-claude-flowguidance">7.3 @claude-flow/guidance 治理控制</h3>
+<p><strong>7 阶段流水线</strong>：Compile → Retrieve → Enforce → Trust → Prove → Defend → Evolve</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Compile</strong></td>
+<td>解析 CLAUDE.md 为类型化策略包</td>
+</tr>
+<tr>
+<td><strong>Retrieve</strong></td>
+<td>意图分类分片检索</td>
+</tr>
+<tr>
+<td><strong>Enforce</strong></td>
+<td>4 个模型无法绕过的关卡</td>
+</tr>
+<tr>
+<td><strong>Trust</strong></td>
+<td>每 Agent 信任累积</td>
+</tr>
+<tr>
+<td><strong>Prove</strong></td>
+<td>HMAC-SHA256 哈希链证明信封</td>
+</tr>
+<tr>
+<td><strong>Defend</strong></td>
+<td>Prompt 注入、记忆中毒检测</td>
+</tr>
+<tr>
+<td><strong>Evolve</strong></td>
+<td>规则优化循环</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">八、性能指标</h2>
+<h3 id="81">8.1 性能基准</h3>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Batch 生成速度</strong></td>
+<td>10-20x 更快</td>
+</tr>
+<tr>
+<td><strong>整体速度提升</strong></td>
+<td>2.8-4.4x</td>
+</tr>
+<tr>
+<td><strong>Token 减少</strong></td>
+<td>32.3%</td>
+</tr>
+<tr>
+<td><strong>SWE-Bench 解决率</strong></td>
+<td>84.8%</td>
+</tr>
+<tr>
+<td><strong>路由准确率</strong></td>
+<td>100%</td>
+</tr>
+<tr>
+<td><strong>路由决策延迟</strong></td>
+<td>0.57ms 平均</td>
+</tr>
+<tr>
+<td><strong>SONA 自适应</strong></td>
+<td>&lt;0.05ms</td>
+</tr>
+<tr>
+<td><strong>HNSW 搜索</strong></td>
+<td>150x-12,500x 更快</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82">8.2 共识机制</h3>
+<table>
+<thead>
+<tr>
+<th>算法</th>
+<th>描述</th>
+<th>阈值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Majority</strong></td>
+<td>简单民主投票</td>
+<td>&gt;50% 胜出</td>
+</tr>
+<tr>
+<td><strong>Weighted</strong></td>
+<td>Queen 投票计 3x</td>
+<td>加权多数</td>
+</tr>
+<tr>
+<td><strong>Byzantine</strong></td>
+<td>容错共识</td>
+<td>2/3 绝对多数</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">九、与其他框架对比</h2>
+<h3 id="91-vs-gstack">9.1 vs GStack</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RuFlo</th>
+<th>GStack</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Agent 数量</strong></td>
+<td>60+</td>
+<td>18</td>
+</tr>
+<tr>
+<td><strong>MCP 工具</strong></td>
+<td>259</td>
+<td>浏览器/QA 工具</td>
+</tr>
+<tr>
+<td><strong>拓扑类型</strong></td>
+<td>4 种</td>
+<td>单一</td>
+</tr>
+<tr>
+<td><strong>自学习</strong></td>
+<td>完整学习循环</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>多 LLM</strong></td>
+<td>5+ 提供商</td>
+<td>仅 Claude</td>
+</tr>
+<tr>
+<td><strong>安全</strong></td>
+<td>企业级 AIDefence</td>
+<td>基础</td>
+</tr>
+<tr>
+<td><strong>方法论</strong></td>
+<td>SPARC</td>
+<td>Sprint 工作流</td>
+</tr>
+<tr>
+<td><strong>创始人</strong></td>
+<td>Agentics Foundation</td>
+<td>Garry Tan (YC)</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>24K+</td>
+<td>36K+</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-vs-langchain">9.2 vs LangChain</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RuFlo</th>
+<th>LangChain</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定位</strong></td>
+<td>Claude Code 专用</td>
+<td>通用 LLM 框架</td>
+</tr>
+<tr>
+<td><strong>Agent 协调</strong></td>
+<td>Swarm 原生</td>
+<td>需要额外组件</td>
+</tr>
+<tr>
+<td><strong>记忆系统</strong></td>
+<td>内置 AgentDB</td>
+<td>需要集成</td>
+</tr>
+<tr>
+<td><strong>MCP 支持</strong></td>
+<td>原生 259 工具</td>
+<td>需要适配</td>
+</tr>
+<tr>
+<td><strong>学习系统</strong></td>
+<td>自学习循环</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>生产就绪</strong></td>
+<td>企业级</td>
+<td>需要更多配置</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93-vs-autogen">9.3 vs AutoGen</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>RuFlo</th>
+<th>AutoGen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>语言</strong></td>
+<td>TypeScript/Python</td>
+<td>Python</td>
+</tr>
+<tr>
+<td><strong>协调模式</strong></td>
+<td>4 种拓扑</td>
+<td>主要 Mesh</td>
+</tr>
+<tr>
+<td><strong>Claude 集成</strong></td>
+<td>原生</td>
+<td>需要适配</td>
+</tr>
+<tr>
+<td><strong>记忆</strong></td>
+<td>多层记忆架构</td>
+<td>需要扩展</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td>原生支持</td>
+<td>无</td>
+</tr>
+<tr>
+<td><strong>安全</strong></td>
+<td>AIDefence 内置</td>
+<td>需要额外实现</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_7">十、安装与快速开始</h2>
+<h3 id="101">10.1 安装</h3>
+<pre><code class="language-bash"># 一键安装 (推荐)
+curl -fsSL https://cdn.jsdelivr.net/gh/ruvnet/claude-flow@main/scripts/install.sh | bash
+
+# 或通过 npx
+npx ruflo@latest init --wizard
+
+# 添加 MCP 到 Claude Code
+claude mcp add ruflo -- npx -y ruflo@latest mcp start
+</code></pre>
+<h3 id="102">10.2 基本使用</h3>
+<pre><code class="language-bash"># 初始化 Swarm
+npx claude-flow@v3alpha swarm init --v3-mode
+
+# 执行任务
+npx ruflo@latest --agent coder --task &quot;Implement user authentication&quot;
+
+# SPARC TDD 模式
+npx claude-flow sparc tdd &quot;feature description&quot;
+
+# 查看状态
+npx claude-flow@v3alpha status --watch
+</code></pre>
+<h3 id="103">10.3 环境变量</h3>
+<pre><code class="language-bash">ANTHROPIC_API_KEY=sk-ant-...
+OPENAI_API_KEY=sk-...
+GOOGLE_API_KEY=...
+CLAUDE_FLOW_LOG_LEVEL=info
+CLAUDE_FLOW_TOOL_GROUPS=implement,test,fix,memory
+CLAUDE_FLOW_TOOL_MODE=develop
+</code></pre>
+<hr />
+<h2 id="adr">十一、架构决策记录 (ADR)</h2>
+<table>
+<thead>
+<tr>
+<th>ADR</th>
+<th>主题</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ADR-001</td>
+<td>扩展架构</td>
+<td>agentic-flow@alpha 作为基础</td>
+</tr>
+<tr>
+<td>ADR-006</td>
+<td>统一记忆服务</td>
+<td>AgentDB 集成</td>
+</tr>
+<tr>
+<td>ADR-008</td>
+<td>Vitest 测试</td>
+<td>比 Jest 快 10x</td>
+</tr>
+<tr>
+<td>ADR-009</td>
+<td>混合记忆后端</td>
+<td>SQLite + HNSW</td>
+</tr>
+<tr>
+<td>ADR-026</td>
+<td>三层模型路由</td>
+<td>智能成本优化</td>
+</tr>
+<tr>
+<td>ADR-033</td>
+<td>RuVector 集成</td>
+<td>77+ SQL AI 函数</td>
+</tr>
+<tr>
+<td>ADR-035</td>
+<td>MCP 工具组</td>
+<td>工具加载优化</td>
+</tr>
+<tr>
+<td>ADR-048</td>
+<td>自动记忆桥接</td>
+<td>Claude Code &lt;-&gt; AgentDB 同步</td>
+</tr>
+<tr>
+<td>ADR-049</td>
+<td>自学习记忆</td>
+<td>GNN, LearningBridge, MemoryGraph</td>
+</tr>
+<tr>
+<td>ADR-050</td>
+<td>智能循环</td>
+<td>自动学习周期</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_8">参考资源</h2>
+<ul>
+<li><strong>GitHub 仓库</strong>：https://github.com/ruvnet/ruflo</li>
+<li><strong>NPM 包</strong>：https://www.npmjs.com/package/ruflo</li>
+<li><strong>官网</strong>：https://Cognitum.One</li>
+<li><strong>Agentics Foundation</strong>：https://agentics.org</li>
+</ul>
+<hr />
+<p><em>报告生成时间：2026-03-24</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

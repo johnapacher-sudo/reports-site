@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermemory 深度调研报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub 开源项目 supermemoryai/supermemory 的深度技术调研 | 调研日期：2026-03-27</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、项目概述</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本信息</a></li>
+<li><a href="#12" class="toc-h3">1.2 一句话介绍</a></li>
+<li><a href="#13" class="toc-h3">1.3 解决的问题</a></li>
+<li><a href="#14" class="toc-h3">1.4 核心能力</a></li>
+<li><a href="#15" class="toc-h3">1.5 基准测试表现</a></li>
+<li><a href="#_2" class="toc-h2">二、核心架构</a></li>
+<li><a href="#21" class="toc-h3">2.1 整体架构图</a></li>
+<li><a href="#22" class="toc-h3">2.2 仓库结构</a></li>
+<li><a href="#23-vs-rag" class="toc-h3">2.3 记忆 vs RAG</a></li>
+<li><a href="#_3" class="toc-h2">三、记忆引擎</a></li>
+<li><a href="#31" class="toc-h3">3.1 核心操作</a></li>
+<li><a href="#32" class="toc-h3">3.2 事实提取</a></li>
+<li><a href="#33" class="toc-h3">3.3 用户画像系统</a></li>
+<li><a href="#34" class="toc-h3">3.4 矛盾解决</a></li>
+<li><a href="#35" class="toc-h3">3.5 自动遗忘</a></li>
+<li><a href="#_4" class="toc-h2">四、混合搜索</a></li>
+<li><a href="#41-rag-memory" class="toc-h3">4.1 RAG + Memory 组合</a></li>
+<li><a href="#42" class="toc-h3">4.2 相似度计算</a></li>
+<li><a href="#43" class="toc-h3">4.3 向量嵌入</a></li>
+<li><a href="#_5" class="toc-h2">五、连接器</a></li>
+<li><a href="#51" class="toc-h3">5.1 支持的集成</a></li>
+<li><a href="#52" class="toc-h3">5.2 数据同步流程</a></li>
+<li><a href="#_6" class="toc-h2">六、文件处理</a></li>
+<li><a href="#61" class="toc-h3">6.1 多模态提取器</a></li>
+<li><a href="#62-api" class="toc-h3">6.2 文件上传 API</a></li>
+<li><a href="#api" class="toc-h2">七、API 设计</a></li>
+<li><a href="#71-api" class="toc-h3">7.1 核心 API 方法</a></li>
+<li><a href="#72" class="toc-h3">7.2 完整使用示例</a></li>
+<li><a href="#_7" class="toc-h2">八、集成模式</a></li>
+<li><a href="#81-vercel-ai-sdk" class="toc-h3">8.1 Vercel AI SDK</a></li>
+<li><a href="#82-openai-agents-sdk" class="toc-h3">8.2 OpenAI Agents SDK</a></li>
+<li><a href="#83-mastra" class="toc-h3">8.3 Mastra</a></li>
+<li><a href="#84-mcp-server" class="toc-h3">8.4 MCP Server</a></li>
+<li><a href="#mcp" class="toc-h2">九、MCP 服务器架构</a></li>
+<li><a href="#_8" class="toc-h2">十、技术栈</a></li>
+<li><a href="#101" class="toc-h3">10.1 运行时与框架</a></li>
+<li><a href="#102" class="toc-h3">10.2 后端基础设施</a></li>
+<li><a href="#103" class="toc-h3">10.3 认证与安全</a></li>
+<li><a href="#104" class="toc-h3">10.4 主要依赖</a></li>
+<li><a href="#_9" class="toc-h2">十一、与其他框架对比</a></li>
+<li><a href="#111-vs-mem0" class="toc-h3">11.1 vs Mem0</a></li>
+<li><a href="#112-vs-langchain-memory" class="toc-h3">11.2 vs LangChain Memory</a></li>
+<li><a href="#113-vs-letta" class="toc-h3">11.3 vs Letta</a></li>
+<li><a href="#_10" class="toc-h2">十二、使用场景</a></li>
+<li><a href="#121" class="toc-h3">12.1 典型应用场景</a></li>
+<li><a href="#122" class="toc-h3">12.2 最佳实践</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Supermemory 深度调研报告</h1>
+                        <div class="article-meta">基于 GitHub 开源项目 supermemoryai/supermemory 的深度技术调研<br>调研日期：2026-03-27</div>
+                    </header>
+                    <h1 id="supermemory">Supermemory 深度调研报告</h1>
+<blockquote>
+<p>基于 GitHub 开源项目 supermemoryai/supermemory 的深度技术调研</p>
+<p>调研日期：2026-03-27</p>
+</blockquote>
+<hr />
+<h2 id="_1">一、项目概述</h2>
+<h3 id="11">1.1 基本信息</h3>
+<table>
+<thead>
+<tr>
+<th>属性</th>
+<th>信息</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>项目名称</strong></td>
+<td>Supermemory</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>https://github.com/supermemoryai/supermemory</td>
+</tr>
+<tr>
+<td><strong>开发者</strong></td>
+<td>supermemoryai</td>
+</tr>
+<tr>
+<td><strong>官网</strong></td>
+<td>https://supermemory.ai</td>
+</tr>
+<tr>
+<td><strong>核心定位</strong></td>
+<td>AI 时代的记忆引擎</td>
+</tr>
+<tr>
+<td><strong>开源状态</strong></td>
+<td>MIT License</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td><strong>19,747</strong></td>
+</tr>
+<tr>
+<td><strong>Forks</strong></td>
+<td>1,835</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>创建时间</strong></td>
+<td>2024-02-27</td>
+</tr>
+<tr>
+<td><strong>活跃状态</strong></td>
+<td>持续更新中</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 一句话介绍</h3>
+<p>Supermemory 是一个<strong>AI 记忆引擎</strong>，让 AI 系统能够跨对话记住信息，自动提取事实、构建用户画像、处理知识更新和矛盾，并在正确的时间交付正确的上下文。</p>
+<h3 id="13">1.3 解决的问题</h3>
+<pre><code>传统 AI 系统的问题：
+
+┌─────────────────────────────────────────────────────────────┐
+│  对话 1: &quot;我喜欢 TypeScript&quot;                                 │
+│  AI: &quot;好的，我记住了&quot;                                        │
+│                                                             │
+│  对话 2: (新对话)                                            │
+│  用户: &quot;我之前说我喜欢什么语言？&quot;                             │
+│  AI: &quot;抱歉，我不知道...&quot; ← 完全忘记了！                      │
+└─────────────────────────────────────────────────────────────┘
+
+                    ↓ Supermemory 解决方案 ↓
+
+┌─────────────────────────────────────────────────────────────┐
+│  对话 1: &quot;我喜欢 TypeScript&quot;                                 │
+│  AI: &quot;好的，已记录到你的档案中&quot;                              │
+│                                                             │
+│  对话 2: (新对话)                                            │
+│  用户: &quot;我之前说我喜欢什么语言？&quot;                             │
+│  AI: &quot;你喜欢 TypeScript&quot; ← 从记忆中检索！                   │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="14">1.4 核心能力</h3>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>记忆提取</strong></td>
+<td>从对话中自动提取事实</td>
+</tr>
+<tr>
+<td><strong>用户画像</strong></td>
+<td>自动维护用户上下文 (~50ms 响应)</td>
+</tr>
+<tr>
+<td><strong>知识更新</strong></td>
+<td>处理时间变化、矛盾和自动遗忘</td>
+</tr>
+<tr>
+<td><strong>混合搜索</strong></td>
+<td>RAG + Memory 单一查询</td>
+</tr>
+<tr>
+<td><strong>连接器</strong></td>
+<td>Google Drive、Gmail、Notion、GitHub 等</td>
+</tr>
+<tr>
+<td><strong>多模态处理</strong></td>
+<td>PDF、图片(OCR)、视频(转录)、代码(AST 分块)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="15">1.5 基准测试表现</h3>
+<p>Supermemory 在所有三个主要 AI 记忆基准测试中<strong>排名第一</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>基准测试</th>
+<th>测量内容</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>LongMemEval</strong></td>
+<td>跨会话长期记忆与知识更新</td>
+<td><strong>81.6% - #1</strong></td>
+</tr>
+<tr>
+<td><strong>LoCoMo</strong></td>
+<td>扩展对话中的事实回忆</td>
+<td><strong>#1</strong></td>
+</tr>
+<tr>
+<td><strong>ConvoMem</strong></td>
+<td>个性化和偏好学习</td>
+<td><strong>#1</strong></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">二、核心架构</h2>
+<h3 id="21">2.1 整体架构图</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────┐
+│                       Supermemory Architecture                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                      Your App / AI Tool                         │  │
+│   │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐   │  │
+│   │  │Claude   │ │ Cursor  │ │  VSCode │ │  Web    │ │  Mobile │   │  │
+│   │  │Desktop  │ │  IDE    │ │  Agent  │ │  App    │ │  App    │   │  │
+│   │  └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘   │  │
+│   │       │           │           │           │           │         │  │
+│   │       └───────────┴───────────┼───────────┴───────────┘         │  │
+│   │                               │                                   │  │
+│   └───────────────────────────────┼───────────────────────────────────┘  │
+│                                   │                                     │
+│                                   ▼                                     │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                     Supermemory API                              │  │
+│   │  ┌──────────────────────────────────────────────────────────┐   │  │
+│   │  │                  Memory Engine                            │   │  │
+│   │  │  • 事实提取        • 时间追踪        • 矛盾解决           │   │  │
+│   │  │  • 自动遗忘        • 用户画像        • 上下文管理         │   │  │
+│   │  └──────────────────────────────────────────────────────────┘   │  │
+│   │                              │                                   │  │
+│   │  ┌───────────────────────────┼───────────────────────────────┐   │  │
+│   │  │                           │                               │   │  │
+│   │  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐       │   │  │
+│   │  │  │   Hybrid    │  │  Connectors │  │   File      │       │   │  │
+│   │  │  │   Search    │  │             │  │ Processing  │       │   │  │
+│   │  │  │ (RAG+Memory)│  │ Drive/Gmail │  │ PDF/Image   │       │   │  │
+│   │  │  │             │  │ Notion/GitHub│ │ Video/Code  │       │   │  │
+│   │  │  └─────────────┘  └─────────────┘  └─────────────┘       │   │  │
+│   │  │                                                           │   │  │
+│   │  └───────────────────────────────────────────────────────────┘   │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+│   ┌─────────────────────────────────────────────────────────────────┐  │
+│   │                    Infrastructure                                │  │
+│   │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌───────────┐ │  │
+│   │  │  Cloudflare │  │ PostgreSQL  │  │  Vector    │  │  Better   │ │  │
+│   │  │  Workers    │  │  Drizzle    │  │  Store     │  │  Auth     │ │  │
+│   │  └─────────────┘ └─────────────┘ └─────────────┘ └───────────┘ │  │
+│   └─────────────────────────────────────────────────────────────────┘  │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="22">2.2 仓库结构</h3>
+<pre><code>supermemory/
+├── apps/
+│   ├── web/                    # Next.js Web 应用
+│   ├── mcp/                    # MCP 服务器
+│   ├── browser-extension/      # 浏览器扩展
+│   ├── docs/                   # 文档站点
+│   └── memory-graph-playground/
+├── packages/
+│   ├── tools/                  # SDK 集成 (AI SDK, OpenAI, Mastra)
+│   ├── memory-graph/           # 可视化组件
+│   ├── lib/                    # 共享工具库
+│   ├── validation/             # API 验证模式
+│   ├── hooks/                  # React Hooks
+│   └── ai-sdk/                 # Vercel AI SDK 集成
+├── turbo.json                  # Turbo 配置
+├── bunfig.toml                 # Bun 配置
+└── package.json
+</code></pre>
+<h3 id="23-vs-rag">2.3 记忆 vs RAG</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    Memory is NOT RAG                                 │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│   RAG (检索增强生成)                                                │
+│   ├── 检索文档块                                                    │
+│   ├── 无状态：所有人得到相同结果                                     │
+│   ├── 不理解时间变化                                                │
+│   └── 例: 搜索 &quot;部署文档&quot; → 返回最新部署指南                         │
+│                                                                     │
+│   Memory (记忆)                                                     │
+│   ├── 提取和追踪关于用户的事实                                      │
+│   ├── 有状态：个性化结果                                            │
+│   ├── 理解时间变化和矛盾                                            │
+│   └── 例: &quot;我刚搬到旧金山&quot; 取代 &quot;我住在纽约&quot;                         │
+│                                                                     │
+│   Supermemory = RAG + Memory 组合                                   │
+│   └── 同时返回文档 (RAG) + 用户偏好 (Memory)                        │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_3">三、记忆引擎</h2>
+<h3 id="31">3.1 核心操作</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Fact Extraction</strong></td>
+<td>从对话中自动提取事实</td>
+</tr>
+<tr>
+<td><strong>Temporal Tracking</strong></td>
+<td>追踪知识的时间变化</td>
+</tr>
+<tr>
+<td><strong>Contradiction Resolution</strong></td>
+<td>检测并解决矛盾信息</td>
+</tr>
+<tr>
+<td><strong>Automatic Forgetting</strong></td>
+<td>自动遗忘过期信息</td>
+</tr>
+</tbody>
+</table>
+<h3 id="32">3.2 事实提取</h3>
+<pre><code class="language-typescript">import Supermemory from &quot;supermemory&quot;;
+
+const client = new Supermemory();
+
+// 存储对话内容，自动提取事实
+await client.add({
+  content: &quot;用户喜欢 TypeScript，偏好函数式编程模式&quot;,
+  containerTag: &quot;user_123&quot;,  // 用户标识
+});
+</code></pre>
+<h3 id="33">3.3 用户画像系统</h3>
+<p>用户画像自动分为两类：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>内容</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Static</strong></td>
+<td>永久事实</td>
+<td>"喜欢 TypeScript", "使用 Vim", "偏好深色模式"</td>
+</tr>
+<tr>
+<td><strong>Dynamic</strong></td>
+<td>近期上下文</td>
+<td>"正在做 API 集成", "调试速率限制"</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-typescript">// 获取用户画像 (~50ms 响应)
+const { profile } = await client.profile({
+  containerTag: &quot;user_123&quot;
+});
+
+console.log(profile.static);   // [&quot;喜欢 TypeScript&quot;, &quot;使用 Vim&quot;]
+console.log(profile.dynamic);  // [&quot;正在做 API 集成&quot;]
+</code></pre>
+<h3 id="34">3.4 矛盾解决</h3>
+<pre><code>时间线示例：
+
+t1: 用户说 &quot;我住在纽约&quot;
+    → 记忆: location = &quot;纽约&quot;
+
+t2: 用户说 &quot;我刚搬到旧金山&quot;
+    → 检测矛盾: 旧位置 vs 新位置
+    → 更新: location = &quot;旧金山&quot;
+    → 遗忘: &quot;住在纽约&quot; (过期信息)
+</code></pre>
+<p><strong>去重逻辑</strong>：</p>
+<pre><code class="language-typescript">export function deduplicateMemories(data: ProfileWithMemories): DeduplicatedMemories {
+  // 优先级: Static &gt; Dynamic &gt; Search Results
+  // 使用 Set 进行 O(1) 查重
+}
+</code></pre>
+<h3 id="35">3.5 自动遗忘</h3>
+<pre><code class="language-typescript">// 软删除过期的记忆
+await client.memories.forget({
+  containerTag: &quot;user_123&quot;,
+  memoryContent: &quot;用户住在纽约&quot;,  // 现已过期
+  reason: &quot;用户搬到了旧金山&quot;
+});
+</code></pre>
+<hr />
+<h2 id="_4">四、混合搜索</h2>
+<h3 id="41-rag-memory">4.1 RAG + Memory 组合</h3>
+<pre><code class="language-typescript">// 混合搜索模式
+const results = await client.search.memories({
+  q: &quot;如何部署？&quot;,
+  containerTag: &quot;user_123&quot;,
+  searchMode: &quot;hybrid&quot;,  // 组合 RAG 文档 + Memory
+});
+
+// 返回:
+// - 部署文档 (RAG)
+// - 用户的部署偏好 (Memory)
+</code></pre>
+<h3 id="42">4.2 相似度计算</h3>
+<pre><code class="language-typescript">// 余弦相似度计算
+export const cosineSimilarity = (vectorA: number[], vectorB: number[]): number =&gt; {
+  let dotProduct = 0;
+  for (let i = 0; i &lt; vectorA.length; i++) {
+    dotProduct += vectorA[i] * vectorB[i];
+  }
+  return dotProduct;  // 归一化向量等于余弦相似度
+};
+
+// 语义相似度
+export const calculateSemanticSimilarity = (
+  doc1Embedding: number[] | null,
+  doc2Embedding: number[] | null
+): number =&gt; {
+  const similarity = cosineSimilarity(doc1Embedding, doc2Embedding);
+  return similarity &gt;= 0 ? similarity : 0;
+};
+</code></pre>
+<h3 id="43">4.3 向量嵌入</h3>
+<ul>
+<li>使用 Cloudflare AI 生成</li>
+<li>与文档和记忆一起存储</li>
+<li>用于语义搜索</li>
+</ul>
+<hr />
+<h2 id="_5">五、连接器</h2>
+<h3 id="51">5.1 支持的集成</h3>
+<table>
+<thead>
+<tr>
+<th>连接器</th>
+<th>同步方式</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Google Drive</strong></td>
+<td>实时 Webhook</td>
+<td>文档自动同步</td>
+</tr>
+<tr>
+<td><strong>Gmail</strong></td>
+<td>实时 Webhook</td>
+<td>邮件处理</td>
+</tr>
+<tr>
+<td><strong>Notion</strong></td>
+<td>实时 Webhook</td>
+<td>页面/数据库同步</td>
+</tr>
+<tr>
+<td><strong>OneDrive</strong></td>
+<td>实时 Webhook</td>
+<td>文档同步</td>
+</tr>
+<tr>
+<td><strong>GitHub</strong></td>
+<td>实时 Webhook</td>
+<td>仓库内容</td>
+</tr>
+<tr>
+<td><strong>Web Crawler</strong></td>
+<td>按需</td>
+<td>URL 抓取</td>
+</tr>
+</tbody>
+</table>
+<h3 id="52">5.2 数据同步流程</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                    Content Processing Pipeline                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│   连接器触发 (每 4 小时 + Webhook)                               │
+│              │                                                  │
+│              ▼                                                  │
+│   ┌─────────────────┐                                          │
+│   │ 内容类型检测     │                                          │
+│   └────────┬────────┘                                          │
+│            │                                                    │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ AI 摘要生成     │                                          │
+│   └────────┬────────┘                                          │
+│            │                                                    │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ 自动标签        │                                          │
+│   └────────┬────────┘                                          │
+│            │                                                    │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ 向量嵌入生成     │                                          │
+│   └────────┬────────┘                                          │
+│            │                                                    │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ 语义分块        │                                          │
+│   └────────┬────────┘                                          │
+│            │                                                    │
+│            ▼                                                    │
+│   ┌─────────────────┐                                          │
+│   │ 存入数据库      │                                          │
+│   └─────────────────┘                                          │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_6">六、文件处理</h2>
+<h3 id="61">6.1 多模态提取器</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PDF</strong></td>
+<td>文本提取</td>
+</tr>
+<tr>
+<td><strong>图片</strong></td>
+<td>OCR 处理</td>
+</tr>
+<tr>
+<td><strong>视频</strong></td>
+<td>语音转录</td>
+</tr>
+<tr>
+<td><strong>代码</strong></td>
+<td>AST 感知分块</td>
+</tr>
+</tbody>
+</table>
+<h3 id="62-api">6.2 文件上传 API</h3>
+<pre><code class="language-typescript">// 上传文件
+await client.documents.uploadFile({
+  file: fileBlob,
+  containerTags: [&quot;project_123&quot;],
+  metadata: { title: &quot;设计文档&quot; }
+});
+
+// 列出文档
+const docs = await client.documents.list({
+  containerTag: &quot;project_123&quot;
+});
+</code></pre>
+<hr />
+<h2 id="api">七、API 设计</h2>
+<h3 id="71-api">7.1 核心 API 方法</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>client.add()</code></td>
+<td>存储内容 (文本、对话、URL、HTML)</td>
+</tr>
+<tr>
+<td><code>client.profile()</code></td>
+<td>用户画像 + 可选搜索</td>
+</tr>
+<tr>
+<td><code>client.search.memories()</code></td>
+<td>混合搜索</td>
+</tr>
+<tr>
+<td><code>client.search.documents()</code></td>
+<td>文档搜索</td>
+</tr>
+<tr>
+<td><code>client.documents.uploadFile()</code></td>
+<td>上传文件</td>
+</tr>
+<tr>
+<td><code>client.documents.list()</code></td>
+<td>列出文档</td>
+</tr>
+<tr>
+<td><code>client.settings.update()</code></td>
+<td>配置记忆提取和分块</td>
+</tr>
+</tbody>
+</table>
+<h3 id="72">7.2 完整使用示例</h3>
+<pre><code class="language-typescript">import Supermemory from &quot;supermemory&quot;;
+
+const client = new Supermemory({ apiKey: &quot;sm_...&quot; });
+
+// 1. 存储对话
+await client.add({
+  content: &quot;用户喜欢 TypeScript 和函数式编程&quot;,
+  containerTag: &quot;user_123&quot;,
+});
+
+// 2. 获取用户画像 + 相关记忆
+const { profile, searchResults } = await client.profile({
+  containerTag: &quot;user_123&quot;,
+  q: &quot;用户偏好什么编程风格？&quot;,
+});
+
+// 3. 混合搜索
+const results = await client.search.memories({
+  q: &quot;部署流程&quot;,
+  containerTag: &quot;user_123&quot;,
+  searchMode: &quot;hybrid&quot;,
+});
+
+// 4. 上传文档
+await client.documents.uploadFile({
+  file: pdfBlob,
+  containerTags: [&quot;project_abc&quot;],
+});
+</code></pre>
+<hr />
+<h2 id="_7">八、集成模式</h2>
+<h3 id="81-vercel-ai-sdk">8.1 Vercel AI SDK</h3>
+<pre><code class="language-typescript">import { withSupermemory } from &quot;@supermemory/tools/ai-sdk&quot;;
+import { openai } from &quot;@ai-sdk/openai&quot;;
+
+const modelWithMemory = withSupermemory(openai(&quot;gpt-4o&quot;), &quot;user_123&quot;, {
+  mode: &quot;full&quot;,
+  addMemory: &quot;always&quot;
+});
+
+// 模式选项:
+// - &quot;profile&quot;: 获取用户画像，不过滤查询
+// - &quot;query&quot;: 基于用户消息搜索记忆
+// - &quot;full&quot;: 组合 profile + query 结果
+</code></pre>
+<h3 id="82-openai-agents-sdk">8.2 OpenAI Agents SDK</h3>
+<pre><code class="language-typescript">import { withSupermemory } from &quot;@supermemory/tools/openai&quot;;
+
+const openaiWithMemory = withSupermemory(&quot;user-123&quot;, {
+  conversationId: &quot;conversation-456&quot;,
+  mode: &quot;full&quot;,
+  addMemory: &quot;always&quot;
+});
+
+const completion = await openaiWithMemory.chat.completions.create({
+  model: &quot;gpt-4o-mini&quot;,
+  messages: [{ role: &quot;user&quot;, content: &quot;你还记得什么？&quot; }],
+});
+</code></pre>
+<h3 id="83-mastra">8.3 Mastra</h3>
+<pre><code class="language-typescript">import { Agent } from &quot;@mastra/core/agent&quot;;
+import { withSupermemory } from &quot;@supermemory/tools/mastra&quot;;
+
+const agent = new Agent(withSupermemory(
+  { id: &quot;assistant&quot;, name: &quot;Assistant&quot;, model: openai(&quot;gpt-4o&quot;) },
+  &quot;user-123&quot;,
+  { mode: &quot;full&quot;, addMemory: &quot;always&quot; }
+));
+</code></pre>
+<h3 id="84-mcp-server">8.4 MCP Server</h3>
+<pre><code class="language-bash"># 安装 MCP 服务器
+npx -y install-mcp@latest https://mcp.supermemory.ai/mcp \
+  --client claude --oauth=yes
+</code></pre>
+<p><strong>MCP 工具列表</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>memory</code></td>
+<td>保存或遗忘信息</td>
+</tr>
+<tr>
+<td><code>recall</code></td>
+<td>搜索记忆</td>
+</tr>
+<tr>
+<td><code>whoAmI</code></td>
+<td>获取当前用户信息</td>
+</tr>
+<tr>
+<td><code>listProjects</code></td>
+<td>列出可用项目</td>
+</tr>
+<tr>
+<td><code>memory-graph</code></td>
+<td>可视化记忆图谱</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="mcp">九、MCP 服务器架构</h2>
+<pre><code>┌─────────────────┐                    ┌──────────────────┐
+│   MCP Client    │◄──── OAuth/API ───►│  Supermemory API │
+│ (Claude, Cursor)│       Key          │ (api.supermemory.ai)
+└────────┬────────┘                    └──────────────────┘
+         │                                       ▲
+         │ MCP Protocol                          │ Auth Validation
+         ▼                                       │
+┌─────────────────────────────────────────────────────────────────┐
+│                   Supermemory MCP Server                         │
+│                 (mcp.supermemory.ai/mcp)                        │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │             Cloudflare Durable Object                    │   │
+│  │  • 会话状态                                              │   │
+│  │  • 客户端信息持久化                                       │   │
+│  │  • MCP 协议处理                                          │   │
+│  └─────────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr />
+<h2 id="_8">十、技术栈</h2>
+<h3 id="101">10.1 运行时与框架</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>运行时</strong></td>
+<td>Bun</td>
+</tr>
+<tr>
+<td><strong>Web 框架</strong></td>
+<td>Next.js (Web), Hono (API/MCP)</td>
+</tr>
+<tr>
+<td><strong>语言</strong></td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>Monorepo</strong></td>
+<td>Turbo</td>
+</tr>
+<tr>
+<td><strong>包管理</strong></td>
+<td>Bun</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 后端基础设施</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Serverless</strong></td>
+<td>Cloudflare Workers</td>
+</tr>
+<tr>
+<td><strong>状态</strong></td>
+<td>Durable Objects + SQLite</td>
+</tr>
+<tr>
+<td><strong>数据库</strong></td>
+<td>PostgreSQL + Drizzle ORM</td>
+</tr>
+<tr>
+<td><strong>向量存储</strong></td>
+<td>Cloudflare AI</td>
+</tr>
+<tr>
+<td><strong>KV 存储</strong></td>
+<td>Cloudflare KV</td>
+</tr>
+</tbody>
+</table>
+<h3 id="103">10.3 认证与安全</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>技术</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>认证</strong></td>
+<td>Better Auth</td>
+</tr>
+<tr>
+<td><strong>API Keys</strong></td>
+<td><code>sm_</code> 前缀</td>
+</tr>
+<tr>
+<td><strong>OAuth</strong></td>
+<td>支持 MCP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="104">10.4 主要依赖</h3>
+<pre><code class="language-json">{
+  &quot;better-auth&quot;: &quot;1.3.3&quot;,
+  &quot;drizzle-orm&quot;: &quot;latest&quot;,
+  &quot;hono&quot;: &quot;latest&quot;,
+  &quot;zod&quot;: &quot;^3.25.76&quot;,
+  &quot;@tanstack/react-query&quot;: &quot;^5.90.14&quot;,
+  &quot;@ai-sdk/openai&quot;: &quot;latest&quot;,
+  &quot;@anthropic-ai/sdk&quot;: &quot;latest&quot;
+}
+</code></pre>
+<hr />
+<h2 id="_9">十一、与其他框架对比</h2>
+<h3 id="111-vs-mem0">11.1 vs Mem0</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Supermemory</th>
+<th>Mem0</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>开源</strong></td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>Stars</strong></td>
+<td>19.7K</td>
+<td>25K+</td>
+</tr>
+<tr>
+<td><strong>基准测试</strong></td>
+<td>LongMemEval #1</td>
+<td>有参与</td>
+</tr>
+<tr>
+<td><strong>连接器</strong></td>
+<td>6+</td>
+<td>多种</td>
+</tr>
+<tr>
+<td><strong>MCP 支持</strong></td>
+<td>原生</td>
+<td>需要适配</td>
+</tr>
+<tr>
+<td><strong>混合搜索</strong></td>
+<td>原生支持</td>
+<td>分别处理</td>
+</tr>
+</tbody>
+</table>
+<h3 id="112-vs-langchain-memory">11.2 vs LangChain Memory</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Supermemory</th>
+<th>LangChain Memory</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>类型</strong></td>
+<td>独立服务</td>
+<td>框架组件</td>
+</tr>
+<tr>
+<td><strong>持久化</strong></td>
+<td>内置</td>
+<td>需要配置</td>
+</tr>
+<tr>
+<td><strong>连接器</strong></td>
+<td>内置</td>
+<td>需要集成</td>
+</tr>
+<tr>
+<td><strong>用户画像</strong></td>
+<td>自动维护</td>
+<td>需要实现</td>
+</tr>
+<tr>
+<td><strong>API</strong></td>
+<td>简单统一</td>
+<td>多种方式</td>
+</tr>
+</tbody>
+</table>
+<h3 id="113-vs-letta">11.3 vs Letta</h3>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Supermemory</th>
+<th>Letta</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>定位</strong></td>
+<td>记忆引擎</td>
+<td>Agent 框架</td>
+</tr>
+<tr>
+<td><strong>核心功能</strong></td>
+<td>记忆管理</td>
+<td>Agent 构建</td>
+</tr>
+<tr>
+<td><strong>集成</strong></td>
+<td>多框架</td>
+<td>自带框架</td>
+</tr>
+<tr>
+<td><strong>部署</strong></td>
+<td>SaaS + 自托管</td>
+<td>自托管</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">十二、使用场景</h2>
+<h3 id="121">12.1 典型应用场景</h3>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AI 助手</strong></td>
+<td>让助手记住用户偏好和历史</td>
+</tr>
+<tr>
+<td><strong>客户服务</strong></td>
+<td>记住客户问题和解决方案</td>
+</tr>
+<tr>
+<td><strong>编程助手</strong></td>
+<td>记住项目上下文和编码风格</td>
+</tr>
+<tr>
+<td><strong>学习平台</strong></td>
+<td>追踪学习进度和偏好</td>
+</tr>
+<tr>
+<td><strong>健康应用</strong></td>
+<td>记住健康目标和偏好</td>
+</tr>
+</tbody>
+</table>
+<h3 id="122">12.2 最佳实践</h3>
+<pre><code class="language-typescript">// 1. 使用容器标签隔离数据
+await client.add({
+  content: &quot;项目使用 React 18&quot;,
+  containerTag: &quot;project_abc&quot;,  // 项目级别
+});
+
+await client.add({
+  content: &quot;用户偏好深色模式&quot;,
+  containerTag: &quot;user_123&quot;,     // 用户级别
+});
+
+// 2. 定期清理过期记忆
+await client.memories.forget({
+  containerTag: &quot;user_123&quot;,
+  memoryContent: &quot;旧的技术栈偏好&quot;,
+  reason: &quot;技术栈已更新&quot;
+});
+
+// 3. 使用混合搜索获得最佳结果
+const results = await client.search.memories({
+  q: &quot;部署配置&quot;,
+  containerTag: &quot;user_123&quot;,
+  searchMode: &quot;hybrid&quot;,
+});
+</code></pre>
+<hr />
+<h2 id="_11">参考资源</h2>
+<ul>
+<li><strong>GitHub</strong>: https://github.com/supermemoryai/supermemory</li>
+<li><strong>文档</strong>: https://supermemory.ai/docs</li>
+<li><strong>快速开始</strong>: https://supermemory.ai/docs/quickstart</li>
+<li><strong>Dashboard</strong>: https://console.supermemory.ai</li>
+<li><strong>Web App</strong>: https://app.supermemory.ai</li>
+<li><strong>Discord</strong>: https://supermemory.link/discord</li>
+<li><strong>Twitter</strong>: https://twitter.com/supermemory</li>
+</ul>
+<hr />
+<p><em>报告生成时间：2026-03-27</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

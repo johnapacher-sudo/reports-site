@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMAD-METHOD 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速入门</a></li>
+<li><a href="#11" class="toc-h3">1.1 环境准备</a></li>
+<li><a href="#12-bmad-method" class="toc-h3">1.2 安装 BMAD-METHOD</a></li>
+<li><a href="#13" class="toc-h3">1.3 验证安装</a></li>
+<li><a href="#14-bmad" class="toc-h3">1.4 第一个 BMAD 项目</a></li>
+<li><a href="#agent" class="toc-h2">二、Agent 命令详解</a></li>
+<li><a href="#21-analyst" class="toc-h3">2.1 Analyst（业务分析师）</a></li>
+<li><a href="#22-pm" class="toc-h3">2.2 PM（产品经理）</a></li>
+<li><a href="#23-architect" class="toc-h3">2.3 Architect（架构师）</a></li>
+<li><a href="#24-scrum-master" class="toc-h3">2.4 Scrum Master（敏捷教练）</a></li>
+<li><a href="#25-developer" class="toc-h3">2.5 Developer（开发者）</a></li>
+<li><a href="#26-qa" class="toc-h3">2.6 QA（测试工程师）</a></li>
+<li><a href="#27-agent" class="toc-h3">2.7 其他 Agent</a></li>
+<li><a href="#todo-cli" class="toc-h2">三、实战案例：构建 Todo CLI</a></li>
+<li><a href="#31" class="toc-h3">3.1 项目初始化</a></li>
+<li><a href="#32-phase-1-agentic-planning" class="toc-h3">3.2 Phase 1: Agentic Planning</a></li>
+<li><a href="#33-phase-2-context-engineered-development" class="toc-h3">3.3 Phase 2: Context-Engineered Development</a></li>
+<li><a href="#34" class="toc-h3">3.4 完整的项目结构</a></li>
+<li><a href="#35" class="toc-h3">3.5 使用项目</a></li>
+<li><a href="#_3" class="toc-h2">四、进阶用法</a></li>
+<li><a href="#41-agent" class="toc-h3">4.1 自定义 Agent</a></li>
+<li><a href="#42" class="toc-h3">4.2 多模块组合</a></li>
+<li><a href="#43-document-sharding" class="toc-h3">4.3 Document Sharding 实践</a></li>
+<li><a href="#44-cicd" class="toc-h3">4.4 CI/CD 集成</a></li>
+<li><a href="#_4" class="toc-h2">五、最佳实践</a></li>
+<li><a href="#51-story" class="toc-h3">5.1 Story 编写规范</a></li>
+<li><a href="#52" class="toc-h3">5.2 上下文管理</a></li>
+<li><a href="#53" class="toc-h3">5.3 迭代工作流</a></li>
+<li><a href="#54" class="toc-h3">5.4 常见陷阱</a></li>
+<li><a href="#_5" class="toc-h2">六、故障排除</a></li>
+<li><a href="#61" class="toc-h3">6.1 常见错误</a></li>
+<li><a href="#62" class="toc-h3">6.2 调试技巧</a></li>
+<li><a href="#63" class="toc-h3">6.3 获取帮助</a></li>
+<li><a href="#_6" class="toc-h2">附录：命令速查表</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>BMAD-METHOD 学习教程</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="bmad-method">BMAD-METHOD 学习教程</h1>
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速入门">快速入门</a></li>
+<li><a href="#二agent-命令详解">Agent 命令详解</a></li>
+<li><a href="#三实战案例构建-todo-cli">实战案例：构建 Todo CLI</a></li>
+<li><a href="#四进阶用法">进阶用法</a></li>
+<li><a href="#五最佳实践">最佳实践</a></li>
+<li><a href="#六故障排除">故障排除</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速入门</h2>
+<h3 id="11">1.1 环境准备</h3>
+<p><strong>系统要求</strong>：
+- Node.js 18.0 或更高版本
+- npm 9.0 或更高版本
+- Git</p>
+<p><strong>推荐工具</strong>（任选其一）：
+- Claude Code CLI
+- Cursor IDE
+- Windsurf IDE
+- VS Code + Cline/RooCode 扩展</p>
+<h3 id="12-bmad-method">1.2 安装 BMAD-METHOD</h3>
+<p><strong>方式一：交互式安装</strong></p>
+<pre><code class="language-bash"># 创建项目目录
+mkdir my-project
+cd my-project
+
+# 运行安装命令
+npx bmad-method install
+</code></pre>
+<p>安装过程会询问：
+1. 选择安装目录（默认当前目录）
+2. 选择模块（推荐新手选 BMM）
+3. 选择工具（根据你使用的 IDE 选择）</p>
+<p><strong>方式二：命令行安装</strong></p>
+<pre><code class="language-bash"># 快速安装（使用默认配置）
+npx bmad-method install --directory ./my-project --modules bmm --tools claude-code --yes
+</code></pre>
+<h3 id="13">1.3 验证安装</h3>
+<pre><code class="language-bash"># 查看项目结构
+ls -la
+
+# 应该看到以下目录
+# .bmad-core/  - BMAD 核心文件
+# docs/        - 文档目录
+# src/         - 源代码目录
+</code></pre>
+<h3 id="14-bmad">1.4 第一个 BMAD 项目</h3>
+<p><strong>Step 1：启动需求分析</strong></p>
+<p>在你的 IDE 或 Claude Code 中输入：</p>
+<pre><code>/analyst
+</code></pre>
+<p>然后描述你的项目需求：</p>
+<pre><code>我需要开发一个命令行待办事项管理工具，主要功能包括：
+1. 添加待办事项
+2. 列出所有待办事项
+3. 标记完成
+4. 删除待办事项
+</code></pre>
+<p><strong>Step 2：生成 PRD</strong></p>
+<pre><code>/pm
+</code></pre>
+<p>PM Agent 会基于 Analyst 的输出生成 PRD 文档。</p>
+<p><strong>Step 3：设计架构</strong></p>
+<pre><code>/architect
+</code></pre>
+<p>Architect Agent 会设计系统架构和技术选型。</p>
+<p><strong>Step 4：拆分任务</strong></p>
+<pre><code>/sm
+</code></pre>
+<p>Scrum Master Agent 会将功能拆分为可执行的 Story。</p>
+<p><strong>Step 5：开始开发</strong></p>
+<pre><code>/dev story 1.1
+</code></pre>
+<p>Developer Agent 会开始实现第一个 Story。</p>
+<hr />
+<h2 id="agent">二、Agent 命令详解</h2>
+<h3 id="21-analyst">2.1 Analyst（业务分析师）</h3>
+<p><strong>命令</strong>：<code>/analyst</code></p>
+<p><strong>职责</strong>：
+- 收集和分析业务需求
+- 识别用户痛点和机会
+- 定义业务目标和成功指标
+- 输出需求分析文档</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code>/analyst
+
+我正在开发一个电商网站，目标用户是小型商家。
+他们需要一个简单的库存管理系统。
+主要痛点是：
+1. 手动记录容易出错
+2. 库存预警不及时
+3. 多渠道销售难以同步
+</code></pre>
+<p><strong>输出</strong>：
+- 业务需求文档（保存到 <code>docs/requirements.md</code>）
+- 用户画像
+- 业务流程图</p>
+<h3 id="22-pm">2.2 PM（产品经理）</h3>
+<p><strong>命令</strong>：<code>/pm</code></p>
+<p><strong>职责</strong>：
+- 编写产品需求文档（PRD）
+- 定义功能规格
+- 设定优先级
+- 规划发布路线图</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code>/pm
+
+基于之前的分析，请帮我编写 PRD。
+MVP 版本只需要核心功能。
+</code></pre>
+<p><strong>输出</strong>：
+- PRD 文档（保存到 <code>docs/prd.md</code>）
+- 功能清单
+- 优先级矩阵</p>
+<h3 id="23-architect">2.3 Architect（架构师）</h3>
+<p><strong>命令</strong>：<code>/architect</code></p>
+<p><strong>职责</strong>：
+- 设计系统架构
+- 选择技术栈
+- 定义数据模型
+- 设计 API 接口
+- 规划部署架构</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code>/architect
+
+技术要求：
+- 后端使用 Python FastAPI
+- 数据库使用 PostgreSQL
+- 前端使用 React
+- 需要支持水平扩展
+</code></pre>
+<p><strong>输出</strong>：
+- 架构设计文档（保存到 <code>docs/architecture.md</code>）
+- 数据模型
+- API 设计
+- 技术选型说明</p>
+<h3 id="24-scrum-master">2.4 Scrum Master（敏捷教练）</h3>
+<p><strong>命令</strong>：<code>/sm</code></p>
+<p><strong>职责</strong>：
+- 将功能拆分为 Epic 和 Story
+- 估算工作量
+- 安排迭代计划
+- 跟踪进度</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code>/sm
+
+请将 PRD 中的功能拆分为 Story。
+每个 Story 应该能在 1-2 天内完成。
+</code></pre>
+<p><strong>输出</strong>：
+- Story 文件（保存到 <code>docs/stories/</code>）
+- 迭代计划
+- 依赖关系图</p>
+<h3 id="25-developer">2.5 Developer（开发者）</h3>
+<p><strong>命令</strong>：<code>/dev</code></p>
+<p><strong>职责</strong>：
+- 实现 Story 中定义的功能
+- 编写代码
+- 编写单元测试
+- 代码重构</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code># 开始实现特定 Story
+/dev story 1.1
+
+# 或者让 AI 选择下一个待处理的 Story
+/dev next
+</code></pre>
+<p><strong>工作流程</strong>：
+1. 加载 Story 上下文
+2. 加载相关架构文档
+3. 实现代码
+4. 编写测试
+5. 更新 Story 状态</p>
+<h3 id="26-qa">2.6 QA（测试工程师）</h3>
+<p><strong>命令</strong>：<code>/qa</code></p>
+<p><strong>职责</strong>：
+- 设计测试用例
+- 执行测试
+- 报告缺陷
+- 验证修复</p>
+<p><strong>使用示例</strong>：</p>
+<pre><code># 测试特定 Story
+/qa story 1.1
+
+# 运行所有测试
+/qa all
+</code></pre>
+<h3 id="27-agent">2.7 其他 Agent</h3>
+<p><strong>UX Designer</strong>：<code>/ux</code></p>
+<pre><code>/ux
+
+请设计用户注册流程的交互。
+需要考虑：
+- 表单验证反馈
+- 错误处理
+- 成功状态
+</code></pre>
+<p><strong>Product Owner</strong>：<code>/po</code></p>
+<pre><code>/po
+
+验收 Story 1.1 的实现。
+检查是否满足验收标准。
+</code></pre>
+<hr />
+<h2 id="todo-cli">三、实战案例：构建 Todo CLI</h2>
+<h3 id="31">3.1 项目初始化</h3>
+<pre><code class="language-bash"># 创建项目
+mkdir todo-cli
+cd todo-cli
+
+# 初始化 Git
+git init
+
+# 安装 BMAD
+npx bmad-method install --modules bmm --tools claude-code --yes
+</code></pre>
+<h3 id="32-phase-1-agentic-planning">3.2 Phase 1: Agentic Planning</h3>
+<p><strong>Step 1: 需求分析</strong></p>
+<pre><code>/analyst
+
+项目名称：Todo CLI
+项目描述：命令行待办事项管理工具
+
+目标用户：
+- 开发者
+- 命令行爱好者
+- 需要快速记录任务的用户
+
+核心功能：
+1. 添加任务（add）
+2. 列出任务（list）
+3. 完成任务（done）
+4. 删除任务（delete）
+5. 清空已完成任务（clear）
+
+非功能需求：
+- 响应时间 &lt; 100ms
+- 支持离线使用
+- 数据本地存储
+</code></pre>
+<p><strong>Step 2: 编写 PRD</strong></p>
+<pre><code>/pm
+
+基于需求分析，编写 PRD。
+
+MVP 范围：
+- 仅实现核心 CRUD 功能
+- 使用 JSON 文件存储
+- 单用户模式
+
+暂不包含：
+- 多用户支持
+- 云同步
+- 提醒功能
+</code></pre>
+<p><strong>Step 3: 架构设计</strong></p>
+<pre><code>/architect
+
+技术栈：
+- 语言：Python 3.10+
+- CLI 框架：Click
+- 存储：JSON 文件
+- 测试：pytest
+
+项目结构：
+todo-cli/
+├── todo/
+│   ├── __init__.py
+│   ├── cli.py       # CLI 入口
+│   ├── models.py    # 数据模型
+│   ├── storage.py   # 存储层
+│   └── commands/    # 命令实现
+│       ├── add.py
+│       ├── list.py
+│       ├── done.py
+│       └── delete.py
+├── tests/
+├── pyproject.toml
+└── README.md
+</code></pre>
+<p><strong>Step 4: 任务拆分</strong></p>
+<pre><code>/sm
+
+请将功能拆分为 Story，每个 Story 应该：
+- 独立可测试
+- 1-2 小时完成
+- 有明确的验收标准
+</code></pre>
+<p>预期的 Story 列表：</p>
+<table>
+<thead>
+<tr>
+<th>Story</th>
+<th>描述</th>
+<th>预估</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>项目初始化和基础结构</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>数据模型和存储层</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>2.1</td>
+<td>实现 add 命令</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>实现 list 命令</td>
+<td>0.5h</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>实现 done 命令</td>
+<td>0.5h</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>实现 delete 命令</td>
+<td>0.5h</td>
+</tr>
+<tr>
+<td>3.1</td>
+<td>单元测试</td>
+<td>1h</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>文档和发布</td>
+<td>0.5h</td>
+</tr>
+</tbody>
+</table>
+<h3 id="33-phase-2-context-engineered-development">3.3 Phase 2: Context-Engineered Development</h3>
+<p><strong>Story 1.1: 项目初始化</strong></p>
+<pre><code>/dev story 1.1
+
+实现项目初始化：
+1. 创建 pyproject.toml
+2. 设置项目结构
+3. 配置 Click 入口
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="language-python"># pyproject.toml
+[project]
+name = &quot;todo-cli&quot;
+version = &quot;0.1.0&quot;
+requires-python = &quot;&gt;=3.10&quot;
+dependencies = [&quot;click&gt;=8.0&quot;]
+
+[project.scripts]
+todo = &quot;todo.cli:main&quot;
+
+# todo/cli.py
+import click
+
+@click.group()
+def main():
+    &quot;&quot;&quot;Todo CLI - 命令行待办事项管理&quot;&quot;&quot;
+    pass
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p><strong>Story 1.2: 数据模型和存储层</strong></p>
+<pre><code>/dev story 1.2
+
+实现数据模型和存储：
+1. Todo 数据类
+2. JSON 文件存储
+3. CRUD 操作
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="language-python"># todo/models.py
+from dataclasses import dataclass, asdict
+from datetime import datetime
+from typing import Optional
+import json
+
+@dataclass
+class Todo:
+    id: int
+    title: str
+    completed: bool = False
+    created_at: str = &quot;&quot;
+
+    def __post_init__(self):
+        if not self.created_at:
+            self.created_at = datetime.now().isoformat()
+
+    def to_dict(self):
+        return asdict(self)
+
+# todo/storage.py
+import json
+from pathlib import Path
+from typing import List, Optional
+from .models import Todo
+
+class TodoStorage:
+    def __init__(self, file_path: str = &quot;~/.todos.json&quot;):
+        self.file_path = Path(file_path).expanduser()
+
+    def load_all(self) -&gt; List[Todo]:
+        if not self.file_path.exists():
+            return []
+        with open(self.file_path) as f:
+            data = json.load(f)
+        return [Todo(**item) for item in data]
+
+    def save_all(self, todos: List[Todo]):
+        with open(self.file_path, 'w') as f:
+            json.dump([t.to_dict() for t in todos], f, indent=2)
+
+    def add(self, title: str) -&gt; Todo:
+        todos = self.load_all()
+        new_id = max([t.id for t in todos], default=0) + 1
+        todo = Todo(id=new_id, title=title)
+        todos.append(todo)
+        self.save_all(todos)
+        return todo
+
+    def get(self, todo_id: int) -&gt; Optional[Todo]:
+        todos = self.load_all()
+        for todo in todos:
+            if todo.id == todo_id:
+                return todo
+        return None
+
+    def update(self, todo_id: int, **kwargs) -&gt; Optional[Todo]:
+        todos = self.load_all()
+        for i, todo in enumerate(todos):
+            if todo.id == todo_id:
+                for key, value in kwargs.items():
+                    setattr(todo, key, value)
+                self.save_all(todos)
+                return todo
+        return None
+
+    def delete(self, todo_id: int) -&gt; bool:
+        todos = self.load_all()
+        for i, todo in enumerate(todos):
+            if todo.id == todo_id:
+                todos.pop(i)
+                self.save_all(todos)
+                return True
+        return False
+</code></pre>
+<p><strong>Story 2.1-2.4: 实现命令</strong></p>
+<pre><code>/dev story 2.1
+
+实现 add 命令
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="language-python"># todo/commands/add.py
+import click
+from ..storage import TodoStorage
+
+@click.command()
+@click.argument('title')
+def add(title: str):
+    &quot;&quot;&quot;添加新任务&quot;&quot;&quot;
+    storage = TodoStorage()
+    todo = storage.add(title)
+    click.echo(f&quot;✓ 已添加任务 #{todo.id}: {title}&quot;)
+
+# 在 cli.py 中注册
+from .commands.add import add
+main.add_command(add)
+</code></pre>
+<pre><code>/dev story 2.2
+
+实现 list 命令
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="language-python"># todo/commands/list.py
+import click
+from ..storage import TodoStorage
+
+@click.command()
+@click.option('--all', '-a', 'show_all', is_flag=True, help='显示所有任务')
+def list_cmd(show_all: bool):
+    &quot;&quot;&quot;列出任务&quot;&quot;&quot;
+    storage = TodoStorage()
+    todos = storage.load_all()
+
+    if not todos:
+        click.echo(&quot;暂无任务&quot;)
+        return
+
+    for todo in todos:
+        status = &quot;✓&quot; if todo.completed else &quot; &quot;
+        if show_all or not todo.completed:
+            click.echo(f&quot;[{status}] #{todo.id}: {todo.title}&quot;)
+</code></pre>
+<p><strong>测试每个 Story</strong></p>
+<pre><code>/qa story 1.1
+/qa story 1.2
+/qa story 2.1
+</code></pre>
+<h3 id="34">3.4 完整的项目结构</h3>
+<pre><code>todo-cli/
+├── .bmad-core/
+│   └── agents/
+├── docs/
+│   ├── prd.md
+│   ├── architecture.md
+│   └── stories/
+│       ├── 1.1.project-init.md
+│       ├── 1.2.models-storage.md
+│       ├── 2.1.cmd-add.md
+│       ├── 2.2.cmd-list.md
+│       ├── 2.3.cmd-done.md
+│       └── 2.4.cmd-delete.md
+├── todo/
+│   ├── __init__.py
+│   ├── cli.py
+│   ├── models.py
+│   ├── storage.py
+│   └── commands/
+│       ├── __init__.py
+│       ├── add.py
+│       ├── list.py
+│       ├── done.py
+│       └── delete.py
+├── tests/
+│   ├── __init__.py
+│   ├── test_models.py
+│   └── test_storage.py
+├── pyproject.toml
+└── README.md
+</code></pre>
+<h3 id="35">3.5 使用项目</h3>
+<pre><code class="language-bash"># 安装
+pip install -e .
+
+# 添加任务
+todo add &quot;学习 BMAD-METHOD&quot;
+todo add &quot;完成项目文档&quot;
+
+# 列出任务
+todo list
+
+# 完成任务
+todo done 1
+
+# 删除任务
+todo delete 2
+</code></pre>
+<hr />
+<h2 id="_3">四、进阶用法</h2>
+<h3 id="41-agent">4.1 自定义 Agent</h3>
+<p>创建自定义 Agent 以适应特定需求：</p>
+<p><strong>Step 1: 创建 Agent 文件</strong></p>
+<pre><code class="language-markdown"># .bmad-core/agents/security-reviewer.md
+
+## Role
+Security Reviewer - 安全审查专家
+
+## Responsibilities
+- 审查代码安全漏洞
+- 检查认证授权实现
+- 识别潜在的安全风险
+- 提供安全改进建议
+
+## Skills
+- OWASP Top 10 知识
+- 代码审计经验
+- 安全测试方法论
+
+## Interaction
+- 在 /dev 完成实现后调用
+- 输出到 docs/security-review/
+
+## Commands
+/security - 启动安全审查
+</code></pre>
+<p><strong>Step 2: 使用自定义 Agent</strong></p>
+<pre><code>/security
+
+请审查 Story 2.1 的实现，关注：
+1. 输入验证
+2. 注入攻击防护
+3. 数据安全
+</code></pre>
+<h3 id="42">4.2 多模块组合</h3>
+<p>组合多个模块以适应复杂项目：</p>
+<pre><code class="language-bash"># 安装 BMM + TEA
+npx bmad-method install --modules bmm,tea --tools claude-code --yes
+</code></pre>
+<p>使用 TEA 模块进行测试驱动开发：</p>
+<pre><code># 先写测试
+/tea design auth-feature
+
+# 再实现
+/dev story 1.1
+
+# 验证测试
+/tea verify auth-feature
+</code></pre>
+<h3 id="43-document-sharding">4.3 Document Sharding 实践</h3>
+<p>对于大型项目，拆分文档：</p>
+<pre><code>docs/
+├── architecture/
+│   ├── 00-overview.md
+│   ├── 01-frontend.md
+│   ├── 02-backend.md
+│   ├── 03-database.md
+│   └── 04-deployment.md
+├── prd/
+│   ├── 00-overview.md
+│   ├── 01-user-management/
+│   │   ├── auth.md
+│   │   └── profile.md
+│   └── 02-product-catalog/
+│       ├── browse.md
+│       └── search.md
+└── stories/
+    ├── epic-1-user-management/
+    │   ├── 1.1.user-registration.md
+    │   ├── 1.2.user-login.md
+    │   └── 1.3.password-reset.md
+    └── epic-2-product-catalog/
+        ├── 2.1.product-list.md
+        └── 2.2.product-search.md
+</code></pre>
+<h3 id="44-cicd">4.4 CI/CD 集成</h3>
+<p>在 CI/CD 流程中使用 BMAD：</p>
+<pre><code class="language-yaml"># .github/workflows/bmad-check.yml
+name: BMAD Check
+
+on: [pull_request]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install BMAD
+        run: npm install -g bmad-method
+
+      - name: Verify Stories
+        run: |
+          # 检查所有已完成的 Story 是否有对应的测试
+          npx bmad-method verify --all-stories
+</code></pre>
+<hr />
+<h2 id="_4">五、最佳实践</h2>
+<h3 id="51-story">5.1 Story 编写规范</h3>
+<p><strong>好的 Story</strong>：</p>
+<pre><code class="language-markdown"># Story 1.1: User Registration
+
+## Context
+- Epic: User Management
+- Priority: High
+- Dependencies: None
+
+## User Story
+As a new user, I want to register with my email,
+so that I can access the system.
+
+## Acceptance Criteria
+- [ ] User can register with email and password
+- [ ] Email must be valid format
+- [ ] Password must be at least 8 characters
+- [ ] Duplicate emails are rejected with clear message
+- [ ] Success registration shows confirmation
+
+## Technical Notes
+- Use bcrypt for password hashing
+- Validate email with regex
+- Store user in users table
+
+## Definition of Done
+- [ ] Code implemented
+- [ ] Unit tests passing
+- [ ] Code reviewed
+- [ ] Documentation updated
+</code></pre>
+<p><strong>不好的 Story</strong>：</p>
+<pre><code class="language-markdown"># Story 1.1: User Registration
+
+实现用户注册功能。
+</code></pre>
+<h3 id="52">5.2 上下文管理</h3>
+<p><strong>原则</strong>：
+1. 每次只加载必要的上下文
+2. 定期归档已完成的 Story
+3. 保持架构文档更新
+4. 使用引用而非复制</p>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-markdown"># 在 Story 中引用架构
+
+## References
+- Architecture: docs/architecture/02-backend.md#authentication
+- PRD: docs/prd/01-user-management/auth.md
+- Related Story: 1.0 (User Model)
+</code></pre>
+<h3 id="53">5.3 迭代工作流</h3>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│                    迭代周期                         │
+│                                                     │
+│  Day 1: Planning                                    │
+│  ├── /analyst - 收集新需求                          │
+│  ├── /pm - 更新 PRD                                 │
+│  └── /sm - 拆分新 Story                             │
+│                                                     │
+│  Day 2-4: Development                               │
+│  ├── /dev story X.X - 实现                          │
+│  ├── /qa story X.X - 测试                           │
+│  └── 重复直到完成所有 Story                          │
+│                                                     │
+│  Day 5: Review &amp; Deploy                             │
+│  ├── /po - 验收                                     │
+│  ├── 部署到测试环境                                  │
+│  └── 准备下一迭代                                    │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="54">5.4 常见陷阱</h3>
+<ol>
+<li><strong>过度规划</strong></li>
+<li>问题：规划阶段花费太多时间</li>
+<li>
+<p>解决：MVP 优先，迭代改进</p>
+</li>
+<li>
+<p><strong>上下文膨胀</strong></p>
+</li>
+<li>问题：加载太多文档导致效率降低</li>
+<li>
+<p>解决：使用 Document Sharding，只加载必要的</p>
+</li>
+<li>
+<p><strong>忽略测试</strong></p>
+</li>
+<li>问题：跳过 QA 步骤</li>
+<li>
+<p>解决：每个 Story 必须通过测试</p>
+</li>
+<li>
+<p><strong>文档不一致</strong></p>
+</li>
+<li>问题：代码更新但文档未更新</li>
+<li>解决：每次迭代结束时同步更新</li>
+</ol>
+<hr />
+<h2 id="_5">六、故障排除</h2>
+<h3 id="61">6.1 常见错误</h3>
+<p><strong>错误：找不到 Agent 命令</strong></p>
+<pre><code>Error: Unknown command '/analyst'
+</code></pre>
+<p><strong>解决方案</strong>：
+1. 确认 BMAD 已正确安装
+2. 检查 <code>.bmad-core/agents/</code> 目录存在
+3. 确认使用的工具支持 BMAD</p>
+<p><strong>错误：上下文超长</strong></p>
+<pre><code>Error: Context length exceeded
+</code></pre>
+<p><strong>解决方案</strong>：
+1. 使用 Document Sharding 拆分文档
+2. 减少加载的文档数量
+3. 归档已完成的 Story</p>
+<p><strong>错误：Story 依赖冲突</strong></p>
+<pre><code>Error: Story 2.1 depends on incomplete Story 1.3
+</code></pre>
+<p><strong>解决方案</strong>：
+1. 先完成依赖的 Story
+2. 或者更新依赖关系</p>
+<h3 id="62">6.2 调试技巧</h3>
+<p><strong>查看当前状态</strong>：</p>
+<pre><code class="language-bash"># 查看所有 Story 状态
+cat docs/stories/status.json
+
+# 查看项目结构
+tree docs/
+</code></pre>
+<p><strong>重置 Story 状态</strong>：</p>
+<pre><code class="language-bash"># 重置特定 Story
+echo '{&quot;status&quot;: &quot;pending&quot;}' &gt; docs/stories/1.1.status.json
+</code></pre>
+<p><strong>清理并重新开始</strong>：</p>
+<pre><code class="language-bash"># 备份当前进度
+cp -r docs docs.backup
+
+# 重新初始化
+rm -rf docs
+npx bmad-method install --modules bmm --tools claude-code --yes
+</code></pre>
+<h3 id="63">6.3 获取帮助</h3>
+<ul>
+<li><strong>GitHub Issues</strong>: https://github.com/bmad-code-org/BMAD-METHOD/issues</li>
+<li><strong>GitHub Discussions</strong>: https://github.com/bmad-code-org/BMAD-METHOD/discussions</li>
+<li><strong>官方文档</strong>: https://docs.bmad-method.org/</li>
+</ul>
+<hr />
+<h2 id="_6">附录：命令速查表</h2>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>用途</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/analyst</code></td>
+<td>启动业务分析师</td>
+<td><code>/analyst</code></td>
+</tr>
+<tr>
+<td><code>/pm</code></td>
+<td>启动产品经理</td>
+<td><code>/pm</code></td>
+</tr>
+<tr>
+<td><code>/architect</code></td>
+<td>启动架构师</td>
+<td><code>/architect</code></td>
+</tr>
+<tr>
+<td><code>/sm</code></td>
+<td>启动敏捷教练</td>
+<td><code>/sm</code></td>
+</tr>
+<tr>
+<td><code>/dev</code></td>
+<td>启动开发者</td>
+<td><code>/dev story 1.1</code></td>
+</tr>
+<tr>
+<td><code>/qa</code></td>
+<td>启动测试工程师</td>
+<td><code>/qa story 1.1</code></td>
+</tr>
+<tr>
+<td><code>/ux</code></td>
+<td>启动 UX 设计师</td>
+<td><code>/ux</code></td>
+</tr>
+<tr>
+<td><code>/po</code></td>
+<td>启动产品负责人</td>
+<td><code>/po</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>教程生成时间：2026-03-21</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

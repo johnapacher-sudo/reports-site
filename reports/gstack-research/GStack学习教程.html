@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GStack 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">从零开始掌握 GStack - YC CEO 的 Claude Code 工作流配置 | 教程日期：2026-03-22（更新）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、环境准备</a></li>
+<li><a href="#11" class="toc-h3">1.1 前置知识</a></li>
+<li><a href="#12" class="toc-h3">1.2 系统要求</a></li>
+<li><a href="#13-claude-code" class="toc-h3">1.3 安装 Claude Code</a></li>
+<li><a href="#14-bun" class="toc-h3">1.4 安装 Bun</a></li>
+<li><a href="#15-gstack" class="toc-h3">1.5 安装 GStack</a></li>
+<li><a href="#16-claudemd" class="toc-h3">1.6 配置 CLAUDE.md</a></li>
+<li><a href="#17" class="toc-h3">1.7 验证安装</a></li>
+<li><a href="#_3" class="toc-h2">二、快速开始</a></li>
+<li><a href="#21-hello-world" class="toc-h3">2.1 Hello World：第一次使用</a></li>
+<li><a href="#22" class="toc-h3">2.2 完整工作流演示</a></li>
+<li><a href="#_4" class="toc-h2">三、核心概念</a></li>
+<li><a href="#31" class="toc-h3">3.1 概念图谱</a></li>
+<li><a href="#32" class="toc-h3">3.2 核心概念详解</a></li>
+<li><a href="#cognitive-mode" class="toc-h4">认知模式 (Cognitive Mode)</a></li>
+<li><a href="#skill" class="toc-h4">技能 (Skill)</a></li>
+<li><a href="#workflow" class="toc-h4">工作流 (Workflow)</a></li>
+<li><a href="#33" class="toc-h3">3.3 术语表</a></li>
+<li><a href="#_5" class="toc-h2">四、技能详解</a></li>
+<li><a href="#41-plan-ceo-review-" class="toc-h3">4.1 /plan-ceo-review - 创始人模式</a></li>
+<li><a href="#_6" class="toc-h4">设计目的</a></li>
+<li><a href="#_7" class="toc-h4">使用场景</a></li>
+<li><a href="#_8" class="toc-h4">使用示例</a></li>
+<li><a href="#42-plan-eng-review-" class="toc-h3">4.2 /plan-eng-review - 工程经理模式</a></li>
+<li><a href="#_9" class="toc-h4">设计目的</a></li>
+<li><a href="#_10" class="toc-h4">使用场景</a></li>
+<li><a href="#_11" class="toc-h4">使用示例</a></li>
+<li><a href="#43-review-" class="toc-h3">4.3 /review - 偏执审查模式</a></li>
+<li><a href="#_12" class="toc-h4">设计目的</a></li>
+<li><a href="#_13" class="toc-h4">使用场景</a></li>
+<li><a href="#_14" class="toc-h4">使用示例</a></li>
+<li><a href="#44-ship-" class="toc-h3">4.4 /ship - 发布模式</a></li>
+<li><a href="#_15" class="toc-h4">设计目的</a></li>
+<li><a href="#_16" class="toc-h4">使用场景</a></li>
+<li><a href="#_17" class="toc-h4">使用示例</a></li>
+<li><a href="#45-browse-" class="toc-h3">4.5 /browse - 浏览器模式</a></li>
+<li><a href="#_18" class="toc-h4">设计目的</a></li>
+<li><a href="#_19" class="toc-h4">使用场景</a></li>
+<li><a href="#_20" class="toc-h4">使用示例</a></li>
+<li><a href="#46-qa-qa" class="toc-h3">4.6 /qa - QA 模式</a></li>
+<li><a href="#_21" class="toc-h4">设计目的</a></li>
+<li><a href="#_22" class="toc-h4">使用场景</a></li>
+<li><a href="#_23" class="toc-h4">使用示例</a></li>
+<li><a href="#47-retro-" class="toc-h3">4.7 /retro - 复盘模式</a></li>
+<li><a href="#_24" class="toc-h4">设计目的</a></li>
+<li><a href="#_25" class="toc-h4">使用场景</a></li>
+<li><a href="#_26" class="toc-h4">使用示例</a></li>
+<li><a href="#_27" class="toc-h2">五、实战案例</a></li>
+<li><a href="#51" class="toc-h3">5.1 案例：电商网站购物车功能</a></li>
+<li><a href="#52-conductor" class="toc-h3">5.2 案例：使用 Conductor 并行开发</a></li>
+<li><a href="#_28" class="toc-h2">六、进阶主题</a></li>
+<li><a href="#61" class="toc-h3">6.1 自定义技能</a></li>
+<li><a href="#62" class="toc-h3">6.2 项目级配置</a></li>
+<li><a href="#63-cicd" class="toc-h3">6.3 与 CI/CD 集成</a></li>
+<li><a href="#64-greptile" class="toc-h3">6.4 Greptile 集成配置</a></li>
+<li><a href="#_29" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1" class="toc-h3">Q1: 技能不显示怎么办？</a></li>
+<li><a href="#q2" class="toc-h3">Q2: 浏览器二进制编译失败？</a></li>
+<li><a href="#q3-cookies" class="toc-h3">Q3: Cookies 导入失败？</a></li>
+<li><a href="#q4-gstack" class="toc-h3">Q4: 如何升级 GStack？</a></li>
+<li><a href="#q5-windows" class="toc-h3">Q5: Windows 支持吗？</a></li>
+<li><a href="#q6" class="toc-h3">Q6: 如何卸载？</a></li>
+<li><a href="#_30" class="toc-h2">八、参考资料</a></li>
+<li><a href="#_31" class="toc-h3">官方资源</a></li>
+<li><a href="#_32" class="toc-h3">相关工具</a></li>
+<li><a href="#_33" class="toc-h3">社区</a></li>
+<li><a href="#_34" class="toc-h2">学习路线图</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GStack 学习教程</h1>
+                        <div class="article-meta">从零开始掌握 GStack - YC CEO 的 Claude Code 工作流配置<br>教程日期：2026-03-22（更新）</div>
+                    </header>
+                    <h1 id="gstack">GStack 学习教程</h1>
+<blockquote>
+<p>从零开始掌握 GStack - YC CEO 的 Claude Code 工作流配置</p>
+<p>教程日期：2026-03-22（更新）</p>
+</blockquote>
+<hr />
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一环境准备">环境准备</a></li>
+<li><a href="#二快速开始">快速开始</a></li>
+<li><a href="#三核心概念">核心概念</a></li>
+<li><a href="#四技能详解">技能详解</a></li>
+<li><a href="#五实战案例">实战案例</a></li>
+<li><a href="#六进阶主题">进阶主题</a></li>
+<li><a href="#七常见问题">常见问题</a></li>
+<li><a href="#八参考资料">参考资料</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、环境准备</h2>
+<h3 id="11">1.1 前置知识</h3>
+<p>学习 GStack 前建议了解：</p>
+<table>
+<thead>
+<tr>
+<th>知识领域</th>
+<th>重要程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code 基础</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>理解 Claude Code CLI 的基本用法</td>
+</tr>
+<tr>
+<td>Git 工作流</td>
+<td>⭐⭐⭐⭐</td>
+<td>PR、分支、合并等概念</td>
+</tr>
+<tr>
+<td>命令行基础</td>
+<td>⭐⭐⭐⭐</td>
+<td>能够运行终端命令</td>
+</tr>
+<tr>
+<td>软件开发流程</td>
+<td>⭐⭐⭐</td>
+<td>理解规划、开发、测试、发布流程</td>
+</tr>
+</tbody>
+</table>
+<h3 id="12">1.2 系统要求</h3>
+<pre><code>支持平台：
+├── macOS (x64/arm64) ✅
+├── Linux (x64/arm64) ✅
+└── Windows ❌ (浏览器二进制暂不支持)
+
+必需软件：
+├── Claude Code CLI (最新版)
+├── Git
+└── Bun v1.0+ (用于编译浏览器二进制)
+</code></pre>
+<h3 id="13-claude-code">1.3 安装 Claude Code</h3>
+<pre><code class="language-bash"># macOS/Linux
+curl -fsSL https://claude.ai/install.sh | sh
+
+# 或使用 npm
+npm install -g @anthropic-ai/claude-code
+
+# 验证安装
+claude --version
+</code></pre>
+<h3 id="14-bun">1.4 安装 Bun</h3>
+<pre><code class="language-bash"># macOS/Linux
+curl -fsSL https://bun.sh/install | bash
+
+# 验证安装
+bun --version
+</code></pre>
+<h3 id="15-gstack">1.5 安装 GStack</h3>
+<p>打开 Claude Code，粘贴以下命令：</p>
+<pre><code>安装 gstack: 运行 `git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack &amp;&amp; cd ~/.claude/skills/gstack &amp;&amp; ./setup` 然后在 CLAUDE.md 中添加 gstack 配置
+</code></pre>
+<p>或者手动执行：</p>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+
+# 运行安装脚本
+cd ~/.claude/skills/gstack &amp;&amp; ./setup
+</code></pre>
+<h3 id="16-claudemd">1.6 配置 CLAUDE.md</h3>
+<p>在 <code>~/.claude/CLAUDE.md</code> 中添加以下内容：</p>
+<pre><code class="language-markdown">## gstack
+
+使用 gstack 的 /browse 技能进行所有 Web 浏览，不要使用 mcp__claude-in-chrome__* 工具。
+
+### 可用技能
+
+| 技能 | 用途 |
+|------|------|
+| /plan-ceo-review | 创始人模式 - 重新思考产品方向，找到 10 星产品 |
+| /plan-eng-review | 工程经理模式 - 锁定架构、数据流、边界条件 |
+| /review | 偏执审查模式 - 发现通过 CI 但可能爆炸的问题 |
+| /ship | 发布模式 - 自动化同步、测试、推送、创建 PR |
+| /browse | 浏览器模式 - 让 AI 拥有&quot;眼睛&quot;，自动化浏览 |
+| /qa | QA 模式 - 测试应用、发现 Bug、自动修复 |
+| /qa-only | 仅报告 QA 模式 - 只报告不修复 |
+| /setup-browser-cookies | 导入浏览器 Cookies |
+| /retro | 复盘模式 - 团队周度复盘 |
+| /document-release | 文档模式 - 更新项目文档 |
+</code></pre>
+<h3 id="17">1.7 验证安装</h3>
+<pre><code class="language-bash"># 检查技能文件
+ls ~/.claude/skills/gstack/
+
+# 应该看到：
+# plan-ceo-review.md
+# plan-eng-review.md
+# review.md
+# ship.md
+# browse.md
+# qa.md
+# ...
+
+# 检查符号链接
+ls -la ~/.claude/skills/ | grep -E &quot;browse|qa|review|ship&quot;
+</code></pre>
+<hr />
+<h2 id="_3">二、快速开始</h2>
+<h3 id="21-hello-world">2.1 Hello World：第一次使用</h3>
+<p>在 Claude Code 中：</p>
+<pre><code>你: /plan-ceo-review
+
+Claude: 我现在处于 CEO/创始人模式。
+        请描述你想要构建的功能或产品，
+        我会帮助你重新思考问题，
+        找到隐藏在需求中的 10 星产品。
+
+你: 我想给电商网站添加一个商品收藏功能
+
+Claude: &quot;商品收藏&quot;是一个起点，但让我们思考一下真正的用户需求...
+
+        用户真正想要的是什么？
+        - 他们想记住感兴趣的商品
+        - 他们想比较不同商品
+        - 他们想等待降价通知
+        - 他们想分享给朋友
+
+        10 星版本可能包括：
+        1. 智能收藏 - 自动分类和标签
+        2. 价格追踪 - 降价时主动通知
+        3. 比较视图 - 并排对比收藏商品
+        4. 分享和协作 - 与家人朋友共享收藏夹
+        5. 智能推荐 - 基于收藏推荐相似商品
+
+        你想要实现哪些功能？
+</code></pre>
+<h3 id="22">2.2 完整工作流演示</h3>
+<pre><code># 1. 产品规划
+你: /plan-ceo-review
+    我想添加用户头像上传功能
+
+# 2. 技术规划
+你: /plan-eng-review
+    好的，我们决定了要实现：头像上传、裁剪、压缩、CDN 存储
+
+# 3. 实现
+你: [退出计划模式，开始编码]
+    请实现头像上传功能
+
+# 4. 代码审查
+你: /review
+
+# 5. 发布
+你: /ship
+
+# 6. 测试
+你: /qa
+</code></pre>
+<hr />
+<h2 id="_4">三、核心概念</h2>
+<h3 id="31">3.1 概念图谱</h3>
+<pre><code>                        ┌─────────────────┐
+                        │     GStack      │
+                        │   (工具集)       │
+                        └────────┬────────┘
+                                 │
+        ┌────────────────────────┼────────────────────────┐
+        │                        │                        │
+        ▼                        ▼                        ▼
+┌───────────────┐        ┌───────────────┐        ┌───────────────┐
+│   Plan 技能    │        │  Execute 技能  │        │  Review 技能   │
+│  (规划阶段)    │        │  (执行阶段)    │        │  (审查阶段)    │
+├───────────────┤        ├───────────────┤        ├───────────────┤
+│/plan-ceo-review│        │    /ship      │        │   /review     │
+│/plan-eng-review│        │    /browse    │        │   /qa         │
+│               │        │    /qa        │        │   /qa-only    │
+└───────────────┘        └───────────────┘        └───────────────┘
+        │                        │                        │
+        └────────────────────────┼────────────────────────┘
+                                 │
+                                 ▼
+                        ┌───────────────┐
+                        │   Supporting   │
+                        │     技能       │
+                        ├───────────────┤
+                        │/setup-browser │
+                        │   -cookies    │
+                        │    /retro     │
+                        │/document-     │
+                        │   release     │
+                        └───────────────┘
+</code></pre>
+<h3 id="32">3.2 核心概念详解</h3>
+<h4 id="cognitive-mode">认知模式 (Cognitive Mode)</h4>
+<p>GStack 的核心思想是让 AI 在不同的"认知模式"之间切换：</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                     认知模式切换                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│   创始人模式          工程经理模式         审查员模式            │
+│   /plan-ceo-review   /plan-eng-review    /review               │
+│                                                                  │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐        │
+│   │ 用户同理心   │    │ 技术严谨    │    │ 偏执审查    │        │
+│   │ 产品愿景    │    │ 架构设计    │    │ 风险发现    │        │
+│   │ 长期思考    │    │ 边界条件    │    │ 安全意识    │        │
+│   └─────────────┘    └─────────────┘    └─────────────┘        │
+│                                                                  │
+│   发布模式            QA 模式             文档模式              │
+│   /ship              /qa                 /document-release     │
+│                                                                  │
+│   ┌─────────────┐    ┌─────────────┐    ┌─────────────┐        │
+│   │ 执行效率    │    │ 质量保证    │    │ 清晰表达    │        │
+│   │ 自动化      │    │ Bug 发现    │    │ 一致性      │        │
+│   │ 可靠性      │    │ 修复验证    │    │ 完整性      │        │
+│   └─────────────┘    └─────────────┘    └─────────────┘        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h4 id="skill">技能 (Skill)</h4>
+<p>GStack 中的每个技能都是一个精心设计的 Markdown 提示词文件：</p>
+<pre><code>技能文件结构：
+~/.claude/skills/gstack/
+├── plan-ceo-review.md
+│   └── 内容：系统提示词 + 行为指南 + 示例
+├── plan-eng-review.md
+├── review.md
+├── ship.md
+└── ...
+</code></pre>
+<h4 id="workflow">工作流 (Workflow)</h4>
+<p>GStack 推荐的工作流顺序：</p>
+<pre><code>标准工作流：
+
+1. 规划阶段
+   ┌─────────────────┐
+   │ /plan-ceo-review │ → 确保方向正确
+   └────────┬────────┘
+            ↓
+   ┌─────────────────┐
+   │ /plan-eng-review │ → 确保架构可行
+   └────────┬────────┘
+            ↓
+2. 实现阶段
+   ┌─────────────────┐
+   │    正常编码      │ → Claude Code 标准模式
+   └────────┬────────┘
+            ↓
+3. 审查阶段
+   ┌─────────────────┐
+   │    /review       │ → 发现潜在问题
+   └────────┬────────┘
+            ↓
+4. 发布阶段
+   ┌─────────────────┐
+   │     /ship        │ → 自动化发布
+   └────────┬────────┘
+            ↓
+5. 验证阶段
+   ┌─────────────────┐
+   │      /qa         │ → 功能验证
+   └────────┬────────┘
+            ↓
+6. 文档阶段
+   ┌─────────────────┐
+   │ /document-release │ → 更新文档
+   └─────────────────┘
+</code></pre>
+<h3 id="33">3.3 术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>英文</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>技能</td>
+<td>Skill</td>
+<td>Claude Code 的可调用提示词模块</td>
+</tr>
+<tr>
+<td>认知模式</td>
+<td>Cognitive Mode</td>
+<td>AI 的思维方式（创始人/工程师/审查员等）</td>
+</tr>
+<tr>
+<td>工作流</td>
+<td>Workflow</td>
+<td>技能的组合使用顺序</td>
+</tr>
+<tr>
+<td>浏览器自动化</td>
+<td>Browser Automation</td>
+<td>通过 Playwright 控制 Chromium</td>
+</tr>
+<tr>
+<td>冒烟测试</td>
+<td>Smoke Test</td>
+<td>快速验证核心功能的测试</td>
+</tr>
+<tr>
+<td>复盘</td>
+<td>Retro</td>
+<td>团队周期性回顾和总结</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_5">四、技能详解</h2>
+<h3 id="41-plan-ceo-review-">4.1 <code>/plan-ceo-review</code> - 创始人模式</h3>
+<h4 id="_6">设计目的</h4>
+<p>重新思考问题，找到隐藏在需求中的 10 星产品。</p>
+<h4 id="_7">使用场景</h4>
+<ul>
+<li>开始新功能开发前</li>
+<li>不确定产品方向时</li>
+<li>想要挑战现有假设时</li>
+</ul>
+<h4 id="_8">使用示例</h4>
+<pre><code>你: /plan-ceo-review
+    我想给博客添加评论功能
+
+Claude: 让我们重新思考这个问题...
+
+        用户真正想要的是什么？
+        - 他们想要与作者互动
+        - 他们想要表达观点
+        - 他们想要看到其他读者的想法
+        - 他们想要建立社区感
+
+        &quot;评论功能&quot;是实现这些目标的一种方式，但不是唯一方式。
+
+        10 星版本可能包括：
+        1. 智能回复建议 - AI 帮助用户写出更好的评论
+        2. 评论质量评分 - 过滤低质量评论
+        3. 线程式讨论 - 支持深度对话
+        4. 作者互动标记 - 作者回复时高亮显示
+        5. 社区徽章 - 活跃评论者获得认可
+        6. 评论订阅 - 追踪感兴趣的讨论
+
+        你想要实现哪些功能？还是坚持基本评论功能？
+</code></pre>
+<h3 id="42-plan-eng-review-">4.2 <code>/plan-eng-review</code> - 工程经理模式</h3>
+<h4 id="_9">设计目的</h4>
+<p>锁定架构、数据流、边界条件和测试矩阵。</p>
+<h4 id="_10">使用场景</h4>
+<ul>
+<li>产品方向确定后</li>
+<li>需要技术方案时</li>
+<li>准备开始实现前</li>
+</ul>
+<h4 id="_11">使用示例</h4>
+<pre><code>你: /plan-eng-review
+    我们决定实现：智能回复建议 + 线程式讨论 + 作者互动标记
+
+Claude: 好的，让我设计技术方案...
+
+        ## 架构图
+
+        ┌─────────────────────────────────────────────┐
+        │                  Frontend                    │
+        │  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
+        │  │CommentList│  │ReplyBox │  │AITips  │     │
+        │  └────┬────┘  └────┬────┘  └────┬────┘     │
+        └───────┼────────────┼────────────┼──────────┘
+                │            │            │
+        ┌───────┴────────────┴────────────┴──────────┐
+        │                  API Layer                  │
+        │  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
+        │  │Comments │  │ Threads │  │  AI    │     │
+        │  │Controller│  │Service │  │Service │     │
+        │  └────┬────┘  └────┬────┘  └────┬────┘     │
+        └───────┼────────────┼────────────┼──────────┘
+                │            │            │
+        ┌───────┴────────────┴────────────┴──────────┐
+        │                 Storage                     │
+        │  ┌─────────┐  ┌─────────┐  ┌─────────┐     │
+        │  │PostgreSQL│  │  Redis  │  │OpenAI  │     │
+        │  │Comments │  │  Cache  │  │  API   │     │
+        │  └─────────┘  └─────────┘  └─────────┘     │
+        └─────────────────────────────────────────────┘
+
+        ## 数据流
+
+        1. 用户提交评论
+           → 验证内容
+           → 存储到 PostgreSQL
+           → 更新 Redis 缓存
+           → 触发 AI 回复建议生成
+
+        2. 加载评论列表
+           → 检查 Redis 缓存
+           → 缓存未命中则查询 PostgreSQL
+           → 组装嵌套结构
+           → 返回给前端
+
+        ## 边界条件
+
+        - 最大嵌套深度：5 层
+        - 评论长度：1-5000 字符
+        - 每用户每小时评论数：100
+        - AI 建议超时：5 秒
+
+        ## 测试矩阵
+
+        | 场景 | 测试用例 |
+        |------|----------|
+        | 正常评论 | 提交、显示、嵌套 |
+        | 边界值 | 空评论、超长评论 |
+        | 并发 | 同时回复同一条 |
+        | 性能 | 1000 条评论加载 |
+        | AI | 建议生成、超时处理 |
+</code></pre>
+<h3 id="43-review-">4.3 <code>/review</code> - 偏执审查模式</h3>
+<h4 id="_12">设计目的</h4>
+<p>发现能通过 CI 但在生产环境爆炸的 Bug。</p>
+<h4 id="_13">使用场景</h4>
+<ul>
+<li>代码实现完成后</li>
+<li>准备发布前</li>
+<li>代码审查时</li>
+</ul>
+<h4 id="_14">使用示例</h4>
+<pre><code>你: /review
+
+Claude: 正在审查当前分支的代码变更...
+
+        ## 审查结果
+
+        ### 🔴 严重问题 (2)
+
+        1. **竞态条件** - `comments_controller.rb:47`
+           ```ruby
+           # 问题：两个请求可能同时创建相同的嵌套结构
+           parent = Comment.find(params[:parent_id])
+           comment = parent.children.create!(...)
+           ```
+           建议：使用数据库级别的 advisory lock
+
+        2. **N+1 查询** - `comment_serializer.rb:23`
+           ```ruby
+           # 问题：每条评论都会查询作者信息
+           comments.map { |c| { author: c.user.name } }
+           ```
+           建议：使用 `includes(:user)` 预加载
+
+        ### 🟡 中等问题 (1)
+
+        3. **信任边界** - `ai_suggestions_service.rb:15`
+           ```ruby
+           # 问题：用户输入直接传给 AI API
+           prompt = &quot;用户说：#{comment.body}&quot;
+           ```
+           建议：对用户输入进行清理和转义
+
+        ### ✅ 良好实践
+
+        - 使用了事务处理
+        - 添加了索引
+        - 有单元测试覆盖
+
+        需要我帮你修复这些问题吗？
+</code></pre>
+<h3 id="44-ship-">4.4 <code>/ship</code> - 发布模式</h3>
+<h4 id="_15">设计目的</h4>
+<p>自动化同步、测试、推送、创建 PR 的流程。</p>
+<h4 id="_16">使用场景</h4>
+<ul>
+<li>代码审查完成</li>
+<li>准备合并到主分支</li>
+<li>需要创建 PR</li>
+</ul>
+<h4 id="_17">使用示例</h4>
+<pre><code>你: /ship
+
+Claude: 正在执行发布流程...
+
+        [1/6] 同步 main 分支...
+              git fetch origin main
+              git rebase origin/main
+              ✅ 成功
+
+        [2/6] 运行测试...
+              bundle exec rspec
+              47 examples, 0 failures
+              ✅ 通过
+
+        [3/6] 检查 Greptile 评论...
+              发现 2 条评论
+              - [已修复] N+1 查询问题
+              - [已处理] 竞态条件已添加锁
+              ✅ 全部处理
+
+        [4/6] 推送分支...
+              git push origin feature/comments
+              ✅ 成功
+
+        [5/6] 创建 Pull Request...
+              标题: feat: Add comment system with AI suggestions
+              ✅ 创建成功
+
+        [6/6] 更新 PR 描述...
+              添加了变更摘要和测试说明
+              ✅ 完成
+
+        ┌─────────────────────────────────────────────┐
+        │  🎉 发布完成！                               │
+        │                                              │
+        │  PR: https://github.com/owner/repo/pull/42  │
+        │  分支: feature/comments                     │
+        │  变更: 8 files, +342/-56                    │
+        └─────────────────────────────────────────────┘
+</code></pre>
+<h3 id="45-browse-">4.5 <code>/browse</code> - 浏览器模式</h3>
+<h4 id="_18">设计目的</h4>
+<p>让 AI 拥有"眼睛"，能够浏览和测试 Web 应用。</p>
+<h4 id="_19">使用场景</h4>
+<ul>
+<li>测试 UI 功能</li>
+<li>验证部署</li>
+<li>截图记录</li>
+<li>检查控制台错误</li>
+</ul>
+<h4 id="_20">使用示例</h4>
+<pre><code>你: /browse https://staging.myapp.com
+    请测试登录流程，然后检查用户仪表板
+
+Claude: [启动浏览器会话]
+
+        &gt; browse goto https://staging.myapp.com
+        ✅ 页面加载成功 (1.2s)
+
+        &gt; browse snapshot
+        检测到登录表单：
+        - Email 输入框
+        - Password 输入框
+        - Submit 按钮
+
+        &gt; browse fill @email &quot;test@example.com&quot;
+        &gt; browse fill @password &quot;testpass123&quot;
+        &gt; browse click @submit
+        ✅ 登录成功，重定向到仪表板
+
+        &gt; browse screenshot /tmp/dashboard.png
+        ✅ 截图已保存
+
+        &gt; browse console
+        控制台输出：
+        - [info] User authenticated: test@example.com
+        - [warn] Chart data loading slow (2.3s)
+        无错误 ✅
+
+        &gt; browse goto /settings
+        &gt; browse snapshot
+        设置页面正常加载
+        所有表单元素可交互 ✅
+
+        ## 测试报告
+
+        | 页面 | 状态 | 耗时 | 控制台 |
+        |------|------|------|--------|
+        | 登录 | ✅ | 1.2s | 无错误 |
+        | 仪表板 | ✅ | 0.8s | 1 警告 |
+        | 设置 | ✅ | 0.5s | 无错误 |
+
+        建议优化：仪表板图表数据加载可以异步化
+</code></pre>
+<h3 id="46-qa-qa">4.6 <code>/qa</code> - QA 模式</h3>
+<h4 id="_21">设计目的</h4>
+<p>测试应用、发现 Bug、自动修复、重新验证。</p>
+<h4 id="_22">使用场景</h4>
+<ul>
+<li>功能实现完成后</li>
+<li>发布前验证</li>
+<li>回归测试</li>
+</ul>
+<h4 id="_23">使用示例</h4>
+<pre><code>你: /qa
+
+Claude: 正在分析分支差异...
+
+        检测到 12 个文件变更：
+        - 3 个控制器
+        - 2 个视图
+        - 4 个服务
+        - 3 个测试
+
+        受影响路由：
+        - /comments
+        - /comments/:id
+        - /api/comments
+
+        [启动 QA 测试]
+
+        ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100%
+
+        ## QA 报告
+
+        ### 健康评分: 85/100
+
+        ### 测试的路由
+
+        | 路由 | 状态 | 问题 |
+        |------|------|------|
+        | /comments | ✅ | 无 |
+        | /comments/:id | ⚠️ | 1 个中等 |
+        | /api/comments | ✅ | 无 |
+
+        ### 发现的问题
+
+        🟡 中等: 评论详情页在移动端显示异常
+        - 位置: /comments/:id
+        - 描述: 嵌套评论超出屏幕宽度
+        - 影响: 移动端用户体验
+
+        需要我修复这个问题吗？
+
+你: 是的，请修复
+
+Claude: [修复中...]
+
+        &gt; 编辑 app/views/comments/show.html.erb
+        &gt; 添加响应式样式
+        &gt; 提交: fix: responsive comment nesting on mobile
+
+        [重新验证]
+
+        &gt; browse goto /comments/123
+        &gt; resize 375x812  # iPhone 尺寸
+        &gt; screenshot
+        ✅ 修复成功
+
+        ## 最终报告
+
+        健康评分: 95/100 (+10)
+        所有路由正常工作 ✅
+        修复已提交到当前分支
+</code></pre>
+<h3 id="47-retro-">4.7 <code>/retro</code> - 复盘模式</h3>
+<h4 id="_24">设计目的</h4>
+<p>团队周度复盘，分析工作模式和成长机会。</p>
+<h4 id="_25">使用场景</h4>
+<ul>
+<li>周末复盘</li>
+<li>团队总结</li>
+<li>个人成长追踪</li>
+</ul>
+<h4 id="_26">使用示例</h4>
+<pre><code>你: /retro
+
+Claude: 正在分析本周的 Git 历史...
+
+        ## 周度复盘 (3月11日 - 3月17日)
+
+        ### 总览
+
+        | 指标 | 数值 |
+        |------|------|
+        | 提交数 | 47 |
+        | 贡献者 | 3 |
+        | 代码行数 | +3,200 / -560 |
+        | 测试比例 | 38% |
+        | PR 数量 | 12 |
+        | 活跃天数 | 5/7 |
+
+        ### 你的本周
+
+        📊 **统计**
+        - 32 次提交
+        - +2,400 行代码
+        - 41% 测试覆盖率
+        - 峰值时段: 晚上 9-11 点
+        - 连续活跃: 47 天 🔥
+
+        🚀 **最大成就**
+        评论系统完整实现
+        - AI 回复建议
+        - 线程式讨论
+        - 作者互动标记
+        - 18 个单元测试
+
+        💪 **做得好的地方**
+        - 一次性完成完整功能
+        - 测试覆盖充分
+        - 代码审查及时响应
+
+        📈 **成长机会**
+        - 考虑在上午安排更多编码时间
+        - 可以尝试更小的 PR 粒度
+
+        ### 团队成员
+
+        #### Alice
+        - 12 次提交，集中在 app/services/
+        - 每个 PR 都小于 200 行 ✨
+        - 机会: 测试比例 12%，建议提升
+
+        #### Bob
+        - 3 次提交
+        - 修复了仪表板的 N+1 查询
+        - 机会: 本周只活跃 1 天，需要了解是否阻塞
+
+        ### 下周建议
+
+        1. 继续保持高测试覆盖率
+        2. 考虑代码评审会议
+        3. 关注 Bob 的工作状态
+
+        复盘快照已保存到 .context/retros/2026-03-17.json
+</code></pre>
+<hr />
+<h2 id="_27">五、实战案例</h2>
+<h3 id="51">5.1 案例：电商网站购物车功能</h3>
+<p>完整示例：从规划到发布的工作流。</p>
+<pre><code># ========== 第一步：产品规划 ==========
+
+你: /plan-ceo-review
+    我想给电商网站添加购物车功能
+
+Claude: 让我们重新思考...
+
+        用户真正想要的是什么？
+        - 临时保存想买的商品
+        - 比较价格和选项
+        - 方便结算
+        - 追踪价格变化
+
+        10 星购物车可能包括：
+        1. 智能推荐 - &quot;经常一起购买&quot;
+        2. 价格追踪 - 降价时通知
+        3. 库存预警 - 即将售罄提示
+        4. 多设备同步 - 手机加购，电脑结算
+        5. 分享购物车 - 给家人朋友看
+
+你: 我们先实现基础功能：添加商品、修改数量、删除商品、结算
+
+# ========== 第二步：技术规划 ==========
+
+你: /plan-eng-review
+
+Claude: 好的，设计技术方案...
+
+        ## 架构
+
+        ┌─────────────────────────────────────────────┐
+        │              ShoppingCart System             │
+        ├─────────────────────────────────────────────┤
+        │                                              │
+        │  ┌─────────┐    ┌─────────┐    ┌─────────┐ │
+        │  │ Cart    │    │ Cart    │    │ Order   │ │
+        │  │ Service │───▶│ Item    │───▶│ Service │ │
+        │  └─────────┘    └─────────┘    └─────────┘ │
+        │       │              │              │      │
+        │       ▼              ▼              ▼      │
+        │  ┌─────────┐    ┌─────────┐    ┌─────────┐ │
+        │  │ Redis   │    │PostgreSQL│   │Payment  │ │
+        │  │ Session │    │  Data   │    │ Gateway │ │
+        │  └─────────┘    └─────────┘    └─────────┘ │
+        │                                              │
+        └─────────────────────────────────────────────┘
+
+        ## API 设计
+
+        POST   /api/cart/items      # 添加商品
+        PUT    /api/cart/items/:id  # 修改数量
+        DELETE /api/cart/items/:id  # 删除商品
+        POST   /api/cart/checkout   # 结算
+
+        ## 数据模型
+
+        Cart:
+          - id: UUID
+          - user_id: UUID (nullable for guest)
+          - created_at: timestamp
+          - updated_at: timestamp
+
+        CartItem:
+          - id: UUID
+          - cart_id: UUID
+          - product_id: UUID
+          - quantity: integer
+          - price_at_add: decimal
+
+        ## 边界条件
+
+        - 最大商品种类：50
+        - 单品最大数量：99
+        - 购物车有效期：30 天（登录用户）/ 7 天（游客）
+
+# ========== 第三步：实现 ==========
+
+你: [退出计划模式]
+    请实现购物车功能，按照上面的技术方案
+
+Claude: [开始实现...]
+
+        创建文件：
+        - app/models/cart.rb
+        - app/models/cart_item.rb
+        - app/services/cart_service.rb
+        - app/controllers/api/cart_controller.rb
+        - ...
+
+        [实现完成]
+
+# ========== 第四步：代码审查 ==========
+
+你: /review
+
+Claude: 正在审查...
+
+        ## 发现的问题
+
+        🔴 严重:
+        1. 库存检查竞态条件 - 两个用户可能同时购买最后一件商品
+        2. 价格缓存过期 - 用户可能看到旧价格
+
+        🟡 中等:
+        3. 游客购物车迁移 - 登录时需要合并购物车
+
+        建议先修复严重问题
+
+你: 请修复这些问题
+
+Claude: [修复中...]
+        - 添加了库存锁
+        - 添加了价格刷新机制
+        - 实现了购物车合并
+        [修复完成]
+
+# ========== 第五步：发布 ==========
+
+你: /ship
+
+Claude: [发布流程...]
+
+        ✅ 同步 main
+        ✅ 运行测试 (82 examples, 0 failures)
+        ✅ 推送分支
+        ✅ 创建 PR #43
+
+        PR: https://github.com/owner/shop/pull/43
+
+# ========== 第六步：测试 ==========
+
+你: /setup-browser-cookies staging.shop.com
+    /qa https://staging.shop.com
+
+Claude: [QA 测试...]
+
+        ## QA 报告
+
+        健康评分: 92/100
+
+        测试场景：
+        ✅ 添加商品到购物车
+        ✅ 修改数量
+        ✅ 删除商品
+        ✅ 结算流程
+        ✅ 价格更新
+
+        所有功能正常！
+
+# ========== 第七步：文档 ==========
+
+你: /document-release
+
+Claude: 正在更新文档...
+
+        更新的文件：
+        - README.md: 添加购物车功能说明
+        - API.md: 添加购物车 API 文档
+        - CHANGELOG.md: 记录本次变更
+
+        文档更新完成！
+</code></pre>
+<h3 id="52-conductor">5.2 案例：使用 Conductor 并行开发</h3>
+<pre><code># 场景：同时处理多个任务
+
+# 终端 1：运行 QA 测试
+你: /qa https://staging.myapp.com
+
+# 终端 2：审查 PR
+你: /review
+    # 在另一个 PR 分支上
+
+# 终端 3：开发新功能
+你: 请实现用户通知功能
+
+# 终端 4：浏览测试
+你: /browse https://staging.myapp.com/new-feature
+
+# 每个终端有独立的工作空间和浏览器实例
+# 互不干扰，同时运行
+</code></pre>
+<hr />
+<h2 id="_28">六、进阶主题</h2>
+<h3 id="61">6.1 自定义技能</h3>
+<p>创建自己的 GStack 技能：</p>
+<pre><code class="language-bash"># 创建自定义技能
+mkdir -p ~/.claude/skills/my-custom
+
+# 创建技能文件
+cat &gt; ~/.claude/skills/my-custom/custom-review.md &lt;&lt; 'EOF'
+# Custom Code Review
+
+你是一个专注于安全性的代码审查员。
+
+## 审查重点
+
+1. SQL 注入
+2. XSS 攻击
+3. CSRF 保护
+4. 敏感数据暴露
+5. 认证和授权
+
+## 输出格式
+
+### 安全问题
+- [严重程度] 问题描述
+- 代码位置
+- 修复建议
+
+### 最佳实践建议
+- ...
+EOF
+
+# 创建符号链接
+ln -s ~/.claude/skills/my-custom/custom-review.md ~/.claude/skills/custom-review.md
+</code></pre>
+<h3 id="62">6.2 项目级配置</h3>
+<p>为团队共享 GStack 配置：</p>
+<pre><code class="language-bash"># 复制到项目
+cp -Rf ~/.claude/skills/gstack .claude/skills/gstack
+rm -rf .claude/skills/gstack/.git
+
+# 团队成员克隆项目后运行
+cd .claude/skills/gstack &amp;&amp; ./setup
+</code></pre>
+<p>项目级 CLAUDE.md：</p>
+<pre><code class="language-markdown">## 项目 GStack 配置
+
+本项目使用 GStack 工作流。
+
+### 必须使用的技能
+
+- 所有 PR 必须通过 `/review`
+- 所有 UI 变更必须通过 `/qa`
+
+### 禁止的操作
+
+- 不要直接推送到 main
+- 不要跳过测试
+</code></pre>
+<h3 id="63-cicd">6.3 与 CI/CD 集成</h3>
+<pre><code class="language-yaml"># .github/workflows/ai-review.yml
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run GStack Review
+        run: |
+          # 安装 Claude Code
+          npm install -g @anthropic-ai/claude-code
+
+          # 运行审查
+          claude /review --ci-mode
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+</code></pre>
+<h3 id="64-greptile">6.4 Greptile 集成配置</h3>
+<pre><code class="language-bash"># 1. 在 greptile.com 安装 GitHub 应用
+
+# 2. GStack 自动读取 Greptile 评论
+
+# 3. 误报历史记录在
+~/.gstack/greptile-history.md
+
+# 4. /retro 会追踪 Greptile 准确率
+</code></pre>
+<hr />
+<h2 id="_29">七、常见问题</h2>
+<h3 id="q1">Q1: 技能不显示怎么办？</h3>
+<pre><code class="language-bash"># 重新运行安装脚本
+cd ~/.claude/skills/gstack &amp;&amp; ./setup
+
+# 检查符号链接
+ls -la ~/.claude/skills/ | grep -E &quot;browse|qa|review&quot;
+
+# 如果缺失，手动创建
+for skill in browse qa review ship retro; do
+  ln -sf ~/.claude/skills/gstack/${skill}.md ~/.claude/skills/${skill}.md
+done
+</code></pre>
+<h3 id="q2">Q2: 浏览器二进制编译失败？</h3>
+<pre><code class="language-bash"># 确保 Bun 已安装
+bun --version
+
+# 手动编译
+cd ~/.claude/skills/gstack
+bun install
+bun run build
+
+# 检查二进制
+ls -la browse/dist/browse
+</code></pre>
+<h3 id="q3-cookies">Q3: Cookies 导入失败？</h3>
+<pre><code>问题：macOS Keychain 阻止访问
+
+解决：
+1. 当系统提示时，点击&quot;始终允许&quot;
+2. 或在系统偏好设置 &gt; 安全性与隐私 &gt; 隐私 &gt; 完全磁盘访问
+   添加终端应用
+</code></pre>
+<h3 id="q4-gstack">Q4: 如何升级 GStack？</h3>
+<pre><code># 在 Claude Code 中运行
+/gstack-upgrade
+
+# 或手动升级
+cd ~/.claude/skills/gstack
+git pull
+./setup
+</code></pre>
+<h3 id="q5-windows">Q5: Windows 支持吗？</h3>
+<pre><code>目前不支持 Windows，因为浏览器二进制
+只支持 macOS 和 Linux。
+
+替代方案：
+1. 使用 WSL2 (Windows Subsystem for Linux)
+2. 使用远程 Linux 服务器
+</code></pre>
+<h3 id="q6">Q6: 如何卸载？</h3>
+<pre><code>在 Claude Code 中粘贴：
+
+卸载 gstack: 运行以下命令
+for s in browse plan-ceo-review plan-eng-review review ship retro qa qa-only setup-browser-cookies document-release; do
+  rm -f ~/.claude/skills/$s
+done
+rm -rf ~/.claude/skills/gstack
+
+然后从 CLAUDE.md 中移除 gstack 配置
+</code></pre>
+<hr />
+<h2 id="_30">八、参考资料</h2>
+<h3 id="_31">官方资源</h3>
+<ul>
+<li><a href="https://github.com/garrytan/gstack">GStack GitHub</a></li>
+<li><a href="https://docs.anthropic.com/claude-code">Claude Code 文档</a></li>
+<li><a href="https://x.com/garrytan">Garry Tan Twitter</a></li>
+</ul>
+<h3 id="_32">相关工具</h3>
+<ul>
+<li><a href="https://github.com/glittercowboy/get-shit-done">GSD (Get Shit Done)</a></li>
+<li><a href="https://github.com/obra/superpowers">Superpowers</a></li>
+<li><a href="https://greptile.com/">Greptile</a></li>
+</ul>
+<h3 id="_33">社区</h3>
+<ul>
+<li><a href="https://www.reddit.com/r/ClaudeAI/">Claude AI Reddit</a></li>
+<li><a href="https://news.ycombinator.com/item?id=47355173">Hacker News 讨论</a></li>
+</ul>
+<hr />
+<h2 id="_34">学习路线图</h2>
+<pre><code>Week 1: 基础入门
+├── Day 1: 安装 GStack，运行 Hello World
+├── Day 2-3: 熟悉 /plan-ceo-review 和 /plan-eng-review
+├── Day 4-5: 练习 /review 和 /ship
+└── Day 6-7: 尝试 /browse 和 /qa
+
+Week 2: 工作流整合
+├── Day 1-2: 完整功能开发工作流
+├── Day 3-4: 浏览器自动化测试
+├── Day 5-6: 团队协作配置
+└── Day 7: 周度复盘 /retro
+
+Week 3: 进阶应用
+├── Day 1-2: Conductor 并行会话
+├── Day 3-4: Greptile 集成
+├── Day 5-6: 自定义技能开发
+└── Day 7: CI/CD 集成
+
+Week 4: 精通
+├── 优化个人工作流
+├── 团队最佳实践
+└── 持续改进
+</code></pre>
+<hr />
+<blockquote>
+<p>教程持续更新中，如有问题请在 <a href="https://github.com/garrytan/gstack/issues">GitHub</a> 提 Issue</p>
+</blockquote>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

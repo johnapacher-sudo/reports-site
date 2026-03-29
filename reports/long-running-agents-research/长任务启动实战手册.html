@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长任务启动实战手册</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">这是一份可操作的实战指南，帮助你在有想法后快速启动并可靠完成长任务</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_2" class="toc-h2">快速导航</a></li>
+<li><a href="#_3" class="toc-h2">一、一分钟启动模板</a></li>
+<li><a href="#a" class="toc-h3">方案 A: 简单文件模式 (推荐入门)</a></li>
+<li><a href="#b-python" class="toc-h3">方案 B: Python 脚本模式 (推荐进阶)</a></li>
+<li><a href="#_4" class="toc-h2">二、五步启动流程</a></li>
+<li><a href="#step-1" class="toc-h3">Step 1: 定义目标</a></li>
+<li><a href="#step-2" class="toc-h3">Step 2: 分解步骤</a></li>
+<li><a href="#step-3" class="toc-h3">Step 3: 设置状态管理</a></li>
+<li><a href="#step-4" class="toc-h3">Step 4: 配置错误处理</a></li>
+<li><a href="#step-5" class="toc-h3">Step 5: 启动监控</a></li>
+<li><a href="#_5" class="toc-h2">三、常用命令速查</a></li>
+<li><a href="#_6" class="toc-h3">状态查看</a></li>
+<li><a href="#_7" class="toc-h3">恢复与重试</a></li>
+<li><a href="#_8" class="toc-h3">清理与重置</a></li>
+<li><a href="#_9" class="toc-h2">四、问题排查指南</a></li>
+<li><a href="#1" class="toc-h3">问题 1: 任务卡住不动</a></li>
+<li><a href="#2" class="toc-h3">问题 2: 内存持续增长</a></li>
+<li><a href="#3" class="toc-h3">问题 3: 状态文件损坏</a></li>
+<li><a href="#4-api" class="toc-h3">问题 4: API 调用频繁失败</a></li>
+<li><a href="#_10" class="toc-h2">五、实战场景示例</a></li>
+<li><a href="#a-web" class="toc-h3">场景 A: 构建 Web 应用</a></li>
+<li><a href="#b" class="toc-h3">场景 B: 数据分析任务</a></li>
+<li><a href="#c" class="toc-h3">场景 C: 代码重构</a></li>
+<li><a href="#checklist" class="toc-h2">六、Checklist: 启动前确认</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>长任务启动实战手册</h1>
+                        <div class="article-meta">这是一份可操作的实战指南，帮助你在有想法后快速启动并可靠完成长任务</div>
+                    </header>
+                    <h1 id="_1">长任务启动实战手册</h1>
+<blockquote>
+<p>这是一份可操作的实战指南，帮助你在有想法后快速启动并可靠完成长任务</p>
+</blockquote>
+<hr />
+<h2 id="_2">快速导航</h2>
+<ul>
+<li><a href="#一分钟启动模板">一分钟启动模板</a></li>
+<li><a href="#五步启动流程">五步启动流程</a></li>
+<li><a href="#常用命令速查">常用命令速查</a></li>
+<li><a href="#问题排查指南">问题排查指南</a></li>
+</ul>
+<hr />
+<h2 id="_3">一、一分钟启动模板</h2>
+<h3 id="a">方案 A: 简单文件模式 (推荐入门)</h3>
+<pre><code class="language-bash"># 1. 创建任务目录
+mkdir -p my-task/{state,logs,artifacts}
+
+# 2. 创建任务配置
+cat &gt; my-task/task_config.json &lt;&lt; 'EOF'
+{
+  &quot;task_id&quot;: &quot;my-first-task&quot;,
+  &quot;goal&quot;: &quot;构建一个完整的用户认证系统&quot;,
+  &quot;steps&quot;: [
+    {&quot;id&quot;: &quot;design&quot;, &quot;name&quot;: &quot;设计数据库模型&quot;, &quot;status&quot;: &quot;pending&quot;},
+    {&quot;id&quot;: &quot;impl&quot;, &quot;name&quot;: &quot;实现认证逻辑&quot;, &quot;status&quot;: &quot;pending&quot;},
+    {&quot;id&quot;: &quot;test&quot;, &quot;name&quot;: &quot;编写测试用例&quot;, &quot;status&quot;: &quot;pending&quot;},
+    {&quot;id&quot;: &quot;doc&quot;, &quot;name&quot;: &quot;编写文档&quot;, &quot;status&quot;: &quot;pending&quot;}
+  ]
+}
+EOF
+
+# 3. 创建进度文件
+cat &gt; my-task/state/progress.md &lt;&lt; 'EOF'
+# 任务进度
+
+## 目标
+构建一个完整的用户认证系统
+
+## 当前状态
+- [ ] 设计数据库模型
+- [ ] 实现认证逻辑
+- [ ] 编写测试用例
+- [ ] 编写文档
+
+## 备注
+(在这里记录重要决策和问题)
+EOF
+
+# 4. 创建启动脚本
+cat &gt; my-task/init.sh &lt;&lt; 'EOF'
+#!/bin/bash
+echo &quot;🚀 初始化任务环境...&quot;
+# 在这里添加环境初始化命令
+echo &quot;✅ 环境就绪&quot;
+EOF
+chmod +x my-task/init.sh
+</code></pre>
+<h3 id="b-python">方案 B: Python 脚本模式 (推荐进阶)</h3>
+<pre><code class="language-python"># save as: run_task.py
+#!/usr/bin/env python3
+&quot;&quot;&quot;长任务执行器 - 最小可行版本&quot;&quot;&quot;
+
+import json
+import time
+from pathlib import Path
+from datetime import datetime
+
+class LongTask:
+    def __init__(self, task_dir: str):
+        self.task_dir = Path(task_dir)
+        self.state_file = self.task_dir / &quot;state&quot; / &quot;task_state.json&quot;
+        self.log_file = self.task_dir / &quot;logs&quot; / &quot;task.log&quot;
+        self.progress_file = self.task_dir / &quot;state&quot; / &quot;progress.md&quot;
+
+        # 确保目录存在
+        for d in [&quot;state&quot;, &quot;logs&quot;, &quot;artifacts&quot;]:
+            (self.task_dir / d).mkdir(parents=True, exist_ok=True)
+
+    def load_state(self) -&gt; dict:
+        if self.state_file.exists():
+            return json.loads(self.state_file.read_text())
+        return {&quot;steps&quot;: [], &quot;completed&quot;: [], &quot;current&quot;: None}
+
+    def save_state(self, state: dict):
+        state[&quot;updated_at&quot;] = datetime.now().isoformat()
+        self.state_file.write_text(json.dumps(state, indent=2))
+
+    def log(self, message: str, level: str = &quot;INFO&quot;):
+        entry = {
+            &quot;timestamp&quot;: datetime.now().isoformat(),
+            &quot;level&quot;: level,
+            &quot;message&quot;: message
+        }
+        with open(self.log_file, 'a') as f:
+            f.write(json.dumps(entry) + '\n')
+        print(f&quot;[{level}] {message}&quot;)
+
+    def get_next_step(self, state: dict) -&gt; dict | None:
+        for step in state.get(&quot;steps&quot;, []):
+            if step.get(&quot;status&quot;) == &quot;pending&quot;:
+                return step
+        return None
+
+    def run(self):
+        &quot;&quot;&quot;运行任务&quot;&quot;&quot;
+        self.log(&quot;任务启动&quot;)
+        state = self.load_state()
+
+        while True:
+            step = self.get_next_step(state)
+            if not step:
+                self.log(&quot;所有步骤完成!&quot;)
+                break
+
+            self.log(f&quot;开始执行: {step['name']}&quot;)
+            step[&quot;status&quot;] = &quot;running&quot;
+            self.save_state(state)
+
+            try:
+                # 这里执行实际的任务逻辑
+                result = self.execute_step(step)
+
+                step[&quot;status&quot;] = &quot;completed&quot;
+                step[&quot;result&quot;] = result
+                self.log(f&quot;步骤完成: {step['name']}&quot;)
+
+            except Exception as e:
+                step[&quot;status&quot;] = &quot;failed&quot;
+                step[&quot;error&quot;] = str(e)
+                self.log(f&quot;步骤失败: {step['name']} - {e}&quot;, &quot;ERROR&quot;)
+
+                # 保存状态后退出
+                self.save_state(state)
+                raise
+
+            self.save_state(state)
+
+        self.log(&quot;任务完成&quot;)
+
+    def execute_step(self, step: dict) -&gt; dict:
+        &quot;&quot;&quot;执行单个步骤 - 由子类实现&quot;&quot;&quot;
+        # 示例: 模拟工作
+        time.sleep(1)
+        return {&quot;status&quot;: &quot;done&quot;}
+
+if __name__ == &quot;__main__&quot;:
+    import sys
+    task_dir = sys.argv[1] if len(sys.argv) &gt; 1 else &quot;my-task&quot;
+    task = LongTask(task_dir)
+    task.run()
+</code></pre>
+<hr />
+<h2 id="_4">二、五步启动流程</h2>
+<h3 id="step-1">Step 1: 定义目标</h3>
+<pre><code class="language-markdown">## 任务目标模板
+
+**一句话描述**: _______________________
+
+**成功标准** (怎么算完成):
+1. _______________________
+2. _______________________
+3. _______________________
+
+**交付物** (产出什么):
+- [ ] _______________________
+- [ ] _______________________
+
+**约束条件** (有什么限制):
+- 时间: _______________________
+- 资源: _______________________
+- 技术: _______________________
+</code></pre>
+<h3 id="step-2">Step 2: 分解步骤</h3>
+<pre><code class="language-markdown">## 步骤分解原则
+
+✅ 好的步骤:
+- 独立可测试
+- 15-60 分钟可完成
+- 有明确的完成标准
+- 失败后可独立重试
+
+❌ 不好的步骤:
+- &quot;完成整个项目&quot;
+- &quot;写代码&quot; (太模糊)
+- &quot;优化性能&quot; (没有量化标准)
+
+## 步骤清单模板
+
+| # | 步骤名 | 预计时间 | 依赖 | 验证方法 |
+|---|--------|----------|------|----------|
+| 1 | | | - | |
+| 2 | | | 1 | |
+| 3 | | | 1 | |
+| 4 | | | 2,3 | |
+</code></pre>
+<h3 id="step-3">Step 3: 设置状态管理</h3>
+<pre><code class="language-json">// task_state.json 模板
+{
+  &quot;task_id&quot;: &quot;unique-task-id&quot;,
+  &quot;goal&quot;: &quot;任务目标描述&quot;,
+  &quot;created_at&quot;: &quot;2026-03-16T10:00:00&quot;,
+  &quot;updated_at&quot;: &quot;2026-03-16T10:00:00&quot;,
+  &quot;status&quot;: &quot;running&quot;,
+  &quot;steps&quot;: [
+    {
+      &quot;id&quot;: &quot;step-1&quot;,
+      &quot;name&quot;: &quot;步骤名称&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;dependencies&quot;: [],
+      &quot;started_at&quot;: null,
+      &quot;completed_at&quot;: null,
+      &quot;result&quot;: null,
+      &quot;error&quot;: null
+    }
+  ],
+  &quot;context&quot;: {
+    &quot;key_decisions&quot;: [],
+    &quot;notes&quot;: &quot;&quot;
+  },
+  &quot;checkpoints&quot;: []
+}
+</code></pre>
+<h3 id="step-4">Step 4: 配置错误处理</h3>
+<pre><code class="language-python"># retry_config.json
+{
+  &quot;max_retries&quot;: 3,
+  &quot;base_delay&quot;: 1.0,
+  &quot;max_delay&quot;: 60.0,
+  &quot;jitter&quot;: true,
+
+  &quot;error_handlers&quot;: {
+    &quot;timeout&quot;: {&quot;action&quot;: &quot;retry&quot;, &quot;delay_multiplier&quot;: 2},
+    &quot;rate_limit&quot;: {&quot;action&quot;: &quot;wait&quot;, &quot;fixed_delay&quot;: 60},
+    &quot;auth_error&quot;: {&quot;action&quot;: &quot;fail&quot;, &quot;notify&quot;: true},
+    &quot;unknown&quot;: {&quot;action&quot;: &quot;retry&quot;, &quot;max_attempts&quot;: 2}
+  }
+}
+</code></pre>
+<h3 id="step-5">Step 5: 启动监控</h3>
+<pre><code class="language-bash"># 终端 1: 运行任务
+python run_task.py my-task
+
+# 终端 2: 监控进度
+watch -n 5 'cat my-task/state/task_state.json | python -m json.tool'
+
+# 终端 3: 查看日志
+tail -f my-task/logs/task.log | python -c &quot;
+import sys, json
+for line in sys.stdin:
+    try:
+        entry = json.loads(line)
+        print(f\&quot;[{entry['level']:5}] {entry['message']}\&quot;)
+    except:
+        print(line.strip())
+&quot;
+</code></pre>
+<hr />
+<h2 id="_5">三、常用命令速查</h2>
+<h3 id="_6">状态查看</h3>
+<pre><code class="language-bash"># 查看任务状态
+cat my-task/state/task_state.json | python -m json.tool
+
+# 查看进度
+cat my-task/state/progress.md
+
+# 查看最近日志
+tail -20 my-task/logs/task.log
+
+# 查看错误日志
+grep '&quot;level&quot;: &quot;ERROR&quot;' my-task/logs/task.log
+
+# 统计完成进度
+cat my-task/state/task_state.json | python -c &quot;
+import sys, json
+data = json.load(sys.stdin)
+steps = data.get('steps', [])
+completed = sum(1 for s in steps if s.get('status') == 'completed')
+total = len(steps)
+print(f'进度: {completed}/{total} ({completed/total*100:.1f}%)')
+&quot;
+</code></pre>
+<h3 id="_7">恢复与重试</h3>
+<pre><code class="language-bash"># 重试失败的步骤
+cat my-task/state/task_state.json | python -c &quot;
+import sys, json
+data = json.load(sys.stdin)
+for step in data.get('steps', []):
+    if step.get('status') == 'failed':
+        step['status'] = 'pending'
+        step['error'] = None
+print(json.dumps(data, indent=2))
+&quot; &gt; my-task/state/task_state.json.tmp
+mv my-task/state/task_state.json.tmp my-task/state/task_state.json
+
+# 从检查点恢复
+# (找到最近的 checkpoint 文件)
+ls -lt my-task/state/checkpoints/
+cp my-task/state/checkpoints/ckpt_xxx.json my-task/state/task_state.json
+</code></pre>
+<h3 id="_8">清理与重置</h3>
+<pre><code class="language-bash"># 清理日志
+&gt; my-task/logs/task.log
+
+# 重置任务状态
+cat &gt; my-task/state/task_state.json &lt;&lt; 'EOF'
+{&quot;steps&quot;: [], &quot;status&quot;: &quot;pending&quot;}
+EOF
+
+# 备份当前状态
+cp -r my-task/state my-task/state.backup.$(date +%Y%m%d_%H%M%S)
+</code></pre>
+<hr />
+<h2 id="_9">四、问题排查指南</h2>
+<h3 id="1">问题 1: 任务卡住不动</h3>
+<p><strong>症状</strong>: 日志没有新输出，进程还在运行</p>
+<p><strong>排查步骤</strong>:</p>
+<pre><code class="language-bash"># 1. 检查进程状态
+ps aux | grep python
+
+# 2. 检查是否有僵尸进程
+ps aux | grep -E 'defunct|zombie'
+
+# 3. 检查资源使用
+top -pid $(pgrep -f &quot;run_task&quot;)
+
+# 4. 检查网络连接
+lsof -i -P | grep $(pgrep -f &quot;run_task&quot;)
+</code></pre>
+<p><strong>解决方案</strong>:
+- 如果是网络阻塞，检查超时设置
+- 如果是死锁，重启任务
+- 添加心跳检测机制</p>
+<h3 id="2">问题 2: 内存持续增长</h3>
+<p><strong>排查步骤</strong>:</p>
+<pre><code class="language-bash"># 监控内存
+watch -n 1 'ps -o pid,rss,vsz,comm -p $(pgrep -f &quot;run_task&quot;)'
+
+# 生成内存快照
+python -m memory_profiler run_task.py my-task
+</code></pre>
+<p><strong>解决方案</strong>:
+- 定期清理不再需要的数据
+- 使用生成器而非列表
+- 检查是否有循环引用</p>
+<h3 id="3">问题 3: 状态文件损坏</h3>
+<p><strong>症状</strong>: JSON 解析失败</p>
+<p><strong>排查步骤</strong>:</p>
+<pre><code class="language-bash"># 验证 JSON 格式
+python -m json.tool my-task/state/task_state.json
+
+# 如果失败，尝试修复
+python -c &quot;
+import json
+try:
+    with open('my-task/state/task_state.json') as f:
+        data = json.load(f)
+except json.JSONDecodeError as e:
+    print(f'错误位置: 行 {e.lineno}, 列 {e.colno}')
+    print(f'错误内容: {e.msg}')
+&quot;
+</code></pre>
+<p><strong>解决方案</strong>:
+- 从检查点恢复
+- 手动修复 JSON
+- 重新开始任务</p>
+<h3 id="4-api">问题 4: API 调用频繁失败</h3>
+<p><strong>排查步骤</strong>:</p>
+<pre><code class="language-bash"># 检查错误率
+grep -c '&quot;level&quot;: &quot;ERROR&quot;' my-task/logs/task.log
+grep -c 'rate.limit' my-task/logs/task.log
+
+# 检查网络延迟
+ping -c 10 api.example.com
+</code></pre>
+<p><strong>解决方案</strong>:
+- 降低请求频率
+- 增加重试间隔
+- 实现断路器</p>
+<hr />
+<h2 id="_10">五、实战场景示例</h2>
+<h3 id="a-web">场景 A: 构建 Web 应用</h3>
+<pre><code class="language-json">{
+  &quot;task_id&quot;: &quot;build-web-app&quot;,
+  &quot;goal&quot;: &quot;构建一个待办事项 Web 应用&quot;,
+  &quot;steps&quot;: [
+    {
+      &quot;id&quot;: &quot;setup&quot;,
+      &quot;name&quot;: &quot;项目初始化&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;commands&quot;: [&quot;npm init -y&quot;, &quot;npm install express&quot;],
+      &quot;verify&quot;: &quot;npm list express&quot;
+    },
+    {
+      &quot;id&quot;: &quot;db&quot;,
+      &quot;name&quot;: &quot;数据库设计&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;files&quot;: [&quot;schema.sql&quot;],
+      &quot;verify&quot;: &quot;sqlite3 todo.db '.schema'&quot;
+    },
+    {
+      &quot;id&quot;: &quot;api&quot;,
+      &quot;name&quot;: &quot;API 开发&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;files&quot;: [&quot;routes.js&quot;, &quot;controllers.js&quot;],
+      &quot;verify&quot;: &quot;npm test&quot;
+    },
+    {
+      &quot;id&quot;: &quot;frontend&quot;,
+      &quot;name&quot;: &quot;前端开发&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;files&quot;: [&quot;public/index.html&quot;, &quot;public/app.js&quot;],
+      &quot;verify&quot;: &quot;curl localhost:3000&quot;
+    },
+    {
+      &quot;id&quot;: &quot;deploy&quot;,
+      &quot;name&quot;: &quot;部署上线&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;verify&quot;: &quot;curl https://myapp.example.com/health&quot;
+    }
+  ]
+}
+</code></pre>
+<h3 id="b">场景 B: 数据分析任务</h3>
+<pre><code class="language-json">{
+  &quot;task_id&quot;: &quot;data-analysis&quot;,
+  &quot;goal&quot;: &quot;分析用户行为数据&quot;,
+  &quot;steps&quot;: [
+    {
+      &quot;id&quot;: &quot;extract&quot;,
+      &quot;name&quot;: &quot;数据提取&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;input&quot;: &quot;raw_data.csv&quot;,
+      &quot;output&quot;: &quot;extracted.json&quot;
+    },
+    {
+      &quot;id&quot;: &quot;clean&quot;,
+      &quot;name&quot;: &quot;数据清洗&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;input&quot;: &quot;extracted.json&quot;,
+      &quot;output&quot;: &quot;cleaned.json&quot;
+    },
+    {
+      &quot;id&quot;: &quot;analyze&quot;,
+      &quot;name&quot;: &quot;数据分析&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;input&quot;: &quot;cleaned.json&quot;,
+      &quot;output&quot;: &quot;analysis_results.json&quot;
+    },
+    {
+      &quot;id&quot;: &quot;visualize&quot;,
+      &quot;name&quot;: &quot;可视化&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;input&quot;: &quot;analysis_results.json&quot;,
+      &quot;output&quot;: &quot;charts/&quot;
+    },
+    {
+      &quot;id&quot;: &quot;report&quot;,
+      &quot;name&quot;: &quot;生成报告&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;input&quot;: &quot;analysis_results.json&quot;,
+      &quot;output&quot;: &quot;report.pdf&quot;
+    }
+  ]
+}
+</code></pre>
+<h3 id="c">场景 C: 代码重构</h3>
+<pre><code class="language-json">{
+  &quot;task_id&quot;: &quot;refactor-auth&quot;,
+  &quot;goal&quot;: &quot;重构认证模块&quot;,
+  &quot;steps&quot;: [
+    {
+      &quot;id&quot;: &quot;analyze&quot;,
+      &quot;name&quot;: &quot;分析现有代码&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;output&quot;: &quot;analysis.md&quot;
+    },
+    {
+      &quot;id&quot;: &quot;design&quot;,
+      &quot;name&quot;: &quot;设计新架构&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;output&quot;: &quot;new_design.md&quot;
+    },
+    {
+      &quot;id&quot;: &quot;implement&quot;,
+      &quot;name&quot;: &quot;实现新代码&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;files&quot;: [&quot;auth/new_module.py&quot;]
+    },
+    {
+      &quot;id&quot;: &quot;migrate&quot;,
+      &quot;name&quot;: &quot;迁移数据&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;script&quot;: &quot;migrate.py&quot;
+    },
+    {
+      &quot;id&quot;: &quot;test&quot;,
+      &quot;name&quot;: &quot;运行测试&quot;,
+      &quot;status&quot;: &quot;pending&quot;,
+      &quot;commands&quot;: [&quot;pytest tests/auth/&quot;]
+    }
+  ]
+}
+</code></pre>
+<hr />
+<h2 id="checklist">六、Checklist: 启动前确认</h2>
+<pre><code>□ 任务目标已明确记录
+□ 步骤已分解到 15-60 分钟粒度
+□ 每个步骤有验证方法
+□ 状态文件已创建
+□ 日志目录已创建
+□ 错误处理策略已确定
+□ 检查点保存逻辑已实现
+□ 监控方式已准备
+□ 恢复流程已测试
+</code></pre>
+<hr />
+<p><em>手册版本: 1.0</em>
+<em>最后更新: 2026-03-16</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPC-Starter 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速入门</a></li>
+<li><a href="#11" class="toc-h3">1.1 环境准备</a></li>
+<li><a href="#12" class="toc-h3">1.2 克隆项目</a></li>
+<li><a href="#13" class="toc-h3">1.3 启动开发服务器</a></li>
+<li><a href="#14" class="toc-h3">1.4 项目验证</a></li>
+<li><a href="#_3" class="toc-h2">二、项目结构详解</a></li>
+<li><a href="#21" class="toc-h3">2.1 目录结构</a></li>
+<li><a href="#22" class="toc-h3">2.2 核心入口文件</a></li>
+<li><a href="#23" class="toc-h3">2.3 路由配置</a></li>
+<li><a href="#_4" class="toc-h2">三、核心功能开发</a></li>
+<li><a href="#31" class="toc-h3">3.1 认证系统</a></li>
+<li><a href="#32" class="toc-h3">3.2 添加新页面</a></li>
+<li><a href="#33" class="toc-h3">3.3 状态管理</a></li>
+<li><a href="#agent-studio-a2ui" class="toc-h2">四、Agent Studio (A2UI)</a></li>
+<li><a href="#41-a2ui" class="toc-h3">4.1 A2UI 协议简介</a></li>
+<li><a href="#42-agent-studio" class="toc-h3">4.2 配置 Agent Studio</a></li>
+<li><a href="#43-agent-studio" class="toc-h3">4.3 使用 Agent Studio</a></li>
+<li><a href="#44-a2ui" class="toc-h3">4.4 自定义 A2UI 组件</a></li>
+<li><a href="#_5" class="toc-h2">五、数据服务层</a></li>
+<li><a href="#51-dataservice" class="toc-h3">5.1 DataService 架构</a></li>
+<li><a href="#52-dataservice" class="toc-h3">5.2 使用 DataService</a></li>
+<li><a href="#53" class="toc-h3">5.3 实时订阅</a></li>
+<li><a href="#54" class="toc-h3">5.4 离线支持</a></li>
+<li><a href="#_6" class="toc-h2">六、测试与质量保证</a></li>
+<li><a href="#61" class="toc-h3">6.1 单元测试</a></li>
+<li><a href="#62-e2e" class="toc-h3">6.2 E2E 测试</a></li>
+<li><a href="#63" class="toc-h3">6.3 质量检查</a></li>
+<li><a href="#ai" class="toc-h2">七、AI 辅助开发最佳实践</a></li>
+<li><a href="#71-agentsmd" class="toc-h3">7.1 使用 AGENTS.md</a></li>
+<li><a href="#72-cursor" class="toc-h3">7.2 Cursor 使用技巧</a></li>
+<li><a href="#73-ai" class="toc-h3">7.3 AI 友好的代码结构</a></li>
+<li><a href="#74-ai" class="toc-h3">7.4 常见 AI 辅助任务</a></li>
+<li><a href="#_7" class="toc-h2">八、部署与上线</a></li>
+<li><a href="#81" class="toc-h3">8.1 构建生产版本</a></li>
+<li><a href="#82-vercel" class="toc-h3">8.2 部署到 Vercel</a></li>
+<li><a href="#83-netlify" class="toc-h3">8.3 部署到 Netlify</a></li>
+<li><a href="#84" class="toc-h3">8.4 环境变量配置</a></li>
+<li><a href="#85-supabase" class="toc-h3">8.5 Supabase 生产配置</a></li>
+<li><a href="#_8" class="toc-h2">附录：常用命令速查表</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OPC-Starter 学习教程</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="opc-starter">OPC-Starter 学习教程</h1>
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速入门">快速入门</a></li>
+<li><a href="#二项目结构详解">项目结构详解</a></li>
+<li><a href="#三核心功能开发">核心功能开发</a></li>
+<li><a href="#四agent-studio-a2ui">Agent Studio (A2UI)</a></li>
+<li><a href="#五数据服务层">数据服务层</a></li>
+<li><a href="#六测试与质量保证">测试与质量保证</a></li>
+<li><a href="#七ai-辅助开发最佳实践">AI 辅助开发最佳实践</a></li>
+<li><a href="#八部署与上线">部署与上线</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速入门</h2>
+<h3 id="11">1.1 环境准备</h3>
+<p><strong>系统要求</strong>：
+- Node.js 18+
+- npm 9+ 或 pnpm 8+
+- Git</p>
+<p><strong>推荐工具</strong>：
+- <strong>Cursor</strong> - AI 代码编辑器（推荐）
+- <strong>Qoder</strong> - AI 编程助手
+- <strong>VS Code</strong> - 传统编辑器</p>
+<h3 id="12">1.2 克隆项目</h3>
+<pre><code class="language-bash"># 克隆仓库
+git clone https://github.com/alibaba/opc-starter.git
+cd opc-starter
+
+# 安装依赖
+npm install
+</code></pre>
+<h3 id="13">1.3 启动开发服务器</h3>
+<p><strong>方式一：MSW Mock 模式（推荐新手）</strong></p>
+<p>无需配置真实后端，使用 Mock 数据：</p>
+<pre><code class="language-bash"># 使用测试环境配置启动
+npm run dev:test
+</code></pre>
+<p>访问 http://localhost:5173</p>
+<p><strong>测试账号</strong>：
+- 邮箱：<code>test@example.com</code>
+- 密码：<code>888888</code></p>
+<p><strong>方式二：真实 Supabase 模式</strong></p>
+<ol>
+<li>创建 Supabase 项目：https://supabase.com</li>
+<li>配置环境变量：</li>
+</ol>
+<pre><code class="language-bash"># 复制环境变量模板
+cp app/.env.example app/.env.local
+</code></pre>
+<p>编辑 <code>app/.env.local</code>：</p>
+<pre><code class="language-env">VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+</code></pre>
+<ol>
+<li>
+<p>运行数据库 Schema（在 Supabase SQL Editor 中执行 <code>app/supabase/setup.sql</code>）</p>
+</li>
+<li>
+<p>启动应用：</p>
+</li>
+</ol>
+<pre><code class="language-bash">npm run dev
+</code></pre>
+<h3 id="14">1.4 项目验证</h3>
+<pre><code class="language-bash"># 类型检查
+npm run type-check
+
+# 单元测试
+npm test
+
+# 构建
+npm run build
+
+# 完整质量检查
+npm run ai:check
+</code></pre>
+<hr />
+<h2 id="_3">二、项目结构详解</h2>
+<h3 id="21">2.1 目录结构</h3>
+<pre><code>app/
+├── src/
+│   ├── auth/                 # 认证模块
+│   │   ├── AuthProvider.tsx  # 认证上下文
+│   │   ├── LoginForm.tsx     # 登录表单
+│   │   └── ProtectedRoute.tsx # 路由守卫
+│   │
+│   ├── components/           # 组件目录
+│   │   ├── agent/            # Agent Studio
+│   │   ├── business/         # 业务组件
+│   │   ├── layout/           # 布局组件
+│   │   ├── organization/     # 组织架构
+│   │   └── ui/               # 基础 UI
+│   │
+│   ├── hooks/                # 自定义 Hooks
+│   ├── lib/                  # 库封装
+│   │   ├── agent/            # Agent 核心
+│   │   ├── reactive/         # 响应式数据
+│   │   └── supabase/         # Supabase 客户端
+│   │
+│   ├── pages/                # 页面组件
+│   ├── services/             # 服务层
+│   │   └── data/             # DataService
+│   │
+│   ├── stores/               # Zustand 状态
+│   ├── types/                # TypeScript 类型
+│   └── utils/                # 工具函数
+│
+├── supabase/
+│   ├── functions/            # Edge Functions
+│   └── setup.sql             # 数据库 Schema
+│
+├── cypress/                  # E2E 测试
+└── .env.test                 # 测试环境变量
+</code></pre>
+<h3 id="22">2.2 核心入口文件</h3>
+<p><strong>main.tsx</strong> - 应用入口：</p>
+<pre><code class="language-tsx">import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import App from './App.tsx'
+import './index.css'
+
+// MSW Mock 初始化（开发/测试环境）
+if (import.meta.env.VITE_ENABLE_MSW === 'true') {
+  import('./mocks/browser').then(({ worker }) =&gt; {
+    worker.start()
+  })
+}
+
+createRoot(document.getElementById('root')!).render(
+  &lt;StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/StrictMode&gt;,
+)
+</code></pre>
+<p><strong>App.tsx</strong> - 根组件：</p>
+<pre><code class="language-tsx">import { AuthProvider } from '@/auth/AuthProvider'
+import { Router } from '@/config/routes'
+
+function App() {
+  return (
+    &lt;AuthProvider&gt;
+      &lt;Router /&gt;
+    &lt;/AuthProvider&gt;
+  )
+}
+
+export default App
+</code></pre>
+<h3 id="23">2.3 路由配置</h3>
+<p><strong>config/routes.tsx</strong>：</p>
+<pre><code class="language-tsx">import { createBrowserRouter } from 'react-router-dom'
+import { ProtectedRoute } from '@/auth/ProtectedRoute'
+import { Layout } from '@/components/layout/Layout'
+import { Dashboard } from '@/pages/Dashboard'
+import { Login } from '@/pages/Login'
+
+export const router = createBrowserRouter([
+  {
+    path: '/login',
+    element: &lt;Login /&gt;,
+  },
+  {
+    path: '/',
+    element: (
+      &lt;ProtectedRoute&gt;
+        &lt;Layout /&gt;
+      &lt;/ProtectedRoute&gt;
+    ),
+    children: [
+      { index: true, element: &lt;Dashboard /&gt; },
+      { path: 'settings', element: &lt;Settings /&gt; },
+      // 添加更多路由...
+    ],
+  },
+])
+</code></pre>
+<hr />
+<h2 id="_4">三、核心功能开发</h2>
+<h3 id="31">3.1 认证系统</h3>
+<p><strong>登录流程</strong>：</p>
+<pre><code class="language-tsx">// pages/Login.tsx
+import { useAuth } from '@/auth/AuthProvider'
+import { LoginForm } from '@/auth/LoginForm'
+
+export function Login() {
+  const { signIn } = useAuth()
+
+  const handleSubmit = async (email: string, password: string) =&gt; {
+    const { error } = await signIn(email, password)
+    if (error) {
+      // 错误处理
+    }
+  }
+
+  return &lt;LoginForm onSubmit={handleSubmit} /&gt;
+}
+</code></pre>
+<p><strong>AuthProvider 实现</strong>：</p>
+<pre><code class="language-tsx">// auth/AuthProvider.tsx
+import { createContext, useContext, useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+
+interface AuthContextType {
+  user: User | null
+  signIn: (email: string, password: string) =&gt; Promise&lt;void&gt;
+  signOut: () =&gt; Promise&lt;void&gt;
+}
+
+const AuthContext = createContext&lt;AuthContextType | null&gt;(null)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState&lt;User | null&gt;(null)
+
+  useEffect(() =&gt; {
+    // 监听认证状态变化
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_, session) =&gt; {
+        setUser(session?.user ?? null)
+      }
+    )
+
+    return () =&gt; subscription.unsubscribe()
+  }, [])
+
+  const signIn = async (email: string, password: string) =&gt; {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    if (error) throw error
+  }
+
+  const signOut = async () =&gt; {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
+
+  return (
+    &lt;AuthContext.Provider value={{ user, signIn, signOut }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  )
+}
+
+export const useAuth = () =&gt; {
+  const context = useContext(AuthContext)
+  if (!context) throw new Error('useAuth must be used within AuthProvider')
+  return context
+}
+</code></pre>
+<h3 id="32">3.2 添加新页面</h3>
+<p><strong>Step 1: 创建页面组件</strong></p>
+<pre><code class="language-tsx">// pages/Products.tsx
+import { useQuery } from '@tanstack/react-query'
+import { dataService } from '@/services/data/DataService'
+
+export function Products() {
+  const { data: products, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: () =&gt; dataService.getProducts(),
+  })
+
+  if (isLoading) return &lt;div&gt;Loading...&lt;/div&gt;
+
+  return (
+    &lt;div className=&quot;p-6&quot;&gt;
+      &lt;h1 className=&quot;text-2xl font-bold mb-4&quot;&gt;Products&lt;/h1&gt;
+      &lt;div className=&quot;grid grid-cols-3 gap-4&quot;&gt;
+        {products?.map((product) =&gt; (
+          &lt;ProductCard key={product.id} product={product} /&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  )
+}
+</code></pre>
+<p><strong>Step 2: 添加路由</strong></p>
+<pre><code class="language-tsx">// config/routes.tsx
+import { Products } from '@/pages/Products'
+
+// 在 children 数组中添加
+{ path: 'products', element: &lt;Products /&gt; },
+</code></pre>
+<p><strong>Step 3: 添加导航</strong></p>
+<pre><code class="language-tsx">// components/layout/Sidebar.tsx
+const navItems = [
+  { path: '/', label: 'Dashboard', icon: Home },
+  { path: '/products', label: 'Products', icon: Package },
+  // ...
+]
+</code></pre>
+<h3 id="33">3.3 状态管理</h3>
+<p><strong>使用 Zustand</strong>：</p>
+<pre><code class="language-tsx">// stores/productStore.ts
+import { create } from 'zustand'
+
+interface ProductState {
+  products: Product[]
+  selectedProduct: Product | null
+  setProducts: (products: Product[]) =&gt; void
+  selectProduct: (product: Product | null) =&gt; void
+}
+
+export const useProductStore = create&lt;ProductState&gt;((set) =&gt; ({
+  products: [],
+  selectedProduct: null,
+  setProducts: (products) =&gt; set({ products }),
+  selectProduct: (product) =&gt; set({ selectedProduct: product }),
+}))
+</code></pre>
+<p><strong>在组件中使用</strong>：</p>
+<pre><code class="language-tsx">// components/ProductList.tsx
+import { useProductStore } from '@/stores/productStore'
+
+export function ProductList() {
+  const { products, selectProduct } = useProductStore()
+
+  return (
+    &lt;ul&gt;
+      {products.map((product) =&gt; (
+        &lt;li key={product.id} onClick={() =&gt; selectProduct(product)}&gt;
+          {product.name}
+        &lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  )
+}
+</code></pre>
+<hr />
+<h2 id="agent-studio-a2ui">四、Agent Studio (A2UI)</h2>
+<h3 id="41-a2ui">4.1 A2UI 协议简介</h3>
+<p><strong>A2UI</strong>（Agent-to-User Interface）是一种声明式 UI 协议，让 AI Agent 可以生成动态交互界面。</p>
+<p><strong>工作流程</strong>：</p>
+<pre><code>用户输入 → LLM 解析 → A2UI Schema → 动态渲染
+</code></pre>
+<h3 id="42-agent-studio">4.2 配置 Agent Studio</h3>
+<p><strong>环境变量</strong>：</p>
+<pre><code class="language-env"># 使用阿里云通义千问
+VITE_DASHSCOPE_API_KEY=your_dashscope_api_key
+
+# 或使用其他 LLM Provider
+VITE_OPENAI_API_KEY=your_openai_api_key
+</code></pre>
+<h3 id="43-agent-studio">4.3 使用 Agent Studio</h3>
+<p><strong>基本用法</strong>：</p>
+<pre><code class="language-tsx">// components/AgentChat.tsx
+import { AgentStudio } from '@/components/agent/AgentStudio'
+
+export function AgentChat() {
+  const handleResponse = (schema: A2UISchema) =&gt; {
+    console.log('AI generated UI:', schema)
+  }
+
+  return (
+    &lt;div className=&quot;h-screen&quot;&gt;
+      &lt;AgentStudio onResponse={handleResponse} /&gt;
+    &lt;/div&gt;
+  )
+}
+</code></pre>
+<p><strong>A2UI Schema 示例</strong>：</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;container&quot;,
+  &quot;children&quot;: [
+    {
+      &quot;type&quot;: &quot;text&quot;,
+      &quot;content&quot;: &quot;Hello, User!&quot;,
+      &quot;style&quot;: { &quot;fontSize&quot;: &quot;24px&quot;, &quot;fontWeight&quot;: &quot;bold&quot; }
+    },
+    {
+      &quot;type&quot;: &quot;button&quot;,
+      &quot;label&quot;: &quot;Click me&quot;,
+      &quot;onClick&quot;: &quot;handleClick&quot;
+    },
+    {
+      &quot;type&quot;: &quot;list&quot;,
+      &quot;items&quot;: [
+        { &quot;type&quot;: &quot;text&quot;, &quot;content&quot;: &quot;Item 1&quot; },
+        { &quot;type&quot;: &quot;text&quot;, &quot;content&quot;: &quot;Item 2&quot; }
+      ]
+    }
+  ]
+}
+</code></pre>
+<h3 id="44-a2ui">4.4 自定义 A2UI 组件</h3>
+<p><strong>注册自定义组件</strong>：</p>
+<pre><code class="language-tsx">// lib/agent/customComponents.ts
+import { registerA2UIComponent } from '@/lib/agent/registry'
+
+// 注册自定义图表组件
+registerA2UIComponent('chart', {
+  render: (props: ChartProps) =&gt; &lt;Chart {...props} /&gt;,
+  validate: (props) =&gt; {
+    // 验证 props
+    return true
+  },
+})
+</code></pre>
+<p><strong>在 A2UI Schema 中使用</strong>：</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;chart&quot;,
+  &quot;chartType&quot;: &quot;line&quot;,
+  &quot;data&quot;: [
+    { &quot;x&quot;: &quot;Jan&quot;, &quot;y&quot;: 100 },
+    { &quot;x&quot;: &quot;Feb&quot;, &quot;y&quot;: 150 }
+  ]
+}
+</code></pre>
+<hr />
+<h2 id="_5">五、数据服务层</h2>
+<h3 id="51-dataservice">5.1 DataService 架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                     DataService                          │
+│  ┌─────────────────────────────────────────────────┐    │
+│  │                 统一 API 接口                     │    │
+│  └─────────────────────────────────────────────────┘    │
+│                         │                                │
+│         ┌───────────────┼───────────────┐               │
+│         ▼               ▼               ▼               │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐       │
+│  │  IndexedDB  │ │   Sync      │ │  Supabase   │       │
+│  │  (本地存储)  │ │  (同步引擎)  │ │  (云端 API)  │       │
+│  └─────────────┘ └─────────────┘ └─────────────┘       │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="52-dataservice">5.2 使用 DataService</h3>
+<p><strong>读取数据</strong>：</p>
+<pre><code class="language-tsx">import { dataService } from '@/services/data/DataService'
+
+// 获取单个实体
+const product = await dataService.getProduct('product-123')
+
+// 获取列表
+const products = await dataService.getProducts({ category: 'electronics' })
+
+// 使用 React Query
+const { data, isLoading } = useQuery({
+  queryKey: ['products', category],
+  queryFn: () =&gt; dataService.getProducts({ category }),
+})
+</code></pre>
+<p><strong>写入数据</strong>：</p>
+<pre><code class="language-tsx">// 创建
+const newProduct = await dataService.createProduct({
+  name: 'New Product',
+  price: 99.99,
+})
+
+// 更新
+await dataService.updateProduct('product-123', {
+  price: 89.99,
+})
+
+// 删除
+await dataService.deleteProduct('product-123')
+</code></pre>
+<h3 id="53">5.3 实时订阅</h3>
+<p><strong>订阅数据变化</strong>：</p>
+<pre><code class="language-tsx">// hooks/useRealtimeProducts.ts
+import { useEffect, useState } from 'react'
+import { dataService } from '@/services/data/DataService'
+
+export function useRealtimeProducts() {
+  const [products, setProducts] = useState&lt;Product[]&gt;([])
+
+  useEffect(() =&gt; {
+    // 初始加载
+    dataService.getProducts().then(setProducts)
+
+    // 订阅变化
+    const subscription = dataService.subscribeToProducts((updated) =&gt; {
+      setProducts(updated)
+    })
+
+    return () =&gt; subscription.unsubscribe()
+  }, [])
+
+  return products
+}
+</code></pre>
+<h3 id="54">5.4 离线支持</h3>
+<p><strong>IndexedDB 缓存</strong>：</p>
+<pre><code class="language-tsx">// services/data/adapters/IndexedDBAdapter.ts
+import { openDB } from 'idb'
+
+const db = await openDB('opc-starter', 1, {
+  upgrade(db) {
+    db.createObjectStore('products', { keyPath: 'id' })
+    db.createObjectStore('orders', { keyPath: 'id' })
+  },
+})
+
+// 读取
+const products = await db.getAll('products')
+
+// 写入
+await db.put('products', product)
+
+// 删除
+await db.delete('products', productId)
+</code></pre>
+<hr />
+<h2 id="_6">六、测试与质量保证</h2>
+<h3 id="61">6.1 单元测试</h3>
+<p><strong>使用 Vitest</strong>：</p>
+<pre><code class="language-tsx">// __tests__/components/ProductCard.test.tsx
+import { render, screen } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { ProductCard } from '@/components/ProductCard'
+
+describe('ProductCard', () =&gt; {
+  it('renders product name', () =&gt; {
+    const product = { id: '1', name: 'Test Product', price: 99.99 }
+    render(&lt;ProductCard product={product} /&gt;)
+
+    expect(screen.getByText('Test Product')).toBeInTheDocument()
+  })
+
+  it('formats price correctly', () =&gt; {
+    const product = { id: '1', name: 'Test', price: 99.99 }
+    render(&lt;ProductCard product={product} /&gt;)
+
+    expect(screen.getByText('$99.99')).toBeInTheDocument()
+  })
+})
+</code></pre>
+<p><strong>运行测试</strong>：</p>
+<pre><code class="language-bash"># 运行所有测试
+npm test
+
+# 监听模式
+npm test -- --watch
+
+# 覆盖率报告
+npm test -- --coverage
+</code></pre>
+<h3 id="62-e2e">6.2 E2E 测试</h3>
+<p><strong>使用 Cypress</strong>：</p>
+<pre><code class="language-typescript">// cypress/e2e/login.cy.ts
+describe('Login Flow', () =&gt; {
+  it('should login successfully', () =&gt; {
+    cy.visit('/login')
+
+    cy.get('[data-testid=&quot;email-input&quot;]').type('test@example.com')
+    cy.get('[data-testid=&quot;password-input&quot;]').type('888888')
+    cy.get('[data-testid=&quot;login-button&quot;]').click()
+
+    cy.url().should('include', '/')
+    cy.contains('Dashboard').should('be.visible')
+  })
+})
+</code></pre>
+<p><strong>运行 E2E 测试</strong>：</p>
+<pre><code class="language-bash"># 交互模式
+npm run test:e2e
+
+# 无头模式（CI）
+npm run test:e2e:headless
+</code></pre>
+<h3 id="63">6.3 质量检查</h3>
+<p><strong>AI 质量检查命令</strong>：</p>
+<pre><code class="language-bash"># 核心检查（lint + type-check + test + build）
+npm run ai:check
+
+# 完整质量检查脚本
+./scripts/quality_check.sh
+</code></pre>
+<p><strong>质量检查清单</strong>：</p>
+<ul>
+<li>[ ] ESLint 无错误</li>
+<li>[ ] TypeScript 类型检查通过</li>
+<li>[ ] 单元测试全部通过</li>
+<li>[ ] E2E 测试全部通过</li>
+<li>[ ] 生产构建成功</li>
+<li>[ ] 无 console 警告</li>
+</ul>
+<hr />
+<h2 id="ai">七、AI 辅助开发最佳实践</h2>
+<h3 id="71-agentsmd">7.1 使用 AGENTS.md</h3>
+<p><strong>AGENTS.md</strong> 是给 AI 编码工具的项目指南：</p>
+<pre><code class="language-markdown"># AGENTS.md
+
+## 项目概述
+OPC-Starter 是一个 AI-Friendly React Boilerplate...
+
+## 代码风格
+- 使用函数组件和 Hooks
+- 遵循 TypeScript 严格模式
+- 组件命名：PascalCase
+- 函数命名：camelCase
+
+## 目录约定
+- components/ - 可复用组件
+- pages/ - 页面组件
+- hooks/ - 自定义 Hooks
+- stores/ - Zustand 状态
+
+## AI 迭代地图
+| 想做什么 | 从哪里开始 | 推荐验证 |
+|---------|-----------|---------|
+| 新增页面 | routes.tsx | npm run type-check |
+| 改数据访问 | DataService.ts | npm test |
+...
+</code></pre>
+<h3 id="72-cursor">7.2 Cursor 使用技巧</h3>
+<p><strong>1. 使用 @ 符号引用文件</strong></p>
+<pre><code>@components/ProductCard.tsx 请帮我添加一个价格显示功能
+</code></pre>
+<p><strong>2. 使用 Codebase Indexing</strong></p>
+<pre><code># indexing 整个项目
+/Codebase: Re-index
+</code></pre>
+<p><strong>3. 使用 BMAD 工作流</strong></p>
+<pre><code>/analyst 分析这个需求
+/pm 生成 PRD
+/dev 实现功能
+</code></pre>
+<h3 id="73-ai">7.3 AI 友好的代码结构</h3>
+<p><strong>原则</strong>：</p>
+<ol>
+<li><strong>单一职责</strong>：每个文件只做一件事</li>
+<li><strong>清晰命名</strong>：文件名和函数名要有描述性</li>
+<li><strong>类型完整</strong>：不要使用 any</li>
+<li><strong>注释适度</strong>：复杂逻辑添加注释</li>
+</ol>
+<p><strong>示例</strong>：</p>
+<pre><code class="language-tsx">// ❌ 不好：文件太大，职责不清
+// components/Product.tsx (500 行)
+
+// ✅ 好：职责清晰
+// components/ProductCard.tsx (50 行)
+// components/ProductList.tsx (80 行)
+// components/ProductDetail.tsx (100 行)
+// hooks/useProduct.ts (40 行)
+// types/product.ts (20 行)
+</code></pre>
+<h3 id="74-ai">7.4 常见 AI 辅助任务</h3>
+<p><strong>添加新功能</strong>：</p>
+<pre><code>请帮我添加一个订单管理页面：
+1. 显示订单列表
+2. 支持搜索和筛选
+3. 点击订单可查看详情
+
+参考 @components/ProductList.tsx 的结构
+</code></pre>
+<p><strong>修复 Bug</strong>：</p>
+<pre><code>@components/Checkout.tsx 中的支付按钮点击后没有响应
+请帮我定位问题并修复
+</code></pre>
+<p><strong>重构代码</strong>：</p>
+<pre><code>@services/data/DataService.ts 这个文件太大了
+请帮我拆分成多个文件，保持功能不变
+</code></pre>
+<hr />
+<h2 id="_7">八、部署与上线</h2>
+<h3 id="81">8.1 构建生产版本</h3>
+<pre><code class="language-bash"># 构建
+npm run build
+
+# 预览构建结果
+npm run preview
+</code></pre>
+<h3 id="82-vercel">8.2 部署到 Vercel</h3>
+<p><strong>方式一：通过 Vercel CLI</strong></p>
+<pre><code class="language-bash"># 安装 Vercel CLI
+npm i -g vercel
+
+# 部署
+vercel
+</code></pre>
+<p><strong>方式二：通过 GitHub 集成</strong></p>
+<ol>
+<li>将代码推送到 GitHub</li>
+<li>在 Vercel 中导入项目</li>
+<li>配置环境变量</li>
+<li>自动部署</li>
+</ol>
+<h3 id="83-netlify">8.3 部署到 Netlify</h3>
+<pre><code class="language-bash"># 安装 Netlify CLI
+npm i -g netlify-cli
+
+# 构建
+npm run build
+
+# 部署
+netlify deploy --prod --dir=dist
+</code></pre>
+<h3 id="84">8.4 环境变量配置</h3>
+<p><strong>生产环境变量</strong>：</p>
+<pre><code class="language-env"># Supabase
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-production-anon-key
+
+# LLM Provider（可选）
+VITE_DASHSCOPE_API_KEY=your_dashscope_api_key
+
+# 功能开关
+VITE_ENABLE_MSW=false
+</code></pre>
+<h3 id="85-supabase">8.5 Supabase 生产配置</h3>
+<p><strong>安全设置</strong>：</p>
+<ol>
+<li>在 Supabase Dashboard 中配置 Row Level Security (RLS)</li>
+<li>设置 API 速率限制</li>
+<li>配置 CORS 允许的域名</li>
+</ol>
+<p><strong>数据库优化</strong>：</p>
+<pre><code class="language-sql">-- 添加索引
+CREATE INDEX idx_products_category ON products(category);
+CREATE INDEX idx_orders_user_id ON orders(user_id);
+
+-- 配置 RLS 策略
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY &quot;Users can view their own orders&quot;
+ON orders FOR SELECT
+USING (user_id = auth.uid());
+</code></pre>
+<hr />
+<h2 id="_8">附录：常用命令速查表</h2>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm run dev</code></td>
+<td>启动开发服务器（真实后端）</td>
+</tr>
+<tr>
+<td><code>npm run dev:test</code></td>
+<td>启动开发服务器（Mock 模式）</td>
+</tr>
+<tr>
+<td><code>npm test</code></td>
+<td>运行单元测试</td>
+</tr>
+<tr>
+<td><code>npm run test:e2e</code></td>
+<td>运行 E2E 测试</td>
+</tr>
+<tr>
+<td><code>npm run type-check</code></td>
+<td>TypeScript 类型检查</td>
+</tr>
+<tr>
+<td><code>npm run lint</code></td>
+<td>ESLint 检查</td>
+</tr>
+<tr>
+<td><code>npm run build</code></td>
+<td>构建生产版本</td>
+</tr>
+<tr>
+<td><code>npm run ai:check</code></td>
+<td>完整质量检查</td>
+</tr>
+<tr>
+<td><code>./scripts/quality_check.sh</code></td>
+<td>完整质量检查（含 E2E）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<p><em>教程生成时间：2026-03-21</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

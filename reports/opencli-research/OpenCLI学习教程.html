@@ -1,0 +1,1586 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCLI 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">"帮我看看 B 站今天有什么热门视频"</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">目录</a></li>
+<li><a href="#_2" class="toc-h2">一、快速开始</a></li>
+<li><a href="#11-opencli" class="toc-h3">1.1 什么是 OpenCLI？</a></li>
+<li><a href="#12" class="toc-h3">1.2 核心优势</a></li>
+<li><a href="#13-5" class="toc-h3">1.3 5 分钟上手</a></li>
+<li><a href="#_3" class="toc-h2">二、安装配置</a></li>
+<li><a href="#21" class="toc-h3">2.1 系统要求</a></li>
+<li><a href="#22-opencli" class="toc-h3">2.2 安装 OpenCLI</a></li>
+<li><a href="#23-chrome" class="toc-h3">2.3 安装 Chrome 扩展</a></li>
+<li><a href="#24" class="toc-h3">2.4 验证安装</a></li>
+<li><a href="#25" class="toc-h3">2.5 配置环境变量（可选）</a></li>
+<li><a href="#_4" class="toc-h2">三、基础命令</a></li>
+<li><a href="#31" class="toc-h3">3.1 查看帮助</a></li>
+<li><a href="#32" class="toc-h3">3.2 通用参数</a></li>
+<li><a href="#33" class="toc-h3">3.3 诊断命令</a></li>
+<li><a href="#34-mcp" class="toc-h3">3.4 MCP 服务器</a></li>
+<li><a href="#_5" class="toc-h2">四、平台使用示例</a></li>
+<li><a href="#41-bilibilib" class="toc-h3">4.1 Bilibili（B 站）</a></li>
+<li><a href="#42" class="toc-h3">4.2 知乎</a></li>
+<li><a href="#43" class="toc-h3">4.3 小红书</a></li>
+<li><a href="#44-twitterx" class="toc-h3">4.4 Twitter/X</a></li>
+<li><a href="#45-youtube" class="toc-h3">4.5 YouTube</a></li>
+<li><a href="#46-reddit" class="toc-h3">4.6 Reddit</a></li>
+<li><a href="#47-github" class="toc-h3">4.7 GitHub</a></li>
+<li><a href="#48" class="toc-h3">4.8 微博</a></li>
+<li><a href="#ai-agent" class="toc-h2">五、AI Agent 集成</a></li>
+<li><a href="#51-claude-code" class="toc-h3">5.1 Claude Code 集成</a></li>
+<li><a href="#52-cursor" class="toc-h3">5.2 Cursor 集成</a></li>
+<li><a href="#53" class="toc-h3">5.3 使用示例</a></li>
+<li><a href="#54-mcp" class="toc-h3">5.4 MCP 工具列表</a></li>
+<li><a href="#_6" class="toc-h2">六、自定义适配器</a></li>
+<li><a href="#61-yaml" class="toc-h3">6.1 YAML 声明式适配器</a></li>
+<li><a href="#62-typescript" class="toc-h3">6.2 TypeScript 注入适配器</a></li>
+<li><a href="#63" class="toc-h3">6.3 适配器配置参考</a></li>
+<li><a href="#_7" class="toc-h2">七、进阶技巧</a></li>
+<li><a href="#71" class="toc-h3">7.1 链式操作</a></li>
+<li><a href="#72" class="toc-h3">7.2 定时任务</a></li>
+<li><a href="#73" class="toc-h3">7.3 脚本集成</a></li>
+<li><a href="#74" class="toc-h3">7.4 错误处理</a></li>
+<li><a href="#75" class="toc-h3">7.5 调试模式</a></li>
+<li><a href="#_8" class="toc-h2">八、常见问题</a></li>
+<li><a href="#81" class="toc-h3">8.1 连接问题</a></li>
+<li><a href="#82" class="toc-h3">8.2 登录状态问题</a></li>
+<li><a href="#83" class="toc-h3">8.3 适配器问题</a></li>
+<li><a href="#84" class="toc-h3">8.4 性能问题</a></li>
+<li><a href="#85-mcp" class="toc-h3">8.5 MCP 集成问题</a></li>
+<li><a href="#_9" class="toc-h2">九、最佳实践</a></li>
+<li><a href="#91" class="toc-h3">9.1 安全建议</a></li>
+<li><a href="#92" class="toc-h3">9.2 性能优化</a></li>
+<li><a href="#93" class="toc-h3">9.3 开发建议</a></li>
+<li><a href="#94" class="toc-h3">9.4 运维建议</a></li>
+<li><a href="#_10" class="toc-h2">十、速查表</a></li>
+<li><a href="#101" class="toc-h3">10.1 常用命令</a></li>
+<li><a href="#102" class="toc-h3">10.2 平台速查</a></li>
+<li><a href="#103" class="toc-h3">10.3 输出格式</a></li>
+<li><a href="#_11" class="toc-h2">参考资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenCLI 学习教程</h1>
+                        <div class="article-meta">"帮我看看 B 站今天有什么热门视频"</div>
+                    </header>
+                    <h1 id="opencli">OpenCLI 学习教程</h1>
+<h2 id="_1">目录</h2>
+<ol>
+<li><a href="#一快速开始">快速开始</a></li>
+<li><a href="#二安装配置">安装配置</a></li>
+<li><a href="#三基础命令">基础命令</a></li>
+<li><a href="#四平台使用示例">平台使用示例</a></li>
+<li><a href="#五ai-agent-集成">AI Agent 集成</a></li>
+<li><a href="#六自定义适配器">自定义适配器</a></li>
+<li><a href="#七进阶技巧">进阶技巧</a></li>
+<li><a href="#八常见问题">常见问题</a></li>
+<li><a href="#九最佳实践">最佳实践</a></li>
+</ol>
+<hr />
+<h2 id="_2">一、快速开始</h2>
+<h3 id="11-opencli">1.1 什么是 OpenCLI？</h3>
+<p>OpenCLI 是一个 <strong>AI 原生的 CLI 运行时</strong>，让你可以通过命令行操作浏览器：</p>
+<pre><code class="language-bash"># 获取 B 站热门视频
+opencli bilibili hot --limit 5
+
+# 查看知乎日报
+opencli zhihu daily
+
+# 获取 Twitter 热搜
+opencli twitter trending
+</code></pre>
+<h3 id="12">1.2 核心优势</h3>
+<ul>
+<li><strong>零配置登录</strong>：复用 Chrome 登录状态</li>
+<li><strong>轻量高效</strong>：Extension 架构，内存占用极低</li>
+<li><strong>AI 友好</strong>：原生 MCP 集成</li>
+</ul>
+<h3 id="13-5">1.3 5 分钟上手</h3>
+<pre><code class="language-bash"># 1. 安装 OpenCLI
+npm install -g @jackwener/opencli
+
+# 2. 安装 Chrome 扩展（见下一节）
+
+# 3. 诊断连接
+opencli doctor
+
+# 4. 执行第一个命令
+opencli bilibili hot --limit 5
+</code></pre>
+<hr />
+<h2 id="_3">二、安装配置</h2>
+<h3 id="21">2.1 系统要求</h3>
+<table>
+<thead>
+<tr>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Node.js</strong></td>
+<td>18.0+</td>
+</tr>
+<tr>
+<td><strong>Chrome</strong></td>
+<td>最新稳定版</td>
+</tr>
+<tr>
+<td><strong>操作系统</strong></td>
+<td>macOS / Linux / Windows</td>
+</tr>
+</tbody>
+</table>
+<h3 id="22-opencli">2.2 安装 OpenCLI</h3>
+<pre><code class="language-bash"># 使用 npm
+npm install -g @jackwener/opencli
+
+# 使用 pnpm
+pnpm add -g @jackwener/opencli
+
+# 使用 yarn
+yarn global add @jackwener/opencli
+
+# 验证安装
+opencli --version
+</code></pre>
+<h3 id="23-chrome">2.3 安装 Chrome 扩展</h3>
+<p><strong>方法一：Chrome Web Store（推荐）</strong></p>
+<ol>
+<li>打开 Chrome Web Store</li>
+<li>搜索 "OpenCLI"</li>
+<li>点击"添加到 Chrome"</li>
+</ol>
+<p><strong>方法二：手动安装</strong></p>
+<pre><code class="language-bash"># 1. 下载扩展
+# 从 GitHub Releases 下载 opencli-extension.zip
+
+# 2. 解压
+unzip opencli-extension.zip -d opencli-extension
+
+# 3. 加载到 Chrome
+# - 打开 chrome://extensions/
+# - 开启「开发者模式」
+# - 点击「加载已解压的扩展程序」
+# - 选择解压后的目录
+</code></pre>
+<h3 id="24">2.4 验证安装</h3>
+<pre><code class="language-bash"># 诊断连接状态
+opencli doctor
+
+# 预期输出：
+# ✓ Chrome Extension connected
+# ✓ Daemon running
+# ✓ All systems operational
+</code></pre>
+<h3 id="25">2.5 配置环境变量（可选）</h3>
+<pre><code class="language-bash"># ~/.zshrc 或 ~/.bashrc
+
+# Daemon 端口
+export OPENCLI_DAEMON_PORT=9527
+
+# 日志级别
+export OPENCLI_LOG_LEVEL=info
+
+# 配置文件路径
+export OPENCLI_CONFIG_DIR=~/.opencli
+</code></pre>
+<hr />
+<h2 id="_4">三、基础命令</h2>
+<h3 id="31">3.1 查看帮助</h3>
+<pre><code class="language-bash"># 查看所有命令
+opencli list
+
+# 查看特定平台命令
+opencli bilibili --help
+
+# YAML 格式输出
+opencli list -f yaml
+</code></pre>
+<h3 id="32">3.2 通用参数</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--limit</code></td>
+<td>限制返回数量</td>
+<td><code>--limit 10</code></td>
+</tr>
+<tr>
+<td><code>--json</code></td>
+<td>JSON 格式输出</td>
+<td><code>--json</code></td>
+</tr>
+<tr>
+<td><code>--format</code></td>
+<td>自定义输出格式</td>
+<td><code>--format yaml</code></td>
+</tr>
+<tr>
+<td><code>--verbose</code></td>
+<td>详细日志</td>
+<td><code>-v</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="33">3.3 诊断命令</h3>
+<pre><code class="language-bash"># 检查连接状态
+opencli doctor
+
+# 查看版本
+opencli version
+
+# 查看配置
+opencli config
+</code></pre>
+<h3 id="34-mcp">3.4 MCP 服务器</h3>
+<pre><code class="language-bash"># 启动 MCP 服务器（供 AI Agent 调用）
+opencli mcp
+
+# 指定端口
+opencli mcp --port 3000
+</code></pre>
+<hr />
+<h2 id="_5">四、平台使用示例</h2>
+<h3 id="41-bilibilib">4.1 Bilibili（B 站）</h3>
+<pre><code class="language-bash"># 获取热门视频
+opencli bilibili hot --limit 10
+
+# 搜索视频
+opencli bilibili search &quot;AI 教程&quot;
+
+# 获取用户信息
+opencli bilibili user 嘉然今天吃什么
+
+# 获取视频详情
+opencli bilibili video BV1xx411c7mD
+
+# 获取评论
+opencli bilibili comments BV1xx411c7mD --limit 20
+</code></pre>
+<h3 id="42">4.2 知乎</h3>
+<pre><code class="language-bash"># 获取知乎日报
+opencli zhihu daily
+
+# 获取热榜
+opencli zhihu hot
+
+# 搜索问题
+opencli zhihu search &quot;如何学习编程&quot;
+
+# 获取问题详情
+opencli zhihu question 12345678
+
+# 获取回答
+opencli zhihu answers 12345678 --limit 10
+</code></pre>
+<h3 id="43">4.3 小红书</h3>
+<pre><code class="language-bash"># 获取推荐
+opencli xiaohongshu feed
+
+# 搜索笔记
+opencli xiaohongshu search &quot;穿搭&quot;
+
+# 获取用户笔记
+opencli xiaohongshu user 用户ID
+</code></pre>
+<h3 id="44-twitterx">4.4 Twitter/X</h3>
+<pre><code class="language-bash"># 获取热搜
+opencli twitter trending
+
+# 搜索推文
+opencli twitter search &quot;AI&quot;
+
+# 获取用户推文
+opencli twitter user elonmusk --limit 10
+
+# 获取推文详情
+opencli twitter tweet 1234567890
+</code></pre>
+<h3 id="45-youtube">4.5 YouTube</h3>
+<pre><code class="language-bash"># 获取热门
+opencli youtube trending
+
+# 搜索视频
+opencli youtube search &quot;tutorial&quot;
+
+# 获取视频信息
+opencli youtube video dQw4w9WgXcQ
+
+# 获取评论
+opencli youtube comments dQw4w9WgXcQ
+</code></pre>
+<h3 id="46-reddit">4.6 Reddit</h3>
+<pre><code class="language-bash"># 获取热门
+opencli reddit hot
+
+# 获取子版块内容
+opencli reddit r/programming
+
+# 搜索
+opencli reddit search &quot;open source&quot;
+</code></pre>
+<h3 id="47-github">4.7 GitHub</h3>
+<pre><code class="language-bash"># 获取趋势仓库
+opencli github trending
+
+# 搜索仓库
+opencli github search &quot;react&quot;
+
+# 获取仓库信息
+opencli github repo facebook/react
+
+# 获取 Issues
+opencli github issues facebook/react --limit 10
+</code></pre>
+<h3 id="48">4.8 微博</h3>
+<pre><code class="language-bash"># 获取热搜
+opencli weibo trending
+
+# 获取用户微博
+opencli weibo user 用户ID
+
+# 搜索
+opencli weibo search &quot;今日热点&quot;
+</code></pre>
+<hr />
+<h2 id="ai-agent">五、AI Agent 集成</h2>
+<h3 id="51-claude-code">5.1 Claude Code 集成</h3>
+<p>在 Claude Code 的 MCP 配置中添加 OpenCLI：</p>
+<pre><code class="language-json">// ~/.claude/claude_desktop_config.json
+{
+  &quot;mcpServers&quot;: {
+    &quot;opencli&quot;: {
+      &quot;command&quot;: &quot;opencli&quot;,
+      &quot;args&quot;: [&quot;mcp&quot;]
+    }
+  }
+}
+</code></pre>
+<h3 id="52-cursor">5.2 Cursor 集成</h3>
+<pre><code class="language-json">// .cursor/mcp.json
+{
+  &quot;mcpServers&quot;: {
+    &quot;opencli&quot;: {
+      &quot;command&quot;: &quot;opencli&quot;,
+      &quot;args&quot;: [&quot;mcp&quot;]
+    }
+  }
+}
+</code></pre>
+<h3 id="53">5.3 使用示例</h3>
+<p>配置完成后，AI Agent 可以直接调用：</p>
+<p><strong>用户提问</strong>：</p>
+<blockquote>
+<p>"帮我看看 B 站今天有什么热门视频"</p>
+</blockquote>
+<p><strong>AI 自动执行</strong>：</p>
+<pre><code class="language-bash">opencli bilibili hot --limit 10
+</code></pre>
+<p><strong>用户提问</strong>：</p>
+<blockquote>
+<p>"知乎上关于 AI 的热门话题有哪些？"</p>
+</blockquote>
+<p><strong>AI 自动执行</strong>：</p>
+<pre><code class="language-bash">opencli zhihu search &quot;AI&quot; --limit 5
+</code></pre>
+<h3 id="54-mcp">5.4 MCP 工具列表</h3>
+<p>通过 MCP 集成，AI 可以访问以下工具：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>opencli_list</code></td>
+<td>列出所有可用命令</td>
+</tr>
+<tr>
+<td><code>opencli_execute</code></td>
+<td>执行指定命令</td>
+</tr>
+<tr>
+<td><code>opencli_search</code></td>
+<td>跨平台搜索</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">六、自定义适配器</h2>
+<h3 id="61-yaml">6.1 YAML 声明式适配器</h3>
+<p><strong>适用场景</strong>：简单的页面抓取</p>
+<p><strong>创建步骤</strong>：</p>
+<pre><code class="language-bash"># 1. 创建适配器目录
+mkdir -p ~/.opencli/adapters/mysite
+
+# 2. 创建配置文件
+cat &gt; ~/.opencli/adapters/mysite/adapter.yaml &lt;&lt; 'EOF'
+name: mysite
+description: My Custom Site Adapter
+version: 1.0.0
+base_url: https://mysite.com
+
+commands:
+  - name: hot
+    description: Get hot posts
+    path: /hot
+    selectors:
+      items: &quot;.post-item&quot;
+      title: &quot;.post-title&quot;
+      link: &quot;a&quot;
+      score: &quot;.score&quot;
+    output:
+      type: array
+      fields:
+        - title
+        - link
+        - score
+
+  - name: search
+    description: Search posts
+    path: /search?q={query}
+    params:
+      - name: query
+        required: true
+    selectors:
+      items: &quot;.search-result&quot;
+      title: &quot;.title&quot;
+      snippet: &quot;.snippet&quot;
+EOF
+
+# 3. 测试适配器
+opencli mysite hot
+</code></pre>
+<h3 id="62-typescript">6.2 TypeScript 注入适配器</h3>
+<p><strong>适用场景</strong>：复杂的交互逻辑</p>
+<p><strong>创建步骤</strong>：</p>
+<pre><code class="language-bash"># 1. 初始化项目
+mkdir my-opencli-adapter
+cd my-opencli-adapter
+npm init -y
+
+# 2. 安装依赖
+npm install @jackwener/opencli typescript
+
+# 3. 创建适配器
+cat &gt; src/adapter.ts &lt;&lt; 'EOF'
+import { Adapter, Command, Param } from '@jackwener/opencli';
+
+export class MySiteAdapter extends Adapter {
+  name = 'mysite';
+  description = 'My Custom Site Adapter';
+
+  @Command({
+    name: 'hot',
+    description: 'Get hot posts'
+  })
+  async getHot(
+    @Param({ name: 'limit', description: 'Number of posts', default: 10 })
+    limit: number
+  ) {
+    const page = await this.getPage();
+    await page.goto('https://mysite.com/hot');
+
+    // 等待加载
+    await page.waitForSelector('.post-item');
+
+    // 提取数据
+    const posts = await page.evaluate(() =&gt; {
+      return Array.from(document.querySelectorAll('.post-item'))
+        .slice(0, limit)
+        .map(el =&gt; ({
+          title: el.querySelector('.title')?.textContent?.trim(),
+          link: el.querySelector('a')?.href,
+          score: parseInt(el.querySelector('.score')?.textContent || '0'),
+        }));
+    });
+
+    return posts;
+  }
+
+  @Command({
+    name: 'search',
+    description: 'Search posts'
+  })
+  async search(
+    @Param({ name: 'query', description: 'Search query', required: true })
+    query: string,
+    @Param({ name: 'limit', default: 10 })
+    limit: number
+  ) {
+    const page = await this.getPage();
+    await page.goto(`https://mysite.com/search?q=${encodeURIComponent(query)}`);
+
+    await page.waitForSelector('.search-result');
+
+    const results = await page.evaluate(() =&gt; {
+      return Array.from(document.querySelectorAll('.search-result'))
+        .slice(0, limit)
+        .map(el =&gt; ({
+          title: el.querySelector('.title')?.textContent?.trim(),
+          snippet: el.querySelector('.snippet')?.textContent?.trim(),
+          link: el.querySelector('a')?.href,
+        }));
+    });
+
+    return results;
+  }
+
+  @Command({
+    name: 'post',
+    description: 'Create a new post'
+  })
+  async createPost(
+    @Param({ name: 'title', required: true })
+    title: string,
+    @Param({ name: 'content', required: true })
+    content: string
+  ) {
+    const page = await this.getPage();
+
+    // 导航到创建页面
+    await page.goto('https://mysite.com/create');
+    await page.waitForSelector('#title');
+
+    // 填写表单
+    await page.type('#title', title);
+    await page.type('#content', content);
+
+    // 提交
+    await page.click('button[type=&quot;submit&quot;]');
+
+    // 等待成功
+    await page.waitForSelector('.success-message');
+
+    return { success: true, title };
+  }
+}
+
+export default MySiteAdapter;
+EOF
+
+# 4. 编译
+npx tsc
+
+# 5. 注册适配器
+opencli adapter add ./dist/adapter.js
+</code></pre>
+<h3 id="63">6.3 适配器配置参考</h3>
+<p><strong>YAML 完整配置示例</strong>：</p>
+<pre><code class="language-yaml">name: example
+version: 1.0.0
+description: Example adapter
+
+# 基础 URL
+base_url: https://example.com
+
+# 请求头
+headers:
+  User-Agent: &quot;Mozilla/5.0...&quot;
+  Accept: &quot;text/html&quot;
+
+# Cookie 处理
+cookies:
+  preserve: true  # 保留登录状态
+
+# 命令定义
+commands:
+  # 简单抓取命令
+  - name: list
+    description: List items
+    path: /api/items
+    method: GET
+    selectors:
+      items: &quot;$.data[*]&quot;  # JSONPath
+      id: &quot;$.id&quot;
+      name: &quot;$.name&quot;
+
+  # 带参数的命令
+  - name: search
+    description: Search items
+    path: /search?q={query}&amp;page={page}
+    params:
+      - name: query
+        required: true
+        type: string
+      - name: page
+        default: 1
+        type: number
+    selectors:
+      items: &quot;.result-item&quot;
+      title: &quot;.title&quot;
+
+  # POST 请求
+  - name: create
+    description: Create item
+    path: /api/items
+    method: POST
+    body:
+      name: &quot;{name}&quot;
+      content: &quot;{content}&quot;
+    params:
+      - name: name
+        required: true
+      - name: content
+        required: true
+
+# 输出配置
+output:
+  default_format: table
+  formats:
+    - table
+    - json
+    - yaml
+</code></pre>
+<hr />
+<h2 id="_7">七、进阶技巧</h2>
+<h3 id="71">7.1 链式操作</h3>
+<pre><code class="language-bash"># 使用 jq 处理输出
+opencli bilibili hot --json | jq '.[] | .title'
+
+# 导出为 CSV
+opencli zhihu hot --json | jq -r '.[] | [.title, .url] | @csv' &gt; hot.csv
+
+# 批量操作
+for tag in &quot;AI&quot; &quot;React&quot; &quot;Python&quot;; do
+  opencli bilibili search &quot;$tag&quot; --limit 5 --json &gt;&gt; results.json
+done
+</code></pre>
+<h3 id="72">7.2 定时任务</h3>
+<pre><code class="language-bash"># 使用 cron 定时采集
+# crontab -e
+
+# 每小时获取热搜
+0 * * * * opencli weibo trending --json &gt;&gt; ~/logs/weibo_$(date +\%Y\%m\%d).json
+
+# 每天早上获取知乎日报
+0 8 * * * opencli zhihu daily
+</code></pre>
+<h3 id="73">7.3 脚本集成</h3>
+<pre><code class="language-bash">#!/bin/bash
+# monitor.sh - 跨平台热度监控
+
+echo &quot;=== Daily Hot Monitor ===&quot;
+echo &quot;Date: $(date)&quot;
+echo &quot;&quot;
+
+echo &quot;## Bilibili Hot&quot;
+opencli bilibili hot --limit 5
+
+echo &quot;&quot;
+echo &quot;## Zhihu Hot&quot;
+opencli zhihu hot --limit 5
+
+echo &quot;&quot;
+echo &quot;## Weibo Trending&quot;
+opencli weibo trending --limit 5
+</code></pre>
+<h3 id="74">7.4 错误处理</h3>
+<pre><code class="language-bash">#!/bin/bash
+# 带错误处理的脚本
+
+# 检查连接
+if ! opencli doctor &amp;&gt; /dev/null; then
+  echo &quot;Error: OpenCLI not connected&quot;
+  exit 1
+fi
+
+# 执行命令并处理错误
+result=$(opencli bilibili hot --limit 10 2&gt;&amp;1)
+if [ $? -ne 0 ]; then
+  echo &quot;Command failed: $result&quot;
+  exit 1
+fi
+
+echo &quot;$result&quot;
+</code></pre>
+<h3 id="75">7.5 调试模式</h3>
+<pre><code class="language-bash"># 启用详细日志
+OPENCLI_LOG_LEVEL=debug opencli bilibili hot
+
+# 保存日志
+opencli bilibili hot --verbose 2&gt;&amp;1 | tee debug.log
+
+# 查看 Daemon 状态
+opencli doctor --verbose
+</code></pre>
+<hr />
+<h2 id="_8">八、常见问题</h2>
+<h3 id="81">8.1 连接问题</h3>
+<p><strong>问题</strong>：<code>opencli doctor</code> 显示连接失败</p>
+<p><strong>解决方案</strong>：</p>
+<pre><code class="language-bash"># 1. 检查 Chrome 是否运行
+pgrep -f &quot;Google Chrome&quot;
+
+# 2. 检查扩展是否安装
+# 打开 chrome://extensions/ 确认
+
+# 3. 重启 Daemon
+opencli daemon restart
+
+# 4. 检查端口占用
+lsof -i :9527
+</code></pre>
+<h3 id="82">8.2 登录状态问题</h3>
+<p><strong>问题</strong>：提示需要登录</p>
+<p><strong>解决方案</strong>：</p>
+<pre><code class="language-bash"># 1. 确保在 Chrome 中已登录目标网站
+# 2. 检查 Chrome 中的 Cookie
+# 3. 尝试重新登录网站
+</code></pre>
+<h3 id="83">8.3 适配器问题</h3>
+<p><strong>问题</strong>：某个平台的命令不工作</p>
+<p><strong>解决方案</strong>：</p>
+<pre><code class="language-bash"># 1. 检查适配器版本
+opencli adapter list
+
+# 2. 更新适配器
+opencli adapter update bilibili
+
+# 3. 使用调试模式
+OPENCLI_LOG_LEVEL=debug opencli bilibili hot
+</code></pre>
+<h3 id="84">8.4 性能问题</h3>
+<p><strong>问题</strong>：命令执行缓慢</p>
+<p><strong>解决方案</strong>：</p>
+<pre><code class="language-bash"># 1. 减少返回数量
+opencli bilibili hot --limit 5
+
+# 2. 使用 --json 跳过格式化
+opencli bilibili hot --json
+
+# 3. 检查网络连接
+</code></pre>
+<h3 id="85-mcp">8.5 MCP 集成问题</h3>
+<p><strong>问题</strong>：AI 无法调用 OpenCLI</p>
+<p><strong>解决方案</strong>：</p>
+<pre><code class="language-bash"># 1. 确认 MCP 服务运行
+opencli mcp &amp;
+
+# 2. 检查配置文件路径
+# Claude Code: ~/.claude/claude_desktop_config.json
+# Cursor: .cursor/mcp.json
+
+# 3. 重启 AI 工具
+</code></pre>
+<hr />
+<h2 id="_9">九、最佳实践</h2>
+<h3 id="91">9.1 安全建议</h3>
+<ol>
+<li><strong>不要在公共电脑使用</strong>：OpenCLI 可以访问你的登录状态</li>
+<li><strong>定期检查权限</strong>：审查 Extension 的权限设置</li>
+<li><strong>敏感操作确认</strong>：对删除、发布等操作添加二次确认</li>
+</ol>
+<h3 id="92">9.2 性能优化</h3>
+<ol>
+<li><strong>合理使用 limit</strong>：避免一次性获取过多数据</li>
+<li><strong>批量操作</strong>：合并多个请求</li>
+<li><strong>缓存数据</strong>：对频繁访问的数据进行缓存</li>
+</ol>
+<h3 id="93">9.3 开发建议</h3>
+<ol>
+<li><strong>版本控制</strong>：将自定义适配器纳入 Git 管理</li>
+<li><strong>测试覆盖</strong>：为适配器编写测试用例</li>
+<li><strong>文档完善</strong>：记录适配器的使用说明</li>
+</ol>
+<h3 id="94">9.4 运维建议</h3>
+<ol>
+<li><strong>监控日志</strong>：定期检查 OpenCLI 日志</li>
+<li><strong>定时更新</strong>：保持 OpenCLI 和适配器最新</li>
+<li><strong>备份配置</strong>：定期备份 ~/.opencli 目录</li>
+</ol>
+<hr />
+<h2 id="_10">十、速查表</h2>
+<h3 id="101">10.1 常用命令</h3>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>opencli list</code></td>
+<td>列出所有命令</td>
+</tr>
+<tr>
+<td><code>opencli doctor</code></td>
+<td>诊断连接</td>
+</tr>
+<tr>
+<td><code>opencli mcp</code></td>
+<td>启动 MCP 服务</td>
+</tr>
+<tr>
+<td><code>opencli &lt;platform&gt; hot</code></td>
+<td>获取热门内容</td>
+</tr>
+<tr>
+<td><code>opencli &lt;platform&gt; search &lt;query&gt;</code></td>
+<td>搜索内容</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 平台速查</h3>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>命令前缀</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bilibili</td>
+<td><code>bilibili</code></td>
+<td><code>opencli bilibili hot</code></td>
+</tr>
+<tr>
+<td>知乎</td>
+<td><code>zhihu</code></td>
+<td><code>opencli zhihu daily</code></td>
+</tr>
+<tr>
+<td>小红书</td>
+<td><code>xiaohongshu</code></td>
+<td><code>opencli xiaohongshu feed</code></td>
+</tr>
+<tr>
+<td>Twitter</td>
+<td><code>twitter</code></td>
+<td><code>opencli twitter trending</code></td>
+</tr>
+<tr>
+<td>YouTube</td>
+<td><code>youtube</code></td>
+<td><code>opencli youtube search</code></td>
+</tr>
+<tr>
+<td>Reddit</td>
+<td><code>reddit</code></td>
+<td><code>opencli reddit hot</code></td>
+</tr>
+<tr>
+<td>GitHub</td>
+<td><code>github</code></td>
+<td><code>opencli github trending</code></td>
+</tr>
+<tr>
+<td>微博</td>
+<td><code>weibo</code></td>
+<td><code>opencli weibo trending</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="103">10.3 输出格式</h3>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>--json</code></td>
+<td>JSON 格式</td>
+</tr>
+<tr>
+<td><code>--yaml</code></td>
+<td>YAML 格式</td>
+</tr>
+<tr>
+<td><code>--table</code></td>
+<td>表格格式（默认）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_11">参考资源</h2>
+<ul>
+<li><strong>GitHub 仓库</strong>：https://github.com/jackwener/opencli</li>
+<li><strong>NPM 包</strong>：https://www.npmjs.com/package/@jackwener/opencli</li>
+<li><strong>问题反馈</strong>：GitHub Issues</li>
+</ul>
+<hr />
+<p><em>教程生成时间：2026-03-21</em></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>
