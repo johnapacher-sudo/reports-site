@@ -1,0 +1,1847 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRELLIS - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-10 小时 | **前置知识：** Python 编程基础、深度学习基础概念（模型推理、GPU）、命令行操作、3D 图形学基础概念（Mesh、纹理）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#trellis-v1" class="toc-h3">安装步骤（TRELLIS v1）</a></li>
+<li><a href="#trellis2" class="toc-h3">安装步骤（TRELLIS.2）</a></li>
+<li><a href="#_3" class="toc-h3">验证安装</a></li>
+<li><a href="#_4" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-trellis-slat" class="toc-h3">1.1 理解 TRELLIS 的核心概念——SLAT 表示</a></li>
+<li><a href="#12-3d-3d" class="toc-h3">1.2 第一次 3D 生成——图像到 3D</a></li>
+<li><a href="#13" class="toc-h3">1.3 理解三种输出格式</a></li>
+<li><a href="#_5" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 调优生成参数</a></li>
+<li><a href="#22-3d" class="toc-h3">2.2 文本到 3D 生成</a></li>
+<li><a href="#23-3d" class="toc-h3">2.3 多图像到 3D 生成</a></li>
+<li><a href="#24-gradio-web" class="toc-h3">2.4 使用 Gradio Web 界面</a></li>
+<li><a href="#_6" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 资产变体生成（保持结构，改变外观）</a></li>
+<li><a href="#32-trellis2-pbr" class="toc-h3">3.2 TRELLIS.2 高级特性——PBR 纹理和分辨率控制</a></li>
+<li><a href="#33-trellis2" class="toc-h3">3.3 TRELLIS.2 纹理生成管线</a></li>
+<li><a href="#34" class="toc-h3">3.4 性能优化与显存管理</a></li>
+<li><a href="#35" class="toc-h3">3.5 最佳实践</a></li>
+<li><a href="#_7" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_8" class="toc-h3">项目需求</a></li>
+<li><a href="#_9" class="toc-h3">项目设计</a></li>
+<li><a href="#_10" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_11" class="toc-h3">代码解析</a></li>
+<li><a href="#_12" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_13" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_14" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_15" class="toc-h3">调试技巧</a></li>
+<li><a href="#_16" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_17" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_18" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_19" class="toc-h3">相关技术拓展</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>TRELLIS - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-10 小时<br>**前置知识：** Python 编程基础、深度学习基础概念（模型推理、GPU）、命令行操作、3D 图形学基础概念（Mesh、纹理）</div>
+                    </header>
+                    <h1 id="trellis-">TRELLIS - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-10 小时
+<strong>前置知识：</strong> Python 编程基础、深度学习基础概念（模型推理、GPU）、命令行操作、3D 图形学基础概念（Mesh、纹理）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>TRELLIS v1</th>
+<th>TRELLIS.2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>操作系统</strong></td>
+<td>Linux</td>
+<td>Linux</td>
+</tr>
+<tr>
+<td><strong>GPU</strong></td>
+<td>NVIDIA 16GB+ 显存（A100、A6000）</td>
+<td>NVIDIA 24GB+ 显存（A100、H100）</td>
+</tr>
+<tr>
+<td><strong>CUDA</strong></td>
+<td>11.8 或 12.2</td>
+<td>12.4</td>
+</tr>
+<tr>
+<td><strong>Python</strong></td>
+<td>3.8+</td>
+<td>3.8+</td>
+</tr>
+<tr>
+<td><strong>Conda</strong></td>
+<td>推荐 Miniconda</td>
+<td>推荐 Miniconda</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>注意：</strong> Windows 用户请参考社区项目 <a href="https://github.com/MackinationsAi/Window_Trellis">Window_Trellis</a>。macOS 不支持（需要 NVIDIA GPU + CUDA）。</p>
+</blockquote>
+<h3 id="trellis-v1">安装步骤（TRELLIS v1）</h3>
+<pre><code class="language-bash"># 1. 克隆仓库（含子模块）
+git clone --recurse-submodules https://github.com/microsoft/TRELLIS.git
+cd TRELLIS
+
+# 2. 运行一键安装脚本（创建 conda 环境 + 安装所有依赖）
+. ./setup.sh --new-env --basic --xformers --flash-attn --diffoctreerast --spconv --mipgaussian --kaolin --nvdiffrast
+
+# 脚本会自动完成：
+# - 创建名为 &quot;trellis&quot; 的 conda 环境
+# - 安装 PyTorch（CUDA 版本）
+# - 编译安装 spconv（稀疏卷积库）
+# - 安装 FlashAttention 和 xFormers（注意力加速）
+# - 安装 Nvdiffrast、FlexiCubes、Kaolin（渲染和几何处理）
+</code></pre>
+<h3 id="trellis2">安装步骤（TRELLIS.2）</h3>
+<pre><code class="language-bash"># 1. 克隆仓库（含子模块）
+git clone -b main https://github.com/microsoft/TRELLIS.2.git --recursive
+cd TRELLIS.2
+
+# 2. 运行一键安装脚本
+. ./setup.sh --new-env --basic --flash-attn --nvdiffrast --nvdiffrec --cumesh --o-voxel --flexgemm
+
+# TRELLIS.2 新增的依赖：
+# - o-voxel: O-Voxel 表示核心库
+# - cumesh: CUDA 加速的 Mesh 处理
+# - flexgemm: 灵活的 GEMM（矩阵乘法）加速
+# - nvdiffrec: 可微分渲染库
+</code></pre>
+<h3 id="_3">验证安装</h3>
+<pre><code class="language-python"># 验证 TRELLIS v1 安装（保存为 check_install.py 并运行）
+import torch
+print(f&quot;PyTorch 版本: {torch.__version__}&quot;)
+print(f&quot;CUDA 可用: {torch.cuda.is_available()}&quot;)
+print(f&quot;GPU 设备: {torch.cuda.get_device_name(0)}&quot;)
+print(f&quot;GPU 显存: {torch.cuda.get_device_properties(0).total_mem / 1024**3:.1f} GB&quot;)
+
+# 验证关键依赖
+import spconv  # 稀疏卷积
+print(f&quot;spconv 版本: {spconv.__version__}&quot;)
+
+try:
+    import flash_attn
+    print(f&quot;FlashAttention 版本: {flash_attn.__version__}&quot;)
+except ImportError:
+    print(&quot;FlashAttention 未安装，将使用 xFormers 后端&quot;)
+
+# 验证 TRELLIS 模块
+from trellis.pipelines import TrellisImageTo3DPipeline
+print(&quot;TRELLIS pipeline 导入成功！&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>PyTorch 版本: 2.1.0+cu118
+CUDA 可用: True
+GPU 设备: NVIDIA A100-SXM4-80GB
+GPU 显存: 80.0 GB
+spconv 版本: 2.3.6
+FlashAttention 版本: 2.5.6
+TRELLIS pipeline 导入成功！
+</code></pre>
+<blockquote>
+<p><strong>安装失败的常见原因：</strong> spconv 编译需要匹配的 CUDA 版本和 GCC 版本。如果编译失败，请确认 <code>nvcc --version</code> 和 <code>gcc --version</code> 输出与 PyTorch CUDA 版本一致。</p>
+</blockquote>
+<hr />
+<h2 id="_4">第一部分：入门篇</h2>
+<h3 id="11-trellis-slat">1.1 理解 TRELLIS 的核心概念——SLAT 表示</h3>
+<p><strong>概念讲解：</strong></p>
+<p>TRELLIS 的核心创新是 <strong>SLAT（Structured LATent，结构化潜在表示）</strong>。理解 SLAT 是使用 TRELLIS 的基础。</p>
+<p>想象你要用积木搭建一个 3D 模型。你不需要填满整个房间（密集表示），只需要在有物体的位置放置积木。SLAT 就是这个思路：</p>
+<ol>
+<li><strong>稀疏网格</strong>：将 3D 空间划分为 64×64×64 的网格（共 262,144 个位置）</li>
+<li><strong>活跃体素</strong>：只在有物体的位置标记为"活跃"（平均约 20,000 个，仅占 7.6%）</li>
+<li><strong>局部潜在向量</strong>：每个活跃体素附带一个 8 维向量，编码该位置的形状和外观信息</li>
+</ol>
+<p>这种设计使得 TRELLIS 能够高效地表示复杂 3D 结构，并且天然支持将同一表示解码为不同格式（Gaussian、NeRF、Mesh）。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 理解 SLAT 表示的结构（概念演示，基于官方 API）
+import torch
+
+# 模拟一个 SLAT 表示
+# coords: [N, 4]，第一列是 batch_id，后三列是 xyz 坐标
+coords = torch.tensor([
+    [0, 10, 20, 15],   # batch 0 中，位于 (10,20,15) 的体素
+    [0, 10, 21, 15],   # batch 0 中，位于 (10,21,15) 的相邻体素
+    [0, 11, 20, 16],   # batch 0 中，位于 (11,20,16) 的体素
+])
+
+# feats: [N, 8]，每个体素的 8 维潜在向量
+feats = torch.randn(3, 8)
+
+print(f&quot;活跃体素数量: {coords.shape[0]}&quot;)
+print(f&quot;网格大小: 64x64x64 = {64**3}&quot;)
+print(f&quot;稀疏率: {coords.shape[0] / 64**3 * 100:.2f}%&quot;)
+print(f&quot;潜在向量维度: {feats.shape[1]}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>活跃体素数量: 3
+网格大小: 64x64x64 = 262144
+稀疏率: 0.00%
+潜在向量维度: 8
+</code></pre>
+<p><strong>练习题：</strong>
+1. 如果一个 3D 资产有 25,000 个活跃体素，每个体素 8 维向量用 float32 存储，计算 SLAT 表示占用的内存大小（提示：coords 占 25,000×4×4 字节，feats 占 25,000×8×4 字节）
+2. 为什么 SLAT 选择 64³ 而不是 128³ 或 32³ 的网格？考虑质量和效率的权衡。</p>
+<hr />
+<h3 id="12-3d-3d">1.2 第一次 3D 生成——图像到 3D</h3>
+<p><strong>概念讲解：</strong></p>
+<p>TRELLIS 最常用的功能是 <strong>Image-to-3D</strong>：输入一张 2D 图像，输出一个完整的 3D 模型。内部执行两阶段生成：</p>
+<ol>
+<li><strong>Stage 1（稀疏结构生成）</strong>：根据图像生成 64³ 网格中哪些位置有物体（二值占据网格）</li>
+<li><strong>Stage 2（潜在向量生成）</strong>：在活跃体素上生成 8 维潜在向量，编码细节信息</li>
+</ol>
+<p>生成完成后，通过不同的解码器将 SLAT 解码为 Gaussian、Radiance Field 或 Mesh 格式。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 TRELLIS v1 官方 example.py（基于官方仓库 example.py）
+import os
+os.environ['SPCONV_ALGO'] = 'native'  # 首次运行使用 native 模式，避免 benchmark 开销
+
+import imageio
+from PIL import Image
+from trellis.pipelines import TrellisImageTo3DPipeline
+from trellis.utils import render_utils, postprocessing_utils
+
+# 第一步：加载预训练模型（首次运行会自动从 HuggingFace 下载，约 4.7GB）
+pipeline = TrellisImageTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS-image-large&quot;)
+pipeline.cuda()
+
+# 第二步：准备输入图像
+# 推荐使用白色/纯色背景的物体图像，尺寸不限（内部会自动预处理）
+image = Image.open(&quot;assets/example_image/T.png&quot;)
+
+# 第三步：运行生成管线
+outputs = pipeline.run(
+    image,
+    seed=1,  # 随机种子，相同种子生成相同结果
+)
+
+# 第四步：查看输出格式
+print(f&quot;输出格式: {list(outputs.keys())}&quot;)
+print(f&quot;Gaussian 数量: {len(outputs['gaussian'])}&quot;)
+print(f&quot;Radiance Field 数量: {len(outputs['radiance_field'])}&quot;)
+print(f&quot;Mesh 数量: {len(outputs['mesh'])}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>输出格式: ['gaussian', 'radiance_field', 'mesh']
+Gaussian 数量: 1
+Radiance Field 数量: 1
+Mesh 数量: 1
+</code></pre>
+<p><strong>练习题：</strong>
+1. 修改 <code>seed</code> 参数为不同的值（如 42、100），观察同一张图像生成的不同 3D 结果，理解随机性在生成中的作用。
+2. 尝试使用自己拍摄的物体照片作为输入，观察不同背景复杂度对生成质量的影响。</p>
+<hr />
+<h3 id="13">1.3 理解三种输出格式</h3>
+<p><strong>概念讲解：</strong></p>
+<p>TRELLIS 同一生成结果可输出三种格式，各有适用场景：</p>
+<table>
+<thead>
+<tr>
+<th>格式</th>
+<th>特点</th>
+<th>最佳用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Gaussian（3D 高斯）</strong></td>
+<td>外观质量最高，支持实时渲染</td>
+<td>可视化预览、实时渲染引擎</td>
+</tr>
+<tr>
+<td><strong>Radiance Field（辐射场）</strong></td>
+<td>连续体积表示，支持任意视角渲染</td>
+<td>NeRF 研究和实验</td>
+</tr>
+<tr>
+<td><strong>Mesh（网格）</strong></td>
+<td>几何质量最高，通用性最强</td>
+<td>游戏引擎导入、3D 打印、下游编辑</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 接续 1.2 的代码，渲染和导出不同格式（基于官方 example.py）
+import imageio
+from trellis.utils import render_utils, postprocessing_utils
+
+# --- 格式 1：3D Gaussians ---
+# 渲染为旋转视频（外观最佳）
+video_gs = render_utils.render_video(outputs['gaussian'][0])['color']
+imageio.mimsave(&quot;output_gaussian.mp4&quot;, video_gs, fps=30)
+print(&quot;Gaussian 视频已保存: output_gaussian.mp4&quot;)
+
+# 保存为 PLY 文件（可在 CloudCompare、Splat 等工具中查看）
+outputs['gaussian'][0].save_ply(&quot;output_gaussian.ply&quot;)
+print(&quot;Gaussian PLY 已保存: output_gaussian.ply&quot;)
+
+# --- 格式 2：Radiance Field ---
+video_rf = render_utils.render_video(outputs['radiance_field'][0])['color']
+imageio.mimsave(&quot;output_rf.mp4&quot;, video_rf, fps=30)
+print(&quot;Radiance Field 视频已保存: output_rf.mp4&quot;)
+
+# --- 格式 3：Mesh ---
+video_mesh = render_utils.render_video(outputs['mesh'][0])['normal']
+imageio.mimsave(&quot;output_mesh.mp4&quot;, video_mesh, fps=30)  &lt;!-- reviewed: 修正 mimsafe 拼写错误为 mimsave --&gt;
+print(&quot;Mesh 法线视频已保存: output_mesh.mp4&quot;)
+
+# --- 导出为 GLB（游戏引擎通用格式）---
+# GLB 导出结合了 Gaussian 的纹理和 Mesh 的几何
+glb = postprocessing_utils.to_glb(
+    outputs['gaussian'][0],      # 用于纹理提取
+    outputs['mesh'][0],          # 用于几何结构
+    simplify=0.95,               # 简化 95% 的三角面（减少面数）
+    texture_size=1024,           # 纹理分辨率 1024×1024
+)
+glb.export(&quot;output.glb&quot;)
+print(&quot;GLB 文件已保存: output.glb&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>Gaussian 视频已保存: output_gaussian.mp4
+Gaussian PLY 已保存: output_gaussian.ply
+Radiance Field 视频已保存: output_rf.mp4
+Mesh 法线视频已保存: output_mesh.mp4
+GLB 文件已保存: output.glb
+</code></pre>
+<p><strong>练习题：</strong>
+1. 对比 <code>simplify=0.95</code> 和 <code>simplify=0.5</code> 导出的 GLB 文件大小和视觉质量差异。
+2. 使用不同 <code>texture_size</code>（512、1024、2048）导出 GLB，观察纹理清晰度的变化。</p>
+<hr />
+<h2 id="_5">第二部分：进阶篇</h2>
+<h3 id="21">2.1 调优生成参数</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS 的生成质量可以通过两个关键参数控制：</p>
+<ul>
+<li><strong>steps（步数）</strong>：去噪过程的迭代次数。步数越多质量越高但速度越慢。默认 Stage 1 为 50 步，Stage 2 为 50 步。</li>
+<li><strong>cfg_strength（引导强度）</strong>：Classifier-Free Guidance 强度。值越高，生成结果越贴合条件（图像/文本），但过高会导致过饱和。推荐范围 3-7.5。</li>
+</ul>
+<p>两个阶段独立控制参数：
+- <code>sparse_structure_sampler_params</code> 控制 Stage 1（结构生成）
+- <code>slat_sampler_params</code> 控制 Stage 2（细节生成）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 对比不同参数组合的生成效果（基于官方 API）
+import os
+os.environ['SPCONV_ALGO'] = 'native'
+
+from PIL import Image
+from trellis.pipelines import TrellisImageTo3DPipeline
+
+pipeline = TrellisImageTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS-image-large&quot;)
+pipeline.cuda()
+
+image = Image.open(&quot;assets/example_image/T.png&quot;)
+
+# --- 快速预览模式（牺牲质量换取速度）---
+outputs_fast = pipeline.run(
+    image,
+    seed=1,
+    sparse_structure_sampler_params={
+        &quot;steps&quot;: 12,       # 默认 50，降低到 12
+        &quot;cfg_strength&quot;: 7.5,
+    },
+    slat_sampler_params={
+        &quot;steps&quot;: 12,       # 默认 50，降低到 12
+        &quot;cfg_strength&quot;: 3,
+    },
+)
+print(&quot;快速模式完成（~10 秒 on A100）&quot;)
+
+# --- 高质量模式（默认参数）---
+outputs_quality = pipeline.run(
+    image,
+    seed=1,
+    sparse_structure_sampler_params={
+        &quot;steps&quot;: 50,
+        &quot;cfg_strength&quot;: 7.5,
+    },
+    slat_sampler_params={
+        &quot;steps&quot;: 50,
+        &quot;cfg_strength&quot;: 3,
+    },
+)
+print(&quot;高质量模式完成（~30 秒 on A100）&quot;)
+
+# --- 批量生成（多个不同变体）---
+outputs_multi = pipeline.run(
+    image,
+    num_samples=4,    # 一次生成 4 个不同结果
+    seed=42,
+    formats=['mesh', 'gaussian'],  # 只生成需要的格式以节省显存
+)
+print(f&quot;批量生成完成，共 {len(outputs_multi['gaussian'])} 个结果&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>快速模式完成（~10 秒 on A100）
+高质量模式完成（~30 秒 on A100）
+批量生成完成，共 4 个结果
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>cfg_strength</code> 过高（&gt;10）会导致生成结果过饱和、几何失真。Stage 2 的 cfg_strength 建议不超过 5。
+- <code>steps</code> 低于 8 时生成质量会显著下降，出现不完整的结构。低于 5 可能生成失败。
+- <code>num_samples &gt; 1</code> 时显存占用线性增加，24GB 显存建议不超过 4 个样本。
+- <code>formats</code> 参数可以只选择需要的格式（如只生成 mesh），显著减少显存和计算开销。</p>
+<p><strong>练习题：</strong>
+1. 固定 <code>steps=50</code>，分别测试 <code>cfg_strength</code> 为 1、3、5、7.5、12 时的生成效果，找出你的图像最佳的 cfg 值。
+2. 测量 <code>steps</code> 从 10 到 100 时生成时间的线性增长关系。</p>
+<hr />
+<h3 id="22-3d">2.2 文本到 3D 生成</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS v1 支持直接从文本描述生成 3D 模型（TRELLIS.2 不支持此功能）。使用 <code>TrellisTextTo3DPipeline</code>，该管线使用 CLIP 文本编码器将文本转换为条件特征。</p>
+<p>文本到 3D 的推荐模型为 <code>TRELLIS-text-xlarge</code>（2.0B 参数，质量最高）。模型规模选择建议：
+- 快速实验：<code>TRELLIS-text-base</code>（342M，速度最快）
+- 平衡质量/速度：<code>TRELLIS-text-large</code>（1.1B）
+- 最佳质量：<code>TRELLIS-text-xlarge</code>（2.0B）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文本到 3D 生成（基于官方 example_text.py）
+import os
+os.environ['SPCONV_ALGO'] = 'native'
+
+import imageio
+from trellis.pipelines import TrellisTextTo3DPipeline
+from trellis.utils import render_utils, postprocessing_utils
+
+# 加载文本到 3D 管线（使用最大模型）
+pipeline = TrellisTextTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS-text-xlarge&quot;)
+pipeline.cuda()
+
+# 文本提示词编写建议：
+# - 描述具体形状和颜色，避免抽象描述
+# - 包含材质信息（metallic, wooden, fabric 等）
+# - 避免过长的描述（建议 20 词以内）
+prompt = &quot;A chair looking like an avocado.&quot;
+
+outputs = pipeline.run(
+    prompt,
+    seed=1,
+)
+
+# 导出为 GLB
+glb = postprocessing_utils.to_glb(
+    outputs['gaussian'][0],
+    outputs['mesh'][0],
+    simplify=0.95,
+    texture_size=1024,
+)
+glb.export(&quot;text_chair.glb&quot;)
+print(f&quot;文本提示: '{prompt}'&quot;)
+print(f&quot;GLB 已保存: text_chair.glb&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>文本提示: 'A chair looking like an avocado.'
+GLB 已保存: text_chair.glb
+</code></pre>
+<p><strong>注意事项：</strong>
+- 文本到 3D 的质量通常低于图像到 3D，因为文本条件的约束更弱。
+- 英文提示词效果最佳。中文提示词需要先用翻译工具转换为英文。
+- 提示词应避免包含场景描述（如"在桌子上"、"在房间里"），专注于物体本身。</p>
+<p><strong>练习题：</strong>
+1. 用相同的 seed 和不同的提示词描述同一物体，比较生成结果的一致性。
+2. 尝试不同的模型规模（base/large/xlarge），对比生成质量和速度。</p>
+<hr />
+<h3 id="23-3d">2.3 多图像到 3D 生成</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS v1 支持从多张图像生成 3D 模型，这在单张图像信息不足时特别有用（如物体的背面看不到）。使用 <code>run_multi_image()</code> 方法，支持两种融合模式：</p>
+<ul>
+<li><strong>stochastic（随机模式）</strong>：随机采样不同视角的条件，适合视角间有重叠的场景</li>
+<li><strong>multidiffusion（多扩散模式）</strong>：同时考虑所有视角条件，适合视角差异大的场景</li>
+</ul>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 多图像到 3D 生成（基于官方 example_multi_image.py）
+import os
+os.environ['SPCONV_ALGO'] = 'native'
+
+import numpy as np
+import imageio
+from PIL import Image
+from trellis.pipelines import TrellisImageTo3DPipeline
+from trellis.utils import render_utils
+
+pipeline = TrellisImageTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS-image-large&quot;)
+pipeline.cuda()
+
+# 准备多张不同视角的图像
+images = [
+    Image.open(&quot;assets/example_multi_image/character_1.png&quot;),  # 正面
+    Image.open(&quot;assets/example_multi_image/character_2.png&quot;),  # 侧面
+    Image.open(&quot;assets/example_multi_image/character_3.png&quot;),  # 背面
+]
+
+# 使用 multidiffusion 模式融合多视角信息
+outputs = pipeline.run_multi_image(
+    images,
+    seed=1,
+    mode='multidiffusion',  # 'stochastic' 或 'multidiffusion'
+    sparse_structure_sampler_params={
+        &quot;steps&quot;: 12,
+        &quot;cfg_strength&quot;: 7.5,
+    },
+    slat_sampler_params={
+        &quot;steps&quot;: 12,
+        &quot;cfg_strength&quot;: 3,
+    },
+)
+
+# 渲染对比视频
+video_gs = render_utils.render_video(outputs['gaussian'][0])['color']
+video_mesh = render_utils.render_video(outputs['mesh'][0])['normal']
+video = [np.concatenate([frame_gs, frame_mesh], axis=1)
+         for frame_gs, frame_mesh in zip(video_gs, video_mesh)]
+imageio.mimsave(&quot;multi_image_result.mp4&quot;, video, fps=30)
+print(&quot;多图像生成完成，视频已保存: multi_image_result.mp4&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>多图像生成完成，视频已保存: multi_image_result.mp4
+</code></pre>
+<p><strong>注意事项：</strong>
+- 多图像模式的显存占用高于单图像模式，建议使用 24GB+ 显存。
+- 输入图像应展示同一物体的不同视角，不要混入不同物体的图像。
+- <code>multidiffusion</code> 模式在视角差异大时效果更好，但速度比 <code>stochastic</code> 慢约 2 倍。</p>
+<p><strong>练习题：</strong>
+1. 分别使用 <code>stochastic</code> 和 <code>multidiffusion</code> 模式生成同一组图像的 3D 模型，对比结果差异。
+2. 尝试只用 2 张图像 vs 3 张图像，观察生成质量的差异。</p>
+<hr />
+<h3 id="24-gradio-web">2.4 使用 Gradio Web 界面</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS 提供了基于 Gradio 的 Web 界面，无需编写代码即可交互式生成 3D 模型。适合快速实验和演示。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动 Gradio Web 界面（TRELLIS v1）
+cd /path/to/TRELLIS
+
+# 图像到 3D 的 Web 界面
+python app.py
+# 启动后浏览器访问 http://127.0.0.1:7860
+
+# 文本到 3D 的 Web 界面
+python app_text.py
+# 启动后浏览器访问 http://127.0.0.1:7860
+
+# TRELLIS.2 的 Web 界面
+cd /path/to/TRELLIS.2
+python app.py              # 图像到 3D
+python app_texturing.py    # 纹理生成
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>Running on local URL:  http://127.0.0.1:7860
+</code></pre>
+<p><strong>注意事项：</strong>
+- Gradio 界面默认使用所有 GPU 显存，不适合在共享服务器上直接使用。
+- 可通过 <code>--server_port</code> 参数修改端口，通过 <code>--share</code> 参数生成公网链接。</p>
+<p><strong>练习题：</strong>
+1. 通过 Gradio 界面生成一个 3D 模型，并分别下载 Gaussian、Mesh、GLB 格式的输出，对比文件大小。</p>
+<hr />
+<h2 id="_6">第三部分：高级篇</h2>
+<h3 id="31">3.1 资产变体生成（保持结构，改变外观）</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS v1 的独特能力是 <strong>资产变体生成（Asset Variant）</strong>：给定一个已有的 3D 模型，生成外观不同但几何结构相同的新变体。</p>
+<p>原理：TRELLIS 的两阶段生成分离了结构（Stage 1）和外观（Stage 2）。变体生成复用已有模型的体素结构（跳过 Stage 1），仅重新生成潜在向量（Stage 2），用新的文本提示引导外观变化。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 资产变体生成（基于官方 example_variant.py）
+import os
+os.environ['SPCONV_ALGO'] = 'native'
+
+import imageio
+import numpy as np
+import open3d as o3d
+from trellis.pipelines import TrellisTextTo3DPipeline
+from trellis.utils import render_utils, postprocessing_utils
+
+# 注意：变体生成使用 TextTo3D 管线（不是 ImageTo3D）
+pipeline = TrellisTextTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS-text-xlarge&quot;)
+pipeline.cuda()
+
+# 加载基础 Mesh（需要是 PLY 格式的三角网格）
+base_mesh = o3d.io.read_triangle_mesh(&quot;assets/T.ply&quot;)
+
+# 用文本描述指定目标外观
+variant_prompt = &quot;Rugged, metallic texture with orange and white paint finish, suggesting a durable, industrial feel.&quot;
+
+outputs = pipeline.run_variant(
+    base_mesh,
+    variant_prompt,
+    seed=1,
+    # 注意：变体模式只有 slat_sampler_params（没有 sparse_structure_sampler_params）
+    # slat_sampler_params={
+    #     &quot;steps&quot;: 12,
+    #     &quot;cfg_strength&quot;: 7.5,
+    # },
+)
+
+# 导出变体
+glb = postprocessing_utils.to_glb(
+    outputs['gaussian'][0],
+    outputs['mesh'][0],
+    simplify=0.95,
+    texture_size=1024,
+)
+glb.export(&quot;variant_industrial.glb&quot;)
+print(f&quot;变体提示: '{variant_prompt}'&quot;)
+print(f&quot;变体 GLB 已保存: variant_industrial.glb&quot;)
+
+# 生成多个变体
+for i, style in enumerate([&quot;wooden carved texture&quot;, &quot;neon glowing cyberpunk style&quot;, &quot;weathered stone texture&quot;]):
+    outputs = pipeline.run_variant(base_mesh, style, seed=i)
+    glb = postprocessing_utils.to_glb(
+        outputs['gaussian'][0], outputs['mesh'][0],
+        simplify=0.95, texture_size=1024
+    )
+    glb.export(f&quot;variant_{i}.glb&quot;)
+    print(f&quot;变体 {i} ({style}) 已保存&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>变体提示: 'Rugged, metallic texture with orange and white paint finish, suggesting a durable, industrial feel.'
+变体 GLB 已保存: variant_industrial.glb
+变体 0 (wooden carved texture) 已保存
+变体 1 (neon glowing cyberpunk style) 已保存
+变体 2 (weathered stone texture) 已保存
+</code></pre>
+<p><strong>注意事项：</strong>
+- 输入 Mesh 必须是 PLY 格式（Open3D 可读），其他格式需先转换。
+- 变体生成只改变外观（颜色、材质），不改变几何结构。如果需要修改几何，需重新运行完整生成。
+- <code>run_variant</code> 会将输入 Mesh 体素化为 64³ 网格，过于精细的细节可能在体素化过程中丢失。</p>
+<hr />
+<h3 id="32-trellis2-pbr">3.2 TRELLIS.2 高级特性——PBR 纹理和分辨率控制</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS.2 引入了多项重要升级：</p>
+<ol>
+<li><strong>PBR（Physically-Based Rendering，基于物理的渲染）纹理</strong>：生成 Base Color、Roughness、Metallic、Opacity 四种纹理贴图，适合游戏引擎和实时渲染</li>
+<li><strong>分辨率控制</strong>：支持 512³、1024³、1536³ 三种分辨率，通过级联上采样实现</li>
+<li><strong>O-Voxel 表示</strong>：支持任意拓扑结构（开放表面、非流形几何）</li>
+</ol>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># TRELLIS.2 图像到 3D 生成（基于官方 TRELLIS.2 example.py）
+import os
+os.environ['OPENCV_IO_ENABLE_OPENEXR'] = '1'
+os.environ[&quot;PYTORCH_CUDA_ALLOC_CONF&quot;] = &quot;expandable_segments:True&quot;
+
+import cv2
+import imageio
+from PIL import Image
+import torch
+from trellis2.pipelines import Trellis2ImageTo3DPipeline
+from trellis2.utils import render_utils
+from trellis2.renderers import EnvMap
+import o_voxel
+
+# 加载 HDR 环境贴图（用于 PBR 渲染）
+envmap = EnvMap(torch.tensor(
+    cv2.cvtColor(cv2.imread('assets/hdri/forest.exr', cv2.IMREAD_UNCHANGED), cv2.COLOR_BGR2RGB),
+    dtype=torch.float32, device='cuda'
+))
+
+# 加载 TRELLIS.2 管线（4B 参数模型）
+pipeline = Trellis2ImageTo3DPipeline.from_pretrained(&quot;microsoft/TRELLIS.2-4B&quot;)
+pipeline.cuda()
+
+image = Image.open(&quot;assets/example_image/T.png&quot;)
+
+# --- 分辨率选择 ---
+# 方案 A：512 快速预览（~3 秒 on H100）
+mesh_512 = pipeline.run(image, pipeline_type='512', seed=1)[0]
+print(f&quot;512 分辨率生成完成&quot;)
+
+# 方案 B：1024 标准质量（~17 秒 on H100）
+mesh_1024 = pipeline.run(image, pipeline_type='1024_cascade', seed=1)[0]
+print(f&quot;1024 级联生成完成&quot;)
+
+# 方案 C：1536 最高质量（~60 秒 on H100）
+mesh_1536 = pipeline.run(image, pipeline_type='1536_cascade', seed=1)[0]
+mesh_1536.simplify(16777216)  # 简化网格到约 16M 面
+print(f&quot;1536 级联生成完成&quot;)
+
+# --- PBR 渲染 ---
+video = render_utils.make_pbr_vis_frames(
+    render_utils.render_video(mesh_1024, envmap=envmap)
+)
+imageio.mimsave(&quot;trellis2_pbr.mp4&quot;, video, fps=15)
+print(&quot;PBR 渲染视频已保存&quot;)
+
+# --- 导出 GLB（含 PBR 纹理）---
+glb = o_voxel.postprocess.to_glb(
+    vertices=mesh_1024.vertices,
+    faces=mesh_1024.faces,
+    attr_volume=mesh_1024.attrs,
+    coords=mesh_1024.coords,
+    attr_layout=mesh_1024.layout,
+    voxel_size=mesh_1024.voxel_size,
+    aabb=[[-0.5, -0.5, -0.5], [0.5, 0.5, 0.5]],
+    decimation_target=1000000,  # 目标 100 万面
+    texture_size=4096,          # 4K 纹理
+    remesh=True,
+    remesh_band=1,
+    remesh_project=0,
+    verbose=True
+)
+glb.export(&quot;trellis2_output.glb&quot;, extension_webp=True)
+print(&quot;TRELLIS.2 GLB 已保存（含 PBR 纹理）&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>512 分辨率生成完成
+1024 级联生成完成
+1536 级联生成完成
+PBR 渲染视频已保存
+TRELLIS.2 GLB 已保存（含 PBR 纹理）
+</code></pre>
+<p><strong>注意事项：</strong>
+- TRELLIS.2 需要 24GB+ 显存。如果 OOM，确保设置了 <code>PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</code>。
+- 1536 分辨率仅在 H100（80GB）上可运行。A100（40GB）建议最高使用 1024。
+- <code>pipeline_type</code> 的 <code>_cascade</code> 后缀表示级联上采样：先 512 再上采样，质量优于直接高分辨率。</p>
+<hr />
+<h3 id="33-trellis2">3.3 TRELLIS.2 纹理生成管线</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS.2 提供了独立的纹理生成管线（Texturing Pipeline），可以为已有的 3D Mesh 添加基于参考图像的 PBR 纹理。这对于需要为手工建模或扫描得到的 Mesh 自动生成纹理的场景特别有用。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># TRELLIS.2 纹理生成（基于官方 example_texturing.py）
+import os
+os.environ[&quot;PYTORCH_CUDA_ALLOC_CONF&quot;] = &quot;expandable_segments:True&quot;
+
+import trimesh
+from PIL import Image
+from trellis2.pipelines import Trellis2TexturingPipeline
+
+# 注意：使用不同的 config_file 加载纹理管线
+pipeline = Trellis2TexturingPipeline.from_pretrained(
+    &quot;microsoft/TRELLIS.2-4B&quot;,
+    config_file=&quot;texturing_pipeline.json&quot;  # 关键：指定纹理配置
+)
+pipeline.cuda()
+
+# 加载目标 Mesh 和参考图像
+mesh = trimesh.load(&quot;assets/example_texturing/the_forgotten_knight.ply&quot;)
+image = Image.open(&quot;assets/example_texturing/image.webp&quot;)
+
+# 运行纹理生成
+output = pipeline.run(
+    mesh,
+    image,
+    seed=42,
+    resolution=1024,       # 内部处理分辨率
+    texture_size=2048,     # 输出纹理分辨率
+)
+
+# 导出带纹理的 GLB
+output.export(&quot;textured_output.glb&quot;, extension_webp=True)
+print(&quot;纹理生成完成，已保存: textured_output.glb&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>纹理生成完成，已保存: textured_output.glb
+</code></pre>
+<p><strong>注意事项：</strong>
+- 纹理管线使用 <code>config_file="texturing_pipeline.json"</code>，不要使用默认配置。
+- 输入 Mesh 需要合理的水密性（watertight）和 UV 展开。
+- 参考图像的风格会直接映射到纹理上，选择风格清晰的参考图效果更好。</p>
+<hr />
+<h3 id="34">3.4 性能优化与显存管理</h3>
+<p><strong>详细讲解：</strong></p>
+<p>TRELLIS 是显存密集型应用。以下是关键的性能优化策略：</p>
+<p><strong>优化策略 1：控制 spconv 算法选择</strong></p>
+<pre><code class="language-python">import os
+
+# 首次运行使用 'native'（避免 benchmark 开销）
+# 批量生产时使用 'auto'（benchmark 后自动选择最快算法）
+os.environ['SPCONV_ALGO'] = 'native'  # 单次推理推荐
+# os.environ['SPCONV_ALGO'] = 'auto'  # 批量推理推荐
+</code></pre>
+<p><strong>优化策略 2：选择性格式生成</strong></p>
+<pre><code class="language-python"># 只生成需要的格式，减少不必要的解码开销
+outputs = pipeline.run(
+    image,
+    seed=1,
+    formats=['mesh'],  # 只生成 Mesh，跳过 Gaussian 和 RF
+)
+</code></pre>
+<p><strong>优化策略 3：显存回收</strong></p>
+<pre><code class="language-python">import torch
+import gc
+
+def generate_with_cleanup(pipeline, image, seed=1):
+    &quot;&quot;&quot;生成后自动清理显存&quot;&quot;&quot;
+    outputs = pipeline.run(image, seed=seed, formats=['mesh', 'gaussian'])
+
+    # 立即导出需要的格式
+    from trellis.utils import postprocessing_utils
+    glb = postprocessing_utils.to_glb(
+        outputs['gaussian'][0], outputs['mesh'][0],
+        simplify=0.95, texture_size=1024
+    )
+    glb.export(&quot;output.glb&quot;)
+
+    # 清理显存
+    del outputs
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    return glb
+</code></pre>
+<p><strong>优化策略 4：TRELLIS.2 低显存模式</strong></p>
+<p>TRELLIS.2 默认启用 <code>low_vram</code> 模式，模型按需加载到 GPU，使用后卸载到 CPU：</p>
+<pre><code class="language-python"># TRELLIS.2 默认就是 low_vram 模式，无需额外配置
+# 如果遇到 OOM，检查：
+# 1. 是否设置了 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# 2. 是否关闭了其他占用 GPU 的进程
+# 3. 是否选择了过高的分辨率（降低 pipeline_type）
+</code></pre>
+<p><strong>注意事项：</strong>
+- 24GB 显存（如 RTX 4090）运行 TRELLIS v1 足够，但 TRELLIS.2 建议至少 A100 40GB。
+- 批量生成时，每次生成后调用 <code>torch.cuda.empty_cache()</code> 可以避免显存碎片化。
+- <code>formats=['mesh']</code> 只生成 Mesh 比生成全部三种格式节省约 40% 显存。</p>
+<hr />
+<h3 id="35">3.5 最佳实践</h3>
+<ol>
+<li><strong>输入图像准备</strong>：使用白色或纯色背景的图像。复杂背景会干扰模型对物体的理解。可以使用图像抠图工具（如 rembg）预处理。</li>
+<li><strong>随机种子管理</strong>：固定 <code>seed</code> 值确保结果可复现。批量生成时使用不同 seed 获得多样性。</li>
+<li><strong>GLB 导出参数</strong>：<code>simplify=0.95</code> 适合大多数场景（保留 5% 的面），如需高质量可降低到 0.8。<code>texture_size=1024</code> 是质量和文件大小的平衡点。</li>
+<li><strong>版本选择</strong>：快速原型和批量生成用 v1（速度快、显存低）；最终产品输出用 TRELLIS.2（PBR 纹理、高分辨率）。</li>
+</ol>
+<hr />
+<h2 id="_7">第四部分：实战项目</h2>
+<h3 id="_8">项目需求</h3>
+<p>构建一个 <strong>批量 3D 资产生成管线</strong>，实现以下功能：
+1. 从指定目录读取多张 2D 图像
+2. 批量生成 3D 模型
+3. 自动导出为 GLB 格式
+4. 生成质量报告（文件大小、面数、顶点数）
+5. 支持参数配置（质量/速度权衡）</p>
+<p>本项目的知识点覆盖：
+- 1.2 节：图像到 3D 的基础管线调用
+- 2.1 节：生成参数调优
+- 1.3 节：GLB 格式导出
+- 3.4 节：显存管理和批量处理优化</p>
+<h3 id="_9">项目设计</h3>
+<pre><code>batch_3d_generator/
+├── generate.py          # 主脚本：批量生成逻辑
+├── config.json          # 参数配置文件
+├── input_images/        # 输入图像目录
+│   ├── image1.png
+│   ├── image2.png
+│   └── image3.png
+└── output/              # 输出目录（自动创建）
+    ├── image1/
+    │   ├── model.glb
+    │   ├── preview.mp4
+    │   └── metadata.json
+    └── report.json      # 全局质量报告
+</code></pre>
+<h3 id="_10">完整实现代码</h3>
+<pre><code class="language-python"># generate.py —— 批量 3D 资产生成管线
+# 基于 TRELLIS v1 官方 API（基于官方仓库 API）
+
+import os
+os.environ['SPCONV_ALGO'] = 'native'  # 使用 native 模式避免 benchmark 开销
+
+import json
+import time
+import gc
+import imageio
+import torch
+from pathlib import Path
+from PIL import Image
+from trellis.pipelines import TrellisImageTo3DPipeline
+from trellis.utils import render_utils, postprocessing_utils
+
+
+def load_config(config_path):
+    &quot;&quot;&quot;加载配置文件&quot;&quot;&quot;
+    default_config = {
+        &quot;model&quot;: &quot;microsoft/TRELLIS-image-large&quot;,
+        &quot;input_dir&quot;: &quot;input_images&quot;,
+        &quot;output_dir&quot;: &quot;output&quot;,
+        &quot;seed&quot;: 42,
+        &quot;formats&quot;: [&quot;mesh&quot;, &quot;gaussian&quot;],
+        &quot;export_glb&quot;: True,
+        &quot;export_video&quot;: True,
+        &quot;sparse_structure_sampler_params&quot;: {
+            &quot;steps&quot;: 12,
+            &quot;cfg_strength&quot;: 7.5
+        },
+        &quot;slat_sampler_params&quot;: {
+            &quot;steps&quot;: 12,
+            &quot;cfg_strength&quot;: 3
+        },
+        &quot;glb_simplify&quot;: 0.95,
+        &quot;glb_texture_size&quot;: 1024
+    }
+
+    if Path(config_path).exists():
+        with open(config_path, 'r') as f:
+            user_config = json.load(f)
+        default_config.update(user_config)
+
+    return default_config
+
+
+def collect_images(input_dir):
+    &quot;&quot;&quot;收集输入目录中的所有图像文件&quot;&quot;&quot;
+    supported_ext = {'.png', '.jpg', '.jpeg', '.webp', '.bmp'}
+    images = []
+    for ext in supported_ext:
+        images.extend(Path(input_dir).glob(f'*{ext}'))
+        images.extend(Path(input_dir).glob(f'*{ext.upper()}'))
+    return sorted(set(images))
+
+
+def generate_single(pipeline, image_path, output_dir, config):
+    &quot;&quot;&quot;处理单张图像的完整流程&quot;&quot;&quot;
+    name = image_path.stem
+    item_dir = Path(output_dir) / name
+    item_dir.mkdir(parents=True, exist_ok=True)
+
+    # 加载图像
+    image = Image.open(image_path).convert('RGB')
+    print(f&quot;  处理: {image_path.name} ({image.size[0]}x{image.size[1]})&quot;)
+
+    # 生成 3D
+    start_time = time.time()
+    outputs = pipeline.run(
+        image,
+        seed=config[&quot;seed&quot;],
+        formats=config[&quot;formats&quot;],
+        sparse_structure_sampler_params=config[&quot;sparse_structure_sampler_params&quot;],
+        slat_sampler_params=config[&quot;slat_sampler_params&quot;],
+    )
+    gen_time = time.time() - start_time
+    print(f&quot;  生成完成，耗时 {gen_time:.1f} 秒&quot;)
+
+    # 收集元数据
+    metadata = {
+        &quot;source_image&quot;: str(image_path),
+        &quot;image_size&quot;: list(image.size),
+        &quot;generation_time_seconds&quot;: round(gen_time, 1),
+        &quot;config&quot;: {
+            &quot;seed&quot;: config[&quot;seed&quot;],
+            &quot;steps_structure&quot;: config[&quot;sparse_structure_sampler_params&quot;][&quot;steps&quot;],
+            &quot;steps_slat&quot;: config[&quot;slat_sampler_params&quot;][&quot;steps&quot;],
+        },
+        &quot;outputs&quot;: {}
+    }
+
+    # 导出 GLB
+    if config[&quot;export_glb&quot;] and 'gaussian' in outputs and 'mesh' in outputs:
+        glb = postprocessing_utils.to_glb(
+            outputs['gaussian'][0],
+            outputs['mesh'][0],
+            simplify=config[&quot;glb_simplify&quot;],
+            texture_size=config[&quot;glb_texture_size&quot;],
+        )
+        glb_path = str(item_dir / &quot;model.glb&quot;)
+        glb.export(glb_path)
+        glb_size = Path(glb_path).stat().st_size / 1024 / 1024
+        metadata[&quot;outputs&quot;][&quot;glb&quot;] = {
+            &quot;path&quot;: glb_path,
+            &quot;file_size_mb&quot;: round(glb_size, 2),
+            &quot;vertices&quot;: len(glb.vertices),
+            &quot;faces&quot;: len(glb.faces),
+        }
+        print(f&quot;  GLB 导出完成: {glb_size:.1f} MB, {len(glb.vertices)} 顶点, {len(glb.faces)} 面&quot;)
+
+    # 导出预览视频
+    if config[&quot;export_video&quot;] and 'gaussian' in outputs:
+        video = render_utils.render_video(outputs['gaussian'][0])['color']
+        video_path = str(item_dir / &quot;preview.mp4&quot;)
+        imageio.mimsave(video_path, video, fps=30)
+        metadata[&quot;outputs&quot;][&quot;preview_video&quot;] = video_path
+        print(f&quot;  预览视频已保存&quot;)
+
+    # 保存元数据
+    with open(item_dir / &quot;metadata.json&quot;, 'w') as f:
+        json.dump(metadata, f, indent=2, ensure_ascii=False)
+
+    # 释放显存（知识点 3.4：显存管理）
+    del outputs
+    torch.cuda.empty_cache()
+    gc.collect()
+
+    return metadata
+
+
+def main():
+    &quot;&quot;&quot;主入口&quot;&quot;&quot;
+    config = load_config(&quot;config.json&quot;)
+    print(&quot;=&quot; * 60)
+    print(&quot;TRELLIS 批量 3D 资产生成管线&quot;)
+    print(&quot;=&quot; * 60)
+
+    # 收集图像
+    images = collect_images(config[&quot;input_dir&quot;])
+    print(f&quot;找到 {len(images)} 张图像&quot;)
+
+    if not images:
+        print(f&quot;错误：在 {config['input_dir']} 中未找到图像文件&quot;)
+        return
+
+    # 加载模型（知识点 1.2：管线加载）
+    print(f&quot;加载模型: {config['model']}...&quot;)
+    pipeline = TrellisImageTo3DPipeline.from_pretrained(config[&quot;model&quot;])
+    pipeline.cuda()
+    print(&quot;模型加载完成&quot;)
+
+    # 批量处理（知识点 2.1：参数调优 + 知识点 3.4：显存管理）
+    all_metadata = []
+    total_start = time.time()
+
+    for i, image_path in enumerate(images):
+        print(f&quot;\n[{i+1}/{len(images)}] 处理: {image_path.name}&quot;)
+        try:
+            metadata = generate_single(pipeline, image_path, config[&quot;output_dir&quot;], config)
+            all_metadata.append(metadata)
+        except Exception as e:
+            print(f&quot;  错误: {e}&quot;)
+            all_metadata.append({&quot;source_image&quot;: str(image_path), &quot;error&quot;: str(e)})
+
+    total_time = time.time() - total_start
+
+    # 生成全局报告
+    success_count = sum(1 for m in all_metadata if &quot;error&quot; not in m)
+    report = {
+        &quot;total_images&quot;: len(images),
+        &quot;successful&quot;: success_count,
+        &quot;failed&quot;: len(images) - success_count,
+        &quot;total_time_seconds&quot;: round(total_time, 1),
+        &quot;avg_time_per_image&quot;: round(total_time / max(len(images), 1), 1),
+        &quot;results&quot;: all_metadata,
+    }
+
+    report_path = Path(config[&quot;output_dir&quot;]) / &quot;report.json&quot;
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(report_path, 'w') as f:
+        json.dump(report, f, indent=2, ensure_ascii=False)
+
+    print(&quot;\n&quot; + &quot;=&quot; * 60)
+    print(f&quot;全部完成！成功: {success_count}/{len(images)}&quot;)
+    print(f&quot;总耗时: {total_time:.1f} 秒&quot;)
+    print(f&quot;平均每张: {total_time/len(images):.1f} 秒&quot;)
+    print(f&quot;报告保存: {report_path}&quot;)
+    print(&quot;=&quot; * 60)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p><strong>配置文件（config.json）：</strong></p>
+<pre><code class="language-json">{
+    &quot;model&quot;: &quot;microsoft/TRELLIS-image-large&quot;,
+    &quot;input_dir&quot;: &quot;input_images&quot;,
+    &quot;output_dir&quot;: &quot;output&quot;,
+    &quot;seed&quot;: 42,
+    &quot;formats&quot;: [&quot;mesh&quot;, &quot;gaussian&quot;],
+    &quot;export_glb&quot;: true,
+    &quot;export_video&quot;: true,
+    &quot;sparse_structure_sampler_params&quot;: {
+        &quot;steps&quot;: 12,
+        &quot;cfg_strength&quot;: 7.5
+    },
+    &quot;slat_sampler_params&quot;: {
+        &quot;steps&quot;: 12,
+        &quot;cfg_strength&quot;: 3
+    },
+    &quot;glb_simplify&quot;: 0.95,
+    &quot;glb_texture_size&quot;: 1024
+}
+</code></pre>
+<h3 id="_11">代码解析</h3>
+<ol>
+<li>
+<p><strong>管线加载（知识点 1.2）</strong>：第 95-97 行使用 <code>from_pretrained</code> 加载模型，整个批量任务只加载一次模型，避免重复加载的开销。</p>
+</li>
+<li>
+<p><strong>参数配置（知识点 2.1）</strong>：<code>config.json</code> 中集中管理 <code>steps</code> 和 <code>cfg_strength</code> 参数，快速模式（steps=12）约 10 秒/张，高质量模式（steps=50）约 30 秒/张。</p>
+</li>
+<li>
+<p><strong>GLB 导出（知识点 1.3）</strong>：第 74-88 行结合 Gaussian 纹理和 Mesh 几何导出 GLB，通过 <code>simplify</code> 控制面数、<code>texture_size</code> 控制纹理分辨率。</p>
+</li>
+<li>
+<p><strong>显存管理（知识点 3.4）</strong>：第 99-101 行在每次生成后释放输出对象并清理 GPU 缓存，防止长时间批量运行时的显存泄漏。</p>
+</li>
+</ol>
+<h3 id="_12">扩展挑战</h3>
+<ol>
+<li><strong>添加图像预处理</strong>：集成 <code>rembg</code> 库自动去除输入图像背景，提升生成质量。提示：<code>pip install rembg</code>，使用 <code>rembg.remove(image)</code> 去背景。</li>
+<li><strong>多 GPU 并行</strong>：修改代码支持多 GPU 并行生成，每个 GPU 处理不同的图像。提示：使用 <code>torch.cuda.set_device()</code> 和多进程。</li>
+<li><strong>质量评估自动化</strong>：集成 CLIP Score 自动评估生成 3D 模型与输入图像的一致性，将评分写入报告。</li>
+</ol>
+<hr />
+<h2 id="_13">第五部分：常见问题与排查指南</h2>
+<h3 id="_14">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CUDA out of memory</code></td>
+<td>GPU 显存不足</td>
+<td>1. 设置 <code>PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</code> 2. 使用 <code>formats=['mesh']</code> 只生成需要的格式 3. 降低 <code>steps</code> 参数 4. 关闭其他 GPU 进程</td>
+</tr>
+<tr>
+<td><code>spconv 编译失败</code></td>
+<td>CUDA/GCC 版本不匹配</td>
+<td>确认 <code>nvcc --version</code> 和 PyTorch 的 CUDA 版本一致。尝试 <code>pip install spconv-cu118</code> 或 <code>spconv-cu121</code></td>
+</tr>
+<tr>
+<td><code>FlashAttention 导入失败</code></td>
+<td>CUDA 版本不支持</td>
+<td>设置 <code>os.environ['ATTN_BACKEND'] = 'xformers'</code> 使用 xFormers 后端</td>
+</tr>
+<tr>
+<td><code>模型下载超时</code></td>
+<td>HuggingFace 网络问题</td>
+<td>使用镜像：<code>HF_ENDPOINT=https://hf-mirror.com</code> 或手动下载模型文件到本地</td>
+</tr>
+<tr>
+<td><code>生成的 3D 模型有残影/幽灵结构</code></td>
+<td>输入图像背景复杂</td>
+<td>使用纯色背景图像，或使用 rembg 去除背景后再输入</td>
+</tr>
+<tr>
+<td><code>生成的 Mesh 不完整/缺失部分</code></td>
+<td>cfg_strength 过低或步数不足</td>
+<td>提高 <code>cfg_strength</code> 到 5-7.5，增加 <code>steps</code> 到 30+</td>
+</tr>
+<tr>
+<td><code>GLB 文件过大</code></td>
+<td>面数和纹理分辨率过高</td>
+<td>降低 <code>simplify</code> 参数值（如 0.98），降低 <code>texture_size</code>（如 512）</td>
+</tr>
+<tr>
+<td><code>TRELLIS.2 OOM on 24GB GPU</code></td>
+<td>1536 分辨率需要更大显存</td>
+<td>使用 <code>pipeline_type='1024_cascade'</code> 代替 <code>'1536_cascade'</code></td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'trellis'</code></td>
+<td>未在项目根目录运行</td>
+<td>确保在 TRELLIS 仓库根目录下运行脚本，或将仓库路径添加到 <code>PYTHONPATH</code></td>
+</tr>
+<tr>
+<td><code>xFormers 和 FlashAttention 冲突</code></td>
+<td>两个库不兼容</td>
+<td>只安装其中一个。推荐 FlashAttention（更快），不兼容时用 xFormers</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">调试技巧</h3>
+<ol>
+<li>
+<p><strong>检查 GPU 显存使用</strong>：在生成前打印 <code>torch.cuda.memory_allocated() / 1024**3</code> 查看当前显存占用。如果接近上限，先生成小分辨率（512）测试，确认参数正确后再提高分辨率。</p>
+</li>
+<li>
+<p><strong>逐步排查生成质量</strong>：如果生成结果不理想，按以下顺序排查：</p>
+</li>
+<li>先检查输入图像质量（是否清晰、背景是否干净）</li>
+<li>再检查 <code>seed</code> 是否固定（确保可复现）</li>
+<li>然后调整 <code>cfg_strength</code>（先尝试 3-7.5 范围）</li>
+<li>
+<p>最后调整 <code>steps</code>（先尝试 30-50）</p>
+</li>
+<li>
+<p><strong>环境变量调试</strong>：设置 <code>CUDA_LAUNCH_BLOCKING=1</code> 可以在 CUDA 错误时获得精确的堆栈跟踪（会降低性能，仅用于调试）。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_16">第六部分：学习路线推荐</h2>
+<h3 id="_17">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>TRELLIS GitHub README</strong> - 重点关注安装步骤和最小示例，快速跑通第一个生成</li>
+<li><strong>TRELLIS example.py</strong> - 完整的图像到 3D 示例代码，逐行理解每个步骤</li>
+<li><strong>TRELLIS example_text.py</strong> - 文本到 3D 示例，理解不同管线的差异</li>
+<li><strong>TRELLIS example_variant.py</strong> - 变体生成示例，理解两阶段生成的解耦特性</li>
+<li><strong>TRELLIS 论文 (arXiv:2412.01506)</strong> - 第 3 节方法论，深入理解 SLAT 表示和 Rectified Flow</li>
+<li><strong>TRELLIS.2 GitHub README</strong> - 理解 v2 的 API 变化和新特性</li>
+<li><strong>TRELLIS.2 example.py</strong> - v2 的完整使用示例，掌握 PBR 和分辨率控制</li>
+<li><strong>TRELLIS 训练代码</strong> - 如果需要微调，阅读 <code>train.py</code> 和配置文件</li>
+</ol>
+<h3 id="_18">推荐进阶资源</h3>
+<ul>
+<li><strong>知乎 TRELLIS 源码解读</strong>（<a href="https://zhuanlan.zhihu.com/p/30989191234">知乎链接</a>）- 中文深度源码分析，适合理解实现细节</li>
+<li><strong>CVPR 2025 Spotlight 论文</strong>（<a href="https://arxiv.org/abs/2412.01506">arXiv:2412.01506</a>）- 完整方法论和实验结果</li>
+<li><strong>3D Gaussian Splatting 基础知识</strong> - 理解 Gaussian 表示需要先了解 3DGS 论文（ECCV 2024 Best Paper）</li>
+<li><strong>DiT (Diffusion Transformer) 论文</strong> - 理解 TRELLIS 的 Transformer 骨干架构设计</li>
+<li><strong>Rectified Flow 论文</strong> - 理解 TRELLIS 使用的矫正流生成方法</li>
+</ul>
+<h3 id="_19">相关技术拓展</h3>
+<ul>
+<li><strong>Hunyuan3D 2.x</strong>（<a href="https://github.com/Tencent-Hunyuan/Hunyuan3D-2">GitHub</a>）- 腾讯的开源 3D 生成模型，支持文本输入和面数控制</li>
+<li><strong>3D Gaussian Splatting</strong>（<a href="https://github.com/graphdeco-inria/gaussian-splatting">GitHub</a>）- TRELLIS Gaussian 输出的底层表示</li>
+<li><strong>FlexiCubes</strong> - TRELLIS Mesh 解码使用的等值面提取方法</li>
+<li><strong>spconv</strong>（<a href="https://github.com/traveller59/spconv">GitHub</a>）- TRELLIS 稀疏卷积的后端库</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neovate Code 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">帮我看看这个项目的结构</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、环境准备</a></li>
+<li><a href="#_2" class="toc-h3">前置知识</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#1-nodejs" class="toc-h4">1. 确保 Node.js 环境</a></li>
+<li><a href="#2-neovate-code" class="toc-h4">2. 安装 Neovate Code</a></li>
+<li><a href="#3" class="toc-h4">3. 验证安装</a></li>
+<li><a href="#4-api-key" class="toc-h4">4. 配置 API Key</a></li>
+<li><a href="#_4" class="toc-h3">环境验证</a></li>
+<li><a href="#_5" class="toc-h2">二、快速开始</a></li>
+<li><a href="#hello-world" class="toc-h3">Hello World</a></li>
+<li><a href="#neovate-code_1" class="toc-h4">第一步: 启动 Neovate Code</a></li>
+<li><a href="#_6" class="toc-h4">第二步: 基础对话</a></li>
+<li><a href="#_7" class="toc-h4">第三步: 文件操作</a></li>
+<li><a href="#_8" class="toc-h4">第四步: 代码审查</a></li>
+<li><a href="#_9" class="toc-h3">核心交互模式</a></li>
+<li><a href="#_10" class="toc-h2">三、核心概念</a></li>
+<li><a href="#_11" class="toc-h3">概念图谱</a></li>
+<li><a href="#_12" class="toc-h3">核心概念详解</a></li>
+<li><a href="#1-approval-mode" class="toc-h4">1. 审批模式（Approval Mode）</a></li>
+<li><a href="#2-agentsmd" class="toc-h4">2. AGENTS.md 规则文件</a></li>
+<li><a href="#3_1" class="toc-h4">3. 会话管理</a></li>
+<li><a href="#4-slash" class="toc-h4">4. Slash 命令</a></li>
+<li><a href="#_13" class="toc-h3">术语表</a></li>
+<li><a href="#_14" class="toc-h2">四、功能详解</a></li>
+<li><a href="#41-mcp" class="toc-h3">4.1 MCP 服务器管理</a></li>
+<li><a href="#42-git-worktree" class="toc-h3">4.2 Git Worktree 工作区</a></li>
+<li><a href="#43-headless-cicd" class="toc-h3">4.3 Headless 模式（CI/CD）</a></li>
+<li><a href="#44" class="toc-h3">4.4 自定义输出风格</a></li>
+<li><a href="#45" class="toc-h3">4.5 插件开发</a></li>
+<li><a href="#cli" class="toc-h2">五、CLI 完整参考</a></li>
+<li><a href="#_15" class="toc-h3">命令行选项</a></li>
+<li><a href="#_16" class="toc-h3">常用工作流</a></li>
+<li><a href="#_17" class="toc-h2">六、进阶主题</a></li>
+<li><a href="#61-spec-sorrycc" class="toc-h3">6.1 Spec 驱动开发（Sorrycc 推荐的最佳实践）</a></li>
+<li><a href="#62-agent" class="toc-h3">6.2 并行 Agent 模式</a></li>
+<li><a href="#63" class="toc-h3">6.3 模型选择策略</a></li>
+<li><a href="#64-vs-code" class="toc-h3">6.4 VS Code 扩展集成</a></li>
+<li><a href="#65" class="toc-h3">6.5 配置最佳实践</a></li>
+<li><a href="#_18" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1-neovate-code-claude-code" class="toc-h3">Q1: Neovate Code 和 Claude Code 有什么关系？</a></li>
+<li><a href="#q2-llm" class="toc-h3">Q2: 支持哪些 LLM 模型？</a></li>
+<li><a href="#q3-api-key" class="toc-h3">Q3: API Key 怎么管理？</a></li>
+<li><a href="#q4-yolo" class="toc-h3">Q4: Yolo 模式安全吗？</a></li>
+<li><a href="#q5-agentsmd-claudemd" class="toc-h3">Q5: AGENTS.md 和 CLAUDE.md 有什么区别？</a></li>
+<li><a href="#q6" class="toc-h3">Q6: 如何处理大型项目的上下文限制？</a></li>
+<li><a href="#q7" class="toc-h3">Q7: 如何在团队中使用？</a></li>
+<li><a href="#q8-neovate-code" class="toc-h3">Q8: Neovate Code 支持中文吗？</a></li>
+<li><a href="#_19" class="toc-h2">八、参考资料</a></li>
+<li><a href="#_20" class="toc-h3">官方资源</a></li>
+<li><a href="#_21" class="toc-h3">社区资源</a></li>
+<li><a href="#_22" class="toc-h3">学习资源</a></li>
+<li><a href="#_23" class="toc-h3">相关工具</a></li>
+<li><a href="#_24" class="toc-h2">学习路线图</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Neovate Code 学习教程</h1>
+                        <div class="article-meta">帮我看看这个项目的结构</div>
+                    </header>
+                    <h1 id="neovate-code">Neovate Code 学习教程</h1>
+<h2 id="_1">一、环境准备</h2>
+<h3 id="_2">前置知识</h3>
+<p>学习 Neovate Code 需要以下基础：</p>
+<table>
+<thead>
+<tr>
+<th>知识</th>
+<th>程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>命令行操作</td>
+<td>必须</td>
+<td>Neovate Code 是 CLI 工具</td>
+</tr>
+<tr>
+<td>Git 基础</td>
+<td>必须</td>
+<td>版本控制、Worktree 功能</td>
+</tr>
+<tr>
+<td>LLM API</td>
+<td>推荐</td>
+<td>了解至少一个 AI 模型 API 的使用</td>
+</tr>
+<tr>
+<td>TypeScript</td>
+<td>可选</td>
+<td>开发插件时需要</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">安装步骤</h3>
+<h4 id="1-nodejs">1. 确保 Node.js 环境</h4>
+<pre><code class="language-bash"># 检查 Node.js 版本（需要 18+）
+node -v
+
+# 如果未安装，使用 nvm 安装
+nvm install 22
+nvm use 22
+</code></pre>
+<h4 id="2-neovate-code">2. 安装 Neovate Code</h4>
+<pre><code class="language-bash"># 全局安装（推荐）
+npm install -g @neovate/code
+
+# 或使用 yarn
+yarn global add @neovate/code
+
+# 或使用 pnpm
+pnpm add -g @neovate/code
+</code></pre>
+<h4 id="3">3. 验证安装</h4>
+<pre><code class="language-bash"># 检查版本
+neovate --version
+# 输出: 0.28.5
+
+# 查看帮助
+neovate --help
+</code></pre>
+<h4 id="4-api-key">4. 配置 API Key</h4>
+<p>选择你偏好的 LLM 提供商，设置环境变量：</p>
+<pre><code class="language-bash"># Anthropic (Claude)
+export ANTHROPIC_API_KEY=&quot;sk-ant-...&quot;
+
+# OpenAI (GPT)
+export OPENAI_API_KEY=&quot;sk-...&quot;
+
+# DeepSeek
+export DEEPSEEK_API_KEY=&quot;sk-...&quot;
+
+# Google (Gemini)
+export GOOGLE_API_KEY=&quot;...&quot;
+
+# 建议写入 shell 配置文件
+echo 'export ANTHROPIC_API_KEY=&quot;your-key&quot;' &gt;&gt; ~/.zshrc
+source ~/.zshrc
+</code></pre>
+<h3 id="_4">环境验证</h3>
+<pre><code class="language-bash"># 在任意项目目录中启动
+cd your-project
+neovate
+
+# 首次启动会提示登录和选择模型
+# 输入 /login 登录
+# 输入 /model 选择模型
+</code></pre>
+<hr />
+<h2 id="_5">二、快速开始</h2>
+<h3 id="hello-world">Hello World</h3>
+<h4 id="neovate-code_1">第一步: 启动 Neovate Code</h4>
+<pre><code class="language-bash">cd your-project
+neovate
+</code></pre>
+<p>你会看到交互式终端界面，显示当前模型和工作目录。</p>
+<h4 id="_6">第二步: 基础对话</h4>
+<pre><code>&gt; 帮我看看这个项目的结构
+
+&gt; 这个文件有什么问题？
+
+&gt; 帮我写一个工具函数，格式化日期为 YYYY-MM-DD 格式
+</code></pre>
+<h4 id="_7">第三步: 文件操作</h4>
+<pre><code>&gt; 在 src/utils/ 下创建一个 format.ts 文件，包含日期格式化函数
+
+&gt; 修改 src/index.ts，导入并使用新的格式化函数
+
+&gt; 为 format.ts 编写单元测试
+</code></pre>
+<h4 id="_8">第四步: 代码审查</h4>
+<pre><code class="language-bash"># 先暂存你的变更
+git add .
+
+# 使用 Neovate Code 审查
+neovate /review
+
+# 或者直接用管道方式
+git diff --cached | neovate /review
+</code></pre>
+<h3 id="_9">核心交互模式</h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>切换方式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Normal Mode</td>
+<td>默认</td>
+<td>Agent 模式，AI 自动执行</td>
+</tr>
+<tr>
+<td>Plan Mode</td>
+<td>Tab 键</td>
+<td>只规划不执行，输出计划</td>
+</tr>
+<tr>
+<td>Brainstorm Mode</td>
+<td>Shift+Tab 两次</td>
+<td>头脑风暴，AI 生成多选题引导设计</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_10">三、核心概念</h2>
+<h3 id="_11">概念图谱</h3>
+<pre><code>Neovate Code 核心概念
+├── 会话管理
+│   ├── 新会话 (neovate)
+│   ├── 继续会话 (neovate -c)
+│   ├── 恢复会话 (neovate -r &lt;id&gt;)
+│   └── 会话压缩 (autoCompact)
+│
+├── 模型系统
+│   ├── 11+ 内置提供商
+│   ├── OpenAI 兼容自定义
+│   ├── 模型别名 (deepseek, gpt-4, ...)
+│   └── Plan 模型独立配置
+│
+├── 规则系统
+│   ├── AGENTS.md (项目级)
+│   ├── AGENTS.md (全局级 ~/.neovate/)
+│   └── /init 自动生成
+│
+├── 工具系统
+│   ├── 内置工具 (文件读写、Shell、Git)
+│   ├── MCP 服务器 (外部工具)
+│   └── 插件 (自定义扩展)
+│
+├── 工作模式
+│   ├── Interactive (终端交互)
+│   ├── Headless (CI/CD)
+│   └── Yolo (全自动)
+│
+└── 工作区
+    ├── 主工作区
+    ├── Git Worktree 隔离
+    └── 并行 Agent
+</code></pre>
+<h3 id="_12">核心概念详解</h3>
+<h4 id="1-approval-mode">1. 审批模式（Approval Mode）</h4>
+<p>Neovate Code 的安全机制，控制 AI 操作的审批级别：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>文件编辑</th>
+<th>Shell 命令</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>default</code></td>
+<td>需确认</td>
+<td>需确认</td>
+<td>日常开发</td>
+</tr>
+<tr>
+<td><code>autoEdit</code></td>
+<td>自动</td>
+<td>需确认</td>
+<td>信任 AI 编辑</td>
+</tr>
+<tr>
+<td><code>yolo</code></td>
+<td>自动</td>
+<td>自动</td>
+<td>CI/CD、完全信任</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash"># 启动时指定
+neovate --approval-mode autoEdit
+
+# 或在会话中切换
+&gt; /approval autoEdit
+
+# 或在配置文件中设置
+# .neovate/settings.json
+{ &quot;approvalMode&quot;: &quot;autoEdit&quot; }
+</code></pre>
+<h4 id="2-agentsmd">2. AGENTS.md 规则文件</h4>
+<p><strong>项目级 AGENTS.md</strong> (<code>./AGENTS.md</code>):</p>
+<pre><code class="language-markdown"># 项目规则
+
+## 技术栈
+- 前端: React 19 + TypeScript
+- 状态管理: Zustand
+- 测试: Vitest
+
+## 编码规范
+- 使用函数式组件，禁止 class 组件
+- 所有函数必须添加 TypeScript 类型
+- 文件命名使用 kebab-case
+- 组件命名使用 PascalCase
+
+## 测试要求
+- 每个新功能必须编写单元测试
+- 测试文件放在同目录 __tests__/ 下
+
+## 架构约束
+- 不允许在组件中直接调用 API
+- 使用自定义 hook 封装数据获取逻辑
+</code></pre>
+<p><strong>全局 AGENTS.md</strong> (<code>~/.neovate/AGENTS.md</code>):</p>
+<pre><code class="language-markdown"># 个人偏好
+
+- 使用中文回复
+- 代码注释使用英文
+- 优先使用 ES Module 语法
+- 偏好函数式编程风格
+</code></pre>
+<p><strong>自动生成</strong>:</p>
+<pre><code class="language-bash"># 在项目根目录运行
+neovate
+
+# 输入
+&gt; /init
+
+# Neovate Code 会扫描项目并生成 AGENTS.md
+</code></pre>
+<h4 id="3_1">3. 会话管理</h4>
+<pre><code class="language-bash"># 新建会话
+neovate
+
+# 继续最近的会话
+neovate -c
+
+# 恢复指定会话
+neovate -r &lt;session-id&gt;
+
+# 查看会话列表
+&gt; /sessions
+</code></pre>
+<h4 id="4-slash">4. Slash 命令</h4>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/help</code></td>
+<td>显示帮助</td>
+</tr>
+<tr>
+<td><code>/login</code></td>
+<td>登录 LLM 提供商</td>
+</tr>
+<tr>
+<td><code>/model</code></td>
+<td>切换模型</td>
+</tr>
+<tr>
+<td><code>/init</code></td>
+<td>自动生成 AGENTS.md</td>
+</tr>
+<tr>
+<td><code>/review</code></td>
+<td>审查 Git 暂存区变更</td>
+</tr>
+<tr>
+<td><code>/sessions</code></td>
+<td>查看会话列表</td>
+</tr>
+<tr>
+<td><code>/compact</code></td>
+<td>压缩当前上下文</td>
+</tr>
+<tr>
+<td><code>/clear</code></td>
+<td>清除会话历史</td>
+</tr>
+<tr>
+<td><code>/undo</code></td>
+<td>撤销上次操作</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AGENTS.md</td>
+<td>规则文件，类似 CLAUDE.md</td>
+</tr>
+<tr>
+<td>Worktree</td>
+<td>Git 工作区隔离机制</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>Model Context Protocol，工具集成协议</td>
+</tr>
+<tr>
+<td>Headless</td>
+<td>无交互模式，用于 CI/CD</td>
+</tr>
+<tr>
+<td>Yolo Mode</td>
+<td>全自动审批模式</td>
+</tr>
+<tr>
+<td>Plan Mode</td>
+<td>只规划不执行的模式</td>
+</tr>
+<tr>
+<td>Brainstorm</td>
+<td>头脑风暴模式，AI 引导式讨论</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_14">四、功能详解</h2>
+<h3 id="41-mcp">4.1 MCP 服务器管理</h3>
+<p>Model Context Protocol 允许 Neovate Code 连接外部工具服务器：</p>
+<pre><code class="language-bash"># 添加 MCP 服务器
+neovate mcp add my-server -t stdio -c &quot;npx my-mcp-server&quot;
+
+# 添加 HTTP 类型的 MCP 服务器
+neovate mcp add remote-server -t http -u http://localhost:3000
+
+# 列出所有服务器
+neovate mcp ls
+
+# 查看详情
+neovate mcp get my-server
+
+# 启用/禁用
+neovate mcp enable my-server
+neovate mcp disable my-server
+
+# 删除
+neovate mcp rm my-server
+
+# 全局操作（-g 标志）
+neovate mcp add global-server -g -t stdio -c &quot;npx global-tool&quot;
+</code></pre>
+<p><strong>配置文件方式</strong> (<code>.neovate/settings.json</code>):</p>
+<pre><code class="language-json">{
+  &quot;mcpServers&quot;: {
+    &quot;my-server&quot;: {
+      &quot;type&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;my-mcp-server&quot;],
+      &quot;env&quot;: {
+        &quot;API_KEY&quot;: &quot;your-key&quot;
+      }
+    },
+    &quot;remote-tool&quot;: {
+      &quot;type&quot;: &quot;http&quot;,
+      &quot;url&quot;: &quot;http://localhost:3000&quot;,
+      &quot;headers&quot;: {
+        &quot;Authorization&quot;: &quot;Bearer token&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<h3 id="42-git-worktree">4.2 Git Worktree 工作区</h3>
+<pre><code class="language-bash"># 创建隔离工作区
+neovate workspace create feature-auth
+# 创建 .neovate-workspaces/feature-auth/ 目录
+
+# 在工作区中启动 Neovate Code
+cd .neovate-workspaces/feature-auth
+neovate
+
+# 完成后回到主工作区
+cd ../..
+
+# 清理工作区
+rm -rf .neovate-workspaces/feature-auth
+</code></pre>
+<p><strong>并行 Agent 模式</strong>:</p>
+<pre><code class="language-bash"># 终端 1: 处理功能 A
+cd .neovate-workspaces/feature-a
+neovate
+
+# 终端 2: 处理功能 B
+cd .neovate-workspaces/feature-b
+neovate
+
+# 两个 Agent 独立工作，互不冲突
+</code></pre>
+<h3 id="43-headless-cicd">4.3 Headless 模式（CI/CD）</h3>
+<pre><code class="language-bash"># 基本用法
+neovate -q &quot;修复 src/utils.ts 中的类型错误&quot;
+
+# 指定输出格式
+neovate -q --output-format json &quot;添加单元测试&quot;
+
+# 完全自动模式
+neovate -q --approval-mode yolo --output-format stream-json &quot;重构 API 模块&quot;
+
+# 指定模型
+neovate -q --model deepseek &quot;优化性能&quot;
+
+# 指定 MCP 配置
+neovate -q --mcp-config ./mcp-config.json &quot;执行任务&quot;
+</code></pre>
+<p><strong>GitHub Actions 集成示例</strong>:</p>
+<pre><code class="language-yaml">name: AI Code Review
+on: [pull_request]
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g @neovate/code
+      - run: |
+          git diff origin/main...HEAD | neovate -q \
+            --output-format json \
+            --approval-mode yolo \
+            &quot;审查这个 PR 的代码质量，输出 JSON 格式的审查结果&quot;
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+</code></pre>
+<h3 id="44">4.4 自定义输出风格</h3>
+<p>通过 Markdown 模板文件自定义 AI 输出格式：</p>
+<pre><code class="language-bash"># 创建输出风格模板
+cat &gt; output-style.md &lt;&lt; 'EOF'
+---
+name: concise
+description: 简洁风格输出
+---
+
+请以以下格式回复：
+- 变更摘要（1-2 句）
+- 修改的文件列表
+- 关键代码变更说明
+EOF
+
+# 使用自定义风格
+neovate --output-style ./output-style.md
+</code></pre>
+<h3 id="45">4.5 插件开发</h3>
+<p>创建自定义插件：</p>
+<pre><code class="language-typescript">// my-plugin.ts
+import type { Plugin } from '@neovate/code';
+
+export default const plugin: Plugin = {
+  name: 'my-company-plugin',
+
+  // 注入上下文信息
+  context: () =&gt; {
+    return {
+      'Company API Base URL': 'https://api.mycompany.com',
+      'Coding Standard': 'ESLint + Prettier',
+      'Team Lead': '张三'
+    };
+  }
+};
+</code></pre>
+<p>在 <code>.neovate/settings.json</code> 中注册：</p>
+<pre><code class="language-json">{
+  &quot;plugins&quot;: {
+    &quot;my-plugin&quot;: {
+      &quot;path&quot;: &quot;./plugins/my-plugin.ts&quot;
+    }
+  }
+}
+</code></pre>
+<hr />
+<h2 id="cli">五、CLI 完整参考</h2>
+<h3 id="_15">命令行选项</h3>
+<pre><code class="language-bash">neovate [选项] [初始提示]
+
+# 核心选项
+  --approval-mode &lt;mode&gt;     审批模式: default, autoEdit, yolo
+  --model &lt;model&gt;            指定模型
+  --plan-model &lt;model&gt;       指定规划模型
+  -c, --continue             继续最近的会话
+  -r, --resume &lt;id&gt;          恢复指定会话
+  -q, --quiet                静默/无交互模式
+  --output-format &lt;format&gt;   输出格式: stream-json, json, text
+  --output-style &lt;file&gt;      自定义输出风格模板
+  --mcp-config &lt;config&gt;      MCP 配置（JSON 或文件路径）
+
+# MCP 子命令
+neovate mcp add &lt;name&gt;       添加 MCP 服务器
+neovate mcp get &lt;name&gt;       查看服务器详情
+neovate mcp rm &lt;name&gt;        删除服务器
+neovate mcp enable &lt;name&gt;    启用服务器
+neovate mcp disable &lt;name&gt;   禁用服务器
+neovate mcp ls               列出所有服务器
+
+# 工作区子命令
+neovate workspace create     创建隔离工作区
+
+# 全局选项
+  --version                  显示版本
+  --help                     显示帮助
+</code></pre>
+<h3 id="_16">常用工作流</h3>
+<pre><code>工作流 1: 日常开发
+1. neovate                        启动会话
+2. /model                         选择模型
+3. 描述需求                       AI 生成代码
+4. 审批变更                       确认或修改
+5. /review                        审查所有变更
+6. 提交代码                       git commit
+
+工作流 2: Spec 驱动开发（推荐）
+1. neovate workspace create       创建隔离工作区
+2. cd .neovate-workspaces/xxx     进入工作区
+3. neovate                        启动
+4. Shift+Tab 两次                 进入 Brainstorm 模式
+5. 描述需求，AI 生成多选题        讨论设计
+6. 确认设计后切回 Normal 模式     实现
+7. 合并回主分支
+
+工作流 3: CI/CD 集成
+1. 编写 neovate -q 命令           配置自动化任务
+2. 指定 --output-format json      结构化输出
+3. 指定 --approval-mode yolo      全自动
+4. 在 CI pipeline 中执行          自动化
+</code></pre>
+<hr />
+<h2 id="_17">六、进阶主题</h2>
+<h3 id="61-spec-sorrycc">6.1 Spec 驱动开发（Sorrycc 推荐的最佳实践）</h3>
+<p>这是 Neovate Code 核心作者 Sorrycc 推荐的生产级工作流：</p>
+<p><strong>步骤一: 创建隔离工作区</strong></p>
+<pre><code class="language-bash">neovate workspace create
+</code></pre>
+<p><strong>步骤二: 进入 Brainstorm 模式</strong>
+- 在 Neovate Code 交互界面中按 Shift+Tab 两次
+- 描述问题，AI 会生成 1-10+ 道多选题帮助细化设计</p>
+<p><strong>步骤三: 迭代讨论</strong>
+- 与 AI 反复讨论，直到设计完善
+- AI 会根据你的选择逐步深入</p>
+<p><strong>步骤四: 归档设计文档</strong>
+- 将确定的设计方案保存到项目中</p>
+<p><strong>步骤五: 实现</strong>
+- 切回 Normal 模式
+- 基于设计文档让 AI 实现代码</p>
+<h3 id="62-agent">6.2 并行 Agent 模式</h3>
+<p>利用 Git Worktree 实现真正的并行 AI 编码：</p>
+<pre><code class="language-bash"># 创建多个工作区
+neovate workspace create feature-auth
+neovate workspace create feature-api
+neovate workspace create feature-ui
+
+# 在不同终端窗口中启动
+# Terminal 1
+cd .neovate-workspaces/feature-auth &amp;&amp; neovate
+
+# Terminal 2
+cd .neovate-workspaces/feature-api &amp;&amp; neovate
+
+# Terminal 3
+cd .neovate-workspaces/feature-ui &amp;&amp; neovate
+
+# 每个 Agent 独立工作，互不干扰
+# 完成后分别合并
+</code></pre>
+<h3 id="63">6.3 模型选择策略</h3>
+<table>
+<thead>
+<tr>
+<th>任务类型</th>
+<th>推荐模型</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>日常编码</td>
+<td>Claude Sonnet 4</td>
+<td>速度快，质量高</td>
+</tr>
+<tr>
+<td>复杂重构</td>
+<td>Claude Opus 4</td>
+<td>推理能力强</td>
+</tr>
+<tr>
+<td>中文场景</td>
+<td>Qwen3 Coder / DeepSeek</td>
+<td>中文理解好</td>
+</tr>
+<tr>
+<td>快速迭代</td>
+<td>GPT 4.1</td>
+<td>响应速度快</td>
+</tr>
+<tr>
+<td>成本敏感</td>
+<td>Gemini 2.5 Flash</td>
+<td>价格低</td>
+</tr>
+<tr>
+<td>规划设计</td>
+<td>独立配置 planModel</td>
+<td>最优规划</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash"># 在配置中设置不同模型用于不同用途
+# .neovate/settings.json
+{
+  &quot;model&quot;: &quot;claude-sonnet-4&quot;,
+  &quot;planModel&quot;: &quot;deepseek&quot;
+}
+</code></pre>
+<h3 id="64-vs-code">6.4 VS Code 扩展集成</h3>
+<p>安装 VS Code 扩展 <code>neovate-assistant</code>:
+- 在编辑器中使用 Neovate Code
+- 内嵌终端 + 编辑器面板
+- 快捷键: <code>Ctrl-Alt-B</code> 构建, <code>Ctrl-Alt-V</code> 预览, <code>Ctrl-Alt-P</code> 命令面板</p>
+<h3 id="65">6.5 配置最佳实践</h3>
+<p><strong>项目配置</strong> (<code>.neovate/settings.json</code>):</p>
+<pre><code class="language-json">{
+  &quot;model&quot;: &quot;claude-sonnet-4&quot;,
+  &quot;planModel&quot;: &quot;deepseek&quot;,
+  &quot;approvalMode&quot;: &quot;autoEdit&quot;,
+  &quot;autoCompact&quot;: true,
+  &quot;commit&quot;: {
+    &quot;auto&quot;: false,
+    &quot;message&quot;: &quot;feat: {description}&quot;
+  },
+  &quot;language&quot;: &quot;zh-CN&quot;
+}
+</code></pre>
+<p><strong>个人覆盖</strong> (<code>.neovate/settings.local.json</code>):</p>
+<pre><code class="language-json">{
+  &quot;approvalMode&quot;: &quot;default&quot;,
+  &quot;model&quot;: &quot;gpt-4.1&quot;
+}
+</code></pre>
+<hr />
+<h2 id="_18">七、常见问题</h2>
+<h3 id="q1-neovate-code-claude-code">Q1: Neovate Code 和 Claude Code 有什么关系？</h3>
+<p>Neovate Code 是独立项目，灵感来自 Claude Code，但定位为"开放的 Claude Code"。主要区别：多模型支持、MIT 开源、插件系统、Worktree 隔离。</p>
+<h3 id="q2-llm">Q2: 支持哪些 LLM 模型？</h3>
+<p>内置支持 11+ 提供商：Anthropic, OpenAI, Google, DeepSeek, xAI, Groq, OpenRouter, ModelScope, Moonshot AI, IFlow 等。还支持任意 OpenAI 兼容 API。</p>
+<h3 id="q3-api-key">Q3: API Key 怎么管理？</h3>
+<p>通过环境变量设置（如 <code>export ANTHROPIC_API_KEY=sk-ant-...</code>），建议写入 shell 配置文件（<code>.zshrc</code> 或 <code>.bashrc</code>）。不要将 Key 写入配置文件或提交到 Git。</p>
+<h3 id="q4-yolo">Q4: Yolo 模式安全吗？</h3>
+<p>Yolo 模式会自动批准所有文件编辑和 Shell 命令。建议仅在以下场景使用：
+- CI/CD 自动化环境
+- 完全信任的测试环境
+- 明确知道 AI 会做什么的场景</p>
+<h3 id="q5-agentsmd-claudemd">Q5: AGENTS.md 和 CLAUDE.md 有什么区别？</h3>
+<p>功能类似，都是为 AI 提供项目级指令。AGENTS.md 是 Neovate Code 使用的格式，支持项目级 + 全局级双层合并。</p>
+<h3 id="q6">Q6: 如何处理大型项目的上下文限制？</h3>
+<ul>
+<li>开启 <code>autoCompact</code> 自动压缩上下文</li>
+<li>使用 AGENTS.md 精简聚焦关键信息</li>
+<li>将大任务拆分为小任务</li>
+<li>使用 Plan Mode 先规划再实现</li>
+</ul>
+<h3 id="q7">Q7: 如何在团队中使用？</h3>
+<ul>
+<li>将 <code>.neovate/settings.json</code> 和 <code>AGENTS.md</code> 提交到 Git</li>
+<li>每个成员用 <code>settings.local.json</code> 覆盖个人偏好</li>
+<li>利用 Worktree 做并行开发</li>
+</ul>
+<h3 id="q8-neovate-code">Q8: Neovate Code 支持中文吗？</h3>
+<p>支持。在 <code>.neovate/settings.json</code> 中设置 <code>"language": "zh-CN"</code> 即可获得中文交互体验。中文场景推荐使用 Qwen3 Coder、DeepSeek 或 Moonshot 模型。</p>
+<hr />
+<h2 id="_19">八、参考资料</h2>
+<h3 id="_20">官方资源</h3>
+<ul>
+<li>GitHub 仓库: https://github.com/neovateai/neovate-code</li>
+<li>官方文档: https://neovateai.dev</li>
+<li>npm 包: https://www.npmjs.com/package/@neovate/code</li>
+</ul>
+<h3 id="_21">社区资源</h3>
+<ul>
+<li>阮一峰周刊自荐: https://github.com/ruanyf/weekly/issues/7805</li>
+<li>知乎官方公告: https://zhuanlan.zhihu.com/p/1954202059206277079</li>
+<li>Linux.do 社区讨论: https://linux.do/t/topic/993411</li>
+</ul>
+<h3 id="_22">学习资源</h3>
+<ul>
+<li>Sorrycc 最佳实践博客: https://sorrycc.com/best-practices-with-neovate-code</li>
+<li>Jimmy Song AI 开源全景: https://jimmysong.io/zh/ai/neovate-code/</li>
+<li>AI 编程社区推荐: https://aicoding.csdn.net/6902b54682fbe0098ca66065.html</li>
+</ul>
+<h3 id="_23">相关工具</h3>
+<ul>
+<li>VS Code 扩展: 搜索 <code>neovate-assistant</code></li>
+<li>MCP 服务器目录: https://github.com/modelcontextprotocol/servers</li>
+<li>AI SDK (Vercel): https://sdk.vercel.ai</li>
+</ul>
+<hr />
+<h2 id="_24">学习路线图</h2>
+<pre><code>第1天: 基础入门
+├── 安装和配置环境
+├── 设置 API Key
+├── 启动第一个会话
+└── 尝试基本对话和代码生成
+
+第2-3天: 核心功能
+├── 掌握 AGENTS.md 规则文件
+├── 学习 Slash 命令
+├── 理解审批模式（default/autoEdit/yolo）
+└── 练习代码审查流程
+
+第4-5天: 进阶功能
+├── 配置 MCP 服务器
+├── 尝试 Git Worktree 隔离
+├── 学习 Plan Mode 和 Brainstorm Mode
+└── 实践 Spec 驱动开发
+
+第6-7天: 工作流集成
+├── 尝试并行 Agent 模式
+├── 配置 Headless 模式
+├── 编写自定义插件
+└── 建立 CI/CD 集成流程
+</code></pre>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

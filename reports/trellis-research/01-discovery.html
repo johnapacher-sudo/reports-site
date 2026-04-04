@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRELLIS - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**注意**：本报告涵盖两个版本 —— 原版 TRELLIS（CVPR 2025 Spotlight）和升级版 TRELLIS.2（4B 参数）。两者均为微软研究院开源项目。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">官方资源</a></li>
+<li><a href="#_8" class="toc-h3">教程资源</a></li>
+<li><a href="#_9" class="toc-h3">社区资源</a></li>
+<li><a href="#_10" class="toc-h3">衍生项目</a></li>
+<li><a href="#_11" class="toc-h2">硬件与系统要求</a></li>
+<li><a href="#trellis" class="toc-h3">TRELLIS（原版）</a></li>
+<li><a href="#trellis2" class="toc-h3">TRELLIS.2（升级版）</a></li>
+<li><a href="#_12" class="toc-h2">预训练模型一览</a></li>
+<li><a href="#trellis_1" class="toc-h3">TRELLIS 模型</a></li>
+<li><a href="#trellis2_1" class="toc-h3">TRELLIS.2 模型</a></li>
+<li><a href="#_13" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>TRELLIS - 技术发现报告</h1>
+                        <div class="article-meta">**注意**：本报告涵盖两个版本 —— 原版 TRELLIS（CVPR 2025 Spotlight）和升级版 TRELLIS.2（4B 参数）。两者均为微软研究院开源项目。</div>
+                    </header>
+                    <h1 id="trellis-">TRELLIS - 技术发现报告</h1>
+<blockquote>
+<p><strong>注意</strong>：本报告涵盖两个版本 —— 原版 TRELLIS（CVPR 2025 Spotlight）和升级版 TRELLIS.2（4B 参数）。两者均为微软研究院开源项目。</p>
+</blockquote>
+<h2 id="_1">基本信息</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>TRELLIS（原版）</th>
+<th>TRELLIS.2（升级版）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GitHub 仓库</strong></td>
+<td><a href="https://github.com/microsoft/TRELLIS">microsoft/TRELLIS</a></td>
+<td><a href="https://github.com/microsoft/TRELLIS.2">microsoft/TRELLIS.2</a></td>
+</tr>
+<tr>
+<td><strong>GitHub Stars</strong></td>
+<td>12,126（截至 2026-04-04）</td>
+<td>5,077（截至 2026-04-04）</td>
+</tr>
+<tr>
+<td><strong>Forks</strong></td>
+<td>1,138</td>
+<td>585</td>
+</tr>
+<tr>
+<td><strong>Contributors</strong></td>
+<td>6</td>
+<td>2</td>
+</tr>
+<tr>
+<td><strong>Open Issues</strong></td>
+<td>250</td>
+<td>114</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td><strong>主要编程语言</strong></td>
+<td>Python</td>
+<td>Python</td>
+</tr>
+<tr>
+<td><strong>首次发布日期</strong></td>
+<td>2024-12-02</td>
+<td>2025-11-26</td>
+</tr>
+<tr>
+<td><strong>最近更新日期</strong></td>
+<td>2026-04-03（活跃）</td>
+<td>2026-04-04（活跃）</td>
+</tr>
+<tr>
+<td><strong>创建者/维护团队</strong></td>
+<td>微软研究院（Microsoft Research）</td>
+<td>微软研究院（Microsoft Research）</td>
+</tr>
+<tr>
+<td><strong>论文</strong></td>
+<td><em>Structured 3D Latents for Scalable and Versatile 3D Generation</em> (CVPR 2025 Spotlight)</td>
+<td><em>Native and Compact Structured Latents for 3D Generation</em> (Tech Report, 2025)</td>
+</tr>
+<tr>
+<td><strong>模型参数</strong></td>
+<td>最大 2B</td>
+<td>4B</td>
+</tr>
+<tr>
+<td><strong>训练数据集</strong></td>
+<td>TRELLIS-500K（500K 多样化 3D 资产）</td>
+<td>Objaverse-XL（Sketchfab 子集）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>TRELLIS 是微软研究院开发的<strong>大规模 3D 资产生成模型</strong>，接受文本或图像提示，生成高质量的 3D 资产（支持 Radiance Fields、3D Gaussians、Mesh 等多种输出格式），使用统一的 Structured LATent (SLAT) 表示实现高保真、多样化的 3D 内容创建。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>高质量 3D 生成</strong> - 从文本或图像提示生成具有精细几何和生动纹理的高质量 3D 资产。TRELLIS.2 支持 512³ 到 1536³ 分辨率的 PBR 纹理输出（Base Color、Roughness、Metallic、Opacity），显著超越同类方法。</p>
+</li>
+<li>
+<p><strong>统一 SLAT 表示（Structured LATent）</strong> - 核心创新是一种统一的 3D 潜在表示方法，将稀疏 3D 网格与密集多视角视觉特征融合，可解码为 Radiance Fields、3D Gaussians 和 Meshes 等多种输出格式，满足不同的下游需求。</p>
+</li>
+<li>
+<p><strong>灵活编辑能力</strong> - 支持生成 3D 资产的变体（Asset Variants）和局部编辑（Local Manipulation），例如移除手臂、添加武器、替换腿部等操作，这在之前的 3D 生成模型中尚未实现。</p>
+</li>
+<li>
+<p><strong>任意拓扑处理（TRELLIS.2 新特性）</strong> - O-Voxel 表示突破了等值面场的限制，可稳健处理开放表面（如衣物、树叶）、非流形几何和内部封闭结构等复杂拓扑。</p>
+</li>
+<li>
+<p><strong>高效生成速度</strong> - TRELLIS.2 在 NVIDIA H100 GPU 上：512³ 分辨率约 3 秒，1024³ 约 17 秒，1536³ 约 60 秒，相比竞品速度领先。</p>
+</li>
+<li>
+<p><strong>全开源生态</strong> - 代码、模型权重、训练代码、数据集（TRELLIS-500K）全部开源，采用 MIT 许可证，支持本地部署和商业使用。</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> TRELLIS 12,126 / TRELLIS.2 5,077（截至 2026-04-04）</li>
+<li><strong>Contributors：</strong> TRELLIS 6 / TRELLIS.2 2</li>
+<li><strong>最近更新日期：</strong> 2026-04-04（两个仓库均活跃维护）</li>
+<li><strong>社区讨论热度：</strong> 高。Reddit r/StableDiffusion 和 r/LocalLLaMA 社区讨论活跃，存在大量对比评测（vs Hunyuan3D、Tripo 等），YouTube 上有多个教程和对比视频。社区还构建了 Windows 兼容版本（Window_Trellis）和 Docker UI（TostUI）。</li>
+<li><strong>Hugging Face：</strong> 模型权重发布在 Hugging Face，提供在线 Demo。</li>
+<li><strong>npm/pypi 下载量：</strong> 不适用（非库/包形式发布）。</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> AI 3D 生成（Text-to-3D、Image-to-3D）</li>
+<li><strong>解决的核心问题：</strong> 从文本/图像提示自动生成高质量、多格式、可编辑的 3D 资产，降低 3D 建模门槛。</li>
+<li><strong>替代/竞品技术：</strong></li>
+<li><strong>Hunyuan3D 2.x</strong>（腾讯） - 开源 3D 生成模型，纹理质量高，生成速度较慢（2-6 分钟）</li>
+<li><strong>Tripo AI</strong> - 商业 3D 生成平台，2026 年被评为最佳 3D 生成工具，速度快，UI 完善</li>
+<li><strong>Meshy</strong> - 商业 3D 生成服务</li>
+<li><strong>Rodin</strong> - 商业 3D 生成模型</li>
+<li><strong>PartCrafter</strong> - 开源 3D 生成模型</li>
+<li><strong>Seed3D</strong>（字节跳动） - 新兴 3D 生成模型</li>
+<li><strong>依赖的上游技术：</strong></li>
+<li>PyTorch（深度学习框架）</li>
+<li>CUDA（GPU 计算）</li>
+<li>Rectified Flow Transformers（核心生成架构）</li>
+<li>Flash Attention / xFormers（注意力机制加速）</li>
+<li>Hugging Face（模型托管）</li>
+<li>DALL-E 3 / GPT-4（示例中用于生成提示图像和文本）</li>
+<li><strong>下游使用者/集成方：</strong></li>
+<li>游戏开发（3D 资产快速原型）</li>
+<li>AR/VR 内容创建</li>
+<li>3D 打印</li>
+<li>影视特效</li>
+<li>电商产品展示</li>
+<li>Azure AI Foundry Labs（微软官方云服务集成）</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">官方资源</h3>
+<ul>
+<li><a href="https://trellis3d.github.io/">TRELLIS 项目主页</a> - 原版 TRELLIS 官方展示页面，含生成效果示例</li>
+<li><a href="https://microsoft.github.io/TRELLIS.2/">TRELLIS.2 项目主页</a> - TRELLIS.2 官方展示页面，含技术特性说明</li>
+<li><a href="https://github.com/microsoft/TRELLIS">TRELLIS GitHub 仓库</a> - 原版代码、模型、训练代码、数据集</li>
+<li><a href="https://github.com/microsoft/TRELLIS.2">TRELLIS.2 GitHub 仓库</a> - 升级版代码和模型</li>
+<li><a href="https://arxiv.org/abs/2412.01506">TRELLIS 论文 (arXiv:2412.01506)</a> - 原版论文</li>
+<li><a href="https://huggingface.co/microsoft/TRELLIS-image-large">TRELLIS Hugging Face 模型</a> - 预训练模型权重</li>
+<li><a href="https://huggingface.co/microsoft/TRELLIS.2-4B">TRELLIS.2 Hugging Face 模型</a> - TRELLIS.2 预训练模型权重</li>
+<li><a href="https://labs.ai.azure.com/projects/trellis/">Azure AI Foundry Labs - Trellis</a> - 微软官方云服务 Demo</li>
+<li><a href="https://www.microsoft.com/en-us/research/publication/structured-3d-latents-for-scalable-and-versatile-3d-generation/">Microsoft Research 出版物</a> - 微软研究院官方介绍</li>
+</ul>
+<h3 id="_8">教程资源</h3>
+<ul>
+<li><a href="https://github.com/microsoft/TRELLIS#readme">TRELLIS GitHub README 快速入门</a> - 安装步骤和最小可运行示例</li>
+<li><a href="https://github.com/FurkanGozukara/Stable-Diffusion/wiki/Step-by-Step-TRELLIS-Tutorial-to-Generate-Amazing-High-Quality-3D-Assets-from-Static-Images-Locally">社区 Step-by-Step 教程</a> - 详细的本机安装和使用指南</li>
+</ul>
+<h3 id="_9">社区资源</h3>
+<ul>
+<li><a href="https://www.reddit.com/r/StableDiffusion/comments/1q3ijwo/trellis_2_is_already_getting_dethroned_by_other/">Reddit r/StableDiffusion - TRELLIS 讨论</a> - 社区对比讨论（TRELLIS vs Hunyuan）</li>
+<li><a href="https://www.reddit.com/r/LocalLLaMA/comments/1porpwd/microsofts_trellis_24b_an_opensource_imageto3d/">Reddit r/LocalLLaMA - TRELLIS.2 讨论</a> - 社区使用体验分享</li>
+<li><a href="https://www.youtube.com/watch?v=OX2P23W7TAA">YouTube - Best Open-Source 3D AI: Trellis.2</a> - 视频评测</li>
+<li><a href="https://www.youtube.com/watch?v=zI7RHYG6UfQ">YouTube - Trellis vs Hunyuan 对比</a> - 实际生成效果对比</li>
+<li><a href="https://www.3daistudio.com/blog/trellis-2-vs-hunyuan-3d-differences-explained">3DAI Studio - Trellis 2 vs Hunyuan 3D 深度对比</a> - 博客深度分析</li>
+<li><a href="https://help.scenario.com/en/articles/comparing-generative-3d-models/">Scenario - 3D 生成模型对比</a> - 多模型横向对比</li>
+</ul>
+<h3 id="_10">衍生项目</h3>
+<ul>
+<li><a href="https://github.com/MackinationsAi/Window_Trellis">Window_Trellis</a> - Windows 兼容版本</li>
+<li><a href="https://www.reddit.com/r/StableDiffusion/comments/1ppfhln/trellis_2_is_now_on_tostui_100_local_100_docker/">TostUI</a> - Docker 本地 UI 部署方案</li>
+</ul>
+<h2 id="_11">硬件与系统要求</h2>
+<h3 id="trellis">TRELLIS（原版）</h3>
+<ul>
+<li><strong>系统：</strong> Linux（Windows 需参考社区方案，非官方支持）</li>
+<li><strong>GPU：</strong> NVIDIA GPU，至少 16GB 显存（验证于 A100 和 A6000）</li>
+<li><strong>CUDA：</strong> 11.8 或 12.2</li>
+<li><strong>Python：</strong> 3.8+</li>
+</ul>
+<h3 id="trellis2">TRELLIS.2（升级版）</h3>
+<ul>
+<li><strong>系统：</strong> Linux</li>
+<li><strong>GPU：</strong> NVIDIA GPU，至少 24GB 显存（验证于 A100 和 H100）</li>
+<li><strong>CUDA：</strong> 推荐 12.4</li>
+<li><strong>Python：</strong> 3.8+</li>
+</ul>
+<h2 id="_12">预训练模型一览</h2>
+<h3 id="trellis_1">TRELLIS 模型</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>描述</th>
+<th>参数量</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRELLIS-image-large</td>
+<td>图像到 3D 生成（推荐）</td>
+<td>1.2B</td>
+</tr>
+<tr>
+<td>TRELLIS-text-base</td>
+<td>文本到 3D 生成（基础版）</td>
+<td>342M</td>
+</tr>
+<tr>
+<td>TRELLIS-text-large</td>
+<td>文本到 3D 生成（大版）</td>
+<td>1.1B</td>
+</tr>
+<tr>
+<td>TRELLIS-text-xlarge</td>
+<td>文本到 3D 生成（超大版）</td>
+<td>2.0B</td>
+</tr>
+</tbody>
+</table>
+<h3 id="trellis2_1">TRELLIS.2 模型</h3>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>描述</th>
+<th>参数量</th>
+<th>分辨率</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TRELLIS.2-4B</td>
+<td>图像到 3D 生成</td>
+<td>4B</td>
+<td>512³ - 1536³</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_13">信息来源</h2>
+<ul>
+<li><a href="https://github.com/microsoft/TRELLIS">GitHub - microsoft/TRELLIS</a> - 获取日期：2026-04-04</li>
+<li><a href="https://github.com/microsoft/TRELLIS.2">GitHub - microsoft/TRELLIS.2</a> - 获取日期：2026-04-04</li>
+<li><a href="https://trellis3d.github.io/">TRELLIS 项目主页</a> - 获取日期：2026-04-04</li>
+<li><a href="https://microsoft.github.io/TRELLIS.2/">TRELLIS.2 项目主页</a> - 获取日期：2026-04-04</li>
+<li><a href="https://www.microsoft.com/en-us/research/publication/structured-3d-latents-for-scalable-and-versatile-3d-generation/">Microsoft Research 出版物</a> - 获取日期：2026-04-04</li>
+<li><a href="https://labs.ai.azure.com/projects/trellis/">Azure AI Foundry Labs - Trellis</a> - 获取日期：2026-04-04</li>
+<li><a href="https://www.reddit.com/r/StableDiffusion/comments/1q3ijwo/trellis_2_is_already_getting_dethroned_by_other/">Reddit r/StableDiffusion - TRELLIS vs Hunyuan</a> - 获取日期：2026-04-04</li>
+<li><a href="https://www.3daistudio.com/blog/trellis-2-vs-hunyuan-3d-differences-explained">3DAI Studio - Trellis 2 vs Hunyuan 3D</a> - 获取日期：2026-04-04</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

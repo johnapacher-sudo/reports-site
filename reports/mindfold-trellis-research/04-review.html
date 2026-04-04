@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trellis (mindfold-ai) 调研报告质量审阅报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**审阅日期：** 2026-04-04 | **审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md（全部三份文档） | **质量评分：** B 级（无 P0/P1 未修复问题，P2 问题 3 个）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">审阅清单结果</a></li>
+<li><a href="#1" class="toc-h3">1. 事实准确性 — 通过</a></li>
+<li><a href="#2" class="toc-h3">2. 代码可运行性 — 通过</a></li>
+<li><a href="#3" class="toc-h3">3. 完整性 — 通过</a></li>
+<li><a href="#4" class="toc-h3">4. 逻辑递进 — 通过</a></li>
+<li><a href="#5" class="toc-h3">5. 术语一致性 — 通过</a></li>
+<li><a href="#6" class="toc-h3">6. 时效性 — 通过</a></li>
+<li><a href="#7" class="toc-h3">7. 来源可溯 — 通过（修复后）</a></li>
+<li><a href="#_2" class="toc-h2">问题列表</a></li>
+<li><a href="#_3" class="toc-h2">修正说明</a></li>
+<li><a href="#p1-1-url" class="toc-h3">P1-1 修正：替换信息来源中的占位符 URL</a></li>
+<li><a href="#_4" class="toc-h2">质量评分</a></li>
+<li><a href="#_5" class="toc-h2">总体评价</a></li>
+<li><a href="#_6" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Trellis (mindfold-ai) 调研报告质量审阅报告</h1>
+                        <div class="article-meta">**审阅日期：** 2026-04-04<br>**审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md（全部三份文档）<br>**质量评分：** B 级（无 P0/P1 未修复问题，P2 问题 3 个）</div>
+                    </header>
+                    <h1 id="trellis-mindfold-ai">Trellis (mindfold-ai) 调研报告质量审阅报告</h1>
+<blockquote>
+<p><strong>审阅日期：</strong> 2026-04-04
+<strong>审阅范围：</strong> 01-discovery.md、02-analysis.md、03-tutorial.md（全部三份文档）
+<strong>质量评分：</strong> B 级（无 P0/P1 未修复问题，P2 问题 3 个）</p>
+</blockquote>
+<hr />
+<h2 id="_1">审阅清单结果</h2>
+<h3 id="1">1. 事实准确性 — 通过</h3>
+<p><strong>检查内容：</strong> 逐项验证了 10 项关键技术声明，与官方来源交叉比对。</p>
+<table>
+<thead>
+<tr>
+<th>声明</th>
+<th>验证结果</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>项目名称 Trellis，GitHub 仓库 mindfold-ai/Trellis</td>
+<td>准确</td>
+<td><a href="https://github.com/mindfold-ai/Trellis">GitHub</a></td>
+</tr>
+<tr>
+<td>npm 包名 @mindfoldhq/trellis，当前版本 v0.3.6</td>
+<td>准确</td>
+<td><a href="https://www.npmjs.com/package/@mindfoldhq/trellis">npm</a></td>
+</tr>
+<tr>
+<td>GitHub Stars 4,598（截至 2026-04-04）</td>
+<td>准确</td>
+<td>GitHub 仓库</td>
+</tr>
+<tr>
+<td>License 存在差异（AGPL-3.0 vs FSL）</td>
+<td>准确，已标注 [置信度：中]</td>
+<td>GitHub + npm 交叉验证</td>
+</tr>
+<tr>
+<td>支持 11 个 AI 编码平台</td>
+<td>准确</td>
+<td>GitHub README</td>
+</tr>
+<tr>
+<td>四种 Agent 类型（Dispatch/Implement/Check/Research）</td>
+<td>准确</td>
+<td>GitHub README + 知乎生产实践文章</td>
+</tr>
+<tr>
+<td>Hook 系统基于 Claude Code 原生 Hooks API</td>
+<td>准确</td>
+<td>Claude Code 官方文档</td>
+</tr>
+<tr>
+<td>Ralph Loop 质量控制循环机制</td>
+<td>准确</td>
+<td>知乎生产实践文章</td>
+</tr>
+<tr>
+<td>竞品 Superpowers ~41-44K Stars</td>
+<td>准确</td>
+<td><a href="https://github.com/obra/superpowers">GitHub - obra/superpowers</a></td>
+</tr>
+<tr>
+<td>竞品 BMAD Method ~39K Stars</td>
+<td>准确</td>
+<td><a href="https://github.com/bmad-code-org/BMAD-METHOD">GitHub - bmad-code-org/BMAD-METHOD</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>具体发现：</strong>
+- 10 项技术声明中，10 项验证通过。License 差异已正确标注置信度。
+- 所有定量数据（Stars、版本号、平台数量）均标注了获取日期。</p>
+<hr />
+<h3 id="2">2. 代码可运行性 — 通过</h3>
+<p><strong>检查内容：</strong> 逐个检查教程中所有代码示例的语法、导入完整性和逻辑正确性。</p>
+<p><strong>具体发现：</strong>
+- 所有 Bash 命令语法正确，可直接复制执行。
+- JSON 配置示例（<code>.claude/settings.json</code>）格式正确，包含完整的花括号闭合。
+- JSONL 示例每行都是合法 JSON 对象，<code>file</code> 和 <code>reason</code> 字段正确包含。
+- <code>validate.py</code> 实战项目代码包含完整 import 语句（json、os、sys、pathlib），函数定义完整，语法正确。
+- Python 验证脚本使用标准库，无外部依赖。
+- <code>_SPEC_MAP</code> 和 <code>ralph-loop.py</code> 等概念代码明确标注为"概念代码"，不要求直接运行。
+- 未发现 P0 级代码问题。</p>
+<hr />
+<h3 id="3">3. 完整性 — 通过</h3>
+<p><strong>检查内容：</strong> 验证三份文档是否覆盖了所有必要的信息维度。</p>
+<p><strong>具体发现：</strong>
+- <strong>discovery 覆盖情况：</strong> 基本信息（名称、仓库、Stars、License、语言、版本、团队）✓、一句话定位 ✓、核心特性（6 条）✓、社区生态 ✓、技术栈定位（上下游、竞品）✓、关键链接（官方/社区/衍生）✓、硬件要求 ✓、安装与快速入门 ✓、路线图 ✓——全部覆盖。
+- <strong>analysis 覆盖情况：</strong> 行业背景与动机 ✓、发展历程 ✓、设计哲学（含设计取舍和置信度标注）✓、核心算法/机制（Hook 系统、Ralph Loop、JSONL 控制）✓、架构设计（五层架构、核心模块、扩展机制）✓、关键概念详解（7 个概念）✓、横向对比（4 个竞品：Superpowers、BMAD、Claude Code Skills、SpecKit/GSD）✓、适用场景 ✓、优缺点 ✓、生态成熟度 ✓、生产就绪度 ✓、学习曲线 ✓——全部覆盖。
+- <strong>tutorial 覆盖情况：</strong> 环境搭建 ✓、入门篇（Hook 概念、项目结构、第一个 Spec）✓、进阶篇（JSONL 控制、Spec 渐进披露、四种 Agent）✓、高级篇（Ralph Loop、Git Worktree、任务生命周期、最佳实践）✓、实战项目 ✓、常见问题排查 ✓、学习路线 ✓——全部覆盖。
+- <strong>横向对比竞品数量：</strong> 4 个竞品（Superpowers、BMAD Method、Claude Code 原生 Skills、SpecKit/GSD），满足至少 3 个的要求。</p>
+<hr />
+<h3 id="4">4. 逻辑递进 — 通过</h3>
+<p><strong>检查内容：</strong> 验证教程章节顺序是否由浅入深，知识点是否有跳跃。</p>
+<p><strong>具体发现：</strong>
+- 教程章节顺序：为什么需要 Hook（理念）→ 项目结构（理解布局）→ 编写第一个 Spec（实践）→ JSONL 控制（配置）→ Spec 渐进披露（过滤）→ 四种 Agent（分工）→ Ralph Loop（质量控制）→ Git Worktree（并行）→ 任务生命周期（状态管理）→ 最佳实践 → 实战项目
+- 每个新概念都建立在前一个之上：1.1 理解 Hook → 1.2 理解项目结构（Hook 在哪些文件上工作）→ 1.3 编写 Spec（Hook 注入的内容）→ 2.1 JSONL 控制（决定注入哪些 Spec）
+- 实战项目综合运用了 3 个知识点（1.2 目录结构、2.1 JSONL 控制、3.1 Ralph Loop 完成标记），满足至少 3 个的要求。
+- 项目代码解析中明确标注了每个知识点的运用位置。</p>
+<hr />
+<h3 id="5">5. 术语一致性 — 通过</h3>
+<p><strong>检查内容：</strong> 验证全文术语使用是否统一。</p>
+<p><strong>具体发现：</strong>
+- "Hook 强制注入（Forced Injection via Hooks）"——全文统一，首次出现附英文全称
+- "Ralph Loop（质量控制循环）"——全文统一
+- "规范渐进披露（Spec Progressive Disclosure）"——全文统一
+- "JSONL 控制文件" / ".jsonl 文件"——全文统一
+- "_SPEC_MAP"——全文统一
+- "四种专用 Agent"（Dispatch/Implement/Check/Research）——名称和职责全文一致
+- "Git Worktree"——全文统一，未使用其他译名
+- "完成标记（Completion Marker）"——全文统一</p>
+<hr />
+<h3 id="6">6. 时效性 — 通过</h3>
+<p><strong>检查内容：</strong> 验证信息是否基于最新版本，获取日期是否标注。</p>
+<p><strong>具体发现：</strong>
+- 信息获取日期统一标注为 2026-04-04
+- 版本号 v0.3.6 基于 npm 最新版本（截至 2026-04-04）
+- GitHub Stars 数据标注了获取日期，避免数据过时误解
+- 项目创建于 2026-01-26，文档中正确反映了项目仅 3 个月历史的早期阶段特性
+- v0.x 版本的不稳定性风险已在劣势和风险点中明确提醒</p>
+<hr />
+<h3 id="7">7. 来源可溯 — 通过（修复后）</h3>
+<p><strong>检查内容：</strong> 验证关键信息是否有来源链接，独立来源数量是否足够。</p>
+<p><strong>具体发现：</strong>
+- <strong>discovery 报告：</strong> 4 个独立来源（GitHub、npm、官网、Discord）
+- <strong>analysis 报告：</strong> 7 个独立来源（GitHub×2、npm、官网、知乎、Medium×2）——初始版本中知乎和 Medium 链接为占位符（xxx），已修复为实际 URL
+- <strong>tutorial 文档：</strong> 代码示例标注了基于哪些配置文件和机制，学习路线推荐包含具体 URL
+- 所有来源均为独立域名，满足至少 3 个独立来源的要求</p>
+<p><strong>已修复问题：</strong> P1-1（见问题列表）</p>
+<hr />
+<h2 id="_2">问题列表</h2>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>级别</th>
+<th>所在文件</th>
+<th>问题描述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1-1</td>
+<td>P1</td>
+<td>02-analysis.md:533-534</td>
+<td>信息来源列表中知乎和 Medium 链接为占位符 <code>xxx</code>，无法溯源。<code>https://zhuanlan.zhihu.com/p/xxx</code> 和 <code>https://medium.com/xxx</code> 不是有效 URL</td>
+<td><strong>已修复</strong></td>
+</tr>
+<tr>
+<td>P2-1</td>
+<td>P2</td>
+<td>01-discovery.md</td>
+<td>GitHub Stars 数值（4,598）随时间变化，报告中已标注获取日期（2026-04-04）但未在关键数据旁增加时间戳备注，可能影响快速阅读时的判断</td>
+<td>建议改进</td>
+</tr>
+<tr>
+<td>P2-2</td>
+<td>P2</td>
+<td>03-tutorial.md</td>
+<td>教程中部分执行结果为"概念说明"（如 <code>head -30 .claude/hooks/session-start.py</code> 的执行结果是注释描述而非实际脚本内容），与"执行结果"标签不完全匹配</td>
+<td>建议改进</td>
+</tr>
+<tr>
+<td>P2-3</td>
+<td>P2</td>
+<td>02-analysis.md</td>
+<td>发展历程中"Discard 社区建立并活跃"疑似为"Discord 社区"的拼写错误</td>
+<td>建议改进</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">修正说明</h2>
+<h3 id="p1-1-url">P1-1 修正：替换信息来源中的占位符 URL</h3>
+<ul>
+<li><strong>修正位置：</strong> <code>02-analysis.md</code> 信息来源与版本说明章节</li>
+<li><strong>修正内容：</strong></li>
+<li><code>https://zhuanlan.zhihu.com/p/xxx</code> → <code>https://zhuanlan.zhihu.com/p/2021068826301796478</code></li>
+<li>链接文本从"知乎 - Trellis 生产实践" → "知乎 - 让 Claude Code 在复杂微服务项目中稳定产出高质量代码"</li>
+<li><code>https://medium.com/xxx</code> → <code>https://ai.plainenglish.io/the-great-framework-showdown-superpowers-vs-bmad-vs-speckit-vs-gsd-360983101c10</code></li>
+<li>链接文本从"Medium - AI Coding Frameworks Comparison" → "Medium - The Great Framework Showdown: Superpowers vs BMAD vs SpecKit vs GSD"</li>
+<li><strong>修正依据：</strong></li>
+<li>知乎 URL 通过 WebSearch 搜索"知乎 Trellis mindfold AI 编码框架 生产实践"验证，<a href="https://zhuanlan.zhihu.com/p/2021068826301796478">来源</a></li>
+<li>Medium URL 通过 WebSearch 搜索"Medium AI coding frameworks comparison 2026 Trellis Superpowers BMAD Claude Code"验证，<a href="https://ai.plainenglish.io/the-great-framework-showdown-superpowers-vs-bmad-vs-speckit-vs-gsd-360983101c10">来源</a></li>
+<li><strong>修正标注：</strong> 已在源文件中添加 <code>&lt;!-- reviewed: 修正占位符 URL 为实际文章链接 --&gt;</code> 注释</li>
+</ul>
+<hr />
+<h2 id="_4">质量评分</h2>
+<p><strong>评分：B 级</strong></p>
+<ul>
+<li>P0 问题：0 个</li>
+<li>P1 问题：1 个（已修复）</li>
+<li>P2 问题：3 个（建议改进，不影响使用）</li>
+</ul>
+<p><strong>评分依据：</strong> 初始状态存在 1 个 P1 问题（信息来源占位符 URL），已修复。修复后无 P0/P1 遗留问题。P2 问题 3 个（超过 2 个的 A 级阈值），故评为 B 级。</p>
+<hr />
+<h2 id="_5">总体评价</h2>
+<p>三份调研文档整体质量较高。事实准确性方面，10 项关键技术声明全部验证通过。代码示例语法正确，实战项目包含完整的 import 语句和逻辑实现。教程从 Hook 注入概念到实战验证工具的逻辑递进清晰，综合运用了 3 个知识点。横向对比覆盖了 4 个竞品（超过 3 个的最低要求）。术语全文统一，中英文对照完整。</p>
+<p>主要不足：信息来源列表中存在 2 个占位符 URL（已修复），3 个 P2 级改进建议（Stars 数据可读性、执行结果标签精确性、一处拼写疑似错误）。文档对 mindfold-ai/Trellis 的技术原理、配置方法和生态定位提供了完整、准确的覆盖。</p>
+<h2 id="_6">信息来源</h2>
+<ul>
+<li><a href="https://github.com/mindfold-ai/Trellis">GitHub - mindfold-ai/Trellis</a> - 验证日期：2026-04-04</li>
+<li><a href="https://www.npmjs.com/package/@mindfoldhq/trellis">npm - @mindfoldhq/trellis</a> - 验证日期：2026-04-04</li>
+<li><a href="https://zhuanlan.zhihu.com/p/2021068826301796478">知乎 - 让 Claude Code 在复杂微服务项目中稳定产出高质量代码</a> - 验证日期：2026-04-04</li>
+<li><a href="https://ai.plainenglish.io/the-great-framework-showdown-superpowers-vs-bmad-vs-speckit-vs-gsd-360983101c10">Medium - The Great Framework Showdown</a> - 验证日期：2026-04-04</li>
+<li><a href="https://github.com/obra/superpowers">GitHub - obra/superpowers</a> - 验证日期：2026-04-04</li>
+<li><a href="https://github.com/bmad-code-org/BMAD-METHOD">GitHub - bmad-code-org/BMAD-METHOD</a> - 验证日期：2026-04-04</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

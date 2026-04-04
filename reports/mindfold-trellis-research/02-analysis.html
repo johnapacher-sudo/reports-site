@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trellis (mindfold-ai) - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**注意**：本报告研究对象是 `mindfold-ai/Trellis`——一个面向 Claude Code、Cursor 等 AI 编码平台的框架和工具集。与微软的 `microsoft/TRELLIS`（3D 资产生成模型）是完全不同的项目。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#hook" class="toc-h4">Hook 注入系统</a></li>
+<li><a href="#ralph-loop" class="toc-h4">Ralph Loop 质量控制循环</a></li>
+<li><a href="#jsonl" class="toc-h4">JSONL 精细化规范控制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#hook-hook-system" class="toc-h3">Hook 系统（Hook System）</a></li>
+<li><a href="#agentfour-specialized-agents" class="toc-h3">四种专用 Agent（Four Specialized Agents）</a></li>
+<li><a href="#spec-progressive-disclosure" class="toc-h3">规范渐进披露（Spec Progressive Disclosure）</a></li>
+<li><a href="#ralph-loop-ralph-loop-quality-control" class="toc-h3">Ralph Loop 质量控制（Ralph Loop Quality Control）</a></li>
+<li><a href="#agent-parallel-agent-sessions" class="toc-h3">并行 Agent 会话（Parallel Agent Sessions）</a></li>
+<li><a href="#cross-service-analyzer" class="toc-h3">跨服务分析器（Cross-Service Analyzer）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Trellis (mindfold-ai) - 深度分析报告</h1>
+                        <div class="article-meta">**注意**：本报告研究对象是 `mindfold-ai/Trellis`——一个面向 Claude Code、Cursor 等 AI 编码平台的框架和工具集。与微软的 `microsoft/TRELLIS`（3D 资产生成模型）是完全不同的项目。</div>
+                    </header>
+                    <h1 id="trellis-mindfold-ai-">Trellis (mindfold-ai) - 深度分析报告</h1>
+<blockquote>
+<p><strong>注意</strong>：本报告研究对象是 <code>mindfold-ai/Trellis</code>——一个面向 Claude Code、Cursor 等 AI 编码平台的框架和工具集。与微软的 <code>microsoft/TRELLIS</code>（3D 资产生成模型）是完全不同的项目。</p>
+</blockquote>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>AI 编码助手（AI Coding Assistant）在 2025-2026 年间迎来了爆发式增长。Claude Code、Cursor、GitHub Copilot、Windsurf 等工具让开发者能够通过自然语言描述来生成、修改和调试代码。然而，当这些工具从个人实验走向团队生产环境时，暴露出一系列核心问题：</p>
+<ol>
+<li>
+<p><strong>规范遵从不可靠</strong>：AI 编码助手对项目编码规范（如命名约定、架构模式、错误处理策略）的遵从依赖于提示词（Prompt）中的描述。传统方式通过 <code>CLAUDE.md</code>、<code>.cursorrules</code>、<code>AGENTS.md</code> 等配置文件传达规范，但 AI 可能在长对话中遗忘或忽略这些指令，导致输出不一致。</p>
+</li>
+<li>
+<p><strong>上下文窗口耗尽</strong>：随着项目规模增长，配置文件内容膨胀（单个 <code>CLAUDE.md</code> 可达数千行），AI 的有效上下文窗口被大量规范文本占用，挤压了实际编码任务的推理空间，导致生成质量随会话推进而下降。</p>
+</li>
+<li>
+<p><strong>任务追踪缺失</strong>：AI 编码助手本质上是"无状态"的——每次对话独立，缺乏任务进度追踪、分阶段执行和质量检查的机制。团队需要手动管理 AI 的任务分配和验收。</p>
+</li>
+<li>
+<p><strong>并行工作能力不足</strong>：单个 AI 会话在同一时间只能处理一个任务，无法利用多核开发机并行处理独立任务，效率受限。</p>
+</li>
+<li>
+<p><strong>团队一致性难以保障</strong>：不同开发者使用同一项目的 AI 编码助手时，由于个人对话历史和习惯不同，AI 的行为差异显著，团队难以维持统一的编码标准。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>Trellis 的核心目标是<strong>将团队的工程知识从"通过人传递"转变为"通过程序化路径传递"</strong>。具体解决：</p>
+<ul>
+<li><strong>规范强制注入</strong>：通过 Hook 机制将编码规范自动注入到 AI 上下文中，不依赖 AI 的"自觉性"读取。Hook 在特定事件（会话启动、Agent 调用、工具使用）触发时执行，确保规范始终被加载。</li>
+<li><strong>任务全生命周期管理</strong>：从任务创建、分发、实现、检查到完成，每个阶段有对应的专用 Agent 负责，支持进度追踪和状态持久化。</li>
+<li><strong>质量闭环控制</strong>：通过 Ralph Loop 机制，Check Agent 在完成任务前必须验证特定完成标记（如 <code>TYPECHECK_FINISH</code>、<code>LINT_FINISH</code>），未通过则循环修复，确保输出质量。</li>
+<li><strong>并行工作支持</strong>：基于 Git Worktree 的多 Agent 并行执行，每个 Agent 在独立的代码分支上工作，完成后合并。</li>
+</ul>
+<h3 id="_4">发展历程</h3>
+<pre><code>2026-01  Trellis 项目创建
+         - GitHub 仓库 mindfold-ai/Trellis 建立
+         - 初始版本发布，支持 Claude Code 平台
+
+2026-02  快速迭代期
+         - npm 包 @mindfoldhq/trellis 发布
+         - 新增多平台支持（Cursor、OpenCode 等）
+         - 引入 Hook 系统和四种 Agent 架构
+
+2026-03  社区增长期
+         - GitHub Stars 突破 3,000
+         - 入选 LobeHub、awesome-claude-code 等社区列表
+         - Discard 社区建立并活跃
+
+2026-04  当前版本（v0.3.6）
+         - 支持 11 个 AI 编码平台
+         - GitHub Stars 达到 4,598
+         - 持续活跃维护
+</code></pre>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>Trellis 的设计遵循四大核心理念：</p>
+<ol>
+<li>
+<p><strong>Hook 强制注入（Forced Injection via Hooks）</strong>：传统方式依赖 AI 主动读取配置文件（如 <code>CLAUDE.md</code>），Trellis 则通过 Claude Code 的原生 Hook API，在特定事件触发时强制将规范注入到 AI 的上下文窗口中。关键区别：<strong>Skills 是"AI 可选读取"，Trellis 是"Hook 强制注入"</strong>。</p>
+</li>
+<li>
+<p><strong>任务驱动工作流（Task-Centered Workflow）</strong>：将 AI 编码从"自由对话"模式转变为"任务驱动"模式。每个任务有明确的状态（pending → in_progress → completed）、类型（frontend/backend/fullstack）和执行阶段（implement → check → finish），对应不同的专用 Agent。</p>
+</li>
+<li>
+<p><strong>规范渐进披露（Spec Progressive Disclosure）</strong>：不是将所有规范一次性注入，而是根据当前任务类型和 Agent 角色，只注入相关的规范子集。例如，前端任务只注入前端规范和共享规范，不注入后端 Java 规范，从而节省上下文窗口空间。</p>
+</li>
+<li>
+<p><strong>质量闭环（Quality Loop）</strong>：Check Agent 通过 Ralph Loop 机制执行质量检查——验证类型检查、代码检查等完成标记是否存在，未通过则自动修复并重新检查，最多循环指定次数，确保输出达到质量标准。</p>
+</li>
+</ol>
+<p><strong>设计取舍</strong>：
+- Hook 强制注入 vs Skills 可选读取：牺牲了一定的灵活性（规范不可被 AI 跳过），换取了输出一致性 [置信度：高]
+- 渐进披露 vs 全量加载：增加了配置复杂度（需要维护 <code>_SPEC_MAP</code> 和 <code>.jsonl</code> 文件），但显著节省了上下文窗口空间 [置信度：高]
+- 多 Agent 分工 vs 单 Agent 全能：增加了编排复杂度（需要 Dispatch Agent），但实现了关注点分离和质量保障 [置信度：高]
+- Git Worktree 并行 vs 串行执行：增加了 Git 操作复杂度，但允许独立任务并行处理 [置信度：高]</p>
+<h3 id="_7">核心算法/机制</h3>
+<h4 id="hook">Hook 注入系统</h4>
+<p>Trellis 的 Hook 系统基于 Claude Code 的原生 Hooks API 构建，利用四种 Hook 事件实现全流程的规范注入和质量控制：</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                   Trellis Hook 系统                       │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  SessionStart Hook                                      │
+│  ├── 触发时机：用户启动 Claude Code 会话                  │
+│  ├── 执行脚本：hooks/session-start.py                    │
+│  └── 注入内容：workflow.md + 用户 workspace 上下文        │
+│                                                         │
+│  PreToolUse Hook                                        │
+│  ├── 触发时机：AI Agent 即将调用工具前                    │
+│  ├── 执行脚本：hooks/inject-subagent-context.py          │
+│  └── 注入内容：根据 Agent 类型加载对应的 .jsonl 规范列表  │
+│                                                         │
+│  PostToolUse Hook                                       │
+│  ├── 触发时机：工具调用完成后                             │
+│  ├── 执行脚本：工作空间同步                               │
+│  └── 执行动作：更新 workspace 日志、同步任务状态           │
+│                                                         │
+│  SubagentStop Hook                                      │
+│  ├── 触发时机：子 Agent 即将停止前                       │
+│  ├── 执行脚本：hooks/ralph-loop.py                       │
+│  └── 执行动作：检查完成标记，未通过则阻止停止并要求修复    │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>Hook 配置结构</strong>（<code>.claude/settings.json</code>）：</p>
+<pre><code class="language-json">{
+  &quot;hooks&quot;: {
+    &quot;SessionStart&quot;: [{
+      &quot;command&quot;: &quot;python .claude/hooks/session-start.py&quot;,
+      &quot;timeout&quot;: 30
+    }],
+    &quot;PreToolUse&quot;: [{
+      &quot;command&quot;: &quot;python .claude/hooks/inject-subagent-context.py&quot;,
+      &quot;matcher&quot;: &quot;Agent&quot;
+    }],
+    &quot;PostToolUse&quot;: [{
+      &quot;command&quot;: &quot;python .claude/hooks/sync-workspace.py&quot;
+    }],
+    &quot;SubagentStop&quot;: [{
+      &quot;command&quot;: &quot;python .claude/hooks/ralph-loop.py&quot;,
+      &quot;matcher&quot;: &quot;check&quot;
+    }]
+  }
+}
+</code></pre>
+<h4 id="ralph-loop">Ralph Loop 质量控制循环</h4>
+<p>Ralph Loop 是 Trellis 质量保障的核心机制，运行在 SubagentStop Hook 中：</p>
+<pre><code>Check Agent 执行检查任务
+    ↓
+SubagentStop Hook 触发
+    ↓ ralph-loop.py 执行
+检查是否包含完成标记？
+    ├── TYPECHECK_FINISH
+    ├── LINT_FINISH
+    ├── TEST_FINISH（如适用）
+    └── CUSTOM_FINISH（自定义标记）
+    ↓
+所有标记都存在？
+    ├── 是 → 允许 Agent 停止
+    └── 否 → 阻止停止，返回缺失标记信息
+              → Agent 继续修复
+              → 重新触发 SubagentStop Hook
+              → 循环检查（最多 N 次）
+</code></pre>
+<p><strong>完成标记的来源</strong>：<code>check.jsonl</code> 文件定义了 Check Agent 需要注入的规范，其中包含了要求 Agent 执行特定检查并输出对应标记的指令。例如：</p>
+<pre><code class="language-jsonl">{&quot;file&quot;: &quot;.trellis/spec/backend-java/quality.md&quot;, &quot;reason&quot;: &quot;CodeQuality&quot;}
+{&quot;file&quot;: &quot;.trellis/spec/shared/error-handling.md&quot;, &quot;reason&quot;: &quot;ErrorHandling&quot;}
+{&quot;file&quot;: &quot;.claude/commands/trellis/finish-work.md&quot;, &quot;reason&quot;: &quot;Lint&quot;}
+{&quot;file&quot;: &quot;.claude/commands/trellis/finish-work.md&quot;, &quot;reason&quot;: &quot;TypeCheck&quot;}
+</code></pre>
+<h4 id="jsonl">JSONL 精细化规范控制</h4>
+<p>每种 Agent 角色有对应的 <code>.jsonl</code> 文件，定义了该 Agent 在执行时应注入哪些规范以及注入原因：</p>
+<pre><code class="language-python"># 规范渐进披露的核心逻辑（概念代码）
+_SPEC_MAP = {
+    &quot;frontend&quot;: {&quot;frontend&quot;, &quot;shared&quot;, &quot;guides&quot;},
+    &quot;backend&quot;:  {&quot;backend-java&quot;, &quot;shared&quot;, &quot;cross-service&quot;, &quot;guides&quot;},
+    &quot;fullstack&quot;: None,  # None = 注入所有规范
+}
+
+def inject_specs(agent_type, task_dev_type):
+    &quot;&quot;&quot;根据 Agent 类型和任务类型选择注入的规范&quot;&quot;&quot;
+    if agent_type == &quot;dispatch&quot;:
+        return []  # Dispatch Agent 不注入任何规范（纯路由）
+
+    spec_file = f&quot;.claude/agents/{agent_type}.jsonl&quot;
+    specs_to_inject = load_jsonl(spec_file)
+
+    if task_dev_type in _SPEC_MAP and _SPEC_MAP[task_dev_type] is not None:
+        # 渐进披露：只注入与任务类型相关的规范
+        allowed_categories = _SPEC_MAP[task_dev_type]
+        specs_to_inject = [
+            s for s in specs_to_inject
+            if get_category(s[&quot;file&quot;]) in allowed_categories
+        ]
+
+    return specs_to_inject
+</code></pre>
+<p><strong>implement.jsonl 示例</strong>（后端任务）：</p>
+<pre><code class="language-jsonl">{&quot;file&quot;: &quot;.trellis/spec/backend-java/service-layer-pattern.md&quot;, &quot;reason&quot;: &quot;ServiceImpl pattern&quot;}
+{&quot;file&quot;: &quot;.trellis/spec/backend-java/api-module.md&quot;, &quot;reason&quot;: &quot;REST endpoint pattern&quot;}
+{&quot;file&quot;: &quot;.trellis/spec/shared/proto-grpc-contract.md&quot;, &quot;reason&quot;: &quot;Proto naming conventions&quot;}
+{&quot;file&quot;: &quot;.trellis/spec/shared/error-handling.md&quot;, &quot;reason&quot;: &quot;ApiCode usage&quot;}
+</code></pre>
+<h3 id="_8">数据流/执行流程</h3>
+<p>完整的 Trellis 任务执行流程：</p>
+<pre><code>用户发起任务请求
+    ↓
+SessionStart Hook 触发
+    ↓ 注入 workflow.md + workspace 上下文
+Dispatch Agent 接收任务
+    ↓（Dispatch 是纯路由，不读取任何规范）
+    ↓ 分析任务类型（frontend/backend/fullstack）
+    ↓ PreToolUse Hook 触发
+    ↓ 根据任务类型注入对应规范
+    ↓
+┌─── 调度子 Agent ───┐
+│                    │
+│  Implement Agent   │
+│  ├── 执行编码任务  │
+│  ├── 遵循注入规范  │
+│  └── 完成实现      │
+│                    │
+│  Check Agent       │
+│  ├── 执行质量检查  │
+│  ├── 输出完成标记  │
+│  └── SubagentStop  │
+│      ├── Ralph Loop 检查标记
+│      ├── 未通过 → 继续修复
+│      └── 通过 → 允许停止
+│                    │
+│  Research Agent    │
+│  ├── 执行调研任务  │
+│  └── 返回调研结果  │
+│                    │
+└────────────────────┘
+    ↓
+PostToolUse Hook 触发
+    ↓ 同步 workspace 日志
+    ↓ 更新任务状态
+    ↓
+任务完成
+</code></pre>
+<p><strong>任务状态持久化</strong>（<code>.trellis/tasks/task.json</code>）：</p>
+<pre><code class="language-json">{
+  &quot;title&quot;: &quot;实现用户认证模块&quot;,
+  &quot;status&quot;: &quot;in_progress&quot;,
+  &quot;dev_type&quot;: &quot;backend&quot;,
+  &quot;current_phase&quot;: 2,
+  &quot;next_action&quot;: [
+    {&quot;phase&quot;: 1, &quot;action&quot;: &quot;implement&quot;},
+    {&quot;phase&quot;: 2, &quot;action&quot;: &quot;check&quot;},
+    {&quot;phase&quot;: 3, &quot;action&quot;: &quot;finish&quot;}
+  ]
+}
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>Trellis 系统由五个核心层次构成：</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│              用户交互层（User Interaction）                │
+│  CLI 命令（trellis init/start/task） / 斜杠命令            │
+├─────────────────────────────────────────────────────────┤
+│              工作流引擎（Workflow Engine）                  │
+│  Dispatch Agent → Implement → Check → Research           │
+├─────────────────────────────────────────────────────────┤
+│              Hook 系统（Hook System）                      │
+│  SessionStart │ PreToolUse │ PostToolUse │ SubagentStop  │
+├─────────────────────────────────────────────────────────┤
+│              规范管理（Spec Management）                    │
+│  _SPEC_MAP │ .jsonl 控制 │ spec/ 目录 │ workspace/       │
+├─────────────────────────────────────────────────────────┤
+│              基础设施（Infrastructure）                     │
+│  Git Worktree │ MCP Tools │ Task JSON │ 多平台适配         │
+│  ABCoder │ GitNexus │ Playwright │ Chrome DevTools        │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>Hook 注入引擎</strong> - Trellis 的核心差异化能力。通过四种 Hook 事件（SessionStart、PreToolUse、PostToolUse、SubagentStop）实现全流程的规范注入和质量控制。关键特性：Dispatch Agent 是"纯路由"——不读取任何规范，Hook 负责所有上下文注入。</p>
+</li>
+<li>
+<p><strong>四种专用 Agent</strong> - Dispatch（调度，纯路由）、Implement（实现，执行编码任务）、Check（检查，执行质量验证并输出完成标记）、Research（研究，执行调研任务）。每种 Agent 有独立的 <code>.md</code> 定义文件和 <code>.jsonl</code> 规范控制文件。</p>
+</li>
+<li>
+<p><strong>规范渐进披露系统</strong> - <code>_SPEC_MAP</code> 根据任务类型（frontend/backend/fullstack）将规范分类，<code>.jsonl</code> 文件定义每种 Agent 应注入的具体规范和原因。通过 <code>inject-subagent-context.py</code> 脚本在 PreToolUse Hook 中执行过滤和注入。</p>
+</li>
+<li>
+<p><strong>Ralph Loop 质量控制器</strong> - 运行在 SubagentStop Hook 中的质量控制循环，验证 Check Agent 的输出是否包含所有要求的完成标记。未通过时阻止 Agent 停止并要求继续修复，最多循环指定次数。</p>
+</li>
+<li>
+<p><strong>任务生命周期管理</strong> - 任务状态持久化在 <code>task.json</code> 中，包含 status、dev_type、current_phase、next_action 数组。支持跨会话的任务恢复和进度追踪。</p>
+</li>
+<li>
+<p><strong>并行会话管理</strong> - 基于 Git Worktree 的多 Agent 并行执行，通过 <code>.trellis/worktree.yaml</code> 配置。每个 Agent 在独立的 worktree（代码分支）中工作，完成后合并回主分支。</p>
+</li>
+<li>
+<p><strong>MCP 工具集成</strong> - 集成 ABCoder（AST 代码分析）、GitNexus（代码知识图谱）、Playwright（E2E 测试）、Chrome DevTools（前端调试）等外部工具。其中 GitNexus 支持跨微服务的变更影响分析。</p>
+</li>
+<li>
+<p><strong>多平台适配层</strong> - 支持 11 个 AI 编码平台（Claude Code、Cursor、OpenCode、iFlow、Codex、Kilo、Kiro、Gemini CLI、Antigravity、Qoder、CodeBuddy）。<code>trellis init</code> 命令通过 <code>--cursor</code>、<code>--opencode</code> 等参数生成对应平台的配置文件。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<ol>
+<li>
+<p><strong>新增编码规范</strong>：在 <code>.trellis/spec/</code> 目录下新增 Markdown 文件，并在对应 Agent 的 <code>.jsonl</code> 文件中添加引用条目（含文件路径和原因说明）。无需修改任何代码。</p>
+</li>
+<li>
+<p><strong>新增 Agent 类型</strong>：在 <code>.claude/agents/</code> 目录下新增 Agent 定义文件（<code>.md</code>），创建对应的 <code>.jsonl</code> 规范控制文件，并在 Hook 配置中注册。</p>
+</li>
+<li>
+<p><strong>新增完成标记</strong>：在 <code>check.jsonl</code> 中添加新的条目，指定需要 Check Agent 验证的规范文件和对应的完成标记名称。Ralph Loop 会自动检查新标记。</p>
+</li>
+<li>
+<p><strong>新增平台支持</strong>：通过 <code>trellis init</code> 命令的新平台参数，生成对应平台的配置文件（如 Cursor 的 <code>.cursorrules</code>、Codex 的 <code>AGENTS.md</code>）。</p>
+</li>
+<li>
+<p><strong>MCP 工具扩展</strong>：通过标准 MCP 协议集成新的外部工具，如代码分析、测试、部署等工具。</p>
+</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="hook-hook-system">Hook 系统（Hook System）</h3>
+<ul>
+<li><strong>定义：</strong> 基于 Claude Code 原生 Hooks API 构建的事件驱动机制，在特定事件（会话启动、工具调用、Agent 停止）触发时执行预定义的 Python 脚本，实现规范注入和质量控制。</li>
+<li><strong>作用：</strong> 解决 AI 编码助手"可能忽略配置文件"的问题。Hook 是程序化执行的，不依赖 AI 的"自觉性"，确保规范始终被注入到上下文中。</li>
+<li><strong>使用场景：</strong> 所有 Trellis 项目的开发流程。四种 Hook 事件覆盖了从会话启动到任务完成的完整生命周期。</li>
+<li><strong>核心文件：</strong></li>
+<li><code>hooks/session-start.py</code> — SessionStart Hook，注入 workflow.md 和 workspace 上下文</li>
+<li><code>hooks/inject-subagent-context.py</code> — PreToolUse Hook，根据 Agent 类型注入对应规范</li>
+<li><code>hooks/ralph-loop.py</code> — SubagentStop Hook，执行 Ralph Loop 质量检查</li>
+</ul>
+<h3 id="agentfour-specialized-agents">四种专用 Agent（Four Specialized Agents）</h3>
+<ul>
+<li><strong>定义：</strong> Trellis 定义了四种专用 Agent 角色，每种 Agent 有明确的职责边界和规范注入策略。</li>
+<li><strong>作用：</strong> 实现关注点分离——调度、实现、检查、研究由不同的 Agent 执行，每个 Agent 只关注自己的职责，接收与职责相关的规范子集。</li>
+<li><strong>使用场景：</strong></li>
+<li><strong>Dispatch Agent</strong>：接收用户任务，分析任务类型（frontend/backend/fullstack），调度对应的子 Agent 执行。关键特性：Dispatch 是"纯路由"，不读取任何规范（<code>_SPEC_MAP</code> 返回空列表），所有上下文注入由 Hook 管理。</li>
+<li><strong>Implement Agent</strong>：执行实际的编码任务。通过 <code>implement.jsonl</code> 接收与任务类型匹配的编码规范（如 ServiceImpl 模式、REST 端点模式、错误处理规范等）。</li>
+<li><strong>Check Agent</strong>：执行质量检查。通过 <code>check.jsonl</code> 接收质量标准和检查清单，输出完成标记（如 <code>TYPECHECK_FINISH</code>、<code>LINT_FINISH</code>），Ralph Loop 验证这些标记。</li>
+<li><strong>Research Agent</strong>：执行技术调研和代码分析任务。接收调研框架和分析指南，输出结构化的调研结果。</li>
+</ul>
+<h3 id="spec-progressive-disclosure">规范渐进披露（Spec Progressive Disclosure）</h3>
+<ul>
+<li><strong>定义：</strong> 根据当前任务的类型和 Agent 角色，只注入相关的规范子集，而非全量加载所有规范。</li>
+<li><strong>作用：</strong> 解决上下文窗口耗尽问题。大型项目的规范文件可能达到数千行，全量加载会挤占 AI 的推理空间。渐进披露确保每次只加载与当前任务相关的规范。</li>
+<li><strong>使用场景：</strong> 任何包含前端和后端规范的项目。<code>_SPEC_MAP</code> 定义了三种任务类型的规范分类：</li>
+<li><code>frontend</code>：注入 frontend + shared + guides 规范</li>
+<li><code>backend</code>：注入 backend-java + shared + cross-service + guides 规范</li>
+<li><code>fullstack</code>：注入所有规范（无过滤）</li>
+<li><strong>代码示例（概念代码，基于 Trellis 内部机制）：</strong></li>
+</ul>
+<pre><code class="language-python"># _SPEC_MAP 定义了规范与任务类型的映射关系
+_SPEC_MAP = {
+    &quot;frontend&quot;: {&quot;frontend&quot;, &quot;shared&quot;, &quot;guides&quot;},
+    &quot;backend&quot;:  {&quot;backend-java&quot;, &quot;shared&quot;, &quot;cross-service&quot;, &quot;guides&quot;},
+    &quot;fullstack&quot;: None,  # None = 注入所有规范，不做过滤
+}
+
+# implement.jsonl 定义了 Implement Agent 应接收的规范
+# 每行一个 JSON 对象，包含文件路径和注入原因
+# 示例内容（后端任务）：
+# {&quot;file&quot;: &quot;.trellis/spec/backend-java/service-layer-pattern.md&quot;, &quot;reason&quot;: &quot;ServiceImpl pattern&quot;}
+# {&quot;file&quot;: &quot;.trellis/spec/backend-java/api-module.md&quot;, &quot;reason&quot;: &quot;REST endpoint pattern&quot;}
+# {&quot;file&quot;: &quot;.trellis/spec/shared/proto-grpc-contract.md&quot;, &quot;reason&quot;: &quot;Proto naming conventions&quot;}
+# {&quot;file&quot;: &quot;.trellis/spec/shared/error-handling.md&quot;, &quot;reason&quot;: &quot;ApiCode usage&quot;}
+</code></pre>
+<h3 id="ralph-loop-ralph-loop-quality-control">Ralph Loop 质量控制（Ralph Loop Quality Control）</h3>
+<ul>
+<li><strong>定义：</strong> 运行在 SubagentStop Hook 中的循环验证机制，检查 Check Agent 的输出是否包含所有要求的完成标记，未通过则阻止 Agent 停止并要求继续修复。</li>
+<li><strong>作用：</strong> 确保 AI 编码助手的输出质量。传统方式中，AI 可能声称"已完成"但实际未执行所有检查步骤。Ralph Loop 通过程序化验证完成标记来防止这种情况。</li>
+<li><strong>使用场景：</strong> Check Agent 执行质量检查时的所有场景。完成标记在 <code>check.jsonl</code> 中定义，Ralph Loop 自动验证。</li>
+<li><strong>防无限循环机制：</strong> Ralph Loop 设有最大迭代次数限制，防止 Check Agent 无法满足检查条件时陷入无限循环。</li>
+</ul>
+<h3 id="agent-parallel-agent-sessions">并行 Agent 会话（Parallel Agent Sessions）</h3>
+<ul>
+<li><strong>定义：</strong> 基于 Git Worktree 的多 Agent 并行执行机制，允许多个 AI Agent 同时处理不同任务，每个 Agent 在独立的 worktree（代码分支）中工作。</li>
+<li><strong>作用：</strong> 提高团队开发效率。独立任务可以并行处理，不受单会话串行执行的限制。</li>
+<li><strong>使用场景：</strong> 多个无依赖关系的任务需要同时处理的场景。通过 <code>.trellis/worktree.yaml</code> 配置并行会话参数。</li>
+<li><strong>配置示例：</strong></li>
+</ul>
+<pre><code class="language-yaml"># .trellis/worktree.yaml（概念结构）
+sessions:
+  - name: &quot;feature-auth&quot;
+    task: &quot;实现用户认证模块&quot;
+    agent: &quot;implement&quot;
+    branch: &quot;feature/auth&quot;
+  - name: &quot;feature-api&quot;
+    task: &quot;实现订单 API&quot;
+    agent: &quot;implement&quot;
+    branch: &quot;feature/order-api&quot;
+</code></pre>
+<h3 id="cross-service-analyzer">跨服务分析器（Cross-Service Analyzer）</h3>
+<ul>
+<li><strong>定义：</strong> 基于 GitNexus 代码知识图谱的跨微服务变更影响分析能力。</li>
+<li><strong>作用：</strong> 在微服务架构中，一个接口变更可能影响多个下游服务。Trellis 通过 GitNexus 分析代码间的依赖关系，自动识别受影响的微服务和需要同步修改的文件。</li>
+<li><strong>使用场景：</strong> 包含多个微服务的大型项目。当 Implement Agent 修改某个服务的接口时，Research Agent 可以利用 GitNexus 分析哪些其他服务受到影响。</li>
+</ul>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Trellis (mindfold-ai)</th>
+<th>Superpowers (obra/superpowers)</th>
+<th>BMAD Method (bmad-code-org)</th>
+<th>Claude Code 原生 Skills</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>Hook 强制注入 + 任务驱动工作流 + 多 Agent 分工</td>
+<td>14 个模块化 Skill 覆盖全开发流程，TDD 强制执行</td>
+<td>多 Agent 敏捷团队模拟，四阶段敏捷循环</td>
+<td>可选式 Markdown 指令文件，AI 自主决定是否读取</td>
+</tr>
+<tr>
+<td><strong>规范注入方式</strong></td>
+<td>Hook 强制注入（程序化执行，AI 不可跳过）</td>
+<td>Skill 加载（AI 可选）</td>
+<td>BMM 模块配置（AI 可选）</td>
+<td>配置文件（AI 可选读取）</td>
+</tr>
+<tr>
+<td><strong>质量控制</strong></td>
+<td>Ralph Loop 循环验证完成标记</td>
+<td>TDD 工作流强制测试先行</td>
+<td>四阶段敏捷循环（Plan→Architect→Develop→Review）</td>
+<td>无内置质量控制</td>
+</tr>
+<tr>
+<td><strong>多平台支持</strong></td>
+<td>11 个（Claude Code、Cursor、OpenCode 等）</td>
+<td>Claude Code 原生</td>
+<td>主要 Claude Code</td>
+<td>Claude Code 专属</td>
+</tr>
+<tr>
+<td><strong>任务管理</strong></td>
+<td>内置任务生命周期管理（task.json）</td>
+<td>无内置任务管理</td>
+<td>通过文档驱动</td>
+<td>无内置任务管理</td>
+</tr>
+<tr>
+<td><strong>并行执行</strong></td>
+<td>Git Worktree 多 Agent 并行</td>
+<td>不支持原生并行</td>
+<td>不支持原生并行</td>
+<td>不支持原生并行</td>
+</tr>
+<tr>
+<td><strong>团队协作</strong></td>
+<td><code>.trellis/</code> 目录可纳入版本控制，团队共享</td>
+<td>个人级配置</td>
+<td>文档驱动团队协作</td>
+<td>个人级配置</td>
+</tr>
+<tr>
+<td><strong>GitHub Stars</strong></td>
+<td>~4.6K（2026-04）</td>
+<td>~41-44K（2026-04）</td>
+<td>~39K（2026-04）</td>
+<td>不适用（内置功能）</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>中等（需理解 Hook 系统、Agent 架构、JSONL 配置）</td>
+<td>低-中（模块化设计，按需加载）</td>
+<td>中-高（完整的敏捷方法论）</td>
+<td>低（Markdown 文件即可）</td>
+</tr>
+<tr>
+<td><strong>扩展性</strong></td>
+<td>新增 spec 文件 + JSONL 条目 + Hook 脚本</td>
+<td>新增 Skill 文件</td>
+<td>新增 BMM 配置</td>
+<td>新增 Markdown 文件</td>
+</tr>
+<tr>
+<td><strong>生产就绪度</strong></td>
+<td>早期阶段（v0.3.6，项目仅 3 个月历史）</td>
+<td>较成熟（已入选 Anthropic 市场）</td>
+<td>较成熟（社区活跃）</td>
+<td>生产就绪（官方支持）</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>团队级 AI 编码标准化、多 Agent 并行开发</td>
+<td>个人/团队全流程 AI 编码增强</td>
+<td>需要完整敏捷方法论的团队</td>
+<td>个人 AI 编码助手扩展</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>AGPL-3.0 / FSL（存在差异）[置信度：中]</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>不适用（内置功能）</td>
+</tr>
+</tbody>
+</table>
+<p><strong>对比分析要点：</strong></p>
+<ul>
+<li><strong>Superpowers</strong> 是当前 AI 编码框架领域 Stars 最多的项目（~41-44K），定位于全流程 AI 编码增强，14 个模块化 Skill 覆盖从 TDD 到代码审查的完整开发生命周期。相比 Trellis，Superpowers 更注重个人开发者的工作流优化，而 Trellis 更注重团队级的规范一致性和任务管理。</li>
+<li><strong>BMAD Method</strong> 采用多 Agent 敏捷团队模拟的方式，定义了完整的四阶段敏捷循环（Plan → Architect → Develop → Review），通过 BMM（BMAD Method Module）实现深度定制。相比 Trellis 的 Hook 强制注入，BMAD 更依赖文档驱动和 AI 自主遵从。</li>
+<li><strong>Claude Code 原生 Skills</strong> 是最简单的方案——只需创建 Markdown 文件即可扩展 AI 行为。但缺少质量保障机制，AI 可以选择忽略 Skills 中的指令。Trellis 通过 Hook 系统解决了这个根本问题。</li>
+</ul>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>多开发者团队的 AI 编码标准化</strong> - 当团队中多人同时使用 AI 编码助手时，Trellis 的 Hook 强制注入和团队共享 <code>.trellis/</code> 目录确保所有开发者的 AI 行为一致。规范一旦定义并提交到版本控制，所有团队成员自动获得相同的 AI 编码标准。知乎生产案例显示，一个 10+ 微服务的工业机器人云平台团队通过 Trellis 解决了项目规范不知情、错误码误用、跨仓库变更遗漏等问题。</p>
+</li>
+<li>
+<p><strong>微服务架构的跨服务变更管理</strong> - Trellis 集成的 GitNexus 代码知识图谱可以分析跨微服务的变更影响。当开发者修改某个服务的接口时，Trellis 能自动识别受影响的下游服务，确保变更的完整性。</p>
+</li>
+<li>
+<p><strong>AI 编码质量要求高的项目</strong> - Ralph Loop 质量控制循环确保 AI 输出满足预定义的质量标准（类型检查、代码检查等），适合对代码质量有严格要求的项目。</p>
+</li>
+<li>
+<p><strong>需要并行处理多个独立任务</strong> - 基于 Git Worktree 的多 Agent 并行执行，适合需要同时推进多个无依赖任务的开发场景。</p>
+</li>
+<li>
+<p><strong>多平台 AI 编码环境</strong> - 支持 11 个 AI 编码平台，适合团队中使用不同编码工具（如部分成员使用 Claude Code，部分使用 Cursor）的场景。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>个人开发者简单项目</strong> - Trellis 的 Hook 系统、多 Agent 架构和任务管理对于个人开发者来说过于复杂。如果项目规模小、只有一个人开发，使用原生的 <code>CLAUDE.md</code> 或 Claude Code Skills 更简单直接。</p>
+</li>
+<li>
+<p><strong>需要完全确定性输出的场景</strong> - Trellis 通过 Hook 系统提高了 AI 输出的一致性，但底层仍依赖 AI 大模型的生成能力，输出并非完全确定性。如果需要严格的确定性代码生成，Trellis 不适合。</p>
+</li>
+<li>
+<p><strong>非 AI 编码辅助场景</strong> - Trellis 专为 AI 编码助手设计，不适用于传统（非 AI）的 CI/CD 管线、代码审查工具或项目管理工具。替代方案：传统的 Linter、CI/CD 管线（如 GitHub Actions）。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>Hook 强制注入解决"AI 忽略规范"的根本问题</strong> - Trellis 的核心差异化价值。传统方案中，AI 编码助手可能忽略 <code>CLAUDE.md</code> 或 Skills 中的指令，尤其在长对话中。Trellis 通过 Hook 程序化执行解决了这个问题——规范在特定事件触发时自动注入，AI 无法跳过。这是从"AI 自觉遵从"到"程序强制执行"的范式转变。</p>
+</li>
+<li>
+<p><strong>Ralph Loop 质量闭环</strong> - 通过 SubagentStop Hook 中的循环验证机制，确保 Check Agent 在声称"完成"前实际执行了所有质量检查。完成标记（如 <code>TYPECHECK_FINISH</code>、<code>LINT_FINISH</code>）是程序化验证的，不依赖 AI 的自我声明。这种"验证后放行"的模式在 AI 编码框架中较为独特。</p>
+</li>
+<li>
+<p><strong>规范渐进披露节省上下文窗口</strong> - 大型项目的规范文件可能达到数千行，全量加载会严重挤占 AI 的推理空间。Trellis 的 <code>_SPEC_MAP</code> 和 <code>.jsonl</code> 控制机制实现了按需注入——前端任务不加载后端规范，后端任务不加载前端规范——有效利用了有限的上下文窗口。</p>
+</li>
+<li>
+<p><strong>多平台统一支持</strong> - 支持 11 个 AI 编码平台，一套规范定义可同时适配 Claude Code、Cursor、OpenCode 等多个工具。这对于工具异构的团队特别有价值。</p>
+</li>
+<li>
+<p><strong>Git Worktree 并行能力</strong> - 在 AI 编码框架中，Trellis 是少数原生支持并行 Agent 会话的项目。多个 AI Agent 可以在独立的 worktree 中同时工作，完成后合并。</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>项目非常年轻</strong> - Trellis 创建于 2026 年 1 月，截至 2026 年 4 月仅约 3 个月历史，当前版本 v0.3.6。项目 API 和配置格式可能频繁变化，升级可能需要迁移成本。相比之下，Superpowers（~41K Stars）和 BMAD Method（~39K Stars）已有更成熟的社区验证。</p>
+</li>
+<li>
+<p><strong>配置复杂度较高</strong> - 要充分发挥 Trellis 的能力，团队需要维护：<code>.trellis/spec/</code> 目录下的规范文件、每种 Agent 的 <code>.jsonl</code> 规范控制文件、<code>_SPEC_MAP</code> 任务类型映射、Hook 配置。这个配置体系对于小型团队或个人开发者来说过于复杂。</p>
+</li>
+<li>
+<p><strong>依赖特定平台的 Hook API</strong> - Trellis 的核心能力（强制注入、Ralph Loop）依赖于 Claude Code 的 Hooks API。对于不支持 Hook 机制的 AI 编码平台，Trellis 只能提供降级功能（如基础的配置文件生成）。这意味着 Trellis 的能力在不同平台间并非完全一致。</p>
+</li>
+<li>
+<p><strong>License 不确定性</strong> - GitHub 仓库标注 AGPL-3.0，npm 页面标注 FSL License，存在差异 [置信度：中]。AGPL-3.0 对商业使用有限制，FSL（Functional Source License）也有类似限制。企业在评估采用时需先明确实际的 License 条款。</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>快速迭代的不稳定性</strong> - Trellis 当前处于 v0.x 版本，按照语义化版本规范，这意味着 API 不保证向后兼容。团队在采用时可能面临升级迁移成本。缓解：关注 Release Notes，在测试项目中验证后再升级。</p>
+</li>
+<li>
+<p><strong>社区规模相对较小</strong> - 4,598 Stars 相比 Superpowers（~41K）和 BMAD（~39K）差距显著，意味着更少的社区贡献、更少的使用案例参考和更慢的问题响应。缓解：Discord 社区活跃，可直接与核心团队沟通。</p>
+</li>
+<li>
+<p><strong>单一维护团队</strong> - 项目由 Mindfold LLC 维护，Contributors 数量待验证。如果核心团队减少投入或转向，项目可能面临维护风险。缓解：项目开源，社区可以 Fork 维护。</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 少。Trellis 本身是一个框架，扩展以"规范文件 + JSONL 配置"的形式存在，而非传统意义上的插件。目前无第三方插件市场或社区共享的规范包。路线图中提到的"Skill Packs（技能包）"功能可能会改变这一状况。</li>
+<li><strong>第三方库支持：</strong> Trellis 集成了 ABCoder（AST 代码分析）、GitNexus（代码知识图谱）、Playwright（E2E 测试）、Chrome DevTools（前端调试）等 MCP 工具。这些是成熟的外部工具，Trellis 通过 MCP 协议与它们集成。</li>
+<li><strong>企业采用案例：</strong> 知乎文章记录了一个工业机器人云平台团队（10+ Java 微服务、2 共享库、1 React 前端）使用 Trellis 的生产案例。但整体而言，公开的企业采用案例较少，项目仅 3 个月历史。</li>
+<li><strong>文档质量：</strong> README 包含完整的安装步骤、目录结构说明和快速入门指南。Discord 社区提供实时支持。但缺少详细的 API 文档、配置参考和最佳实践指南（对于 v0.x 版本这是可以理解的）。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 早期阶段（v0.3.6）。核心机制（Hook 注入、Ralph Loop、任务管理）在概念上已完善，但缺少大规模生产环境的验证数据。Open Issues 仅 1 个，但项目用户基数较小，不能完全反映稳定性。</li>
+<li><strong>性能表现：</strong> Hook 脚本使用 Python 执行，每次触发有少量延迟（SessionStart Hook 设置了 30 秒超时）。对于 AI 编码助手的交互节奏而言，这个延迟几乎无感。Ralph Loop 的循环次数有上限，不会无限执行。</li>
+<li><strong>监控/可观测性：</strong> 无内置监控。<code>.trellis/workspace/</code> 目录保存了工作日志，可用于事后回顾。但不提供实时监控、指标聚合或告警能力。</li>
+<li><strong>故障恢复：</strong> 任务状态持久化在 <code>task.json</code> 中，支持跨会话恢复。但如果 Hook 脚本执行异常（如 Python 环境问题），会话可能无法正常注入规范，需要手动排查。</li>
+<li><strong>安全合规：</strong> License 存在 AGPL-3.0 / FSL 差异，企业使用前需明确实际条款。Hook 脚本有执行任意 Python 代码的能力，需要确保 <code>.claude/hooks/</code> 目录下的脚本来源可信。</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>AI 编码助手的基本使用（Claude Code、Cursor 等至少一种）</li>
+<li>Claude Code Hooks API 的基本概念（如果使用 Claude Code 平台）</li>
+<li>Git Worktree 的基本操作（如果使用并行会话）</li>
+<li>Python 基础（理解 Hook 脚本的工作原理，但通常不需要修改）</li>
+<li>
+<p>团队编码规范管理的实践经验</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 1-2 小时（安装 Trellis CLI、执行 <code>trellis init</code>、理解基本工作流）</p>
+</li>
+<li><strong>精通时间估计：</strong> 2-3 天（自定义规范体系、配置 JSONL 控制、设置 Ralph Loop 完成标记、配置并行会话、集成 MCP 工具）</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>Trellis 是 AI 编码框架领域中一个<strong>理念独特但尚处早期</strong>的项目。其核心贡献——Hook 强制注入 + Ralph Loop 质量闭环 + 规范渐进披露——解决了 AI 编码助手在团队生产环境中的三个根本问题：规范遵从不可靠、输出质量无保障、上下文窗口浪费。</p>
+<p><strong>推荐使用场景：</strong>
+- 多开发者团队需要统一 AI 编码行为标准
+- 微服务架构需要跨服务变更影响分析
+- 对 AI 代码输出质量有严格要求（如企业级项目）</p>
+<p><strong>不推荐场景：</strong>
+- 个人开发者或小型项目（配置复杂度过高）
+- 需要确定性输出的场景（底层仍依赖 AI 大模型）
+- 对 License 有严格要求的企业（需先明确实际 License 条款）</p>
+<p><strong>与竞品的定位差异：</strong> 如果需要最成熟的 AI 编码增强框架，选择 Superpowers；如果需要完整的敏捷方法论驱动，选择 BMAD Method；如果需要解决"AI 忽略规范"的根本问题并需要团队级标准化，Trellis 提供了独特的 Hook 强制注入方案。</p>
+<p><strong>综合评分：</strong> 6.5/10（AI 编码框架领域）
+- 扣分项：项目年龄仅 3 个月（-1.5）、社区规模较小（-1）、License 不确定（-0.5）、配置复杂度高（-0.5）
+- 加分项：Hook 强制注入理念独特（+0.5）、多平台支持（+0.5）</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> Trellis v0.3.6（npm，截至 2026-04-04）</li>
+<li><strong>信息获取日期：</strong> 2026-04-04</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/mindfold-ai/Trellis">GitHub - mindfold-ai/Trellis</a> - 项目源代码和 README</li>
+<li><a href="https://www.npmjs.com/package/@mindfoldhq/trellis">npm - @mindfoldhq/trellis</a> - 版本信息和安装说明</li>
+<li><a href="https://trytrellis.app">Trellis 官网</a> - 产品介绍和文档</li>
+<li><a href="https://zhuanlan.zhihu.com/p/2021068826301796478">知乎 - 让 Claude Code 在复杂微服务项目中稳定产出高质量代码</a> - 工业机器人云平台团队的 Trellis 使用案例和内部机制详解 <!-- reviewed: 修正占位符 URL 为实际知乎文章链接 --></li>
+<li><a href="https://ai.plainenglish.io/the-great-framework-showdown-superpowers-vs-bmad-vs-speckit-vs-gsd-360983101c10">Medium - The Great Framework Showdown: Superpowers vs BMAD vs SpecKit vs GSD</a> - AI 编码框架对比分析（Superpowers、BMAD 等） <!-- reviewed: 修正占位符 URL 为实际 Medium 文章链接 --></li>
+<li><a href="https://github.com/obra/superpowers">GitHub - obra/superpowers</a> - Superpowers 竞品数据</li>
+<li><a href="https://github.com/bmad-code-org/BMAD-METHOD">GitHub - bmad-code-org/BMAD-METHOD</a> - BMAD Method 竞品数据</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

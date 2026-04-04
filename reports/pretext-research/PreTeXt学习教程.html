@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreTeXt 学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">注意: TeXLive 完整安装约 5GB，如果只需要 HTML 输出可以跳过。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">一、环境准备</a></li>
+<li><a href="#_2" class="toc-h3">前置知识</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#1-pretext-cli" class="toc-h4">1. 安装 PreTeXt CLI</a></li>
+<li><a href="#2-texlivepdf" class="toc-h4">2. 安装 TeXLive（PDF 输出需要）</a></li>
+<li><a href="#3-vs-code" class="toc-h4">3. 安装 VS Code 扩展（推荐）</a></li>
+<li><a href="#_4" class="toc-h3">环境验证</a></li>
+<li><a href="#_5" class="toc-h2">二、快速开始</a></li>
+<li><a href="#hello-world" class="toc-h3">Hello World</a></li>
+<li><a href="#_6" class="toc-h4">第一步: 创建新项目</a></li>
+<li><a href="#_7" class="toc-h4">第二步: 编写内容</a></li>
+<li><a href="#_8" class="toc-h4">第三步: 构建</a></li>
+<li><a href="#_9" class="toc-h2">三、核心概念</a></li>
+<li><a href="#_10" class="toc-h3">概念图谱</a></li>
+<li><a href="#_11" class="toc-h3">核心概念详解</a></li>
+<li><a href="#1-xml" class="toc-h4">1. XML 文档结构</a></li>
+<li><a href="#2" class="toc-h4">2. 数学排版</a></li>
+<li><a href="#3" class="toc-h4">3. 交叉引用</a></li>
+<li><a href="#4" class="toc-h4">4. 文档划分</a></li>
+<li><a href="#_12" class="toc-h3">术语表</a></li>
+<li><a href="#_13" class="toc-h2">四、功能详解</a></li>
+<li><a href="#41" class="toc-h3">4.1 段落与文本</a></li>
+<li><a href="#42" class="toc-h3">4.2 数学环境</a></li>
+<li><a href="#43" class="toc-h3">4.3 练习系统</a></li>
+<li><a href="#44" class="toc-h3">4.4 图片和图形</a></li>
+<li><a href="#45" class="toc-h3">4.5 程序代码</a></li>
+<li><a href="#46" class="toc-h3">4.6 表格</a></li>
+<li><a href="#47" class="toc-h3">4.7 参考文献与引用</a></li>
+<li><a href="#cli" class="toc-h2">五、CLI 工具详解</a></li>
+<li><a href="#_14" class="toc-h3">常用命令</a></li>
+<li><a href="#projectptx" class="toc-h3">project.ptx 配置文件</a></li>
+<li><a href="#_15" class="toc-h3">典型工作流</a></li>
+<li><a href="#_16" class="toc-h3">项目模板</a></li>
+<li><a href="#_17" class="toc-h2">六、进阶主题</a></li>
+<li><a href="#61" class="toc-h3">6.1 资产生成详解</a></li>
+<li><a href="#62" class="toc-h3">6.2 自定义样式</a></li>
+<li><a href="#63-sage-cell" class="toc-h3">6.3 Sage Cell 集成</a></li>
+<li><a href="#64" class="toc-h3">6.4 多文件项目</a></li>
+<li><a href="#65" class="toc-h3">6.5 国际化支持</a></li>
+<li><a href="#66-runestone" class="toc-h3">6.6 部署到 Runestone</a></li>
+<li><a href="#_18" class="toc-h2">七、常见问题</a></li>
+<li><a href="#q1-pretext-mathbook-xml" class="toc-h3">Q1: PreTeXt 和 MathBook XML 是什么关系？</a></li>
+<li><a href="#q2-xml-markdown" class="toc-h3">Q2: 我必须用 XML 吗？能用 Markdown 吗？</a></li>
+<li><a href="#q3-pretext-latex" class="toc-h3">Q3: 学习 PreTeXt 需要先学 LaTeX 吗？</a></li>
+<li><a href="#q4-pretext-pdf" class="toc-h3">Q4: PreTeXt 输出的 PDF 质量如何？</a></li>
+<li><a href="#q5-schema" class="toc-h3">Q5: 构建时报 Schema 验证错误怎么办？</a></li>
+<li><a href="#q6" class="toc-h3">Q6: 如何处理中文内容？</a></li>
+<li><a href="#q7-latex-pretext" class="toc-h3">Q7: 能否将已有的 LaTeX 文档转换为 PreTeXt？</a></li>
+<li><a href="#q8" class="toc-h3">Q8: 多人协作怎么管理？</a></li>
+<li><a href="#_19" class="toc-h2">八、参考资料</a></li>
+<li><a href="#_20" class="toc-h3">官方资源</a></li>
+<li><a href="#_21" class="toc-h3">社区资源</a></li>
+<li><a href="#_22" class="toc-h3">学习资源</a></li>
+<li><a href="#_23" class="toc-h3">相关工具</a></li>
+<li><a href="#_24" class="toc-h2">学习路线图</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>PreTeXt 学习教程</h1>
+                        <div class="article-meta">注意: TeXLive 完整安装约 5GB，如果只需要 HTML 输出可以跳过。</div>
+                    </header>
+                    <h1 id="pretext">PreTeXt 学习教程</h1>
+<h2 id="_1">一、环境准备</h2>
+<h3 id="_2">前置知识</h3>
+<p>学习 PreTeXt 需要以下基础：</p>
+<table>
+<thead>
+<tr>
+<th>知识</th>
+<th>程度</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>XML 基础</td>
+<td>必须</td>
+<td>理解标签、属性、嵌套</td>
+</tr>
+<tr>
+<td>LaTeX 数学</td>
+<td>推荐</td>
+<td>在 <code>&lt;m&gt;</code> 标签中使用 LaTeX 公式</td>
+</tr>
+<tr>
+<td>命令行操作</td>
+<td>必须</td>
+<td>使用 CLI 工具构建项目</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>可选</td>
+<td>仅 CLI 安装需要 pip</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_3">安装步骤</h3>
+<h4 id="1-pretext-cli">1. 安装 PreTeXt CLI</h4>
+<pre><code class="language-bash"># 使用 pip 安装（当前版本 2.37.2，需要 Python 3.10+）
+python -m pip install --user pretext
+
+# 验证安装
+pretext --version
+
+# 如果 pretext 不在 PATH 中
+python -m pretext --version
+</code></pre>
+<h4 id="2-texlivepdf">2. 安装 TeXLive（PDF 输出需要）</h4>
+<pre><code class="language-bash"># macOS
+brew install --cask mactex
+
+# Ubuntu/Debian
+sudo apt install texlive-full
+
+# 验证
+xelatex --version
+</code></pre>
+<blockquote>
+<p>注意: TeXLive 完整安装约 5GB，如果只需要 HTML 输出可以跳过。</p>
+</blockquote>
+<h4 id="3-vs-code">3. 安装 VS Code 扩展（推荐）</h4>
+<p>在 VS Code 中搜索并安装 <code>oscarlevin.pretext-tools</code> 扩展（或搜索 <code>pretext-tools</code>），提供：
+- <code>.ptx</code> 文件语法高亮
+- LaTeX 数学公式识别
+- XML 代码片段（覆盖大部分 PreTeXt 元素）
+- Schema 自动补全（配合 vscode-xml 扩展）
+- CLI 命令集成（状态栏菜单）
+- 快捷键: <code>Ctrl-Alt-B</code> 构建, <code>Ctrl-Alt-V</code> 预览, <code>Ctrl-Alt-P</code> 命令菜单
+- LaTeX → PreTeXt 转换（实验性）</p>
+<h3 id="_4">环境验证</h3>
+<pre><code class="language-bash"># 检查 CLI
+pretext --version
+
+# 创建测试项目
+pretext new &quot;my-first-book&quot;
+cd my-first-book
+
+# 尝试构建
+pretext build html
+</code></pre>
+<hr />
+<h2 id="_5">二、快速开始</h2>
+<h3 id="hello-world">Hello World</h3>
+<h4 id="_6">第一步: 创建新项目</h4>
+<pre><code class="language-bash"># 创建新项目（支持模板: book, article, course, demo, hello, slideshow）
+pretext new &quot;我的第一本书&quot;       # 默认使用 book 模板
+cd 我的第一本书
+</code></pre>
+<p>CLI 会生成以下项目结构：</p>
+<pre><code>我的第一本书/
+├── project.ptx          # 项目配置文件
+├── source/
+│   └── main.ptx         # 主要内容文件
+├── assets/              # 图片等资源
+├── output/              # 构建输出目录
+│   └── html/            # HTML 输出
+└── publication/         # 发布配置
+</code></pre>
+<h4 id="_7">第二步: 编写内容</h4>
+<p>编辑 <code>source/main.ptx</code>：</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;pretext&gt;
+  &lt;book xml:id=&quot;my-first-book&quot;&gt;
+    &lt;title&gt;我的第一本 PreTeXt 书&lt;/title&gt;
+    &lt;frontmatter&gt;
+      &lt;titlepage&gt;
+        &lt;author&gt;
+          &lt;personname&gt;张三&lt;/personname&gt;
+        &lt;/author&gt;
+      &lt;/titlepage&gt;
+    &lt;/frontmatter&gt;
+
+    &lt;chapter xml:id=&quot;ch-hello&quot;&gt;
+      &lt;title&gt;你好，PreTeXt&lt;/title&gt;
+      &lt;p&gt;这是我的第一本 PreTeXt 书籍。PreTeXt 让我可以写一次，
+        发布到多种格式。&lt;/p&gt;
+      &lt;p&gt;最令人兴奋的是数学公式的支持。比如欧拉公式：
+        &lt;me&gt;e^{i\pi} + 1 = 0&lt;/me&gt;
+      &lt;/p&gt;
+    &lt;/chapter&gt;
+  &lt;/book&gt;
+&lt;/pretext&gt;
+</code></pre>
+<h4 id="_8">第三步: 构建</h4>
+<pre><code class="language-bash"># 构建 HTML 版本
+pretext build html
+
+# 构建 PDF 版本（需要 TeXLive）
+pretext build pdf
+
+# 查看结果
+pretext view html
+</code></pre>
+<hr />
+<h2 id="_9">三、核心概念</h2>
+<h3 id="_10">概念图谱</h3>
+<pre><code>PreTeXt 核心概念
+├── 文档类型
+│   ├── book（书籍）
+│   ├── article（文章）
+│   ├── letter（信件）
+│   └── slideshow（幻灯片）
+│
+├── 文档结构
+│   ├── frontmatter（前言部分）
+│   ├── part（部分/卷）
+│   ├── chapter（章）
+│   ├── section（节）
+│   ├── subsection（小节）
+│   └── backmatter（后记部分）
+│
+├── 内容类型
+│   ├── 段落与文本（p, blockquote）
+│   ├── 数学（m, me, men）
+│   ├── 列表（ol, ul, dl）
+│   ├── 图片与媒体
+│   ├── 程序代码
+│   └── 表格
+│
+├── 学术元素
+│   ├── 定理与证明
+│   ├── 定义与公理
+│   ├── 练习与解答
+│   ├── 示例与活动
+│   └── 参考文献
+│
+└── 输出格式
+    ├── HTML（在线交互）
+    ├── PDF（印刷版）
+    ├── EPUB（电子书）
+    ├── Jupyter Notebook
+    ├── RevealJS（幻灯片）
+    └── Braille（盲文）
+</code></pre>
+<h3 id="_11">核心概念详解</h3>
+<h4 id="1-xml">1. XML 文档结构</h4>
+<p>PreTeXt 文档是标准的 XML 文件，扩展名通常为 <code>.ptx</code>：</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;!-- 这是 XML 声明 --&gt;
+
+&lt;pretext&gt;
+  &lt;!-- 根元素，所有内容都在这里 --&gt;
+
+  &lt;book xml:id=&quot;unique-id&quot;&gt;
+    &lt;!-- 文档主体 --&gt;
+  &lt;/book&gt;
+
+&lt;/pretext&gt;
+</code></pre>
+<p><strong>关键规则</strong>：
+- 所有标签必须闭合（<code>&lt;p&gt;...&lt;/p&gt;</code> 或 <code>&lt;br/&gt;</code>）
+- 标签名大小写敏感（全部小写）
+- 属性值必须用引号包裹
+- <code>xml:id</code> 提供唯一标识符，用于交叉引用</p>
+<h4 id="2">2. 数学排版</h4>
+<p>PreTeXt 使用 LaTeX 数学语法，通过不同的标签区分行内和行间公式：</p>
+<pre><code class="language-xml">&lt;p&gt;
+  行内公式: 勾股定理 &lt;m&gt;a^2 + b^2 = c^2&lt;/m&gt; 是基本定理。
+&lt;/p&gt;
+
+&lt;p&gt;
+  行间公式（无编号）:
+  &lt;me&gt;\int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2}&lt;/me&gt;
+&lt;/p&gt;
+
+&lt;p&gt;
+  行间公式（有编号）:
+  &lt;men xml:id=&quot;eq-euler&quot;&gt;e^{i\theta} = \cos\theta + i\sin\theta&lt;/men&gt;
+  引用: 方程 (&lt;xref ref=&quot;eq-euler&quot;/&gt;) 是欧拉公式。
+&lt;/p&gt;
+</code></pre>
+<h4 id="3">3. 交叉引用</h4>
+<p>PreTeXt 的交叉引用系统自动处理编号：</p>
+<pre><code class="language-xml">&lt;!-- 定义引用目标 --&gt;
+&lt;chapter xml:id=&quot;ch-intro&quot;&gt;
+  &lt;title&gt;引言&lt;/title&gt;
+  ...
+  &lt;theorem xml:id=&quot;thm-main&quot;&gt;
+    &lt;title&gt;主定理&lt;/title&gt;
+    &lt;statement&gt;&lt;p&gt;...&lt;/p&gt;&lt;/statement&gt;
+  &lt;/theorem&gt;
+  &lt;figure xml:id=&quot;fig-diagram&quot;&gt;
+    &lt;caption&gt;示意图&lt;/caption&gt;
+    ...
+  &lt;/figure&gt;
+&lt;/chapter&gt;
+
+&lt;!-- 在其他位置引用 --&gt;
+&lt;p&gt;如 &lt;xref ref=&quot;ch-intro&quot;/&gt; 所述，特别是定理 &lt;xref ref=&quot;thm-main&quot;/&gt;
+  和图 &lt;xref ref=&quot;fig-diagram&quot;/&gt;。&lt;/p&gt;
+</code></pre>
+<h4 id="4">4. 文档划分</h4>
+<p>PreTeXt 支持多种文档类型和划分方式：</p>
+<pre><code class="language-xml">&lt;!-- 书籍 --&gt;
+&lt;book&gt;
+  &lt;frontmatter&gt;...&lt;/frontmatter&gt;
+  &lt;part&gt;
+    &lt;chapter&gt;...&lt;/chapter&gt;
+    &lt;chapter&gt;
+      &lt;section&gt;...&lt;/section&gt;
+      &lt;section&gt;
+        &lt;subsection&gt;...&lt;/subsection&gt;
+      &lt;/section&gt;
+    &lt;/chapter&gt;
+  &lt;/part&gt;
+  &lt;backmatter&gt;...&lt;/backmatter&gt;
+&lt;/book&gt;
+
+&lt;!-- 文章（无章节划分） --&gt;
+&lt;article&gt;
+  &lt;section&gt;...&lt;/section&gt;
+  &lt;section&gt;...&lt;/section&gt;
+&lt;/article&gt;
+</code></pre>
+<h3 id="_12">术语表</h3>
+<table>
+<thead>
+<tr>
+<th>术语</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>.ptx 文件</td>
+<td>PreTeXt 源文件，本质是 XML</td>
+</tr>
+<tr>
+<td>Schema</td>
+<td>RELAX-NG 模式定义，规定合法的文档结构</td>
+</tr>
+<tr>
+<td>XSLT</td>
+<td>转换语言，将 XML 转为输出格式</td>
+</tr>
+<tr>
+<td>project.ptx</td>
+<td>项目配置文件（注意: 不是源文件）</td>
+</tr>
+<tr>
+<td>构建 (Build)</td>
+<td>将源文件转换为输出格式的过程</td>
+</tr>
+<tr>
+<td>生成 (Generate)</td>
+<td>生成图片等资源的过程</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_13">四、功能详解</h2>
+<h3 id="41">4.1 段落与文本</h3>
+<pre><code class="language-xml">&lt;!-- 基本段落 --&gt;
+&lt;p&gt;这是一个普通段落。&lt;/p&gt;
+
+&lt;!-- 强调 --&gt;
+&lt;p&gt;这是&lt;em&gt;强调文本&lt;/em&gt;和&lt;alert&gt;警告文本&lt;/alert&gt;。&lt;/p&gt;
+
+&lt;!-- 引用 --&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;数学是科学的女王。&lt;/p&gt;
+  &lt;attribution&gt;— 卡尔·弗里德里希·高斯&lt;/attribution&gt;
+&lt;/blockquote&gt;
+
+&lt;!-- 列表 --&gt;
+&lt;ol&gt;
+  &lt;li&gt;第一项&lt;/li&gt;
+  &lt;li&gt;第二项
+    &lt;ol&gt;
+      &lt;li&gt;嵌套项&lt;/li&gt;
+    &lt;/ol&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;无序列表项&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;!-- 定义列表 --&gt;
+&lt;dl&gt;
+  &lt;li&gt;
+    &lt;title&gt;导数&lt;/title&gt;
+    &lt;p&gt;函数在某一点的瞬时变化率。&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/dl&gt;
+</code></pre>
+<h3 id="42">4.2 数学环境</h3>
+<pre><code class="language-xml">&lt;!-- 定理 --&gt;
+&lt;theorem xml:id=&quot;thm-fermat&quot;&gt;
+  &lt;title&gt;费马大定理&lt;/title&gt;
+  &lt;creator&gt;皮埃尔·德·费马&lt;/creator&gt;
+  &lt;statement&gt;
+    &lt;p&gt;当整数 &lt;m&gt;n &gt; 2&lt;/m&gt; 时，不存在正整数 &lt;m&gt;x, y, z&lt;/m&gt;
+      使得 &lt;m&gt;x^n + y^n = z^n&lt;/m&gt;。&lt;/p&gt;
+  &lt;/statement&gt;
+&lt;/theorem&gt;
+
+&lt;!-- 证明 --&gt;
+&lt;proof&gt;
+  &lt;p&gt;证明过程省略（Andrew Wiles, 1994）。&lt;/p&gt;
+&lt;/proof&gt;
+
+&lt;!-- 定义 --&gt;
+&lt;definition xml:id=&quot;def-continuity&quot;&gt;
+  &lt;title&gt;连续性&lt;/title&gt;
+  &lt;statement&gt;
+    &lt;p&gt;函数 &lt;m&gt;f&lt;/m&gt; 在点 &lt;m&gt;a&lt;/m&gt; 连续，当且仅当
+      &lt;me&gt;\lim_{x \to a} f(x) = f(a)&lt;/me&gt;&lt;/p&gt;
+  &lt;/statement&gt;
+&lt;/definition&gt;
+
+&lt;!-- 引理、推论、命题 --&gt;
+&lt;lemma xml:id=&quot;lem-helper&quot;&gt;
+  &lt;statement&gt;&lt;p&gt;辅助引理内容&lt;/p&gt;&lt;/statement&gt;
+&lt;/lemma&gt;
+
+&lt;corollary xml:id=&quot;cor-main&quot;&gt;
+  &lt;statement&gt;&lt;p&gt;推论内容&lt;/p&gt;&lt;/statement&gt;
+&lt;/corollary&gt;
+
+&lt;axiom xml:id=&quot;ax-field&quot;&gt;
+  &lt;statement&gt;&lt;p&gt;域公理&lt;/p&gt;&lt;/statement&gt;
+&lt;/axiom&gt;
+</code></pre>
+<h3 id="43">4.3 练习系统</h3>
+<p>PreTeXt 的练习系统支持分阶段提示，适合教学：</p>
+<pre><code class="language-xml">&lt;!-- 基本练习 --&gt;
+&lt;exercise xml:id=&quot;ex-basic&quot;&gt;
+  &lt;statement&gt;
+    &lt;p&gt;计算 &lt;m&gt;\int_0^1 x^2 dx&lt;/m&gt;。&lt;/p&gt;
+  &lt;/statement&gt;
+  &lt;hint&gt;
+    &lt;p&gt;使用幂函数积分公式。&lt;/p&gt;
+  &lt;/hint&gt;
+  &lt;answer&gt;
+    &lt;p&gt;&lt;m&gt;\frac{1}{3}&lt;/m&gt;&lt;/p&gt;
+  &lt;/answer&gt;
+  &lt;solution&gt;
+    &lt;p&gt;
+      &lt;me&gt;\int_0^1 x^2 dx = \frac{x^3}{3}\Big|_0^1 = \frac{1}{3}&lt;/me&gt;
+    &lt;/p&gt;
+  &lt;/solution&gt;
+&lt;/exercise&gt;
+
+&lt;!-- WeBWorK 在线练习 --&gt;
+&lt;exercise xml:id=&quot;ex-webwork&quot;&gt;
+  &lt;title&gt;在线练习&lt;/title&gt;
+  &lt;webwork source=&quot;Library/ma123DB/set2/srw4_8_45.pg&quot;&gt;
+    &lt;statement&gt;
+      &lt;p&gt;这道题目将通过 WeBWorK 系统在线评分。&lt;/p&gt;
+    &lt;/statement&gt;
+  &lt;/webwork&gt;
+&lt;/exercise&gt;
+</code></pre>
+<h3 id="44">4.4 图片和图形</h3>
+<pre><code class="language-xml">&lt;!-- 静态图片 --&gt;
+&lt;figure xml:id=&quot;fig-graph&quot;&gt;
+  &lt;caption&gt;函数图像&lt;/caption&gt;
+  &lt;image source=&quot;images/graph.png&quot; width=&quot;60%&quot;/&gt;
+&lt;/figure&gt;
+
+&lt;!-- 使用 TikZ/PGF 绘图 --&gt;
+&lt;figure xml:id=&quot;fig-tikz&quot;&gt;
+  &lt;caption&gt;TikZ 绘图&lt;/caption&gt;
+  &lt;image&gt;
+    &lt;latex-image&gt;
+      \begin{tikzpicture}
+        \draw (0,0) circle (1);
+        \draw (0,0) -- (1,0);
+        \draw (0,0) -- (0.5,0.866);
+      \end{tikzpicture}
+    &lt;/latex-image&gt;
+  &lt;/image&gt;
+&lt;/figure&gt;
+
+&lt;!-- 使用 Sage 生成图片 --&gt;
+&lt;figure xml:id=&quot;fig-sage&quot;&gt;
+  &lt;caption&gt;Sage 绘图&lt;/caption&gt;
+  &lt;sageplot&gt;
+    plot(sin(x), (x, -pi, pi), color='blue')
+  &lt;/sageplot&gt;
+&lt;/figure&gt;
+
+&lt;!-- 交互式图形 --&gt;
+&lt;figure xml:id=&quot;fig-interactive&quot;&gt;
+  &lt;caption&gt;可交互的图形&lt;/caption&gt;
+  &lt;interactive xml:id=&quot;int-geogebra&quot; platform=&quot;geogebra&quot;&gt;
+    &lt;slate xml:id=&quot;geogebra-slate&quot; surface=&quot;geogebra&quot;/&gt;
+  &lt;/interactive&gt;
+&lt;/figure&gt;
+</code></pre>
+<h3 id="45">4.5 程序代码</h3>
+<pre><code class="language-xml">&lt;!-- 代码块 --&gt;
+&lt;listing xml:id=&quot;lst-python&quot;&gt;
+  &lt;caption&gt;Python 示例&lt;/caption&gt;
+  &lt;input xml:id=&quot;lst-python-input&quot;&gt;
+    &lt;cline&gt;def fibonacci(n):&lt;/cline&gt;
+    &lt;cline&gt;    if n &amp;lt;= 1:&lt;/cline&gt;
+    &lt;cline&gt;        return n&lt;/cline&gt;
+    &lt;cline&gt;    return fibonacci(n-1) + fibonacci(n-2)&lt;/cline&gt;
+  &lt;/input&gt;
+&lt;/listing&gt;
+
+&lt;!-- 行内代码 --&gt;
+&lt;p&gt;使用 &lt;c&gt;print(&quot;Hello&quot;)&lt;/c&gt; 输出文字。&lt;/p&gt;
+
+&lt;!-- Sage Cell 可执行代码 --&gt;
+&lt;sage xml:id=&quot;sage-example&quot;&gt;
+  &lt;input&gt;
+    factor(x^2 - 1)
+  &lt;/input&gt;
+&lt;/sage&gt;
+</code></pre>
+<h3 id="46">4.6 表格</h3>
+<pre><code class="language-xml">&lt;table xml:id=&quot;tbl-comparison&quot;&gt;
+  &lt;title&gt;方法对比&lt;/title&gt;
+  &lt;caption&gt;三种数值方法的精度对比&lt;/caption&gt;
+  &lt;tabular&gt;
+    &lt;col halign=&quot;left&quot;/&gt;
+    &lt;col halign=&quot;center&quot;/&gt;
+    &lt;col halign=&quot;center&quot;/&gt;
+    &lt;col halign=&quot;center&quot;/&gt;
+    &lt;thead&gt;
+      &lt;row&gt;
+        &lt;cell&gt;方法&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;n=10&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;n=100&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;n=1000&lt;/m&gt;&lt;/cell&gt;
+      &lt;/row&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;
+      &lt;row&gt;
+        &lt;cell&gt;梯形法&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3324&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3333&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3333&lt;/m&gt;&lt;/cell&gt;
+      &lt;/row&gt;
+      &lt;row&gt;
+        &lt;cell&gt;Simpson 法&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3333&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3333&lt;/m&gt;&lt;/cell&gt;
+        &lt;cell&gt;&lt;m&gt;0.3333&lt;/m&gt;&lt;/cell&gt;
+      &lt;/row&gt;
+    &lt;/tbody&gt;
+  &lt;/tabular&gt;
+&lt;/table&gt;
+</code></pre>
+<h3 id="47">4.7 参考文献与引用</h3>
+<pre><code class="language-xml">&lt;!-- 在 backmatter 中定义参考文献 --&gt;
+&lt;backmatter&gt;
+  &lt;references&gt;
+    &lt;title&gt;参考文献&lt;/title&gt;
+    &lt;biblio type=&quot;book&quot; xml:id=&quot;bib-spivak&quot;&gt;
+      &lt;author&gt;&lt;personname&gt;Michael Spivak&lt;/personname&gt;&lt;/author&gt;
+      &lt;title&gt;Calculus&lt;/title&gt;
+      &lt;year&gt;2006&lt;/year&gt;
+      &lt;publisher&gt;Publish or Perish&lt;/publisher&gt;
+    &lt;/biblio&gt;
+    &lt;biblio type=&quot;article&quot; xml:id=&quot;bib-wiles&quot;&gt;
+      &lt;author&gt;&lt;personname&gt;Andrew Wiles&lt;/personname&gt;&lt;/author&gt;
+      &lt;title&gt;Modular elliptic curves and Fermat's Last Theorem&lt;/title&gt;
+      &lt;year&gt;1995&lt;/year&gt;
+      &lt;journal&gt;Annals of Mathematics&lt;/journal&gt;
+    &lt;/biblio&gt;
+  &lt;/references&gt;
+&lt;/backmatter&gt;
+
+&lt;!-- 在正文中引用 --&gt;
+&lt;p&gt;参见 &lt;xref ref=&quot;bib-spivak&quot;/&gt; 和 &lt;xref ref=&quot;bib-wiles&quot;/&gt;。&lt;/p&gt;
+</code></pre>
+<hr />
+<h2 id="cli">五、CLI 工具详解</h2>
+<h3 id="_14">常用命令</h3>
+<pre><code class="language-bash"># 项目管理
+pretext new &quot;项目名称&quot;          # 创建新项目（模板: book, article, course, demo, hello, slideshow）
+pretext init                    # 在当前目录初始化项目文件
+pretext update                  # 更新项目文件以匹配当前 CLI 版本
+
+# 构建（完整支持格式: html, pdf, latex, epub, kindle, braille, revealjs, webwork, custom）
+pretext build html              # 构建 HTML
+pretext build pdf               # 构建 PDF
+pretext build epub              # 构建 EPUB
+pretext build latex             # 生成 LaTeX 源文件
+pretext build revealjs          # 构建 RevealJS 幻灯片
+pretext build --clean           # 清理后重新构建
+pretext build -g html           # 构建前自动生成资源
+
+# 资源生成
+pretext generate                # 生成所有资源（图片、交互元素等）
+pretext generate -x sec-id      # 只生成指定 xml:id 的资源
+pretext generate -q             # 只生成有变化的资源
+pretext generate --all-formats  # 为所有格式生成资源
+
+# 预览
+pretext view html               # 在浏览器中预览 HTML（默认端口 8128）
+pretext view html -p 3000       # 指定端口预览
+pretext view -b html            # 预览前自动构建
+pretext view -s                 # 停止预览服务器
+
+# 部署
+pretext deploy                  # 部署到 GitHub Pages
+pretext deploy --no-push        # 只准备部署，不推送
+
+# 转换
+pretext import paper.tex        # 实验性: LaTeX → PreTeXt 转换
+
+# 验证与诊断
+pretext validate                # 验证源文件是否符合 Schema
+pretext support                 # 输出诊断信息用于寻求支持
+
+# 其他
+pretext --help                  # 帮助
+pretext --version               # 版本信息
+pretext -t                      # 列出所有构建目标
+</code></pre>
+<h3 id="projectptx">project.ptx 配置文件</h3>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;pretext-project&gt;
+  &lt;title&gt;我的教材&lt;/title&gt;
+
+  &lt;source&gt;
+    &lt;directory&gt;source&lt;/directory&gt;
+    &lt;main&gt;main.ptx&lt;/main&gt;
+  &lt;/source&gt;
+
+  &lt;targets&gt;
+    &lt;target name=&quot;html&quot; format=&quot;html&quot;&gt;
+      &lt;output-directory&gt;output/html&lt;/output-directory&gt;
+    &lt;/target&gt;
+    &lt;target name=&quot;pdf&quot; format=&quot;pdf&quot;&gt;
+      &lt;output-directory&gt;output/pdf&lt;/output-directory&gt;
+    &lt;/target&gt;
+  &lt;/targets&gt;
+
+  &lt;assets&gt;
+    &lt;directory&gt;assets&lt;/directory&gt;
+  &lt;/assets&gt;
+&lt;/pretext-project&gt;
+</code></pre>
+<h3 id="_15">典型工作流</h3>
+<pre><code>1. 创建项目    pretext new &quot;我的数学书&quot;
+2. 编写内容    编辑 source/main.ptx
+3. 验证结构    pretext validate
+4. 构建 HTML   pretext build html
+5. 预览结果    pretext view html
+6. 迭代修改    回到第2步
+7. 生成图片    pretext generate
+8. 构建 PDF    pretext build pdf
+9. 部署上线    pretext deploy（部署到 GitHub Pages）
+</code></pre>
+<h3 id="_16">项目模板</h3>
+<p><code>pretext new</code> 支持多种模板：</p>
+<table>
+<thead>
+<tr>
+<th>模板</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>book</code>（默认）</td>
+<td>完整书籍模板</td>
+</tr>
+<tr>
+<td><code>article</code></td>
+<td>短文/文章模板</td>
+</tr>
+<tr>
+<td><code>course</code></td>
+<td>课程模板</td>
+</tr>
+<tr>
+<td><code>demo</code></td>
+<td>功能演示模板</td>
+</tr>
+<tr>
+<td><code>hello</code></td>
+<td>最小 Hello World 模板</td>
+</tr>
+<tr>
+<td><code>slideshow</code></td>
+<td>幻灯片模板</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash">pretext new &quot;我的文章&quot;        # 默认 book 模板
+pretext new &quot;课件&quot; article    # 使用 article 模板
+pretext new &quot;demo&quot; demo       # 功能演示
+</code></pre>
+<hr />
+<h2 id="_17">六、进阶主题</h2>
+<h3 id="61">6.1 资产生成详解</h3>
+<p><code>pretext generate</code> 支持以下资产类型：</p>
+<table>
+<thead>
+<tr>
+<th>资产类型</th>
+<th>说明</th>
+<th>适用格式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>webwork</code></td>
+<td>WeBWorK 在线练习</td>
+<td>所有格式</td>
+</tr>
+<tr>
+<td><code>latex-image</code></td>
+<td>TikZ/PGF 绘图</td>
+<td>HTML, EPUB, Braille, RevealJS</td>
+</tr>
+<tr>
+<td><code>sageplot</code></td>
+<td>Sage 数学绘图</td>
+<td>所有格式</td>
+</tr>
+<tr>
+<td><code>asymptote</code></td>
+<td>Asymptote 3D 图形</td>
+<td>所有格式</td>
+</tr>
+<tr>
+<td><code>prefigure</code></td>
+<td>Prefigure 图形</td>
+<td>HTML, PDF, LaTeX, RevealJS</td>
+</tr>
+<tr>
+<td><code>youtube</code></td>
+<td>YouTube 视频缩略图</td>
+<td>PDF, LaTeX, EPUB, Kindle, Braille</td>
+</tr>
+<tr>
+<td><code>codelens</code></td>
+<td>代码步进展示</td>
+<td>所有格式</td>
+</tr>
+<tr>
+<td><code>interactive</code></td>
+<td>交互元素静态替代</td>
+<td>PDF, LaTeX, EPUB, Kindle, Braille</td>
+</tr>
+<tr>
+<td><code>mermaid</code></td>
+<td>Mermaid 流程图</td>
+<td>PDF, LaTeX, EPUB, Kindle</td>
+</tr>
+<tr>
+<td><code>qrcode</code></td>
+<td>二维码</td>
+<td>PDF, LaTeX, EPUB, Kindle</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash"># 常用命令
+pretext generate                # 生成所有资源
+pretext generate -q             # 只生成有变化的（增量）
+pretext generate --clean        # 清除后重新生成
+pretext generate -f             # 强制重新生成
+</code></pre>
+<h3 id="62">6.2 自定义样式</h3>
+<p>PreTeXt 支持通过 CSS 自定义 HTML 输出样式：</p>
+<pre><code>publication/
+└── custom.css
+</code></pre>
+<p>在 <code>project.ptx</code> 中引用：</p>
+<pre><code class="language-xml">&lt;targets&gt;
+  &lt;target name=&quot;html&quot; format=&quot;html&quot;&gt;
+    &lt;output-directory&gt;output/html&lt;/output-directory&gt;
+    &lt;extra-css&gt;publication/custom.css&lt;/extra-css&gt;
+  &lt;/target&gt;
+&lt;/pretext-project&gt;
+</code></pre>
+<h3 id="63-sage-cell">6.3 Sage Cell 集成</h3>
+<p>Sage Cell 允许读者在浏览器中直接执行代码：</p>
+<pre><code class="language-xml">&lt;sage xml:id=&quot;sage-demo&quot;&gt;
+  &lt;input&gt;
+    # 读者可以直接运行这段代码
+    var('x')
+    f = x^3 - 3*x + 1
+    plot(f, (x, -2, 2), color='red')
+  &lt;/input&gt;
+&lt;/sage&gt;
+</code></pre>
+<p>HTML 输出会自动嵌入 Sage Cell 服务器，读者点击即可运行。</p>
+<h3 id="64">6.4 多文件项目</h3>
+<p>大型项目可以拆分为多个文件：</p>
+<pre><code>source/
+├── main.ptx           # 主文件，包含 &lt;pretext&gt; 根元素
+├── chapter1.ptx       # 第一章
+├── chapter2.ptx       # 第二章
+├── exercises.ptx      # 练习题
+└── images/            # 图片资源
+</code></pre>
+<p>在主文件中使用 <code>xi:include</code> 引入：</p>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;pretext xmlns:xi=&quot;http://www.w3.org/2001/XInclude&quot;&gt;
+  &lt;book xml:id=&quot;my-book&quot;&gt;
+    &lt;title&gt;我的教材&lt;/title&gt;
+    &lt;xi:include href=&quot;chapter1.ptx&quot;/&gt;
+    &lt;xi:include href=&quot;chapter2.ptx&quot;/&gt;
+  &lt;/book&gt;
+&lt;/pretext&gt;
+</code></pre>
+<h3 id="65">6.5 国际化支持</h3>
+<p>PreTeXt 支持多语言文档：</p>
+<pre><code class="language-xml">&lt;book xml:lang=&quot;zh-CN&quot;&gt;
+  &lt;title&gt;中文数学教材&lt;/title&gt;
+  ...
+&lt;/book&gt;
+</code></pre>
+<h3 id="66-runestone">6.6 部署到 Runestone</h3>
+<p>Runestone 平台提供免费的交互式教材托管：</p>
+<pre><code class="language-bash"># 构建 Runestone 兼容格式
+pretext build runestone
+
+# 使用 runestone 命令部署
+# （需要 Runestone 账号）
+</code></pre>
+<hr />
+<h2 id="_18">七、常见问题</h2>
+<h3 id="q1-pretext-mathbook-xml">Q1: PreTeXt 和 MathBook XML 是什么关系？</h3>
+<p>MathBook XML 是 PreTeXt 的前身。2018 年项目更名为 PreTeXt，以反映其超越数学领域的应用。两者是同一个项目。</p>
+<h3 id="q2-xml-markdown">Q2: 我必须用 XML 吗？能用 Markdown 吗？</h3>
+<p>PreTeXt 必须使用 XML 格式。XML 的严格结构是 PreTeXt 实现多格式输出和语义标记的基础。Markdown 太过松散，无法表达定理、证明等学术结构。</p>
+<h3 id="q3-pretext-latex">Q3: 学习 PreTeXt 需要先学 LaTeX 吗？</h3>
+<p>不需要。但如果你需要在文档中使用数学公式，需要了解 LaTeX 数学语法（这是几乎所有数学排版系统共用的）。PreTeXt 的文档结构本身与 LaTeX 无关。</p>
+<h3 id="q4-pretext-pdf">Q4: PreTeXt 输出的 PDF 质量如何？</h3>
+<p>非常好。PreTeXt 实际上是通过 XSLT 将 XML 转换为 LaTeX，然后用 TeXLive 编译为 PDF。因此 PDF 输出继承了 LaTeX 的高质量排版。</p>
+<h3 id="q5-schema">Q5: 构建时报 Schema 验证错误怎么办？</h3>
+<pre><code class="language-bash"># 使用 validate 命令检查
+pretext validate
+
+# 常见错误:
+# 1. 标签未闭合 → 检查 XML 结构
+# 2. 嵌套层次错误 → 查阅文档确认允许的嵌套关系
+# 3. 属性值缺失 → 检查必要属性（如 xml:id）
+</code></pre>
+<h3 id="q6">Q6: 如何处理中文内容？</h3>
+<pre><code class="language-xml">&lt;!-- 在文档根元素指定语言 --&gt;
+&lt;book xml:lang=&quot;zh-CN&quot;&gt;
+
+&lt;!-- PDF 输出可能需要配置中文字体 --&gt;
+&lt;!-- 在 project.ptx 中配置 XeLaTeX 选项 --&gt;
+</code></pre>
+<h3 id="q7-latex-pretext">Q7: 能否将已有的 LaTeX 文档转换为 PreTeXt？</h3>
+<p>PreTeXt CLI 提供了实验性的 LaTeX 导入功能：</p>
+<pre><code class="language-bash">pretext import paper.tex -o output.ptx
+</code></pre>
+<p>但由于 LaTeX 的自由度很高，自动转换不可能完美。建议用于快速起步，然后手动调整。</p>
+<h3 id="q8">Q8: 多人协作怎么管理？</h3>
+<p>推荐使用 Git 进行版本控制：
+- <code>.ptx</code> 文件是纯文本，天然适合 Git
+- 使用 XInclude 拆分文件，每人负责不同章节
+- GitHub/GitLab 提供 PR 审查流程</p>
+<hr />
+<h2 id="_19">八、参考资料</h2>
+<h3 id="_20">官方资源</h3>
+<ul>
+<li>官方网站: https://pretextbook.org</li>
+<li>GitHub 仓库: https://github.com/PreTeXtBook/pretext</li>
+<li>CLI 文档: https://github.com/PreTeXtBook/pretext-cli</li>
+<li>项目目录: https://pretextbook.org/catalog.html</li>
+</ul>
+<h3 id="_21">社区资源</h3>
+<ul>
+<li>PreTeXt Google Group: 主要的社区讨论平台</li>
+<li>PreTeXt Discord: 实时交流</li>
+<li>MAA（美国数学协会）: PreTeXt 的主要推广组织</li>
+</ul>
+<h3 id="_22">学习资源</h3>
+<ul>
+<li>PreTeXt Guide（权威文档）: 包含 For Authors, Basics Reference, For Publishers, For Developers 等章节</li>
+<li>PreTeXt 示例项目: GitHub 仓库中的 <code>examples/</code> 目录（sample article 包含"每种元素的示例"）</li>
+<li>"Git for Authors" 书籍: Rob Beezer 和 David Farmer 合著，教授作者使用 Git 管理手稿</li>
+<li>Runestone Academy: 大量使用 PreTeXt 的在线教材</li>
+</ul>
+<h3 id="_23">相关工具</h3>
+<ul>
+<li>VS Code PreTeXt 扩展: 编辑和预览</li>
+<li>oXygen XML Editor: 商业 XML 编辑器，对 RELAX-NG 支持优秀</li>
+<li>SageMath: PreTeXt 集成的计算系统</li>
+</ul>
+<hr />
+<h2 id="_24">学习路线图</h2>
+<pre><code>第1周: 基础入门
+├── 安装环境和 CLI
+├── 创建第一个项目
+├── 理解 XML 基本结构
+└── 成功构建 HTML 和 PDF
+
+第2周: 文档结构
+├── 学习章节划分（chapter/section/subsection）
+├── 掌握段落、列表、引用
+├── 练习交叉引用系统
+└── 编写一个完整的章节
+
+第3周: 数学排版
+├── 行内和行间公式
+├── 定理、证明、定义环境
+├── 练习系统（hint/answer/solution）
+└── 编写一份包含完整数学内容的章节
+
+第4周: 高级功能
+├── 图片和图形（TikZ、SagePlot）
+├── 程序代码展示
+├── 交互式元素（Sage Cell）
+└── 表格和参考文献
+
+第5周+: 项目实战
+├── 多文件项目管理
+├── 自定义样式
+├── 部署和发布
+└── 贡献到 PreTeXt 社区
+</code></pre>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>
