@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenHarness - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-12 小时 | **前置知识：** Python 基础、命令行操作、基本 Git 使用、LLM API 概念（Prompt/Completion） | **基于版本：** OpenHarness v0.1.0（2026-04-01 发布）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-agent-harness" class="toc-h3">1.1 理解 Agent Harness 的核心概念</a></li>
+<li><a href="#12" class="toc-h3">1.2 交互式会话与基本命令</a></li>
+<li><a href="#13-agent-loop" class="toc-h3">1.3 Agent Loop（智能体循环）</a></li>
+<li><a href="#14" class="toc-h3">1.4 工具系统基础</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 多模型提供商切换</a></li>
+<li><a href="#22-skills" class="toc-h3">2.2 Skills 技能系统</a></li>
+<li><a href="#23" class="toc-h3">2.3 权限治理与安全控制</a></li>
+<li><a href="#24-plugins" class="toc-h3">2.4 Plugins 插件系统</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-agent-swarm" class="toc-h3">3.1 多 Agent 协调（Swarm）</a></li>
+<li><a href="#32" class="toc-h3">3.2 非交互模式与自动化集成</a></li>
+<li><a href="#33" class="toc-h3">3.3 性能优化与最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">学习里程碑检查清单</a></li>
+<li><a href="#_21" class="toc-h2">附录：术语对照表</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenHarness - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-12 小时<br>**前置知识：** Python 基础、命令行操作、基本 Git 使用、LLM API 概念（Prompt/Completion）<br>**基于版本：** OpenHarness v0.1.0（2026-04-01 发布）</div>
+                    </header>
+                    <h1 id="openharness-">OpenHarness - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-12 小时
+<strong>前置知识：</strong> Python 基础、命令行操作、基本 Git 使用、LLM API 概念（Prompt/Completion）
+<strong>基于版本：</strong> OpenHarness v0.1.0（2026-04-01 发布）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Linux 或 Windows（WSL 推荐）</li>
+<li><strong>Python：</strong> 3.10 或更高版本</li>
+<li><strong>包管理器：</strong> <a href="https://github.com/astral-sh/uv">uv</a>（Python 高性能包管理器）</li>
+<li><strong>Node.js：</strong> 18+（可选，仅用于 React 终端 UI）</li>
+<li><strong>LLM API Key：</strong> 至少一个（Anthropic、DeepSeek、OpenAI 等）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 第 1 步：安装 uv 包管理器（如果尚未安装）
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 验证 uv 安装
+uv --version
+
+# 第 2 步：克隆 OpenHarness 仓库
+git clone https://github.com/HKUDS/OpenHarness.git
+cd OpenHarness
+
+# 第 3 步：安装项目依赖（包含开发依赖）
+uv sync --extra dev
+
+# 第 4 步：配置 API Key（以下任选一种）
+
+# 方式 A：使用 Anthropic Claude（默认）
+export ANTHROPIC_API_KEY=&quot;sk-ant-your-key-here&quot;
+
+# 方式 B：使用 Moonshot/Kimi（Anthropic 兼容格式）
+export ANTHROPIC_BASE_URL=&quot;https://api.moonshot.cn/anthropic&quot;
+export ANTHROPIC_API_KEY=&quot;your_kimi_api_key&quot;
+export ANTHROPIC_MODEL=&quot;kimi-k2.5&quot;
+
+# 方式 C：使用 DeepSeek（OpenAI 兼容格式）
+export OPENHARNESS_API_FORMAT=openai
+export OPENAI_API_KEY=&quot;your_deepseek_key&quot;
+export OPENHARNESS_BASE_URL=&quot;https://api.deepseek.com&quot;
+export OPENHARNESS_MODEL=&quot;deepseek-chat&quot;
+
+# 方式 D：使用本地 Ollama（完全离线）
+# 先安装并启动 Ollama：https://ollama.com
+ollama pull qwen3:8b
+export OPENHARNESS_API_FORMAT=openai
+export OPENAI_API_KEY=&quot;ollama&quot;
+export OPENHARNESS_BASE_URL=&quot;http://localhost:11434/v1&quot;
+export OPENHARNESS_MODEL=&quot;qwen3:8b&quot;
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 激活虚拟环境后启动 OpenHarness
+source .venv/bin/activate
+oh --help
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Usage: oh [OPTIONS] COMMAND [ARGS]
+
+OpenHarness - Open Agent Harness
+
+Options:
+  -p, --print         非交互模式，直接输出到 stdout
+  -m, --model         指定模型名称
+  --api-format        API 格式：anthropic（默认）或 openai
+  --output-format     输出格式：text、json、stream-json
+  --permission-mode   权限模式：default、auto、plan
+  -d, --debug         启用调试模式
+  ...
+
+Commands:
+  mcp      MCP 服务器管理
+  plugin   插件管理
+  auth     认证管理
+</code></pre>
+<pre><code class="language-bash"># 快速验证：发送一条测试提示
+oh -p &quot;Say hello in 3 languages&quot;
+</code></pre>
+<p><strong>预期输出（因模型不同会有差异）：</strong></p>
+<pre><code>Hello! / 你好！ / こんにちは！
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-agent-harness">1.1 理解 Agent Harness 的核心概念</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在传统的大语言模型（LLM）使用中，你输入一段文本，模型返回一段文本。模型只能"说话"，不能"做事"——它不能读写文件、不能执行命令、不能搜索网络。</p>
+<p><strong>Agent Harness（智能体驾驶系统）</strong> 的核心思想是：在模型外面包裹一层基础设施，为模型提供"手"（工具执行）、"眼"（上下文观察）、"记忆"（持久化存储）和"安全边界"（权限控制）。</p>
+<p>用公式表达：</p>
+<pre><code>Harness = Tools（工具）+ Knowledge（知识）+ Observation（观察）+ Action（行动）+ Permissions（权限）
+</code></pre>
+<p>核心理念：<strong>"The model is the agent. The code is the harness."</strong>（模型是 Agent，代码是 Harness）</p>
+<p>模型决定 <strong>做什么</strong>（what），Harness 决定 <strong>怎么做</strong>（how）。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 最简单的使用——一条命令让 Agent 分析当前目录
+cd ~/my-project
+oh -p &quot;List all Python files in this directory and count total lines of code&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>I found 12 Python files with a total of 3,456 lines of code:
+
+1. main.py (234 lines)
+2. utils.py (189 lines)
+3. models/user.py (156 lines)
+...
+</code></pre>
+<p><strong>练习题：</strong>
+1. 使用 <code>oh -p</code> 命令让 Agent 列出你当前目录下的所有文件，并按大小排序
+2. 让 Agent 解释当前目录中某个 Python 文件的功能</p>
+<hr />
+<h3 id="12">1.2 交互式会话与基本命令</h3>
+<p><strong>概念讲解：</strong></p>
+<p>上一节我们用了 <code>-p</code> 参数进行非交互式的单次对话。现在我们进入 <strong>交互式会话模式</strong>，这是 OpenHarness 的主要使用方式。</p>
+<p>在交互模式下，你可以：
+- 输入自然语言提示与 Agent 对话
+- 使用 <code>/</code> 开头的斜杠命令执行特定操作
+- Agent 可以调用工具来读写文件、执行命令等
+- 每次工具调用前都会请求你的权限确认（Default 模式下）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动交互式会话
+oh
+
+# 进入后你会看到 OpenHarness 的欢迎界面
+# 然后可以输入任何提示
+</code></pre>
+<p><strong>常用斜杠命令一览：</strong></p>
+<pre><code class="language-bash"># 在 OpenHarness 交互式会话中输入以下命令
+
+/help                    # 查看所有可用命令
+/permissions             # 切换权限模式（default/auto/plan）
+/commit                  # 使用 commit skill 创建 Git 提交
+/plan                    # 进入计划模式（禁止写入操作）
+/resume                  # 恢复之前的会话
+/clear                   # 清空当前对话上下文
+</code></pre>
+<p><strong>执行结果（/help 命令）：</strong></p>
+<pre><code>Available Commands:
+  /help          Show this help message
+  /commit        Create a git commit
+  /permissions   Change permission mode
+  /plan          Enter plan mode
+  /resume        Resume a previous session
+  /clear         Clear conversation context
+  ...
+</code></pre>
+<p><strong>练习题：</strong>
+1. 启动 OpenHarness 交互式会话，使用 <code>/help</code> 查看所有命令
+2. 输入一条提示让 Agent 在当前目录创建一个 <code>hello.py</code> 文件，观察权限确认对话框</p>
+<hr />
+<h3 id="13-agent-loop">1.3 Agent Loop（智能体循环）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Agent Loop 是 OpenHarness 的核心引擎。它是一个无限循环的状态机，运作方式如下：</p>
+<ol>
+<li><strong>接收提示</strong>：用户输入一条自然语言指令</li>
+<li><strong>模型推理</strong>：将提示和可用工具列表发送给 LLM，获取流式响应</li>
+<li><strong>判断行动</strong>：</li>
+<li>如果模型的 <code>stop_reason</code> 不是 <code>tool_use</code>，说明任务完成，返回结果</li>
+<li>如果模型返回了工具调用（tool_use），进入工具执行流程</li>
+<li><strong>工具执行</strong>：经过权限检查 → Hook 前置 → 执行 → Hook 后置 → 获取结果</li>
+<li><strong>结果回注</strong>：将工具执行结果追加到消息上下文中</li>
+<li><strong>循环</strong>：回到第 2 步，模型看到工具结果后决定下一步行动</li>
+</ol>
+<p><strong>关键洞察：</strong> 模型自己决定需要调用哪些工具、以什么顺序调用。Harness 只是提供工具和安全边界。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 观察 Agent Loop 的工作过程
+# 使用 debug 模式可以看到每一步的详细信息
+oh -d
+
+# 然后输入提示：
+# &quot;读取 README.md 文件的第一行，然后创建一个 summary.txt 写入文件概要&quot;
+</code></pre>
+<p><strong>执行结果（简化版 debug 输出）：</strong></p>
+<pre><code>[DEBUG] User prompt: 读取 README.md 文件的第一行...
+[DEBUG] Sending to model with 43 tools available
+[DEBUG] Model response: tool_use — Read(file_path=&quot;README.md&quot;, limit=1)
+[DEBUG] Permission check: allowed
+[DEBUG] Tool executed: Read → &quot;# My Project\n&quot;
+[DEBUG] Appending tool result to context
+[DEBUG] Model response: tool_use — Write(file_path=&quot;summary.txt&quot;, content=&quot;...&quot;)
+[DEBUG] Permission check: asking user (Default mode)
+&gt; Allow Write to summary.txt? [y/n] y
+[DEBUG] Tool executed: Write → success
+[DEBUG] Model response: text — &quot;我已经读取了 README.md...&quot;
+</code></pre>
+<p><strong>练习题：</strong>
+1. 使用 debug 模式运行 OpenHarness，让 Agent 完成一个需要多步工具调用的任务（如"找到项目中的 TODO 注释并整理成列表"），观察 Agent Loop 的循环过程
+2. 数一数你的任务中 Agent Loop 循环了多少次</p>
+<hr />
+<h3 id="14">1.4 工具系统基础</h3>
+<p><strong>概念讲解：</strong></p>
+<p>工具（Tool）是 Agent 与外部世界交互的 <strong>唯一通道</strong>。OpenHarness 内置了 43 个工具，分为 9 大类：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>文件 I/O</td>
+<td>Bash, Read, Write, Edit, Glob, Grep</td>
+<td>文件读写、搜索、编辑</td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>WebFetch, WebSearch, ToolSearch, LSP</td>
+<td>网页抓取、搜索、代码搜索</td>
+</tr>
+<tr>
+<td>Notebook</td>
+<td>NotebookEdit</td>
+<td>Jupyter 笔记本编辑</td>
+</tr>
+<tr>
+<td>Agent</td>
+<td>Agent, SendMessage, TeamCreate/Delete</td>
+<td>子 Agent 管理与协调</td>
+</tr>
+<tr>
+<td>任务</td>
+<td>TaskCreate/Get/List/Update/Stop/Output</td>
+<td>后台任务生命周期</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>MCPTool, ListMcpResources, ReadMcpResource</td>
+<td>Model Context Protocol 集成</td>
+</tr>
+<tr>
+<td>模式</td>
+<td>EnterPlanMode, ExitPlanMode, Worktree</td>
+<td>工作流模式切换</td>
+</tr>
+<tr>
+<td>调度</td>
+<td>CronCreate/List/Delete, RemoteTrigger</td>
+<td>定时和远程执行</td>
+</tr>
+<tr>
+<td>元工具</td>
+<td>Skill, Config, Brief, Sleep, AskUser</td>
+<td>知识加载、配置、交互</td>
+</tr>
+</tbody>
+</table>
+<p>每个工具都有四个核心特征：
+1. <strong>Pydantic 输入验证</strong> — 结构化、类型安全的参数定义
+2. <strong>JSON Schema 自描述</strong> — 模型自动理解工具的参数和用途
+3. <strong>权限集成</strong> — 执行前进行权限检查
+4. <strong>Hook 支持</strong> — PreToolUse/PostToolUse 生命周期事件</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 在交互式会话中让 Agent 使用不同工具
+
+# 文件 I/O 工具
+# 提示：&quot;读取 config.json 并列出所有配置项&quot;
+
+# 搜索工具
+# 提示：&quot;搜索 web 查找 Python 3.13 的新特性&quot;
+
+# Glob + Grep 工具组合
+# 提示：&quot;找到项目中所有使用 asyncio 的 Python 文件&quot;
+</code></pre>
+<p><strong>执行结果（Glob + Grep 组合任务）：</strong></p>
+<pre><code>Found 5 files using asyncio:
+
+1. openharness/engine/query.py — 3 occurrences
+2. openharness/tools/base.py — 1 occurrence
+3. openharness/mcp/client.py — 7 occurrences
+4. tests/test_engine.py — 12 occurrences
+5. openharness/coordinator/swarm.py — 4 occurrences
+</code></pre>
+<p><strong>练习题：</strong>
+1. 让 Agent 使用 WebSearch 工具搜索一个技术问题并总结答案
+2. 让 Agent 使用 Glob 工具找到项目中所有的 Markdown 文件</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 多模型提供商切换</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenHarness 的一大亮点是同时支持 <strong>Anthropic 格式</strong>（默认）和 <strong>OpenAI 兼容格式</strong>。这意味着你可以自由切换后端模型，不受特定提供商锁定。</p>
+<p>支持的提供商包括：
+- <strong>Anthropic 格式：</strong> Anthropic Claude、Moonshot/Kimi、Vertex、Bedrock
+- <strong>OpenAI 兼容格式：</strong> OpenAI、DeepSeek、DashScope（通义千问）、SiliconFlow、Groq、Ollama（本地）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 示例 1：切换到 DeepSeek
+uv run oh --api-format openai \
+  --base-url &quot;https://api.deepseek.com&quot; \
+  --api-key &quot;sk-your-deepseek-key&quot; \
+  --model &quot;deepseek-chat&quot;
+
+# 示例 2：切换到阿里云 DashScope（通义千问）
+uv run oh --api-format openai \
+  --base-url &quot;https://dashscope.aliyuncs.com/compatible-mode/v1&quot; \
+  --api-key &quot;sk-your-dashscope-key&quot; \
+  --model &quot;qwen3.5-flash&quot;
+
+# 示例 3：使用本地 Ollama（完全离线，无 API 费用）
+uv run oh --api-format openai \
+  --base-url &quot;http://localhost:11434/v1&quot; \
+  --api-key &quot;ollama&quot; \
+  --model &quot;qwen3:8b&quot;
+
+# 示例 4：通过环境变量持久配置（推荐写入 ~/.bashrc 或 ~/.zshrc）
+export OPENHARNESS_API_FORMAT=openai
+export OPENAI_API_KEY=&quot;sk-your-key&quot;
+export OPENHARNESS_BASE_URL=&quot;https://api.deepseek.com&quot;
+export OPENHARNESS_MODEL=&quot;deepseek-chat&quot;
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>不同模型的工具调用能力不同</strong>：Claude 和 DeepSeek 对工具调用的支持较好，小模型可能不稳定
+- <strong>Ollama 本地模型需要足够的内存</strong>：8B 参数模型建议至少 8GB 内存
+- <strong>API Key 不要提交到 Git</strong>：建议使用环境变量而非命令行参数传递密钥
+- <strong>Base URL 必须包含协议前缀</strong>：<code>https://</code> 或 <code>http://</code></p>
+<p><strong>练习题：</strong>
+1. 配置 OpenHarness 分别使用两种不同的模型提供商，发送相同的提示，对比响应质量
+2. 尝试使用本地 Ollama 模型运行 OpenHarness，记录体验差异</p>
+<hr />
+<h3 id="22-skills">2.2 Skills 技能系统</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Skills（技能）是 Markdown 格式的领域知识文件，在模型需要时 <strong>按需加载</strong> 到上下文中。技能不会一直占用上下文窗口，而是当用户的提示匹配到某个技能时才被注入。</p>
+<p>OpenHarness 兼容 Claude Code 的 Skills 格式，这意味着你可以直接使用 <code>anthropics/skills</code> 仓库中的所有技能。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看可用技能
+# 在交互式会话中输入：
+# /skills
+</code></pre>
+<p><strong>创建自定义技能：</strong></p>
+<pre><code class="language-bash"># 第 1 步：创建技能目录
+mkdir -p ~/.openharness/skills
+
+# 第 2 步：创建技能文件
+cat &gt; ~/.openharness/skills/code-review-zh.md &lt;&lt; 'SKILL_EOF'
+---
+name: code-review-zh
+description: 中文代码审查技能，专注于安全、性能和可维护性
+---
+
+# 中文代码审查技能
+
+## 何时使用
+当用户要求审查代码、检查 Bug、评估代码质量时使用此技能。
+
+## 审查流程
+1. **安全审查**：检查是否存在 SQL 注入、XSS、命令注入等安全漏洞
+2. **性能审查**：检查是否存在 N+1 查询、不必要的循环、内存泄漏
+3. **可维护性审查**：检查命名规范、代码复杂度、注释质量
+4. **测试覆盖**：检查是否有对应的单元测试
+
+## 输出格式
+使用以下格式输出审查结果：
+
+### 🔴 严重问题
+- [文件:行号] 问题描述 → 建议修复方式
+
+### 🟡 改进建议
+- [文件:行号] 问题描述 → 建议改进方式
+
+### 🟢 优秀实践
+- 值得肯定的代码实践
+SKILL_EOF
+
+# 第 3 步：在会话中使用技能
+oh
+# 然后输入：&quot;审查 main.py 的代码质量&quot;
+# Agent 会自动加载 code-review-zh 技能
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>已加载技能：code-review-zh
+
+### 🔴 严重问题
+- [main.py:45] SQL 查询使用字符串拼接 → 建议使用参数化查询
+
+### 🟡 改进建议
+- [main.py:23] 函数复杂度过高（圈复杂度 15）→ 建议拆分为多个小函数
+- [main.py:67] 缺少错误处理 → 建议添加 try/except 块
+
+### 🟢 优秀实践
+- 类型注解使用规范
+- 函数文档字符串完整
+</code></pre>
+<p><strong>注意事项：</strong>
+- 技能文件的 <strong>frontmatter</strong>（<code>---</code> 之间的 YAML）必须包含 <code>name</code> 和 <code>description</code>
+- 技能文件过大（超过 2000 token）会占用过多上下文窗口，影响模型表现
+- 技能不是工具——它提供的是 <strong>知识指导</strong>，不是可执行代码
+- <code>anthropics/skills</code> 仓库中的 <code>.md</code> 文件可以直接复制到 <code>~/.openharness/skills/</code> 使用</p>
+<p><strong>练习题：</strong>
+1. 创建一个自定义技能，用于生成符合你团队规范的 Git commit message
+2. 从 <code>anthropics/skills</code> 仓库下载一个技能文件并在 OpenHarness 中使用</p>
+<hr />
+<h3 id="23">2.3 权限治理与安全控制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenHarness 提供三级权限模式，在 Agent 自主性和安全性之间取得平衡：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>行为</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Default</strong>（默认）</td>
+<td>写操作前询问用户确认</td>
+<td>日常开发</td>
+</tr>
+<tr>
+<td><strong>Auto</strong></td>
+<td>允许所有操作，不询问</td>
+<td>沙箱/测试环境</td>
+</tr>
+<tr>
+<td><strong>Plan Mode</strong></td>
+<td>禁止所有写入操作</td>
+<td>代码审查、只读分析</td>
+</tr>
+</tbody>
+</table>
+<p>你还可以通过 <code>settings.json</code> 配置更细粒度的权限规则。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 方式 1：通过命令行参数设置权限模式
+oh --permission-mode auto          # 自动模式
+oh --permission-mode plan          # 只读计划模式
+
+# 方式 2：在交互式会话中切换
+# 输入 /permissions 命令
+
+# 方式 3：通过配置文件设置细粒度规则
+mkdir -p .openharness
+cat &gt; .openharness/settings.json &lt;&lt; 'SETTINGS_EOF'
+{
+  &quot;permission&quot;: {
+    &quot;mode&quot;: &quot;default&quot;,
+    &quot;path_rules&quot;: [
+      {&quot;pattern&quot;: &quot;/etc/*&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;/System/*&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;*/.env&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;*/credentials*&quot;, &quot;allow&quot;: false}
+    ],
+    &quot;denied_commands&quot;: [
+      &quot;rm -rf /&quot;,
+      &quot;rm -rf ~&quot;,
+      &quot;DROP TABLE *&quot;,
+      &quot;DELETE FROM *&quot;,
+      &quot;format c:&quot;,
+      &quot;mkfs&quot;
+    ]
+  }
+}
+SETTINGS_EOF
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>永远不要在生产环境使用 Auto 模式</strong>，除非在完全隔离的沙箱中
+- <strong>Plan Mode 是只读的</strong>，Agent 只能分析和建议，不能修改任何文件
+- <strong>路径规则使用 glob 模式匹配</strong>，<code>*</code> 匹配任意字符，<code>**</code> 匹配多层目录
+- <strong>denied_commands 是黑名单</strong>，任何包含这些字符串的 Shell 命令都会被拒绝
+- 配置文件优先级：项目目录 <code>.openharness/settings.json</code> &gt; 全局 <code>~/.openharness/settings.json</code></p>
+<p><strong>练习题：</strong>
+1. 启动 OpenHarness 并切换到 Plan Mode，尝试让 Agent 修改文件，观察行为
+2. 配置 <code>settings.json</code> 禁止 Agent 访问 <code>/tmp</code> 目录，然后测试规则是否生效</p>
+<hr />
+<h3 id="24-plugins">2.4 Plugins 插件系统</h3>
+<p><strong>概念讲解：</strong></p>
+<p>插件（Plugins）是比技能更强大的扩展机制。一个插件可以包含：
+- <strong>命令（Commands）</strong>：新的斜杠命令
+- <strong>Hook</strong>：PreToolUse/PostToolUse 生命周期钩子
+- <strong>Agent</strong>：专门的子 Agent 定义</p>
+<p>OpenHarness 兼容 Claude Code 的插件格式，已验证 12 个官方插件。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 管理插件
+oh plugin list                      # 列出已安装的插件
+oh plugin install &lt;source-url&gt;      # 安装插件
+oh plugin enable &lt;plugin-name&gt;      # 启用插件
+oh plugin disable &lt;plugin-name&gt;     # 禁用插件
+</code></pre>
+<p><strong>创建自定义插件：</strong></p>
+<pre><code class="language-bash"># 第 1 步：创建插件目录结构
+mkdir -p .openharness/plugins/my-linter/.claude-plugin
+mkdir -p .openharness/plugins/my-linter/commands
+mkdir -p .openharness/plugins/my-linter/hooks
+
+# 第 2 步：创建插件配置文件
+cat &gt; .openharness/plugins/my-linter/.claude-plugin/plugin.json &lt;&lt; 'EOF'
+{
+  &quot;name&quot;: &quot;my-linter&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;自定义代码检查插件&quot;
+}
+EOF
+
+# 第 3 步：添加命令
+cat &gt; .openharness/plugins/my-linter/commands/lint.md &lt;&lt; 'EOF'
+---
+name: lint
+description: 运行代码检查并报告问题
+---
+
+# Lint 命令
+
+## 执行流程
+1. 使用 Bash 工具运行 `ruff check .` 或 `flake8 .`
+2. 分析输出结果
+3. 按严重程度分类报告问题
+4. 对于可自动修复的问题，建议使用 `ruff check --fix`
+EOF
+
+# 第 4 步：添加 Hook（在文件编辑后自动检查）
+cat &gt; .openharness/plugins/my-linter/hooks/hooks.json &lt;&lt; 'EOF'
+{
+  &quot;hooks&quot;: [
+    {
+      &quot;event&quot;: &quot;PostToolUse&quot;,
+      &quot;tool&quot;: &quot;Edit&quot;,
+      &quot;action&quot;: &quot;Run `ruff check {{file_path}}` and report any issues found.&quot;
+    },
+    {
+      &quot;event&quot;: &quot;PostToolUse&quot;,
+      &quot;tool&quot;: &quot;Write&quot;,
+      &quot;action&quot;: &quot;Run `ruff check {{file_path}}` and report any issues found.&quot;
+    }
+  ]
+}
+EOF
+
+# 第 5 步：启用插件
+oh plugin enable my-linter
+</code></pre>
+<p><strong>注意事项：</strong>
+- 插件的 <code>plugin.json</code> 路径必须严格遵循 <code>.claude-plugin/plugin.json</code> 的格式
+- Hook 的 <code>event</code> 只支持 <code>PreToolUse</code> 和 <code>PostToolUse</code>
+- 插件命令是 Markdown 文件，不是可执行脚本——它们提供的是 <strong>指导知识</strong>
+- <code>{{file_path}}</code> 等 <code>{{}}</code> 占位符会在运行时被替换为实际值</p>
+<p><strong>练习题：</strong>
+1. 创建一个自定义插件，在每次文件写入后自动运行 <code>git diff</code> 显示变更
+2. 从 Claude Code 插件仓库安装一个官方插件并在 OpenHarness 中使用</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-agent-swarm">3.1 多 Agent 协调（Swarm）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenHarness 内置了多 Agent 协调能力，允许主 Agent 将复杂任务拆分为多个子任务，分配给专门的子 Agent 并行处理。这就是所谓的 <strong>Swarm（蜂群）模式</strong>。</p>
+<p>相关工具：
+- <strong>Agent</strong>：生成子 Agent
+- <strong>SendMessage</strong>：向子 Agent 发送消息
+- <strong>TeamCreate/Delete</strong>：创建/删除 Agent 团队
+- <strong>TaskCreate/Get/List/Update/Stop/Output</strong>：后台任务生命周期管理</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 在交互式会话中使用多 Agent 协调
+# 启动 OpenHarness
+oh
+
+# 然后输入提示：
+# &quot;同时审查 src/ 目录下的所有 Python 文件的代码质量，
+#  为每个文件生成审查报告，保存到 review/ 目录&quot;
+#
+# Agent 会自动：
+# 1. 使用 Glob 找到所有 Python 文件
+# 2. 使用 Agent 工具生成多个子 Agent
+# 3. 每个子 Agent 负责审查一个文件
+# 4. 使用 TaskCreate 创建后台任务
+# 5. 汇总所有子 Agent 的结果
+</code></pre>
+<p><strong>注意事项：</strong>
+- 每个子 Agent 都会消耗 API 调用次数和 Token，注意成本控制
+- 子 Agent 之间的共享状态有限，不适合需要强一致性的任务
+- 后台任务可以通过 <code>TaskGet</code> 和 <code>TaskOutput</code> 查询进度和结果
+- <strong>不要为每个小任务都创建子 Agent</strong>——只有当任务可以真正并行处理时才使用 Swarm 模式，否则串行处理更高效
+- <strong>子 Agent 的权限继承自主 Agent</strong>：如果主 Agent 是 Default 模式，子 Agent 也需要用户确认写操作，这可能导致阻塞</p>
+<hr />
+<h3 id="32">3.2 非交互模式与自动化集成</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenHarness 支持三种非交互式输出格式，使其可以嵌入到 CI/CD 流水线、Shell 脚本或其他自动化系统中：</p>
+<table>
+<thead>
+<tr>
+<th>格式</th>
+<th>参数</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>text</strong></td>
+<td><code>--output-format text</code></td>
+<td>纯文本输出，适合人类阅读</td>
+</tr>
+<tr>
+<td><strong>json</strong></td>
+<td><code>--output-format json</code></td>
+<td>JSON 结构化输出，适合程序解析</td>
+</tr>
+<tr>
+<td><strong>stream-json</strong></td>
+<td><code>--output-format stream-json</code></td>
+<td>实时 JSON 事件流，适合实时监控</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 示例 1：纯文本模式（默认）
+oh -p &quot;解释 main.py 的主要功能&quot; --output-format text
+
+# 示例 2：JSON 输出（用于脚本解析）
+oh -p &quot;列出所有 TODO 注释&quot; --output-format json
+
+# 示例 3：在 CI/CD 流水线中使用
+oh -p &quot;检查这个仓库的代码是否有明显的 Bug&quot; \
+  --output-format json \
+  --permission-mode plan \
+  | python -c &quot;import sys, json; data=json.load(sys.stdin); sys.exit(1 if data.get('bugs_found') else 0)&quot;
+
+# 示例 4：在 Shell 脚本中使用
+#!/bin/bash
+# auto_review.sh - 自动代码审查脚本
+
+REPO_PATH=&quot;$1&quot;
+cd &quot;$REPO_PATH&quot; || exit 1
+
+# 运行 OpenHarness 进行代码审查
+oh -p &quot;审查最近一次 Git commit 的代码变更，检查安全问题和 Bug&quot; \
+  --output-format text \
+  --permission-mode plan
+
+echo &quot;审查完成&quot;
+</code></pre>
+<h3 id="33">3.3 性能优化与最佳实践</h3>
+<p><strong>优化策略 1：选择合适的模型</strong></p>
+<pre><code class="language-bash"># 简单任务使用便宜快速的模型
+oh --model &quot;claude-haiku-4-5&quot; -p &quot;格式化这段 JSON&quot;
+
+# 复杂任务使用强大的模型
+oh --model &quot;claude-sonnet-4-6&quot; -p &quot;重构这个模块的架构&quot;
+
+# 日常开发使用性价比模型
+oh --model &quot;deepseek-chat&quot; -p &quot;修复这个 Bug&quot;
+</code></pre>
+<p><strong>优化策略 2：使用 Plan Mode 减少无效操作</strong></p>
+<pre><code class="language-bash"># 先用 Plan Mode 分析，确认方案后再执行
+oh --permission-mode plan -p &quot;分析这个项目并提出重构建议&quot;
+# 确认方案后切换到 Default 模式执行
+</code></pre>
+<p><strong>最佳实践：</strong></p>
+<ol>
+<li><strong>使用 CLAUDE.md 提供项目上下文</strong>：在项目根目录创建 <code>CLAUDE.md</code> 文件，写入项目规范、架构说明、编码风格等。OpenHarness 会自动发现并注入到上下文中。</li>
+</ol>
+<pre><code class="language-bash"># 创建项目级 CLAUDE.md
+cat &gt; CLAUDE.md &lt;&lt; 'EOF'
+# 项目规范
+
+## 技术栈
+- Python 3.12+
+- FastAPI + SQLAlchemy
+- pytest 测试
+
+## 编码规范
+- 使用 type hints
+- 函数最大长度 50 行
+- 必须有 docstring
+
+## 测试要求
+- 所有新功能必须有测试
+- 测试覆盖率 &gt; 80%
+EOF
+</code></pre>
+<ol>
+<li>
+<p><strong>使用 Auto-Compact 控制上下文窗口</strong>：长时间会话中，OpenHarness 会自动压缩历史消息以节省 Token。</p>
+</li>
+<li>
+<p><strong>使用 Memory 持久化关键信息</strong>：通过 <code>MEMORY.md</code> 文件保存跨会话的知识。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个 <strong>自动化代码审查机器人</strong>，能够：
+1. 分析 Git 仓库中最近的代码变更
+2. 对变更进行安全审查、性能审查和代码质量审查
+3. 生成结构化的审查报告
+4. 支持多种输出格式（终端、JSON）</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>auto-review/
+├── review.sh              # 主入口脚本
+├── .openharness/
+│   ├── settings.json      # 权限配置
+│   ├── skills/
+│   │   └── review.md      # 自定义审查技能
+│   └── plugins/
+│       └── auto-review/
+│           └── .claude-plugin/
+│               └── plugin.json
+└── README.md
+</code></pre>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-bash">#!/bin/bash
+# review.sh - 自动化代码审查机器人
+# 使用方法：./review.sh [仓库路径] [输出格式]
+
+# 第 1 步：解析参数
+REPO_PATH=&quot;${1:-.}&quot;
+OUTPUT_FORMAT=&quot;${2:-text}&quot;
+
+# 第 2 步：切换到目标仓库
+cd &quot;$REPO_PATH&quot; || { echo &quot;错误：无法进入目录 $REPO_PATH&quot;; exit 1; }
+
+# 第 3 步：检查是否是 Git 仓库
+if [ ! -d &quot;.git&quot; ]; then
+    echo &quot;错误：$REPO_PATH 不是 Git 仓库&quot;
+    exit 1
+fi
+
+# 第 4 步：获取最近的变更摘要
+COMMIT_COUNT=$(git log --oneline -5 | wc -l)
+echo &quot;=== 将审查最近 $COMMIT_COUNT 个提交的变更 ===&quot;
+
+# 第 5 步：构建审查提示
+REVIEW_PROMPT=&quot;你是一位资深代码审查专家。请审查这个 Git 仓库中最近 5 个提交的代码变更。
+
+审查维度：
+1. 安全性：是否存在 SQL 注入、XSS、命令注入等安全漏洞
+2. 性能：是否存在 N+1 查询、内存泄漏、不必要的循环
+3. 代码质量：命名规范、复杂度、重复代码
+4. 测试覆盖：新增代码是否有对应的测试
+
+输出格式：
+- 按严重程度分类（严重/警告/建议）
+- 每个问题包含：文件路径、行号范围、问题描述、建议修复方式
+- 最后给出整体评分（1-10）和改进建议&quot;
+
+# 第 6 步：运行 OpenHarness（Plan Mode 确保只读）
+oh -p &quot;$REVIEW_PROMPT&quot; \
+   --output-format &quot;$OUTPUT_FORMAT&quot; \
+   --permission-mode plan
+
+echo &quot;&quot;
+echo &quot;=== 审查完成 ===&quot;
+</code></pre>
+<pre><code class="language-bash"># 创建自定义审查技能
+mkdir -p .openharness/skills
+cat &gt; .openharness/skills/security-review.md &lt;&lt; 'SKILL_EOF'
+---
+name: security-review
+description: 专注于安全漏洞的代码审查技能
+---
+
+# 安全审查技能
+
+## 检查清单
+
+### OWASP Top 10 检查
+1. **注入攻击**：检查所有 SQL 查询是否使用参数化
+2. **XSS**：检查所有用户输入是否经过转义
+3. **敏感数据泄露**：检查是否有硬编码的密钥或密码
+4. **访问控制**：检查 API 端点是否有权限验证
+5. **安全配置**：检查 CORS、CSRF 等配置
+
+### 输出格式
+对于每个发现的安全问题：
+- 严重程度：🔴 高危 / 🟡 中危 / 🟢 低危
+- CWE 编号（如适用）
+- 受影响的代码位置
+- 修复建议（包含代码示例）
+SKILL_EOF
+</code></pre>
+<pre><code class="language-bash"># 创建权限配置
+cat &gt; .openharness/settings.json &lt;&lt; 'SETTINGS_EOF'
+{
+  &quot;permission&quot;: {
+    &quot;mode&quot;: &quot;plan&quot;,
+    &quot;path_rules&quot;: [
+      {&quot;pattern&quot;: &quot;/etc/*&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;*/.env&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;*/credentials*&quot;, &quot;allow&quot;: false},
+      {&quot;pattern&quot;: &quot;*/id_rsa*&quot;, &quot;allow&quot;: false}
+    ],
+    &quot;denied_commands&quot;: [
+      &quot;rm -rf&quot;,
+      &quot;curl.*|.*sh&quot;,
+      &quot;wget.*|.*sh&quot;,
+      &quot;DROP TABLE&quot;,
+      &quot;DELETE FROM&quot;
+    ]
+  }
+}
+SETTINGS_EOF
+</code></pre>
+<p><strong>使用方式：</strong></p>
+<pre><code class="language-bash"># 赋予执行权限
+chmod +x review.sh
+
+# 审查当前仓库（终端输出）
+./review.sh .
+
+# 审查指定仓库（JSON 输出，适合集成到 CI）
+./review.sh /path/to/repo json
+
+# 集成到 GitHub Actions
+# .github/workflows/review.yml 中使用：
+# - name: Auto Review
+#   run: ./review.sh . json &gt; review-report.json
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p>本实战项目综合运用了以下知识点：</p>
+<ol>
+<li>
+<p><strong>非交互模式（<code>-p</code> 参数 + <code>--output-format</code>）</strong> — 通过 <code>-p</code> 传递审查提示，配合 <code>json</code> 输出格式，使脚本可以集成到 CI/CD 流水线中。参考入门篇 1.1 和高级篇 3.2。</p>
+</li>
+<li>
+<p><strong>权限治理（<code>--permission-mode plan</code>）</strong> — 审查机器人使用 Plan Mode，确保 Agent 只读取代码、生成报告，不会修改任何文件。参考进阶篇 2.3。</p>
+</li>
+<li>
+<p><strong>自定义技能（Skills）</strong> — <code>security-review.md</code> 技能为 Agent 提供安全审查的专业知识，使其审查更有针对性。参考进阶篇 2.2。</p>
+</li>
+<li>
+<p><strong>配置文件（settings.json）</strong> — 通过路径规则和命令黑名单，防止 Agent 访问敏感文件或执行危险命令。参考进阶篇 2.3。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加 Slack/飞书通知</strong>：在审查完成后，通过 Webhook 将审查结果发送到 Slack 或飞书群组</li>
+<li><strong>增量审查</strong>：只审查 Git diff 中的变更部分，而非整个仓库，提高效率</li>
+<li><strong>多模型对比审查</strong>：使用不同模型对同一份代码进行审查，对比审查质量</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ANTHROPIC_API_KEY not set</code></td>
+<td>未配置 API Key</td>
+<td>运行 <code>export ANTHROPIC_API_KEY="your-key"</code> 或在 <code>.env</code> 文件中配置</td>
+</tr>
+<tr>
+<td><code>Connection refused</code> (Ollama)</td>
+<td>Ollama 服务未启动</td>
+<td>运行 <code>ollama serve</code> 启动本地模型服务</td>
+</tr>
+<tr>
+<td><code>Model not found: xxx</code></td>
+<td>模型名称错误</td>
+<td>检查 <code>--model</code> 参数是否与提供商支持的模型名称一致</td>
+</tr>
+<tr>
+<td><code>Permission denied: Write</code></td>
+<td>Plan Mode 下尝试写入</td>
+<td>切换到 Default 模式：<code>/permissions</code> → 选择 default</td>
+</tr>
+<tr>
+<td><code>Rate limit exceeded</code></td>
+<td>API 调用频率超限</td>
+<td>降低请求频率或升级 API 账户等级</td>
+</tr>
+<tr>
+<td><code>Context window exceeded</code></td>
+<td>对话历史过长</td>
+<td>使用 <code>/clear</code> 清空上下文，或开启 Auto-Compact</td>
+</tr>
+<tr>
+<td><code>Tool execution timeout</code></td>
+<td>工具执行超时</td>
+<td>检查网络连接，或使用 <code>-d</code> 查看详细错误</td>
+</tr>
+<tr>
+<td><code>uv: command not found</code></td>
+<td>uv 包管理器未安装</td>
+<td>运行 <code>curl -LsSf https://astral.sh/uv/install.sh \| sh</code></td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError</code></td>
+<td>依赖未安装</td>
+<td>运行 <code>uv sync --extra dev</code> 重新安装依赖</td>
+</tr>
+<tr>
+<td>Plugin not found</td>
+<td>插件路径错误</td>
+<td>确认插件位于 <code>.openharness/plugins/&lt;name&gt;/.claude-plugin/plugin.json</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li><strong>使用 debug 模式</strong>：启动时加 <code>-d</code> 或 <code>--debug</code> 参数，可以看到每一步的工具调用、权限检查和模型响应细节，是排查问题的第一选择。</li>
+</ol>
+<pre><code class="language-bash">oh -d -p &quot;你的提示&quot;
+</code></pre>
+<ol>
+<li>
+<p><strong>检查配置文件优先级</strong>：当配置不生效时，检查是否存在多个配置文件冲突。优先级从高到低：命令行参数 &gt; 项目 <code>.openharness/settings.json</code> &gt; 全局 <code>~/.openharness/settings.json</code>。</p>
+</li>
+<li>
+<p><strong>逐步简化提示</strong>：当 Agent 行为异常时，将复杂提示拆分为多个简单步骤，逐步排查是哪一步出了问题。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README</strong> — 快速入门、安装指南、基本使用。重点：Quick Start 和 Provider Compatibility 章节</li>
+<li><strong>docs/SHOWCASE.md</strong> — 实际使用场景和示例。重点：理解不同使用模式（交互/非交互/自动化）</li>
+<li><strong>CONTRIBUTING.md</strong> — 贡献指南和开发环境配置。重点：开发流程、测试运行方式</li>
+<li><strong>源码 openharness/engine/</strong> — Agent Loop 核心实现。重点：理解循环机制和工具调度</li>
+<li><strong>源码 openharness/tools/</strong> — 工具实现参考。重点：BaseTool 抽象和工具注册机制</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://github.com/anthropics/skills">anthropics/skills 仓库</a></strong> — Claude Code 官方技能库，所有 <code>.md</code> 文件可直接在 OpenHarness 中使用</li>
+<li><strong><a href="https://github.com/claude-code/plugins">claude-code/plugins 仓库</a></strong> — Claude Code 官方插件库，了解插件开发最佳实践</li>
+<li><strong><a href="https://modelcontextprotocol.io/">Model Context Protocol (MCP) 文档</a></strong> — MCP 协议官方文档，理解 OpenHarness 的 MCP 集成机制</li>
+<li><strong><a href="https://docs.pydantic.dev/">Pydantic V2 文档</a></strong> — 工具输入验证框架，开发自定义工具的必备知识</li>
+<li><strong><a href="https://github.com/openclaw/openclaw">OpenClaw 项目</a></strong> — 同属 HKUDS 生态的 AI 网关项目，理解更广泛的 Agent 生态</li>
+</ul>
+<h3 id="_20">学习里程碑检查清单</h3>
+<ul>
+<li>[ ] 成功安装并运行 OpenHarness</li>
+<li>[ ] 理解 Agent Loop 的工作原理（提示→推理→工具→循环）</li>
+<li>[ ] 能使用交互式和非交互式两种模式</li>
+<li>[ ] 能切换不同的 LLM 模型提供商</li>
+<li>[ ] 能创建自定义技能（.md 文件）</li>
+<li>[ ] 能配置权限规则（settings.json）</li>
+<li>[ ] 能创建自定义插件（commands + hooks）</li>
+<li>[ ] 能将 OpenHarness 集成到 Shell 脚本中</li>
+<li>[ ] 理解多 Agent 协调的基本概念</li>
+<li>[ ] 能阅读源码理解核心模块的实现</li>
+</ul>
+<hr />
+<h2 id="_21">附录：术语对照表</h2>
+<table>
+<thead>
+<tr>
+<th>中文术语</th>
+<th>英文原文</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>智能体驾驶系统</td>
+<td>Agent Harness</td>
+<td>包裹在 LLM 外部的基础设施层</td>
+</tr>
+<tr>
+<td>智能体循环</td>
+<td>Agent Loop</td>
+<td>提示→推理→工具→观察的核心循环</td>
+</tr>
+<tr>
+<td>工具</td>
+<td>Tool</td>
+<td>Agent 与外部世界交互的唯一通道</td>
+</tr>
+<tr>
+<td>技能</td>
+<td>Skill</td>
+<td>Markdown 格式的领域知识包</td>
+</tr>
+<tr>
+<td>插件</td>
+<td>Plugin</td>
+<td>包含命令、Hook、Agent 的扩展包</td>
+</tr>
+<tr>
+<td>权限治理</td>
+<td>Permission Governance</td>
+<td>多级权限控制系统</td>
+</tr>
+<tr>
+<td>生命周期钩子</td>
+<td>Lifecycle Hook</td>
+<td>PreToolUse/PostToolUse 事件钩子</td>
+</tr>
+<tr>
+<td>指数退避重试</td>
+<td>Exponential Backoff</td>
+<td>API 调用失败时的重试策略</td>
+</tr>
+<tr>
+<td>上下文压缩</td>
+<td>Auto-Compact</td>
+<td>自动压缩历史消息以节省 Token</td>
+</tr>
+<tr>
+<td>蜂群协调</td>
+<td>Swarm Coordination</td>
+<td>多 Agent 并行协作模式</td>
+</tr>
+<tr>
+<td>模型上下文协议</td>
+<td>Model Context Protocol (MCP)</td>
+<td>标准化的外部工具集成协议</td>
+</tr>
+</tbody>
+</table>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

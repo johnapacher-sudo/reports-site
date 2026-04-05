@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenHarness - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">⚠️ OpenHarness 是一个极年轻的项目（截至 2026-04-05 仅有 4 天历史），后续版本迭代速度和长期维护承诺尚待观察。[置信度：高]</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#agent-loop" class="toc-h4">Agent Loop（智能体循环）</a></li>
+<li><a href="#_8" class="toc-h4">循环检测与防护</a></li>
+<li><a href="#_9" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_10" class="toc-h2">架构设计</a></li>
+<li><a href="#_11" class="toc-h3">整体架构</a></li>
+<li><a href="#_12" class="toc-h3">核心模块</a></li>
+<li><a href="#_13" class="toc-h3">扩展机制</a></li>
+<li><a href="#_14" class="toc-h2">关键概念详解</a></li>
+<li><a href="#agent-harness" class="toc-h3">Agent Harness（智能体驾驶系统）</a></li>
+<li><a href="#tool-system" class="toc-h3">工具系统（Tool System）</a></li>
+<li><a href="#skills-system" class="toc-h3">技能系统（Skills System）</a></li>
+<li><a href="#permission-governance" class="toc-h3">权限治理（Permission Governance）</a></li>
+<li><a href="#agent-swarm-coordination" class="toc-h3">多 Agent 协调（Swarm Coordination）</a></li>
+<li><a href="#provider-compatibility" class="toc-h3">多模型兼容（Provider Compatibility）</a></li>
+<li><a href="#_15" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_16" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_17" class="toc-h3">最佳场景</a></li>
+<li><a href="#_18" class="toc-h3">不适用场景</a></li>
+<li><a href="#_19" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_20" class="toc-h3">优势</a></li>
+<li><a href="#_21" class="toc-h3">劣势</a></li>
+<li><a href="#_22" class="toc-h3">风险点</a></li>
+<li><a href="#_23" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_24" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_25" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_26" class="toc-h2">总结与建议</a></li>
+<li><a href="#_27" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenHarness - 深度分析报告</h1>
+                        <div class="article-meta">⚠️ OpenHarness 是一个极年轻的项目（截至 2026-04-05 仅有 4 天历史），后续版本迭代速度和长期维护承诺尚待观察。[置信度：高]</div>
+                    </header>
+                    <h1 id="openharness-">OpenHarness - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025-2026 年，AI 编码助手（AI Coding Agent）领域爆发式增长。Anthropic 的 Claude Code 凭借强大的 Agent 能力成为标杆，但其闭源性质和 TypeScript 实现使得开发者难以理解其内部机制、进行定制化开发或用于学术研究。与此同时，开源社区涌现了多个替代方案（OpenCode、Cline、Goose 等），但大多数要么功能不够完整，要么架构复杂难以理解。</p>
+<p>这一时期的核心行业痛点包括：</p>
+<ol>
+<li><strong>黑箱问题</strong>：商业 AI 编码助手内部机制不透明，开发者无法理解其决策逻辑</li>
+<li><strong>锁定风险</strong>：大多数工具绑定特定模型提供商（如 Claude Code 绑定 Anthropic）</li>
+<li><strong>门槛过高</strong>：现有开源替代品（如 OpenCode 120k+ Stars）代码量庞大，学习和二次开发成本高</li>
+<li><strong>学术研究缺失</strong>：缺乏适合学术研究的、结构清晰的 Agent 基础设施参考实现</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>OpenHarness 由香港大学数据智能实验室（HKUDS）创建，核心动机包括：</p>
+<ol>
+<li><strong>教育与研究价值</strong>：提供一份清晰的、可读的 Agent 基础设施参考实现，帮助研究者和开发者理解 AI Agent 的内部工作原理</li>
+<li><strong>极简主义验证</strong>：探索"用最少的代码实现最大的功能"的极限——用 Claude Code 约 2.3% 的代码量（11,733 行 vs 512,664 行）复现其核心功能</li>
+<li><strong>生态系统兼容</strong>：与 Claude Code 的 Skills 和 Plugins 格式保持兼容，降低迁移成本</li>
+<li><strong>模型无关性</strong>：同时支持 Anthropic 和 OpenAI 兼容的 API 格式，打破模型提供商锁定</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-04-01</strong>：v0.1.0 首次发布，包含完整的 Agent Harness 架构（43 工具、54 命令、React TUI、多模型支持）</li>
+</ul>
+<blockquote>
+<p>⚠️ OpenHarness 是一个极年轻的项目（截至 2026-04-05 仅有 4 天历史），后续版本迭代速度和长期维护承诺尚待观察。[置信度：高]</p>
+</blockquote>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>OpenHarness 的核心设计哲学可以归纳为三个层次：</p>
+<p><strong>1. Harness 分离原则</strong></p>
+<blockquote>
+<p>"The model is the agent. The code is the harness."（模型是 Agent，代码是 Harness）</p>
+</blockquote>
+<p>这一原则将 AI Agent 系统拆分为两个独立的层次：</p>
+<ul>
+<li><strong>模型层（Agent）</strong>：提供推理、规划、决策等智能能力。模型本身只输出文本，不具备任何"行动力"</li>
+<li><strong>框架层（Harness）</strong>：为模型提供"手、眼、记忆和安全边界"。用公式表达：<code>Harness = Tools + Knowledge + Observation + Action + Permissions</code></li>
+</ul>
+<p>这种分离使得同一个模型可以接入不同的 Harness 获得不同能力，同一个 Harness 也可以连接不同的模型。</p>
+<p><strong>2. 极简主义</strong></p>
+<p>HKUDS 团队追求用最精简的代码实现最大的功能覆盖：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Claude Code</th>
+<th>OpenHarness</th>
+<th>比例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>代码量</td>
+<td>512,664 行</td>
+<td>11,733 行</td>
+<td>2.3%</td>
+</tr>
+<tr>
+<td>文件数</td>
+<td>1,884</td>
+<td>163</td>
+<td>8.6%</td>
+</tr>
+<tr>
+<td>工具数</td>
+<td>~44</td>
+<td>43</td>
+<td>98%</td>
+</tr>
+<tr>
+<td>命令数</td>
+<td>~88</td>
+<td>54</td>
+<td>61%</td>
+</tr>
+</tbody>
+</table>
+<p>这表明 Claude Code 的绝大部分代码并非核心逻辑，而是边缘场景处理、性能优化和平台适配。OpenHarness 通过抓住核心模式，用极小的代价实现了接近完整的功能覆盖。</p>
+<p><strong>3. 兼容优于创新</strong></p>
+<p>OpenHarness 选择与 Claude Code 的 Skills（.md 文件）和 Plugins（plugin.json 格式）保持兼容，而非创造新的格式。这使得现有的 Claude Code 生态资源可以直接在 OpenHarness 中使用。</p>
+<h3 id="_7">核心算法/机制</h3>
+<h4 id="agent-loop">Agent Loop（智能体循环）</h4>
+<p>Agent Loop 是 OpenHarness 的心脏，本质上是一个无限循环的状态机：</p>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│                    Agent Loop                        │
+│                                                      │
+│  ┌──────────┐    ┌──────────┐    ┌───────────────┐  │
+│  │  用户输入  │───&gt;│  上下文   │───&gt;│  模型推理      │  │
+│  │ (Prompt)  │    │ (Context) │    │ (LLM Stream)  │  │
+│  └──────────┘    └──────────┘    └───────┬───────┘  │
+│                                          │           │
+│                              ┌───────────┤           │
+│                              │ stop?     │tool_use?  │
+│                              ▼           ▼           │
+│                        ┌────────┐  ┌────────────┐   │
+│                        │ 返回结果 │  │ 权限检查    │   │
+│                        │(Done)  │  │(Permission) │   │
+│                        └────────┘  └─────┬──────┘   │
+│                                          │           │
+│                                    ┌─────▼──────┐   │
+│                                    │ Hook 前置   │   │
+│                                    │(PreToolUse) │   │
+│                                    └─────┬──────┘   │
+│                                          │           │
+│                                    ┌─────▼──────┐   │
+│                                    │ 工具执行    │   │
+│                                    │(Execute)   │   │
+│                                    └─────┬──────┘   │
+│                                          │           │
+│                                    ┌─────▼──────┐   │
+│                                    │ Hook 后置   │   │
+│                                    │(PostToolUse)│   │
+│                                    └─────┬──────┘   │
+│                                          │           │
+│                                    ┌─────▼──────┐   │
+│                                    │ 结果追加    │   │
+│                                    │→ 回到推理   │   │
+│                                    └────────────┘   │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>核心循环伪代码：</strong></p>
+<pre><code class="language-python"># 基于 OpenHarness README 中的 Agent Loop 伪代码
+while True:
+    response = await api.stream(messages, tools)
+
+    if response.stop_reason != &quot;tool_use&quot;:
+        break  # 模型认为任务完成
+
+    for tool_call in response.tool_uses:
+        # 权限检查 → Hook前置 → 执行 → Hook后置 → 结果
+        result = await harness.execute_tool(tool_call)
+
+    messages.append(tool_results)
+    # 循环继续 — 模型看到结果后决定下一步行动
+</code></pre>
+<p><strong>关键设计决策：</strong></p>
+<ul>
+<li>模型决定 <strong>做什么</strong>（what），Harness 决定 <strong>怎么做</strong>（how）</li>
+<li>每次工具调用都经过权限检查和生命周期 Hook</li>
+<li>支持并行工具执行，提高效率</li>
+<li>实现了 API 指数退避重试（Exponential Backoff）机制</li>
+<li>内置 Token 计数和成本追踪</li>
+</ul>
+<h4 id="_8">循环检测与防护</h4>
+<p>Agent Loop 的一个关键挑战是防止模型陷入无限循环。OpenHarness 继承了 OpenClaw 生态的循环检测机制，包括：</p>
+<ol>
+<li><strong>重复检测</strong>：检测相同工具调用的重复模式</li>
+<li><strong>轮询检测</strong>：识别无进展的无效轮询操作</li>
+<li><strong>熔断机制</strong>：全局阈值防止资源耗尽</li>
+<li><strong>乒乓检测</strong>：检测两个工具之间的相互调用循环</li>
+</ol>
+<h3 id="_9">数据流/执行流程</h3>
+<p>从用户输入到最终输出的完整数据流：</p>
+<pre><code>用户提示 (Prompt)
+    │
+    ▼
+CLI 或 React TUI（界面层）
+    │
+    ▼
+RuntimeBundle（运行时捆绑包，组装配置、工具、权限等）
+    │
+    ▼
+QueryEngine（查询引擎）
+    │
+    ├──&gt; CLAUDE.md 发现与注入
+    ├──&gt; Skills 按需加载
+    ├──&gt; Memory 持久记忆读取
+    ├──&gt; System Prompt 组装
+    │
+    ▼
+API Client（Anthropic/OpenAI 兼容）
+    │
+    ├──&gt; 流式请求发送
+    ├──&gt; 指数退避重试
+    │
+    ▼
+Tool Registry（工具注册表，43 个工具）
+    │
+    ├──&gt; Permission Check（权限检查）
+    ├──&gt; PreToolUse Hook
+    ├──&gt; Tool Execution（工具执行）
+    ├──&gt; PostToolUse Hook
+    │
+    ▼
+Tool Results → 追加到消息上下文 → 回到 QueryEngine
+    │
+    ▼
+最终响应（文本/JSON/流式 JSON）
+</code></pre>
+<h2 id="_10">架构设计</h2>
+<h3 id="_11">整体架构</h3>
+<p>OpenHarness 采用模块化的分层架构，共 10+ 核心子系统：</p>
+<pre><code>openharness/
+├── engine/          # 🧠 Agent Loop — 查询→流式响应→工具调用→循环
+├── tools/           # 🔧 43 工具 — 文件I/O、Shell、搜索、Web、MCP
+├── skills/          # 📚 知识 — 按需加载技能文件（.md格式）
+├── plugins/         # 🔌 扩展 — 命令、Hook、Agent、MCP服务器
+├── permissions/     # 🛡️ 安全 — 多级权限模式、路径规则、命令黑名单
+├── hooks/           # ⚡ 生命周期 — PreToolUse/PostToolUse事件Hook
+├── commands/        # 💬 54 命令 — /help、/commit、/plan、/resume等
+├── mcp/             # 🌐 MCP — Model Context Protocol客户端
+├── memory/          # 🧠 记忆 — 跨会话持久化知识
+├── tasks/           # 📋 任务 — 后台任务管理
+├── coordinator/     # 🤝 多Agent — 子Agent生成、团队协调
+├── prompts/         # 📝 上下文 — 系统提示组装、CLAUDE.md、技能注入
+├── config/          # ⚙️ 配置 — 多层配置、迁移
+└── ui/              # 🖥️ React TUI — 后端协议+前端界面
+</code></pre>
+<h3 id="_12">核心模块</h3>
+<ul>
+<li>
+<p><strong>engine/</strong> — 核心引擎模块，实现 Agent Loop 的主循环逻辑。负责：查询流式发送、工具调用分发、循环控制、Token 追踪和成本计算。这是整个系统的心脏，其他所有模块都围绕它工作。</p>
+</li>
+<li>
+<p><strong>tools/</strong> — 工具注册表和工具实现。包含 43 个工具，分为 9 大类：文件 I/O（6 个）、搜索（4 个）、Notebook（1 个）、Agent（3 个）、任务（6 个）、MCP（3 个）、模式（3 个）、调度（3 个）、元工具（5 个）。每个工具使用 Pydantic 进行输入验证，生成 JSON Schema 供模型理解。</p>
+</li>
+<li>
+<p><strong>skills/</strong> — 技能加载系统。技能是 Markdown 格式的领域知识文件，仅在模型需要时按需加载（on-demand），避免占用上下文窗口。兼容 anthropics/skills 格式。</p>
+</li>
+<li>
+<p><strong>plugins/</strong> — 插件系统。支持热插拔的命令、Hook 和 Agent 扩展。兼容 claude-code/plugins 格式，已验证 12 个官方插件。</p>
+</li>
+<li>
+<p><strong>permissions/</strong> — 权限治理。提供三种模式（Default/Auto/Plan Mode），支持路径级规则和命令黑名单。</p>
+</li>
+<li>
+<p><strong>hooks/</strong> — 生命周期 Hook。在工具执行前后触发自定义逻辑，支持 PreToolUse 和 PostToolUse 事件。</p>
+</li>
+<li>
+<p><strong>coordinator/</strong> — 多 Agent 协调。支持子 Agent 生成与委派、团队注册、后台任务生命周期管理。</p>
+</li>
+<li>
+<p><strong>prompts/</strong> — 上下文组装。负责 CLAUDE.md 发现与注入、Skills 加载、System Prompt 组装。</p>
+</li>
+<li>
+<p><strong>config/</strong> — 多层配置系统。支持全局配置、项目配置和命令行参数的优先级合并。</p>
+</li>
+<li>
+<p><strong>ui/</strong> — React/Ink 终端 UI。提供交互式终端界面，通过后端协议与核心引擎通信。</p>
+</li>
+</ul>
+<h3 id="_13">扩展机制</h3>
+<p>OpenHarness 提供三种主要的扩展途径：</p>
+<p><strong>1. 自定义工具（Custom Tool）</strong></p>
+<p>基于 <code>BaseTool</code> 抽象类创建新工具：</p>
+<pre><code class="language-python"># 基于官方 README 中的自定义工具示例（基于 v0.1.0）
+from pydantic import BaseModel, Field
+from openharness.tools.base import BaseTool, ToolExecutionContext, ToolResult
+
+class MyToolInput(BaseModel):
+    query: str = Field(description=&quot;Search query&quot;)
+
+class MyTool(BaseTool):
+    name = &quot;my_tool&quot;
+    description = &quot;Does something useful&quot;
+    input_model = MyToolInput
+
+    async def execute(self, arguments: MyToolInput, context: ToolExecutionContext) -&gt; ToolResult:
+        return ToolResult(output=f&quot;Result for: {arguments.query}&quot;)
+</code></pre>
+<p><strong>2. 自定义技能（Custom Skill）</strong></p>
+<p>创建 Markdown 文件即可添加领域知识：</p>
+<pre><code class="language-markdown"># 基于官方 README 中的自定义技能示例（基于 v0.1.0）
+---
+name: my-skill
+description: Expert guidance for my specific domain
+---
+
+# My Skill
+
+## When to use
+Use when the user asks about [your domain].
+
+## Workflow
+1. Step one
+2. Step two
+</code></pre>
+<p>将文件放置在 <code>~/.openharness/skills/my-skill.md</code> 即可自动识别。</p>
+<p><strong>3. 自定义插件（Custom Plugin）</strong></p>
+<p>创建包含 <code>plugin.json</code> 的目录即可添加命令、Hook 和 Agent：</p>
+<pre><code class="language-json">// 基于官方 README 中的插件配置示例（基于 v0.1.0）
+{
+  &quot;name&quot;: &quot;my-plugin&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;My custom plugin&quot;
+}
+</code></pre>
+<p>放置在 <code>.openharness/plugins/my-plugin/.claude-plugin/plugin.json</code>，可通过 <code>oh plugin install/enable</code> 管理。</p>
+<h2 id="_14">关键概念详解</h2>
+<h3 id="agent-harness">Agent Harness（智能体驾驶系统）</h3>
+<ul>
+<li><strong>定义：</strong> Agent Harness 是包裹在 LLM 外部的完整基础设施层，将纯文本输出的聊天模型转变为能执行实际操作的功能性 Agent。公式：<code>Harness = Tools + Knowledge + Observation + Action + Permissions</code></li>
+<li><strong>作用：</strong> 为模型提供"手"（工具执行）、"眼"（上下文观察）、"记忆"（持久化存储）和"安全边界"（权限控制）。模型本身只负责推理决策，Harness 负责所有实际操作。</li>
+<li><strong>使用场景：</strong> 任何需要 LLM 与外部环境交互的场景——代码编辑、文件管理、命令执行、网络搜索、多任务协调等。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于官方 README（基于 v0.1.0）
+# 最简单的使用方式 — 一条命令启动 Agent
+ANTHROPIC_API_KEY=your_key uv run oh -p &quot;Inspect this repository and list the top 3 refactors&quot;
+</code></pre>
+<h3 id="tool-system">工具系统（Tool System）</h3>
+<ul>
+<li><strong>定义：</strong> 工具是 Agent 与外部环境交互的唯一通道。每个工具是一个独立的异步函数，具有类型安全的输入/输出定义。</li>
+<li><strong>作用：</strong> 定义 Agent 的能力边界。所有 Agent 操作都必须通过工具完成，没有任何后门。模型通过 JSON Schema 理解工具的参数和用途。</li>
+<li><strong>使用场景：</strong> 文件读写、Shell 命令执行、代码搜索、Web 搜索、Jupyter Notebook 编辑、子 Agent 管理、MCP 协议调用等。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于官方 README 中的工具抽象（基于 v0.1.0）
+# 工具的核心特征：
+# 1. Pydantic 输入验证 — 结构化、类型安全的输入
+# 2. JSON Schema 自描述 — 模型自动理解工具参数
+# 3. 权限集成 — 执行前检查
+# 4. Hook 支持 — PreToolUse/PostToolUse 生命周期事件
+
+from pydantic import BaseModel, Field
+
+class ReadFileInput(BaseModel):
+    file_path: str = Field(description=&quot;The absolute path to the file to read&quot;)
+    offset: int | None = Field(default=None, description=&quot;Line number to start reading from&quot;)
+    limit: int | None = Field(default=None, description=&quot;Number of lines to read&quot;)
+</code></pre>
+<h3 id="skills-system">技能系统（Skills System）</h3>
+<ul>
+<li><strong>定义：</strong> 技能是以 Markdown 文件形式组织的领域知识包，在模型需要时按需加载到上下文中。</li>
+<li><strong>作用：</strong> 为模型提供特定领域的专家指导（如 Git 提交规范、代码审查流程、调试方法论等），不占用基础上下文窗口。</li>
+<li><strong>使用场景：</strong> 代码提交、代码审查、系统调试、实现规划、测试编写、代码简化、PDF 处理、Excel 操作等 40+ 个领域。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-markdown"># 基于官方 README（基于 v0.1.0）
+# 内置技能列表示例
+Available Skills:
+- commit: Create clean, well-structured git commits
+- review: Review code for bugs, security issues, and quality
+- debug: Diagnose and fix bugs systematically
+- plan: Design an implementation plan before coding
+- test: Write and run tests for code
+- simplify: Refactor code to be simpler and more maintainable
+</code></pre>
+<h3 id="permission-governance">权限治理（Permission Governance）</h3>
+<ul>
+<li><strong>定义：</strong> 多级权限控制系统，在 Agent 执行操作前进行安全检查，防止未经授权的文件修改、命令执行等危险操作。</li>
+<li><strong>作用：</strong> 在 Agent 自主性和安全性之间取得平衡。Default 模式要求用户确认写操作，Auto 模式跳过所有检查，Plan Mode 禁止所有写入。</li>
+<li><strong>使用场景：</strong> 日常开发（Default 模式）、沙箱环境（Auto 模式）、大规模重构前的安全审查（Plan Mode）。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-json">// 基于官方 README（基于 v0.1.0）
+// settings.json 中的路径级权限规则
+{
+  &quot;permission&quot;: {
+    &quot;mode&quot;: &quot;default&quot;,
+    &quot;path_rules&quot;: [
+      {&quot;pattern&quot;: &quot;/etc/*&quot;, &quot;allow&quot;: false}
+    ],
+    &quot;denied_commands&quot;: [&quot;rm -rf /&quot;, &quot;DROP TABLE *&quot;]
+  }
+}
+</code></pre>
+<h3 id="agent-swarm-coordination">多 Agent 协调（Swarm Coordination）</h3>
+<ul>
+<li><strong>定义：</strong> 子 Agent 生成与委派机制，允许主 Agent 将复杂任务拆分为多个子任务，分配给专门的子 Agent 并行处理。</li>
+<li><strong>作用：</strong> 提高复杂任务的处理效率，支持团队模式的分工协作。</li>
+<li><strong>使用场景：</strong> 多文件并行编辑、大规模代码重构、多角度代码审查、后台长时间运行的任务。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于官方 README（基于 v0.1.0）
+# 通过 Agent 工具和 Task 工具实现多 Agent 协作
+# 工具列表：
+# - Agent: 生成子 Agent
+# - SendMessage: 向子 Agent 发送消息
+# - TeamCreate/Delete: 创建/删除 Agent 团队
+# - TaskCreate/Get/List/Update/Stop/Output: 后台任务生命周期管理
+</code></pre>
+<h3 id="provider-compatibility">多模型兼容（Provider Compatibility）</h3>
+<ul>
+<li><strong>定义：</strong> 双 API 格式兼容层，同时支持 Anthropic 格式（默认）和 OpenAI 兼容格式，覆盖数十种 LLM 提供商。</li>
+<li><strong>作用：</strong> 打破模型提供商锁定，允许用户自由选择和切换后端模型，包括本地运行的 Ollama 模型。</li>
+<li><strong>使用场景：</strong> 使用不同模型进行成本优化、本地模型离线开发、多模型对比测试、企业内部网关接入。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于官方 README（基于 v0.1.0）
+# 使用 OpenAI 兼容格式连接 DashScope
+uv run oh --api-format openai \
+  --base-url &quot;https://dashscope.aliyuncs.com/compatible-mode/v1&quot; \
+  --api-key &quot;sk-xxx&quot; \
+  --model &quot;qwen3.5-flash&quot;
+
+# 或通过环境变量配置
+export OPENHARNESS_API_FORMAT=openai
+export OPENAI_API_KEY=sk-xxx
+export OPENHARNESS_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+export OPENHARNESS_MODEL=qwen3.5-flash
+uv run oh
+</code></pre>
+<h2 id="_15">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OpenHarness</th>
+<th>Claude Code</th>
+<th>OpenCode</th>
+<th>Cline</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>极简 Agent Harness 参考实现，Python，教育与研究导向</td>
+<td>Anthropic 官方商业产品，TypeScript，追求极致体验</td>
+<td>开源中性 Agent 层，Go 实现，模型无关</td>
+<td>VS Code 内嵌 Agent，专注 IDE 集成体验</td>
+</tr>
+<tr>
+<td><strong>实现语言</strong></td>
+<td>Python</td>
+<td>TypeScript</td>
+<td>Go</td>
+<td>TypeScript</td>
+</tr>
+<tr>
+<td><strong>代码规模</strong></td>
+<td>~11,733 行（163 文件）</td>
+<td>~512,664 行（1,884 文件）</td>
+<td>待验证</td>
+<td>待验证</td>
+</tr>
+<tr>
+<td><strong>开源协议</strong></td>
+<td>MIT</td>
+<td>非完全开源</td>
+<td>MIT</td>
+<td>Apache 2.0</td>
+</tr>
+<tr>
+<td><strong>GitHub Stars</strong></td>
+<td>~3,500+</td>
+<td>~71,500</td>
+<td>~120,000+</td>
+<td>待验证</td>
+</tr>
+<tr>
+<td><strong>工具数量</strong></td>
+<td>43</td>
+<td>~44</td>
+<td>待验证</td>
+<td>待验证</td>
+</tr>
+<tr>
+<td><strong>模型支持</strong></td>
+<td>Anthropic + OpenAI 兼容（15+ 提供商）</td>
+<td>仅 Anthropic Claude</td>
+<td>多模型（OpenAI、Anthropic、本地模型等）</td>
+<td>主要 Claude + OpenAI</td>
+</tr>
+<tr>
+<td><strong>界面形态</strong></td>
+<td>CLI + React TUI</td>
+<td>CLI + TUI</td>
+<td>CLI + TUI + Desktop</td>
+<td>VS Code 扩展</td>
+</tr>
+<tr>
+<td><strong>插件/技能生态</strong></td>
+<td>兼容 Claude Code Skills + Plugins</td>
+<td>原生 Skills + Plugins</td>
+<td>自有插件系统</td>
+<td>自有扩展系统</td>
+</tr>
+<tr>
+<td><strong>多 Agent 支持</strong></td>
+<td>内置 Swarm 协调</td>
+<td>内置子 Agent</td>
+<td>多会话并行</td>
+<td>单会话为主</td>
+</tr>
+<tr>
+<td><strong>MCP 支持</strong></td>
+<td>内置 MCP 客户端</td>
+<td>内置 MCP</td>
+<td>待验证</td>
+<td>待验证</td>
+</tr>
+<tr>
+<td><strong>生产就绪度</strong></td>
+<td>v0.1.0（极早期，不建议生产使用）</td>
+<td>商业级，生产可用</td>
+<td>活跃迭代中，可考虑生产使用</td>
+<td>稳定版本，可生产使用</td>
+</tr>
+<tr>
+<td><strong>学习难度</strong></td>
+<td>低（代码量极小，架构清晰）</td>
+<td>高（代码量巨大）</td>
+<td>中（Go 语言学习曲线）</td>
+<td>低（IDE 内使用）</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>学术研究、教育学习、快速原型、轻量脚本</td>
+<td>专业开发、大型项目</td>
+<td>多模型环境、成本敏感场景</td>
+<td>IDE 内日常开发</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>数据来源说明：</strong> OpenHarness 数据来自 GitHub README 和知乎专栏；Claude Code 数据来自知乎专栏代码对比；OpenCode Stars/Contributors 来自 OpenCode 官网和 Morph 对比文章（获取日期 2026-04-05）；Cline 数据来自 Cline VS Code Marketplace 页面和社区评测。标注"待验证"的维度因缺乏权威来源，未填写以确保数据准确性。[置信度：中 — 部分数据来自第三方报道，未直接从 GitHub API 验证]</p>
+</blockquote>
+<h2 id="_16">适用场景分析</h2>
+<h3 id="_17">最佳场景</h3>
+<ol>
+<li>
+<p><strong>AI Agent 架构研究与学习</strong> — OpenHarness 的极简代码量（11,733 行）和清晰的模块化架构，使其成为理解 AI Agent 内部机制的绝佳教材。对于想深入了解 Claude Code 或类似工具工作原理的开发者和研究者，OpenHarness 提供了一份完整可读的参考实现。</p>
+</li>
+<li>
+<p><strong>快速原型与概念验证</strong> — 当需要快速构建一个 AI Agent 原型来验证某个想法时，OpenHarness 的纯 Python 实现和丰富的工具集可以大幅降低开发门槛。自定义工具只需继承 <code>BaseTool</code> 类即可。</p>
+</li>
+<li>
+<p><strong>多模型对比与评估</strong> — OpenHarness 的双 API 格式兼容（Anthropic + OpenAI）使其成为天然的模型对比平台。可以在同一套工具和提示下，快速切换不同模型评估表现。</p>
+</li>
+<li>
+<p><strong>轻量级自动化脚本</strong> — 通过非交互模式（<code>-p</code> 参数）和 JSON/stream-json 输出格式，OpenHarness 可以作为 CI/CD 流水线或其他自动化系统中的智能组件使用。</p>
+</li>
+<li>
+<p><strong>Skills/Plugins 开发测试</strong> — 由于与 Claude Code 的 Skills 和 Plugins 格式兼容，OpenHarness 可以作为开发和测试 Skills/Plugins 的轻量级环境。</p>
+</li>
+</ol>
+<h3 id="_18">不适用场景</h3>
+<ol>
+<li>
+<p><strong>生产环境关键任务</strong> — v0.1.0 极早期版本，缺乏生产环境验证和长期稳定性数据。建议等待至少 v1.0 版本。替代方案：Claude Code（商业级）或 OpenCode（成熟开源）。</p>
+</li>
+<li>
+<p><strong>需要 IDE 深度集成的开发工作流</strong> — OpenHarness 是 CLI 工具，不提供 IDE 内嵌体验。替代方案：Cline（VS Code 扩展）或 Cursor（独立 IDE）。</p>
+</li>
+<li>
+<p><strong>大规模团队协作</strong> — 缺乏企业级的权限管理、审计日志和团队协作功能。替代方案：Claude Code Team Plan 或企业级解决方案。</p>
+</li>
+</ol>
+<h2 id="_19">优缺点深度分析</h2>
+<h3 id="_20">优势</h3>
+<ol>
+<li>
+<p><strong>极简代码量，极致可读性</strong> — 仅 11,733 行代码实现了 Claude Code 98% 的工具兼容（43/44）。这使得阅读和理解整个代码库成为可能，对于学习和研究具有巨大价值。</p>
+</li>
+<li>
+<p><strong>双 API 格式兼容</strong> — 同时支持 Anthropic 和 OpenAI 格式，覆盖 15+ 提供商（包括本地 Ollama），有效打破模型锁定。</p>
+</li>
+<li>
+<p><strong>生态兼容性</strong> — 与 Claude Code 的 Skills 和 Plugins 格式完全兼容，可直接复用现有生态资源。</p>
+</li>
+<li>
+<p><strong>MIT 开源协议</strong> — 最宽松的开源协议之一，允许商业使用、修改和分发，无附加限制。</p>
+</li>
+<li>
+<p><strong>Python 实现</strong> — 相比 TypeScript（Claude Code）和 Go（OpenCode），Python 在 AI/ML 社区拥有最广泛的用户基础，降低了学习和贡献门槛。</p>
+</li>
+<li>
+<p><strong>完整的测试覆盖</strong> — 114 个单元/集成测试 + 22 个 E2E 测试 + 12 个真实插件测试，对于 v0.1.0 版本来说测试覆盖相当完善。</p>
+</li>
+</ol>
+<h3 id="_21">劣势</h3>
+<ol>
+<li>
+<p><strong>极早期阶段</strong> — 仅发布 v0.1.0，缺乏生产环境验证，API 可能发生不兼容变更，Bug 密度可能较高。[置信度：高]</p>
+</li>
+<li>
+<p><strong>社区规模有限</strong> — ~3,500 Stars 与 OpenCode（120k+）和 Claude Code（71.5k+）差距巨大，社区贡献者和生态资源较少。[置信度：高]</p>
+</li>
+<li>
+<p><strong>缺乏独立文档站</strong> — 没有 docs.openharness.ai 等独立文档站点，所有文档都依赖 GitHub README，对新手不够友好。[置信度：高]</p>
+</li>
+<li>
+<p><strong>性能未知</strong> — 没有找到任何性能基准测试数据，在大规模代码库或长时间运行场景下的表现未知。[置信度：中]</p>
+</li>
+<li>
+<p><strong>缺少英文社区覆盖</strong> — 大部分社区讨论集中在中文社区（知乎、CSDN），英文社区的知名度和讨论度较低，可能影响国际化发展。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_22">风险点</h3>
+<ol>
+<li>
+<p><strong>项目可持续性风险</strong> — 作为学术实验室项目（HKUDS），长期维护取决于实验室的研究方向和资源投入。建议关注提交频率和 Issue 回复速度来判断项目健康度。</p>
+</li>
+<li>
+<p><strong>安全性风险</strong> — 作为 Agent 框架，涉及文件操作和命令执行，权限系统的安全性至关重要。虽然有多级权限模式，但 v0.1.0 的安全审计情况未知。建议在沙箱环境中首次使用。</p>
+</li>
+<li>
+<p><strong>与 Claude Code 的兼容性漂移</strong> — 如果 Claude Code 更新其 Skills/Plugins 格式，OpenHarness 可能需要跟进适配，存在兼容性维护成本。</p>
+</li>
+</ol>
+<h2 id="_23">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 兼容 12 个 Claude Code 官方插件（已验证），自有插件生态尚在萌芽阶段。[置信度：高]</li>
+<li><strong>第三方库支持：</strong> 通过 MCP（Model Context Protocol）可以接入外部工具服务器，但具体的第三方集成案例较少。[置信度：中]</li>
+<li><strong>企业采用案例：</strong> 截至 2026-04-05，未找到任何企业采用案例报道。这与项目极年轻（4 天）直接相关。[置信度：高]</li>
+<li><strong>文档质量：</strong> README 文档质量较高（包含快速入门、架构说明、代码示例、扩展指南），但缺乏独立的 API 参考文档、教程和架构深度指南。[置信度：高]</li>
+</ul>
+<h2 id="_24">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> ⚠️ v0.1.0 初始发布，缺乏生产环境稳定性数据。114 个测试通过是积极信号，但不足以证明生产就绪。[置信度：高]</li>
+<li><strong>性能表现：</strong> ❓ 未找到性能基准数据。支持流式输出和并行工具执行是正面指标，但在大型代码库中的实际表现未知。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 内置 Token 计数和成本追踪。支持 debug 模式（<code>-d/--debug</code>）。缺乏与主流监控工具（如 Prometheus、Grafana）的集成。[置信度：高]</li>
+<li><strong>故障恢复：</strong> 支持会话恢复（<code>/resume</code> 命令）和 API 指数退避重试。后台任务管理提供生命周期控制。但缺乏系统级的故障恢复机制（如崩溃恢复、状态持久化）。[置信度：中]</li>
+<li><strong>安全合规：</strong> 多级权限模式、路径级规则、命令黑名单、PreToolUse/PostToolUse Hook 提供了基本的安全框架。但作为 v0.1.0 项目，未经过安全审计。[置信度：中]</li>
+</ul>
+<h2 id="_25">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>必需：Python 基础、命令行使用、基本 Git 操作</li>
+<li>推荐：LLM API 概念（Prompt/Completion/Tool Use）、异步 Python（async/await）</li>
+<li>
+<p>加分：Pydantic 数据验证、React/Ink（如需自定义 TUI）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 1-2 小时即可完成安装并开始使用。Python 开发者可以在半天内理解核心架构。[置信度：高]</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 1-2 周可深入理解 Agent Loop、工具系统和权限机制。1 个月可开始开发自定义工具和插件。相比 Claude Code（代码量 44 倍），精通 OpenHarness 的门槛显著更低。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_26">总结与建议</h2>
+<p><strong>综合评价：</strong></p>
+<p>OpenHarness 是一个雄心勃勃且设计精巧的项目。它用极简的代码量（2.3%）实现了惊人的功能覆盖（98% 工具兼容），为 AI Agent 基础设施领域提供了一份难得的清晰参考。其核心价值在于<strong>教育与研究</strong>——让开发者能够阅读、理解、修改一个完整的 Agent 框架，这是 512,664 行的 Claude Code 无法提供的体验。</p>
+<p><strong>使用建议：</strong></p>
+<ol>
+<li><strong>学习和研究用途</strong>：强烈推荐。这是目前最适合理解 AI Agent 内部机制的开源项目。</li>
+<li><strong>个人开发工具</strong>：可以尝试，但建议在沙箱环境中使用，注意 v0.1.0 的潜在不稳定性。</li>
+<li><strong>生产环境</strong>：暂不推荐。建议至少等待 v1.0 稳定版本，并关注项目活跃度和社区反馈。</li>
+<li><strong>企业评估</strong>：可以纳入技术雷达的"评估"级别，持续跟踪但不急于采用。</li>
+</ol>
+<p><strong>关注指标：</strong></p>
+<ul>
+<li>GitHub Stars 和 Contributors 增长趋势</li>
+<li>提交频率和 Issue 响应速度</li>
+<li>v0.2.0/v0.3.0 版本的 API 变更幅度</li>
+<li>是否有企业采用案例出现</li>
+<li>安全审计和漏洞修复情况</li>
+</ul>
+<h2 id="_27">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> OpenHarness v0.1.0（2026-04-01 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-05</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/HKUDS/OpenHarness">GitHub - HKUDS/OpenHarness</a> — 主要信息来源（README、架构说明、代码示例）</li>
+<li><a href="https://zhuanlan.zhihu.com/p/2023517045422047369">知乎专栏 — OpenHarness：港大开源的轻量级 Agent 框架</a> — 代码量对比、架构设计解读</li>
+<li><a href="https://developer.aliyun.com/article/1723774">阿里云开发者社区 — Harness 驾驭工程是 AI 平权的必经之路？</a> — Harness 概念解析</li>
+<li><a href="https://gitcode.csdn.net/69d04d060a2f6a37c59ce0fa.html">CSDN GitCode — OpenHarness 详解</a> — 技术细节分析</li>
+<li><a href="https://gitcode.csdn.net/69bd56a854b52172bc62f563.html">CSDN GitCode — Agent Loop 深度解析</a> — OpenClaw Agent Loop 架构参考</li>
+<li><a href="https://morphllm.com/comparisons/opencode-vs-claude-code">Morph — OpenCode vs Claude Code</a> — 竞品对比数据</li>
+<li><a href="https://opencode.ai/">OpenCode 官网</a> — OpenCode Stars/Contributors 数据</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>
