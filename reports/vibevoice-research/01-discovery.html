@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeVoice - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">⚠️ **重要提示：** VibeVoice-TTS 的代码已于 2025-09-05 因防止滥用从 GitHub 仓库中移除。当前仓库中仅保留 VibeVoice-ASR（语音识别）和 VibeVoice-Realtime-0.5B（实时语音合成）的代码。项目官方声明："We do not recommend using VibeVoice in commercial or real-world applications without further testing and development."</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">官方资源</a></li>
+<li><a href="#_8" class="toc-h3">安装和使用</a></li>
+<li><a href="#_9" class="toc-h3">学术论文</a></li>
+<li><a href="#_10" class="toc-h3">社区资源</a></li>
+<li><a href="#_11" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>VibeVoice - 技术发现报告</h1>
+                        <div class="article-meta">⚠️ **重要提示：** VibeVoice-TTS 的代码已于 2025-09-05 因防止滥用从 GitHub 仓库中移除。当前仓库中仅保留 VibeVoice-ASR（语音识别）和 VibeVoice-Realtime-0.5B（实时语音合成）的代码。项目官方声明："We do not recommend using VibeVoice in commercial or real-world applications without further testing and development."</div>
+                    </header>
+                    <h1 id="vibevoice-">VibeVoice - 技术发现报告</h1>
+<blockquote>
+<p>⚠️ <strong>重要提示：</strong> VibeVoice-TTS 的代码已于 2025-09-05 因防止滥用从 GitHub 仓库中移除。当前仓库中仅保留 VibeVoice-ASR（语音识别）和 VibeVoice-Realtime-0.5B（实时语音合成）的代码。项目官方声明："We do not recommend using VibeVoice in commercial or real-world applications without further testing and development."</p>
+</blockquote>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> VibeVoice</li>
+<li><strong>官方地址：</strong> https://microsoft.github.io/VibeVoice/ （项目主页）</li>
+<li><strong>GitHub 仓库：</strong> https://github.com/microsoft/VibeVoice</li>
+<li><strong>当前版本：</strong> 无明确版本号标签（项目以滚动更新方式发布，最新代码基于 main 分支，最后推送 2026-04-09）</li>
+<li><strong>License：</strong> MIT License</li>
+<li><strong>主要编程语言：</strong> Python</li>
+<li><strong>首次发布日期：</strong> 2025 年 8 月 25 日（GitHub 仓库创建日期，最初包含 TTS 代码）[来源：GitHub API]</li>
+<li><strong>创建者/维护团队：</strong> Microsoft（微软），由 Microsoft 的语音 AI 研究团队开发和维护</li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>VibeVoice 是微软开源的前沿语音 AI 模型家族，包含长语音识别（ASR）、长文本转语音（TTS）和实时语音合成（Realtime TTS）三大模型，其中 VibeVoice-ASR 可在单次推理中处理长达 60 分钟的音频并输出结构化"谁在何时说了什么"的识别结果。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li><strong>VibeVoice-ASR 长语音识别（Long-form ASR）</strong> — 在单次推理中处理长达 60 分钟的音频（在 64K token 长度内），输出结构化的"谁（Who）、何时（When）、什么（What）"识别结果。支持 51 种语言，支持自定义热词（hotwords），已集成到 HuggingFace Transformers（2026 年 3 月）。基于 Qwen2.5 架构的约 8.3B 参数模型（28 层 Transformer，3584 隐藏维度），需约 18GB 显存运行。 [来源：GitHub README、项目主页、HuggingFace 文档、arXiv:2601.18184]</li>
+</ol>
+<!-- reviewed: P0 修正——VibeVoice-ASR 并非 1.5B 模型，而是约 8.3B-9B 参数模型（28 层 Transformer，3584 隐藏维度）。修正依据：HuggingFace 文档、Microsoft Tech Community 博客、arXiv:2601.18184。同时将"50+"修正为精确的"51"种语言 -->
+
+<ol>
+<li>
+<p><strong>VibeVoice-TTS 长文本转语音（Long-form Multi-speaker TTS）</strong> — 支持生成长达 90 分钟的多说话人语音，单次推理最多支持 4 个不同说话人，具有丰富的表现力和跨语言能力。该模型被 ICLR 2026 接收为 Oral 论文。<strong>代码已于 2025-09-05 因防止滥用从仓库中移除。</strong> [来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>VibeVoice-Realtime-0.5B 实时语音合成（Realtime TTS）</strong> — 轻量级 0.5B 参数实时 TTS 模型，首次可听延迟约 300ms，支持流式文本输入，稳健支持约 10 分钟的长语音生成。适合对话式交互场景。 [来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>连续语音分词器（Continuous Speech Tokenizers）</strong> — VibeVoice 的核心创新之一，包含声学分词器（Acoustic Tokenizer）和语义分词器（Semantic Tokenizer），以超低 7.5 Hz 帧率运行，为语音理解和生成提供统一的表示基础。 [来源：GitHub README、项目主页]</p>
+</li>
+<li>
+<p><strong>Next-Token Diffusion 框架</strong> — 结合大型语言模型（LLM）与扩散模型（Diffusion Head）的生成框架，LLM 负责 next-token 预测，扩散模型负责精细的声学生成，实现高质量、富有表现力的语音合成。 [来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>多语言支持（50+ Languages）</strong> — VibeVoice-ASR 支持 50 种以上语言的识别，VibeVoice-TTS 支持多语言语音合成和跨语言说话人迁移。 [来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>vLLM 推理加速支持</strong> — VibeVoice-ASR 支持通过 vLLM 进行高效推理加速，适合批量处理和部署场景。 [来源：GitHub README]</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> 37,943（截至 2026-04-09）[来源：GitHub API]</li>
+<li><strong>GitHub Forks：</strong> 4,375（截至 2026-04-09）[来源：GitHub API]</li>
+<li><strong>Contributors：</strong> Microsoft 语音 AI 研究团队主导开发，接受社区贡献 [来源：GitHub]</li>
+<li><strong>最近更新日期：</strong> 最后一次推送 2026-04-09 [来源：GitHub API]</li>
+<li><strong>未关闭 Issue：</strong> 132 个 [来源：GitHub API]</li>
+<li><strong>社区衍生项目：</strong></li>
+<li><strong>VibeVoice-ComfyUI</strong> — 社区开发的 ComfyUI 集成节点，将 VibeVoice 引入 ComfyUI 工作流 [来源：GitHub README]</li>
+<li><strong>vibevoice-community/VibeVoice</strong> — 社区 Fork 仓库，可能保留了 TTS 代码的快照 [来源：GitHub]</li>
+<li><strong>Vibing 输入法</strong> — 基于 VibeVoice-ASR 驱动的语音输入法应用 [来源：GitHub README]</li>
+<li><strong>学术认可：</strong> VibeVoice-TTS 被 ICLR 2026 接收为 Oral 论文 [来源：GitHub README]</li>
+<li><strong>商业集成：</strong> VibeVoice-ASR 已可在 Azure AI Foundry 上部署使用 [来源：GitHub README]</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> 语音 AI / 语音识别（ASR）/ 文本转语音（TTS）/ 多模态 AI</li>
+<li><strong>解决的核心问题：</strong> 现有语音 AI 模型在长音频处理上的能力不足——传统 ASR 模型（如 Whisper）需要将长音频分段处理导致上下文丢失和说话人混淆；传统 TTS 模型无法生成长时间、多说话人、富有表现力的连贯语音。VibeVoice 通过连续语音分词器和 next-token diffusion 框架实现端到端的长语音理解和生成。</li>
+<li><strong>替代/竞品技术：</strong></li>
+<li><strong>OpenAI Whisper</strong> — 开源 ASR 基准模型，但需分段处理长音频，无结构化说话人分离输出</li>
+<li><strong>ElevenLabs</strong> — 商业 TTS 服务，长语音和多说话人能力出色，但闭源且收费</li>
+<li><strong>ChatTTS</strong> — 开源中文 TTS 模型，专注自然语音合成，但长语音和多说话人能力有限</li>
+<li><strong>Fish Speech</strong> — 开源多语言 TTS，支持语音克隆，社区活跃</li>
+<li><strong>Google Universal Speech Model (USM)</strong> — Google 的多语言 ASR 模型</li>
+<li><strong>依赖的上游技术：</strong> PyTorch、HuggingFace Transformers、vLLM、Qwen2.5（底座 LLM）、扩散模型（Diffusion Models）</li>
+<li><strong>下游使用者/集成方：</strong> HuggingFace Transformers 用户、Azure AI Foundry 用户、ComfyUI 用户、Vibing 输入法用户、语音应用开发者</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">官方资源</h3>
+<ul>
+<li><a href="https://github.com/microsoft/VibeVoice">GitHub 仓库</a> — 源码、Issue、文档</li>
+<li><a href="https://microsoft.github.io/VibeVoice/">项目主页</a> — 演示示例、论文链接、功能介绍</li>
+<li><a href="https://huggingface.co/collections/microsoft/vibevoice">HuggingFace 模型页面</a> — 预训练模型下载和推理代码</li>
+</ul>
+<h3 id="_8">安装和使用</h3>
+<ul>
+<li><strong>pip 安装（ASR）：</strong> 通过 HuggingFace Transformers 集成使用</li>
+<li><strong>源码构建：</strong> <code>git clone https://github.com/microsoft/VibeVoice.git</code> 后按 README 指引安装</li>
+<li><strong>Azure AI Foundry：</strong> 企业级部署选项</li>
+</ul>
+<h3 id="_9">学术论文</h3>
+<ul>
+<li><a href="https://microsoft.github.io/VibeVoice/">ICLR 2026 论文（VibeVoice-TTS）</a> — Oral 论文，详细描述 next-token diffusion 框架</li>
+</ul>
+<h3 id="_10">社区资源</h3>
+<ul>
+<li><a href="https://github.com/microsoft/VibeVoice">VibeVoice-ComfyUI</a> — ComfyUI 集成节点</li>
+<li><a href="https://github.com/microsoft/VibeVoice">Vibing 输入法</a> — 基于 VibeVoice-ASR 的语音输入法</li>
+<li><a href="https://github.com/vibevoice-community/VibeVoice">vibevoice-community/VibeVoice</a> — 社区 Fork 仓库</li>
+</ul>
+<h2 id="_11">信息来源</h2>
+<ul>
+<li><a href="https://github.com/microsoft/VibeVoice">GitHub - microsoft/VibeVoice</a> — 主要信息来源（README、项目结构、Issue 统计）— 获取日期：2026-04-10</li>
+<li><a href="https://api.github.com/repos/microsoft/VibeVoice">GitHub API - microsoft/VibeVoice</a> — Stars（37,943）、Forks（4,375）、Issues（132）、创建日期（2025-08-25）等元数据 — 获取日期：2026-04-10</li>
+<li><a href="https://microsoft.github.io/VibeVoice/">VibeVoice 项目主页</a> — 演示示例、功能介绍、论文信息 — 获取日期：2026-04-10</li>
+<li><a href="https://huggingface.co/collections/microsoft/vibevoice">HuggingFace - VibeVoice Collection</a> — 模型下载和推理集成信息 — 获取日期：2026-04-10</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

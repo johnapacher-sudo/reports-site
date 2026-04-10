@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeIsland - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">"No subscription. No telemetry. No commercial intentions." — dev.to 文章中对项目定位的描述</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#hook-hook-mechanism" class="toc-h3">Hook 机制（Hook Mechanism）</a></li>
+<li><a href="#unix-domain-socket-unix-domain-socket-ipc" class="toc-h3">Unix Domain Socket 通信（Unix Domain Socket IPC）</a></li>
+<li><a href="#smart-popup-suppression" class="toc-h3">智能弹窗抑制（Smart Popup Suppression）</a></li>
+<li><a href="#notch-ui-notch-ui-pattern" class="toc-h3">Notch UI 模式（Notch UI Pattern）</a></li>
+<li><a href="#askuserquestion-quick-reply" class="toc-h3">AskUserQuestion 快速回复（Quick Reply）</a></li>
+<li><a href="#subagent-tracking" class="toc-h3">子代理追踪（Subagent Tracking）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h3">综合评价</a></li>
+<li><a href="#_27" class="toc-h3">使用建议</a></li>
+<li><a href="#_28" class="toc-h3">替代方案推荐</a></li>
+<li><a href="#_29" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>CodeIsland - 深度分析报告</h1>
+                        <div class="article-meta">"No subscription. No telemetry. No commercial intentions." — dev.to 文章中对项目定位的描述</div>
+                    </header>
+                    <h1 id="codeisland-">CodeIsland - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025-2026 年间，AI 编程助手（AI Coding Agent）迅速普及。Claude Code、OpenAI Codex、Gemini CLI 等命令行 AI 编程工具成为开发者的日常工具。与传统的 IDE 插件（如 GitHub Copilot 的 VS Code 扩展）不同，这些新一代工具以终端为主要交互界面，通过多轮对话和工具调用完成编程任务。</p>
+<p>这带来了一个新问题：<strong>多 AI 编程助手并发运行时的状态监控和上下文切换问题</strong>。当开发者同时运行多个 Claude Code、Codex 或 Gemini CLI 会话时——分别在不同终端标签页中处理不同任务——开发者需要频繁切换终端窗口以检查进度、审批权限请求、回答 AI 提出的问题。这种手动切换极其低效，且容易遗漏关键通知。</p>
+<p>同时，macOS 的刘海（Notch / Dynamic Island）区域在 MacBook Pro 2021 及之后机型上一直是一个视觉上被浪费的空间。苹果自身的 Dynamic Island 功能仅限于 iPhone，MacBook 上的 Notch 区域除了显示摄像头状态灯之外，没有系统级的交互式利用。这为第三方工具提供了一个天然的 UI 展示区域——不影响正常工作区，又始终可见。</p>
+<h3 id="_3">创立动机</h3>
+<p>CodeIsland 的创建者 KrisYing（@krisying）是一位独立开发者。其灵感来源于 @farouqaldori 开发的 claude-island 项目——一个将 Claude Code 的状态信息显示在 MacBook 刘海区域的工具。</p>
+<p>KrisYing 的核心动机是：</p>
+<ol>
+<li><strong>将单一工具支持扩展为多工具支持</strong> — claude-island 仅支持 Claude Code，而现实中开发者可能同时使用多种 AI 编程工具（Codex、Gemini CLI、Cursor 等）。</li>
+<li><strong>解决多会话并发的监控痛点</strong> — 当同时运行 3-5 个 AI 编程会话时，手动切换终端窗口检查状态极为低效。</li>
+<li><strong>将被动通知变为主动交互</strong> — 不仅显示状态，还允许在 Notch 面板中直接回答 AI 的问题（如 Claude Code 的 AskUserQuestion）、审批权限请求。</li>
+<li><strong>零侵入性 UI</strong> — 利用 MacBook Notch 区域作为显示面板，不占用额外的屏幕空间或窗口位置。</li>
+</ol>
+<blockquote>
+<p>"No subscription. No telemetry. No commercial intentions." — dev.to 文章中对项目定位的描述</p>
+</blockquote>
+<h3 id="_4">发展历程</h3>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>事件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2026-04-05</td>
+<td>官方介绍文章发布</td>
+<td>dev.to 上发布两篇文章介绍 CodeIsland 的核心功能和 Buddy 系统</td>
+</tr>
+<tr>
+<td>2026-04-06</td>
+<td>GitHub 仓库创建</td>
+<td>项目公开发布，wxtsky/CodeIsland 和 xmqywx/CodeIsland 同步镜像</td>
+</tr>
+<tr>
+<td>2026-04-07</td>
+<td>v1.0.8 发布</td>
+<td>新增 GitHub Copilot CLI 支持（第 9 个 AI 工具）</td>
+</tr>
+<tr>
+<td>2026-04-08</td>
+<td>快速迭代期</td>
+<td>连续发布多个版本，修复问题、增加功能</td>
+</tr>
+<tr>
+<td>2026-04-09</td>
+<td>v1.0.16 发布</td>
+<td>实现开发者 ID 签名 + 公证（Notarization），解决 Gatekeeper 警告</td>
+</tr>
+<tr>
+<td>2026-04-09</td>
+<td>v1.0.17 发布</td>
+<td>当前最新版本，新增多源会话发现和 PID 复用保护</td>
+</tr>
+<tr>
+<td>2026-04-09</td>
+<td>Homebrew Cask 上架</td>
+<td>支持通过 <code>brew install --cask codeisland</code> 一键安装</td>
+</tr>
+</tbody>
+</table>
+<p>项目在发布仅 4 天内即获得 682 Stars、75 Forks，增长势头强劲。[来源：GitHub API, 2026-04-10]</p>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>CodeIsland 的设计可以用三个关键词概括：</p>
+<p><strong>1. 零侵入（Zero Intrusion）</strong></p>
+<p>CodeIsland 的 UI 完全嵌入 MacBook 的刘海区域。收起时仅显示微小状态指示器（几乎不可见），展开时变为完整控制面板。它不创建额外的窗口、不占用菜单栏空间、不干扰正常工作区。开发者可以在全屏模式下使用，Notch 面板仍然可用。</p>
+<p><strong>2. Hook 驱动（Hook-Driven）</strong></p>
+<p>CodeIsland 不修改任何 AI 工具的源代码，而是通过各工具提供的 Hook 机制捕获事件。例如 Claude Code 的 <code>~/.claude/hooks/</code> 配置、Codex 的 hook 系统等。这种设计确保了与 AI 工具的松耦合——AI 工具更新时不需要修改 CodeIsland 本身。</p>
+<p><strong>3. 纯本地（Fully Local）</strong></p>
+<p>所有数据传输和处理都在本地完成。CodeIsland 不向任何外部服务器发送数据，不包含遥测（Telemetry）或分析（Analytics）功能。唯一的外部网络请求是通过 Anthropic OAuth API 查询使用量（且认证令牌从 macOS Keychain 读取，不经过 CodeIsland）。</p>
+<h3 id="_7">核心算法/机制</h3>
+<p>CodeIsland 的核心工作机制基于以下流程：</p>
+<pre><code>AI 工具产生事件 → Hook 捕获事件 → Bridge 二进制序列化 → Unix Socket 传输 → 主应用解析 → UI 更新
+</code></pre>
+<p><strong>Hook 机制：</strong></p>
+<p>CodeIsland 在每个支持的 AI 工具的 hook 配置中注册一个命令行调用。当 AI 工具产生事件（如会话开始、任务完成、请求权限、提出问题等）时，hook 触发 <code>codeisland-bridge</code> 命令行工具。</p>
+<p><strong>Bridge 二进制（codeisland-bridge）：</strong></p>
+<p><code>codeisland-bridge</code> 是一个约 86KB 的原生 Swift 二进制文件，作为 hook 命令被执行。它的职责是：</p>
+<ol>
+<li>接收 hook 传入的事件数据（通过 stdin 或命令行参数）</li>
+<li>将事件数据序列化</li>
+<li>通过 Unix Domain Socket（<code>/tmp/codeisland-&lt;uid&gt;.sock</code>）发送给 CodeIsland 主应用</li>
+</ol>
+<pre><code>codeisland-bridge 大小：~86KB（universal binary, arm64 + x86_64）
+Socket 路径：/tmp/codeisland-&lt;uid&gt;.sock（uid 为当前用户 ID）
+</code></pre>
+<p><strong>Unix Domain Socket 通信：</strong></p>
+<p>主应用启动时创建 Unix Domain Socket 监听。bridge 二进制作为客户端连接该 socket，将序列化后的事件数据写入。主应用在独立线程中读取 socket 数据，解析后更新 SwiftUI 界面。</p>
+<h3 id="_8">数据流/执行流程</h3>
+<p>以下是 Claude Code 会话中，AI 请求权限时的完整数据流：</p>
+<pre><code>1. Claude Code 运行中，准备执行 Bash 命令
+   ↓
+2. Claude Code 触发 PreToolUse hook
+   ↓
+3. Hook 配置中的命令被执行：
+   codeisland-bridge --event permission-request --session &lt;id&gt; --data {...}
+   ↓
+4. codeisland-bridge 连接 Unix Socket /tmp/codeisland-&lt;uid&gt;.sock
+   ↓
+5. 序列化的事件数据通过 Socket 发送
+   ↓
+6. CodeIsland 主应用接收事件
+   ↓
+7. 检测当前终端焦点状态（智能弹窗抑制）
+   ↓
+8a. 如果会话在后台 → Notch 面板弹出通知 + 可操作按钮
+8b. 如果会话在前台 → 仅更新状态，不弹出（避免干扰）
+   ↓
+9. 用户在 Notch 面板中点击&quot;允许&quot;按钮
+   ↓
+10. CodeIsland 通过 cmux send（或 AppleScript）将响应发送到对应终端
+   ↓
+11. Claude Code 收到权限审批，继续执行
+</code></pre>
+<p><strong>智能弹窗抑制（Smart Popup Suppression）</strong> 是数据流中的关键决策节点。CodeIsland 检测用户当前正在查看的终端标签页，仅对不可见的会话弹出通知。已支持的终端及检测粒度：</p>
+<table>
+<thead>
+<tr>
+<th>终端</th>
+<th>检测粒度</th>
+<th>检测方式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cmux</td>
+<td>工作区级别</td>
+<td>cmux 内部状态</td>
+</tr>
+<tr>
+<td>iTerm2</td>
+<td>会话级别</td>
+<td>AppleScript</td>
+</tr>
+<tr>
+<td>Ghostty</td>
+<td>窗口级别</td>
+<td>AppleScript</td>
+</tr>
+<tr>
+<td>Terminal.app</td>
+<td>标签级别</td>
+<td>AppleScript</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>CodeIsland 的架构分为四个主要层次：</p>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│              Notch UI 层（SwiftUI）                       │
+│  状态指示器 / 展开面板 / 会话卡片 / Buddy 展示           │
+├──────────────────────────────────────────────────────────┤
+│              应用逻辑层（App Logic）                      │
+│  会话管理 / 事件分发 / 弹窗抑制 / 终端跳转              │
+├──────────────────────────────────────────────────────────┤
+│              IPC 通信层（Inter-Process Communication）    │
+│  Unix Domain Socket 服务端 / 事件解析 / 序列化          │
+├──────────────────────────────────────────────────────────┤
+│              Bridge 层（Hook Integration）                │
+│  codeisland-bridge / Hook 安装器 / 多工具适配            │
+└──────────────────────────────────────────────────────────┘
+         ↕ 外部交互
+┌──────────────────────────────────────────────────────────┐
+│              外部系统层                                   │
+│  AI 工具 Hooks / 终端模拟器 / macOS Keychain             │
+│  Anthropic OAuth API / AppleScript                       │
+└──────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>Notch UI 模块</strong> — 基于 SwiftUI 构建的 Notch 区域 UI 组件。收起时显示微小状态指示器（如活跃会话数量、颜色编码的工具标识），展开时显示完整控制面板（包含会话列表、子代理任务、Buddy 信息等）。利用 macOS 原生 UI 能力实现流畅的展开/收起动画。</p>
+</li>
+<li>
+<p><strong>会话管理模块（Session Manager）</strong> — 管理所有活跃的 AI 编程会话。每个会话包含：会话 ID、关联的 AI 工具类型、PID（进程 ID）、当前状态（运行中/等待输入/已完成）、关联的终端标签页信息。v1.0.17 新增了 PID 复用保护机制，防止因操作系统 PID 复用导致的会话混淆。</p>
+</li>
+<li>
+<p><strong>事件分发模块（Event Dispatcher）</strong> — 接收来自 Unix Domain Socket 的原始事件数据，解析事件类型（会话开始、状态更新、权限请求、AskUserQuestion、子代理创建等），分发给对应的处理器。采用事件驱动架构，确保 UI 更新的实时性。</p>
+</li>
+<li>
+<p><strong>Bridge 二进制（codeisland-bridge）</strong> — 独立的轻量级命令行工具（~86KB），作为 hook 命令被 AI 工具调用。负责将 hook 事件数据通过 Unix Socket 转发给主应用。Universal binary（arm64 + x86_64）确保在 Intel 和 Apple Silicon Mac 上均可运行。</p>
+</li>
+<li>
+<p><strong>Hook 安装器（Hook Installer）</strong> — 负责在各 AI 工具的 hook 配置中注册 codeisland-bridge。支持的 AI 工具及其 hook 配置位置：</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>AI 工具</th>
+<th>Hook 配置位置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Claude Code</td>
+<td><code>~/.claude/hooks/</code></td>
+</tr>
+<tr>
+<td>Codex（OpenAI）</td>
+<td>Codex hook 配置</td>
+</tr>
+<tr>
+<td>Gemini CLI</td>
+<td>Gemini CLI hook 配置</td>
+</tr>
+<tr>
+<td>Cursor</td>
+<td>Cursor hook 配置</td>
+</tr>
+<tr>
+<td>Qoder</td>
+<td>Qoder hook 配置</td>
+</tr>
+<tr>
+<td>Factory</td>
+<td>Factory hook 配置</td>
+</tr>
+<tr>
+<td>CodeBuddy</td>
+<td>CodeBuddy hook 配置</td>
+</tr>
+<tr>
+<td>OpenCode</td>
+<td>OpenCode hook 配置</td>
+</tr>
+<tr>
+<td>GitHub Copilot CLI</td>
+<td>Copilot CLI hook 配置</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p><strong>终端集成模块（Terminal Integration）</strong> — 通过 AppleScript 和终端特定的 API 实现终端检测和跳转。负责：①检测当前聚焦的终端标签页（用于智能弹窗抑制）；②实现一键跳转到指定会话的终端标签页；③将用户在 Notch 面板中的操作（如权限审批、问题回答）发送到对应的终端。</p>
+</li>
+<li>
+<p><strong>使用量监控模块（Usage Monitor）</strong> — 通过 Anthropic OAuth API 直接读取 Claude 的使用量数据（5 小时和 7 天使用百分比）。认证令牌从 macOS Keychain 读取（不经过 CodeIsland 本身），API 调用直接从用户机器发起，确保安全性。</p>
+</li>
+<li>
+<p><strong>Buddy 系统模块</strong> — 集成 Claude Code 的 <code>/buddy</code> 功能。使用 Bun.hash + Mulberry32 算法（与 Claude Code 相同的算法）根据用户信息计算伙伴属性：种类、稀有度、属性值和个性特征。配有像素风 ASCII 艺术图案展示。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>CodeIsland 的扩展主要通过以下方式实现：</p>
+<p><strong>1. 新 AI 工具支持</strong></p>
+<p>添加新的 AI 工具支持需要：①了解该工具的 hook 机制；②在 Hook 安装器中添加对应的配置逻辑；③在事件分发模块中添加该工具特有事件类型的解析。项目开源（MIT License），社区可以通过 PR 提交新工具的支持。</p>
+<p><strong>2. 新终端支持</strong></p>
+<p>添加新的终端模拟器支持需要：①了解该终端的 AppleScript 接口或其他检测方式；②在终端集成模块中添加对应的检测逻辑。当前已支持 cmux、iTerm2、Ghostty、Terminal.app，还有 Warp、VS Code 等 5+ 终端在部分支持列表中。</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="hook-hook-mechanism">Hook 机制（Hook Mechanism）</h3>
+<ul>
+<li><strong>定义：</strong> CodeIsland 利用各 AI 编程工具提供的 Hook（钩子）接口，在特定事件发生时执行自定义命令。Hook 是一种事件回调机制——工具在执行关键操作时（如会话开始、请求权限、完成任务），会调用预先注册的外部命令。</li>
+<li><strong>作用：</strong> Hook 机制是 CodeIsland 实现非侵入式监控的关键。它不需要修改 AI 工具的源代码或配置文件的核心内容，仅在 hook 配置中添加一行命令调用。当 AI 工具更新时，hook 接口保持稳定，CodeIsland 无需同步修改。</li>
+<li><strong>使用场景：</strong> Claude Code 的 hook 配置位于 <code>~/.claude/hooks/</code> 目录。CodeIsland 在安装时自动在配置中添加对 <code>codeisland-bridge</code> 的调用。此后每次 Claude Code 产生事件，hook 自动触发 bridge。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-json">// Claude Code hooks 配置示例
+// 来源：基于 GitHub README 和 dev.to 文章描述
+{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;codeisland-bridge --event pre-tool-use --session $CLAUDE_SESSION_ID&quot;
+          }
+        ]
+      }
+    ],
+    &quot;PostToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;codeisland-bridge --event post-tool-use --session $CLAUDE_SESSION_ID&quot;
+          }
+        ]
+      }
+    ]
+  }
+}
+</code></pre>
+<h3 id="unix-domain-socket-unix-domain-socket-ipc">Unix Domain Socket 通信（Unix Domain Socket IPC）</h3>
+<ul>
+<li><strong>定义：</strong> Unix Domain Socket 是一种进程间通信（IPC）机制，允许同一台机器上的两个进程通过文件系统路径（如 <code>/tmp/codeisland-&lt;uid&gt;.sock</code>）建立双向通信通道。它比网络 Socket（TCP/UDP）更高效，因为数据不需要经过网络协议栈。</li>
+<li><strong>作用：</strong> CodeIsland 使用 Unix Domain Socket 作为 bridge 二进制和主应用之间的通信通道。bridge 作为客户端连接 socket，主应用作为服务端监听。这种设计确保了事件传递的低延迟和高可靠性。</li>
+<li><strong>使用场景：</strong> 每次 AI 工具产生事件时，bridge 二进制在毫秒级内将事件通过 socket 发送给主应用。主应用的事件循环持续监听 socket，接收到数据后立即更新 UI。Socket 路径包含用户 UID，确保多用户环境下不会冲突。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-swift">// Unix Domain Socket 服务端监听示例（Swift 伪代码）
+// 来源：基于 dev.to 文章描述的架构
+// Socket 路径：/tmp/codeisland-&lt;uid&gt;.sock
+
+import Foundation
+
+class SocketServer {
+    private var socketFD: Int32 = -1
+
+    func start() throws {
+        let uid = getuid()
+        let socketPath = &quot;/tmp/codeisland-\(uid).sock&quot;
+
+        // 创建 Unix Domain Socket
+        socketFD = socket(AF_UNIX, SOCK_STREAM, 0)
+
+        // 绑定到文件路径
+        var addr = sockaddr_un()
+        addr.sun_family = sa_family_t(AF_UNIX)
+        socketPath.withCString { path in
+            strncpy(&amp;addr.sun_path.0, path, MemoryLayout.size(ofValue: addr.sun_path))
+        }
+
+        bind(socketFD, sockaddr_cast(&amp;addr), socklen_t(MemoryLayout.size(ofValue: addr)))
+        listen(socketFD, 5)
+
+        // 在独立线程中接受连接并读取数据
+        DispatchQueue.global().async {
+            self.acceptLoop()
+        }
+    }
+
+    private func acceptLoop() {
+        while true {
+            let clientFD = accept(socketFD, nil, nil)
+            if clientFD &gt; 0 {
+                // 读取事件数据并分发给主线程更新 UI
+                self.handleClient(clientFD)
+            }
+        }
+    }
+}
+</code></pre>
+<h3 id="smart-popup-suppression">智能弹窗抑制（Smart Popup Suppression）</h3>
+<ul>
+<li><strong>定义：</strong> 一种基于终端焦点检测的通知过滤机制。CodeIsland 检测用户当前正在查看的终端标签页，仅对不可见的会话弹出通知，对当前正在查看的会话仅静默更新状态。</li>
+<li><strong>作用：</strong> 解决多会话并发时通知轰炸的问题。如果没有弹窗抑制，当 5 个 Claude Code 会话同时运行时，每个会话的每个事件都会弹出通知，严重干扰当前工作。智能抑制确保只弹出真正需要用户关注的通知。</li>
+<li><strong>使用场景：</strong> 开发者在 cmux 工作区 A 中查看 Claude Code 会话 1 的输出，此时会话 2（在工作区 B 中）请求权限。CodeIsland 检测到工作区 A 是当前焦点，因此会话 2 的权限请求会弹出通知；而会话 1 的状态更新则静默进行。</li>
+</ul>
+<h3 id="notch-ui-notch-ui-pattern">Notch UI 模式（Notch UI Pattern）</h3>
+<ul>
+<li><strong>定义：</strong> 将 MacBook 的刘海区域作为可交互 UI 面板的设计模式。收起时显示微小状态指示器（几乎不占用视觉空间），点击或悬停时展开为完整控制面板。</li>
+<li><strong>作用：</strong> 提供零侵入性的 UI 体验。开发者不需要为监控工具分配额外的屏幕空间或窗口位置。Notch 区域本来就是"不可使用"的区域（被摄像头占据），CodeIsland 将其周围的空闲区域转化为功能性 UI。</li>
+<li><strong>使用场景：</strong> 开发者在全屏模式下使用 Xcode 编写代码，同时在后台运行 3 个 Claude Code 会话。Notch 区域显示 3 个小圆点（活跃会话指示器），当某个会话请求权限时，对应圆点闪烁并展开面板。开发者点击"允许"后，面板自动收起，无需离开当前工作。</li>
+</ul>
+<h3 id="askuserquestion-quick-reply">AskUserQuestion 快速回复（Quick Reply）</h3>
+<ul>
+<li><strong>定义：</strong> 当 Claude Code 通过 AskUserQuestion 机制向用户提出多选问题时，CodeIsland 直接在 Notch 面板中显示选项按钮，用户点击即可将答案发送到对应终端。</li>
+<li><strong>作用：</strong> 消除了"切换到对应终端 → 找到问题 → 输入答案"的多步操作，将交互步骤从 3-4 步减少到 1 步（直接点击按钮）。</li>
+<li><strong>使用场景：</strong> Claude Code 在会话 3 中提出问题："Which approach do you prefer? A) Refactor B) New module"。CodeIsland 在 Notch 面板中显示两个按钮。用户点击"B) New module"，CodeIsland 通过 <code>cmux send</code> 将答案发送到会话 3 的终端。</li>
+</ul>
+<h3 id="subagent-tracking">子代理追踪（Subagent Tracking）</h3>
+<ul>
+<li><strong>定义：</strong> 当 Claude Code 生成子代理（Subagent）时，CodeIsland 实时显示带有闪电徽章的子代理任务列表和可折叠的详情视图。</li>
+<li><strong>作用：</strong> 让开发者了解 AI 编程助手的内部工作状态——知道 AI 正在并行执行哪些子任务，每个子任务的进度如何。这对于长时间运行的复杂任务特别有价值。</li>
+<li><strong>使用场景：</strong> Claude Code 在执行一个大规模重构任务时，生成了 3 个子代理分别处理不同模块的修改。CodeIsland 在 Notch 面板中显示 3 个子代理卡片，每个带有闪电图标和当前状态。开发者可以展开某个子代理查看详情，了解其正在执行的具体操作。</li>
+</ul>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>CodeIsland</th>
+<th>claude-island</th>
+<th>AgentNotch</th>
+<th>手动终端切换</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>多工具 Notch 监控面板</td>
+<td>Claude Code 专用 Notch 工具</td>
+<td>多工具 Notch/菜单栏监控</td>
+<td>无工具辅助</td>
+</tr>
+<tr>
+<td>开源</td>
+<td>是（MIT）</td>
+<td>是（Apache 2.0）</td>
+<td>是（MIT）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>定价</td>
+<td>免费</td>
+<td>免费</td>
+<td>免费</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>AI 工具支持</td>
+<td>9 种（Claude Code、Codex、Gemini CLI、Cursor、Qoder、Factory、CodeBuddy、OpenCode、GitHub Copilot CLI）</td>
+<td>1 种（仅 Claude Code）</td>
+<td>2 种（Claude Code、OpenAI Codex）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>监控方式</td>
+<td>Hook 机制 + Unix Socket</td>
+<td>Hook 机制 + Unix Socket</td>
+<td>OTLP/HTTP（端口 4318）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>权限审批</td>
+<td>支持（Notch 面板内操作）</td>
+<td>支持</td>
+<td>不明确</td>
+<td>需切换到对应终端</td>
+</tr>
+<tr>
+<td>问题回答</td>
+<td>支持（AskUserQuestion 快速回复）</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>需切换到对应终端</td>
+</tr>
+<tr>
+<td>子代理追踪</td>
+<td>支持（闪电徽章 + 详情）</td>
+<td>不支持</td>
+<td>支持（Real-Time Tool Tracking）</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>Token/费用监控</td>
+<td>支持（Claude 使用量百分比）</td>
+<td>不支持</td>
+<td>支持（Token &amp; Cost Monitoring）</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>智能弹窗抑制</td>
+<td>支持（cmux/iTerm2/Ghostty/Terminal.app）</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>Buddy 系统</td>
+<td>支持</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>终端跳转</td>
+<td>支持（一键跳转到对应标签页）</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>手动查找</td>
+</tr>
+<tr>
+<td>UI 位置</td>
+<td>MacBook Notch</td>
+<td>MacBook Notch</td>
+<td>Notch（无 Notch 时回落到菜单栏）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>系统要求</td>
+<td>macOS 14.0+（Sonoma）</td>
+<td>macOS 15.6+</td>
+<td>macOS 14.0+（Sonoma）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>代码签名</td>
+<td>开发者 ID 签名 + 公证</td>
+<td>不明确</td>
+<td>不明确</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>遥测/分析</td>
+<td>无</td>
+<td>Mixpanel（匿名，仅启动和会话事件）</td>
+<td>无（100% 本地）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>安装方式</td>
+<td>Homebrew Cask / DMG / 源码构建</td>
+<td>源码构建 / Release 下载</td>
+<td>Homebrew Cask</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>682 [来源：GitHub API, 2026-04-10]</td>
+<td>~100+ [来源：GitHub 搜索估算]</td>
+<td>~200+ [来源：GitHub 搜索估算]</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>社区活跃度</td>
+<td>高（4 天 682 Stars，快速迭代）</td>
+<td>低（功能较少，更新不频繁）</td>
+<td>中（持续更新中）</td>
+<td>不适用</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低（安装即用，自动配置）</td>
+<td>低（安装即用）</td>
+<td>低（安装即用）</td>
+<td>无</td>
+</tr>
+<tr>
+<td>主要编程语言</td>
+<td>Swift</td>
+<td>Swift</td>
+<td>Swift</td>
+<td>不适用</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>数据来源说明：</strong> CodeIsland 数据来自 GitHub API（2026-04-10）；claude-island 数据来自 GitHub README 和仓库页面；AgentNotch 数据来自 GitHub README 和仓库页面。claude-island 和 AgentNotch 的 Stars 数为 GitHub 搜索估算值，精确数据标注为待验证。</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>多 AI 编程会话并发监控</strong> — 当开发者同时运行 3 个以上 Claude Code 或其他 AI 编程会话时，CodeIsland 提供一目了然的状态总览。每个会话的状态、进度和请求类型以颜色编码和图标形式显示在 Notch 面板中，无需切换终端标签页。这是 CodeIsland 最核心的使用场景。</p>
+</li>
+<li>
+<p><strong>AI 任务自动化批处理</strong> — 开发者在 cmux 中配置多个工作区，每个工作区运行一个 AI 编程任务（如不同模块的 Bug 修复、不同文件的代码重构）。CodeIsland 的智能弹窗抑制确保只弹出需要用户操作的会话通知，其他会话的进度更新静默进行。当某个会话需要审批权限或回答问题时，Notch 面板弹出可操作的通知。</p>
+</li>
+<li>
+<p><strong>Claude 使用量管理</strong> — 通过 Notch 面板直接查看 Claude 的 5 小时和 7 天使用百分比，避免在不知不觉中超额使用。对于使用 Claude Pro 或 Max 订阅的开发者特别有价值。</p>
+</li>
+<li>
+<p><strong>团队开发中的 AI 辅助协调</strong> — 在团队开发中，多个开发者可能各自运行 AI 编程助手处理不同任务。CodeIsland 的 Notch 面板提供了一种非侵入式的方式监控所有 AI 任务的进展，适合团队 Lead 或 Tech Lead 角色。</p>
+</li>
+<li>
+<p><strong>学习和探索 AI 编程工具</strong> — 对于刚开始使用 Claude Code 等 AI 编程工具的开发者，CodeIsland 的 Buddy 系统和子代理追踪功能提供了一种有趣的学习体验，增加了使用 AI 工具的趣味性。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>非 macOS 平台</strong> — CodeIsland 仅支持 macOS 14.0+（Sonoma），且 UI 依赖 MacBook 的 Notch 硬件。Windows 和 Linux 用户无法使用。即使是没有 Notch 的 Mac 机型，体验也会大打折扣。</p>
+</li>
+<li>
+<p><strong>仅使用单一 AI 工具且单会话</strong> — 如果开发者仅运行一个 Claude Code 会话，且该会话就在当前终端标签页中可见，CodeIsland 的多会话监控和智能弹窗抑制功能无法发挥价值。直接在终端中操作更为简单。</p>
+</li>
+<li>
+<p><strong>不需要实时监控的批量任务</strong> — 如果 AI 编程任务都是长时间运行、不需要人工干预的自动化任务，CodeIsland 的实时监控和交互功能（权限审批、问题回答）的价值有限。此类场景更适合日志文件或 CI/CD 流水线。</p>
+</li>
+<li>
+<p><strong>对企业安全合规有严格要求</strong> — 虽然 CodeIsland 不发送遥测数据，但它需要读取 macOS Keychain 中的 Anthropic OAuth 令牌来查询使用量。对于有严格安全策略的企业环境，这可能需要额外的安全审批。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>真正的零侵入 UI</strong> — 利用 MacBook Notch 区域作为 UI 面板是 CodeIsland 最独特的优势。开发者不需要为监控工具分配额外的窗口、面板或菜单栏空间。在全屏模式下工作时，Notch 面板仍然可用。这是其他竞品（如菜单栏应用）无法比拟的。[置信度：高]</p>
+</li>
+<li>
+<p><strong>广泛的多工具支持（9 种）</strong> — 相比 claude-island（仅 1 种）和 AgentNotch（2 种），CodeIsland 支持 9 种 AI 编程工具，覆盖了当前主流的几乎所有命令行 AI 编程助手。这意味着开发者无论使用哪种工具，都能在同一个 Notch 面板中统一监控。[置信度：高]</p>
+</li>
+<li>
+<p><strong>主动交互而非被动显示</strong> — CodeIsland 不仅显示状态，还允许在 Notch 面板中直接操作：审批权限、回答问题、跳转到对应终端。这比纯状态显示工具（如 claude-island）提供了更高的工作效率提升。[置信度：高]</p>
+</li>
+<li>
+<p><strong>智能弹窗抑制</strong> — 这是 CodeIsland 相对于简单通知系统的关键差异化特性。通过检测终端焦点状态，仅在必要时弹出通知，避免了多会话并发时的通知轰炸。cmux 的工区级别检测尤其精确。[置信度：高]</p>
+</li>
+<li>
+<p><strong>完全本地、无遥测</strong> — 不发送任何数据到外部服务器，不包含 Mixpanel、Google Analytics 等追踪 SDK。认证令牌直接从 macOS Keychain 读取，不经过 CodeIsland。对于注重隐私的开发者来说，这是一个重要优势。[置信度：高]</p>
+</li>
+<li>
+<p><strong>开源且 MIT 许可</strong> — 社区可以自由使用、修改和分发。开发者可以审计源码确认安全性，也可以提交 PR 添加新的 AI 工具或终端支持。</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>平台限制严格</strong> — 仅支持 macOS 14.0+（Sonoma），且最佳体验需要带有 Notch 的 MacBook Pro 机型。没有 Notch 的 Mac 体验会大打折扣（可能回落到普通窗口模式）。Windows 和 Linux 用户完全无法使用。这极大地限制了潜在用户群体。[置信度：高]</p>
+</li>
+<li>
+<p><strong>项目非常年轻</strong> — 项目创建于 2026-04-06，截至分析日期仅 4 天。虽然迭代速度快（已发布到 v1.0.17），但代码库和社区生态尚未经过充分的时间考验。可能存在未发现的 Bug 或兼容性问题。[置信度：高]</p>
+</li>
+<li>
+<p><strong>依赖 AI 工具的 Hook 接口</strong> — CodeIsland 的核心功能依赖于各 AI 工具提供稳定的 Hook 接口。如果某个 AI 工具更新后修改或移除了 Hook 接口，CodeIsland 的对应功能将失效。这种外部依赖是不可控的。[置信度：中]</p>
+</li>
+<li>
+<p><strong>单开发者维护</strong> — 项目主要由 KrisYing 独立开发和维护。如果维护者因任何原因停止维护，项目可能面临停滞风险。虽然有 75 个 Fork，但目前活跃贡献者极少。[置信度：中]</p>
+</li>
+<li>
+<p><strong>Bridge 二进制的安全考量</strong> — <code>codeisland-bridge</code> 作为命令行工具被 AI 工具的 hook 调用，需要可执行权限。虽然二进制经过开发者 ID 签名和公证，但每次 hook 触发都会启动一个新进程，在高频事件场景下可能产生性能开销。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>AI 工具 Hook 接口变更</strong> — 如果 Claude Code、Codex 等 AI 工具更新后修改 Hook 接口格式或语义，CodeIsland 需要跟进适配。<strong>影响：</strong> 对应 AI 工具的监控功能暂时失效，直到 CodeIsland 发布修复版本。<strong>缓解措施：</strong> 项目开源且迭代迅速，社区可以快速提交适配 PR；Hook 接口通常保持向后兼容。</p>
+</li>
+<li>
+<p><strong>macOS 安全策略变化</strong> — Apple 对 Notch 区域的 API 访问和 Unix Domain Socket 的安全策略可能在未来版本中收紧。<strong>影响：</strong> CodeIsland 可能需要频繁适配新版本 macOS 的安全要求。<strong>缓解措施：</strong> 项目已实现开发者 ID 签名和公证，符合 Apple 当前安全要求；Swift/SwiftUI 技术栈与 macOS 原生生态高度契合。</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 无插件系统。CodeIsland 的扩展通过源码修改和 PR 提交实现，而非插件机制。支持的 AI 工具和终端类型由代码库硬编码。[置信度：高]</li>
+<li><strong>第三方库支持：</strong> 无。CodeIsland 是一个独立的 macOS 原生应用，不提供 API 供第三方库集成。[置信度：高]</li>
+<li><strong>企业采用案例：</strong> 项目仅发布 4 天，尚未发现企业公开采用案例。主要用户群体是个人开发者和独立开发者。[置信度：中]</li>
+<li><strong>文档质量：</strong> 中等。GitHub README 提供了完整的功能介绍、安装指南和技术架构说明。dev.to 上的两篇文章详细讲解了核心功能和 Buddy 系统。但缺乏系统性的 API 文档和开发者贡献指南。[置信度：高]</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 中等。项目迭代迅速（4 天发布 17 个版本），但版本号（v1.0.x）表明仍在快速修复 Bug 的阶段。v1.0.16 才实现开发者 ID 签名和公证。v1.0.17 新增 PID 复用保护，说明早期版本存在会话混淆问题。建议等待版本号稳定到 v1.1+ 后再在关键工作流中依赖。[置信度：中]</li>
+<li><strong>性能表现：</strong> 良好。Bridge 二进制仅 ~86KB，Unix Domain Socket 通信延迟极低（微秒级）。SwiftUI 原生渲染确保 UI 流畅。在高频事件场景（如 AI 工具密集使用工具调用）下，每次 hook 触发都会启动一个新进程，可能产生轻微的 CPU 开销。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 不适用。CodeIsland 本身就是一个监控工具，不涉及服务端运行时监控。</li>
+<li><strong>故障恢复：</strong> 中等。如果主应用崩溃或重启，Unix Domain Socket 会重新创建，bridge 二进制在下次 hook 触发时自动重连。但正在传输中的事件数据可能丢失。没有持久化的事件队列或重放机制。[置信度：中]</li>
+<li><strong>安全合规：</strong> 良好。v1.0.16 起实现开发者 ID 签名和 Apple 公证，确保二进制未被篡改。不从 macOS Keychain 导出认证令牌（仅读取使用量时使用）。不包含遥测或分析 SDK。bridge 二进制仅执行 Unix Socket 写入操作，不执行任何网络请求。MIT 开源许可证允许安全审计。[置信度：高]</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li><strong>最低要求：</strong> macOS 基本操作能力。CodeIsland 的核心操作（安装、查看状态、点击按钮）不需要任何编程知识。</li>
+<li><strong>进阶使用：</strong> 了解 cmux 或 iTerm2 等终端工具的使用有助于充分利用智能弹窗抑制和终端跳转功能。</li>
+<li>
+<p><strong>源码贡献：</strong> 需要 Swift/SwiftUI 编程能力，了解 macOS 原生开发、Unix Domain Socket 和进程间通信。</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> <strong>5-10 分钟</strong>。通过 Homebrew 一键安装（<code>brew install --cask codeisland</code>），启动后自动安装 Hook 配置。无需手动配置。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong></p>
+</li>
+<li><strong>日常使用：</strong> 30 分钟。熟悉 Notch 面板的展开/收起、会话状态指示器的含义、权限审批和问题回答操作。</li>
+<li><strong>源码贡献：</strong> 2-4 小时。需要阅读 Swift 源码，理解 Unix Domain Socket 通信机制和 Hook 安装逻辑。</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<h3 id="_26">综合评价</h3>
+<p>CodeIsland 是一个<strong>设计理念出色、执行力强</strong>的早期开源项目。它精准地抓住了 AI 编程助手时代的一个核心痛点——多会话并发的状态监控和上下文切换——并给出了一个优雅的解决方案：利用 MacBook Notch 区域作为零侵入的监控面板。</p>
+<p>其技术架构（Hook → Bridge → Unix Socket → SwiftUI UI）设计合理，层次清晰。Hook 驱动的方式确保了与 AI 工具的松耦合；Unix Domain Socket 提供了低延迟的 IPC 通道；SwiftUI 原生渲染保证了流畅的 UI 体验。智能弹窗抑制、AskUserQuestion 快速回复、一键终端跳转等细节功能体现了对用户工作流的深入理解。</p>
+<p>项目的主要风险在于其极早期状态（仅 4 天）和单一维护者。虽然迭代速度惊人（4 天 17 个版本），但长期可持续性需要观察。建议关注社区的贡献者增长和 Issue 响应速度。</p>
+<p>与竞品相比，CodeIsland 在功能完整性和多工具支持方面领先于 claude-island 和 AgentNotch。但 AgentNotch 的 OTLP/HTTP 方案（不依赖 Hook）在技术路线选择上有不同考量——Hook 方案更轻量但依赖工具接口，OTLP 方案更独立但需要额外端口。</p>
+<h3 id="_27">使用建议</h3>
+<table>
+<thead>
+<tr>
+<th>用户类型</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>多 AI 工具用户（日常使用 3+ 会话）</td>
+<td>强烈推荐。CodeIsland 能显著提升多会话管理效率，建议通过 Homebrew 安装试用</td>
+</tr>
+<tr>
+<td>单一 Claude Code 用户</td>
+<td>可以尝试。功能价值不如多会话场景明显，但使用量监控和 Buddy 系统有一定趣味性</td>
+</tr>
+<tr>
+<td>非 macOS 用户</td>
+<td>不适用。等待社区可能出现的跨平台移植或替代方案</td>
+</tr>
+<tr>
+<td>开源贡献者（Swift 开发者）</td>
+<td>推荐参与。项目开源且迭代活跃，是参与 macOS 原生开发和 AI 工具链生态的良好机会</td>
+</tr>
+<tr>
+<td>企业团队</td>
+<td>谨慎评估。项目过于年轻，建议等待 v1.1+ 版本和更成熟的社区生态后再考虑</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_28">替代方案推荐</h3>
+<p>如果 CodeIsland 不满足需求，以下替代方案值得考虑：</p>
+<ol>
+<li><strong>claude-island</strong>（@farouqaldori）— 如果只需要 Claude Code 支持，claude-island 更轻量简单</li>
+<li><strong>AgentNotch</strong>（AppGram）— 支持 Notch/菜单栏双模式，使用 OTLP/HTTP 协议而非 Hook，适合对 Hook 机制有顾虑的用户</li>
+<li><strong>手动终端管理</strong> — 使用 tmux/cmux 等终端复用工具，配合系统通知实现基本的多会话管理</li>
+</ol>
+<h2 id="_29">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> v1.0.17（当前最新版本，2026-04-09 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-10</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/wxtsky/CodeIsland">GitHub - wxtsky/CodeIsland</a> — 源码、README、Releases、Issue 统计</li>
+<li><a href="https://api.github.com/repos/wxtsky/CodeIsland">GitHub API - wxtsky/CodeIsland</a> — Stars、Forks、Issues 等元数据</li>
+<li><a href="https://github.com/wxtsky/CodeIsland/releases">GitHub Releases</a> — 版本历史和更新日志</li>
+<li><a href="https://dev.to/krisying/i-turned-my-macbooks-notch-into-a-control-center-for-ai-coding-agents-2o57">dev.to — I Turned My MacBook's Notch Into a Control Center for AI Coding Agents</a> — 核心功能详解、技术架构、终端支持列表</li>
+<li><a href="https://dev.to/krisying/my-claude-code-buddy-moved-into-my-macbooks-notch-and-i-cant-stop-looking-at-it-3d6e">dev.to — My Claude Code Buddy Moved Into My MacBook's Notch</a> — Buddy 系统详情、技术栈补充</li>
+<li><a href="https://github.com/farouqaldori/claude-island">GitHub - farouqaldori/claude-island</a> — 竞品分析，CodeIsland 的灵感来源</li>
+<li><a href="https://github.com/appgram/agentnotch">GitHub - appgram/agentnotch</a> — 竞品分析，AgentNotch 的 README 和功能列表</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

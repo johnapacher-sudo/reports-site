@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeIsland - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">CodeIsland 是一个开源的 macOS 原生应用，将 MacBook 的刘海（Notch/Dynamic Island）区域变为 AI 编程助手的实时状态面板——让你无需切换窗口即可监控多个 AI 编程会话的进度、权限请求和使用量。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">官方资源</a></li>
+<li><a href="#_8" class="toc-h3">安装渠道</a></li>
+<li><a href="#_9" class="toc-h3">教程资源</a></li>
+<li><a href="#_10" class="toc-h3">社区资源</a></li>
+<li><a href="#_11" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>CodeIsland - 技术发现报告</h1>
+                        <div class="article-meta">CodeIsland 是一个开源的 macOS 原生应用，将 MacBook 的刘海（Notch/Dynamic Island）区域变为 AI 编程助手的实时状态面板——让你无需切换窗口即可监控多个 AI 编程会话的进度、权限请求和使用量。</div>
+                    </header>
+                    <h1 id="codeisland-">CodeIsland - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> CodeIsland</li>
+<li><strong>官方地址：</strong> https://github.com/wxtsky/CodeIsland （GitHub 仓库即为主要官方入口）</li>
+<li><strong>GitHub 仓库：</strong> https://github.com/wxtsky/CodeIsland （同步镜像：https://github.com/xmqywx/CodeIsland）</li>
+<li><strong>当前版本：</strong> v1.0.17（发布于 2026-04-09）[来源：GitHub Releases]</li>
+<li><strong>License：</strong> MIT License</li>
+<li><strong>主要编程语言：</strong> Swift</li>
+<li><strong>首次发布日期：</strong> 2026 年 4 月 5 日（dev.to 文章首发介绍，GitHub 仓库创建于 2026-04-06）[来源：dev.to、GitHub API]</li>
+<li><strong>创建者/维护团队：</strong> KrisYing（@krisying，GitHub: @wxtsky / @xmqywx），独立开发者</li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>CodeIsland 是一个开源的 macOS 原生应用，将 MacBook 的刘海（Notch/Dynamic Island）区域变为 AI 编程助手的实时状态面板——让你无需切换窗口即可监控多个 AI 编程会话的进度、权限请求和使用量。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>Notch 原生 UI（Notch-native UI）</strong> — CodeIsland 直接嵌入 MacBook 的刘海区域，收起时显示微小状态指示器，展开时变为完整控制面板。完全利用 macOS 系统原生 UI 能力，不需要额外的窗口或状态栏空间。[来源：GitHub README、dev.to 文章]</p>
+</li>
+<li>
+<p><strong>多 AI 工具实时监控（Multi-tool Real-time Monitoring）</strong> — 支持 9 种主流 AI 编程工具：Claude Code、Codex（OpenAI）、Gemini CLI、Cursor、Qoder、Factory、CodeBuddy、OpenCode、GitHub Copilot CLI。每个工具通过 Hook 机制捕获事件，实时推送到 CodeIsland UI。[来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>智能弹窗抑制（Smart Popup Suppression）</strong> — 检测用户当前正在查看的终端标签页，仅对不可见的会话弹出通知。已支持 cmux（工作区级别）、iTerm2（会话级别）、Ghostty（窗口级别）、Terminal.app（标签级别）。[来源：dev.to 文章]</p>
+</li>
+<li>
+<p><strong>AskUserQuestion 快速回复</strong> — 当 Claude Code 提出多选问题时，选项直接以按钮形式显示在 Notch 面板中，点击即可通过 <code>cmux send</code> 将答案发送到终端，无需切换窗口。[来源：dev.to 文章]</p>
+</li>
+<li>
+<p><strong>一键终端跳转（One-Click Terminal Jump）</strong> — 每个会话旁有一个绿色终端按钮，点击后 CodeIsland 自动定位到对应的 cmux 工作区（或 iTerm 标签、Ghostty 窗口）并前置显示。[来源：dev.to 文章]</p>
+</li>
+<li>
+<p><strong>Claude 使用量监控（Usage Monitoring）</strong> — 通过 Anthropic OAuth API 直接读取 5 小时 / 7 天使用百分比，无需插件，从 macOS Keychain 读取认证令牌。[来源：dev.to 文章]</p>
+</li>
+<li>
+<p><strong>子代理追踪（Subagent Tracking）</strong> — 当 Claude Code 生成子代理时，CodeIsland 实时显示带有闪电徽章的子代理任务列表和可折叠的详情视图。[来源：dev.to 文章]</p>
+</li>
+<li>
+<p><strong>像素风吉祥物系统（Pixel-art Mascots）</strong> — 集成 Claude Code 的 <code>/buddy</code> 系统，显示伙伴的种类、稀有度、属性和个性特征，配有 ASCII 艺术图案。[来源：dev.to 文章、GitHub README]</p>
+</li>
+<li>
+<p><strong>双语文持与多显示器</strong> — 支持中英双语界面，适配多显示器环境。[来源：GitHub README]</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> 682（截至 2026-04-09）[来源：GitHub API]</li>
+<li><strong>GitHub Forks：</strong> 75（截至 2026-04-09）[来源：GitHub API]</li>
+<li><strong>Contributors：</strong> 项目主要由 KrisYing 独立开发，接受社区贡献 [来源：GitHub]</li>
+<li><strong>最近更新日期：</strong> 最后一次推送 2026-04-09；最新版本 v1.0.17（2026-04-09）[来源：GitHub]</li>
+<li><strong>未关闭 Issue：</strong> 14 个 [来源：GitHub API]</li>
+<li><strong>社区讨论热度：</strong> 项目上线仅 4 天（2026-04-06 创建）即获得 682 Stars，增长势头强劲。在 Reddit 的 r/ClaudeCode、r/ClaudeAI、r/macapps 等社区均有讨论。dev.to 上的官方介绍文章引起广泛关注。[来源：Reddit、dev.to]</li>
+<li><strong>Homebrew 安装：</strong> 已上架 Homebrew Cask（<code>brew install --cask codeisland</code>），支持一键安装 [来源：GitHub README]</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> macOS 原生应用 / AI 开发工具链 / 开发者效率工具</li>
+<li><strong>解决的核心问题：</strong> 多 AI 编程助手并发运行时的状态监控和上下文切换问题。当开发者同时运行多个 Claude Code、Cursor 等 AI 工具时，需要在多个终端窗口间频繁切换以检查进度、审批权限、回答问题。CodeIsland 将所有这些信息聚合到 Notch 区域，实现一览无余。</li>
+<li><strong>替代/竞品技术：</strong></li>
+<li><strong>claude-island</strong>（@farouqaldori）— CodeIsland 的灵感来源，专注于 Claude Code 单一工具的 Dynamic Island 集成</li>
+<li><strong>AgentNotch</strong>（appgram/agentnotch）— 类似的 macOS 菜单栏应用，提供 AI 编程助手的实时可见性</li>
+<li><strong>终端原生方案</strong> — 手动在终端标签间切换（无工具辅助）</li>
+<li><strong>依赖的上游技术：</strong> macOS 14+（Sonoma）、Swift/SwiftUI、Unix Domain Socket、Anthropic OAuth API、macOS Keychain、AppleScript</li>
+<li><strong>下游使用者/集成方：</strong> AI 编程工具用户（Claude Code、Codex、Gemini CLI 等 9 种工具的用户）、终端用户（cmux、iTerm2、Ghostty 等）</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">官方资源</h3>
+<ul>
+<li><a href="https://github.com/wxtsky/CodeIsland">GitHub 仓库（主）</a> — 源码、Issue、Releases</li>
+<li><a href="https://github.com/xmqywx/CodeIsland">GitHub 仓库（镜像）</a> — 同步镜像仓库</li>
+<li><a href="https://github.com/wxtsky/CodeIsland/releases">GitHub Releases</a> — 版本发布历史</li>
+<li><a href="https://github.com/wxtsky/CodeIsland">Homebrew Cask</a> — 通过 <code>brew install --cask codeisland</code> 安装</li>
+</ul>
+<h3 id="_8">安装渠道</h3>
+<ul>
+<li><strong>Homebrew Cask（推荐）：</strong> <code>brew install --cask codeisland</code></li>
+<li><strong>DMG 下载：</strong> GitHub Releases 页面提供 DMG 安装包</li>
+<li><strong>源码构建：</strong> <code>git clone</code> 后使用 Xcode 构建</li>
+</ul>
+<h3 id="_9">教程资源</h3>
+<ul>
+<li><a href="https://dev.to/krisying/i-turned-my-macbooks-notch-into-a-control-center-for-ai-coding-agents-2o57">I Turned My MacBook's Notch Into a Control Center for AI Coding Agents — dev.to</a> — 官方详细介绍文章，包含完整功能演示和截图</li>
+</ul>
+<h3 id="_10">社区资源</h3>
+<ul>
+<li><a href="https://www.reddit.com/r/ClaudeCode/comments/1pibst6/claude_island_dynamic_island_for_claude_code/">Reddit — r/ClaudeCode 讨论</a> — 社区讨论和反馈</li>
+<li><a href="https://github.com/farouqaldori/claude-island">claude-island（灵感来源项目）</a> — CodeIsland 的灵感来源，@farouqaldori 开发的 Claude Code Dynamic Island 工具</li>
+</ul>
+<h2 id="_11">信息来源</h2>
+<ul>
+<li><a href="https://github.com/wxtsky/CodeIsland">GitHub - wxtsky/CodeIsland</a> — 主要信息来源（README、Releases、Issue 统计、GitHub API 元数据）— 获取日期：2026-04-10</li>
+<li><a href="https://dev.to/krisying/i-turned-my-macbooks-notch-into-a-control-center-for-ai-coding-agents-2o57">dev.to — I Turned My MacBook's Notch Into a Control Center for AI Coding Agents</a> — 官方介绍文章，功能详解和技术栈信息 — 获取日期：2026-04-10</li>
+<li><a href="https://github.com/wxtsky/CodeIsland/releases">GitHub Releases</a> — 版本历史和更新日志 — 获取日期：2026-04-10</li>
+<li><a href="https://www.reddit.com/r/ClaudeCode/comments/1pibst6/claude_island_dynamic_island_for_claude_code/">Reddit — r/ClaudeCode</a> — 社区讨论和用户反馈 — 获取日期：2026-04-10</li>
+<li><a href="https://api.github.com/repos/wxtsky/CodeIsland">GitHub API（元数据查询）</a> — Stars、Forks、Issues 等统计数据 — 获取日期：2026-04-10</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

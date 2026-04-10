@@ -1,0 +1,1293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisBug（ProjectVisBug） - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">⚠️ **重要提示：** Chrome 138+（2025 年中起）已完全禁用所有 Manifest V2 扩展。VisBug 当前使用 Manifest V2，**无法在标准 Chrome 浏览器上安装和使用**。Firefox 版本目前仍可正常使用。如需在 Chrome 上使用，需等待项目完成向 Manifest V3 的迁移。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#custom-element" class="toc-h3">自定义元素（Custom Element）</a></li>
+<li><a href="#shadow-dom-shadow-dom-isolation" class="toc-h3">Shadow DOM 隔离（Shadow DOM Isolation）</a></li>
+<li><a href="#tool-system" class="toc-h3">工具系统（Tool System）</a></li>
+<li><a href="#multiselect" class="toc-h3">多选机制（Multiselect）</a></li>
+<li><a href="#dom-dom-traversal" class="toc-h3">DOM 遍历（DOM Traversal）</a></li>
+<li><a href="#style-inspector" class="toc-h3">样式检查器（Style Inspector）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h3">综合评价</a></li>
+<li><a href="#_27" class="toc-h3">使用建议</a></li>
+<li><a href="#_28" class="toc-h3">替代方案推荐</a></li>
+<li><a href="#_29" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>VisBug（ProjectVisBug） - 深度分析报告</h1>
+                        <div class="article-meta">⚠️ **重要提示：** Chrome 138+（2025 年中起）已完全禁用所有 Manifest V2 扩展。VisBug 当前使用 Manifest V2，**无法在标准 Chrome 浏览器上安装和使用**。Firefox 版本目前仍可正常使用。如需在 Chrome 上使用，需等待项目完成向 Manifest V3 的迁移。</div>
+                    </header>
+                    <h1 id="visbugprojectvisbug-">VisBug（ProjectVisBug） - 深度分析报告</h1>
+<blockquote>
+<p>⚠️ <strong>重要提示：</strong> Chrome 138+（2025 年中起）已完全禁用所有 Manifest V2 扩展。VisBug 当前使用 Manifest V2，<strong>无法在标准 Chrome 浏览器上安装和使用</strong>。Firefox 版本目前仍可正常使用。如需在 Chrome 上使用，需等待项目完成向 Manifest V3 的迁移。</p>
+</blockquote>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>Web 设计领域长期存在一个核心痛点：<strong>设计师与开发者之间的工具鸿沟</strong>。设计师习惯使用 Figma、Sketch 等可视化工具进行创作，而开发者则在代码编辑器和浏览器 DevTools 中工作。当设计师需要验证某个样式调整的效果时，必须向开发者提出修改请求，等待开发者修改 CSS 后才能看到效果。这个来回沟通的循环极其低效。</p>
+<p>2018 年前后，浏览器开发者工具虽然功能强大，但其目标用户是开发者而非设计师。Chrome DevTools 的 Elements 面板需要理解 CSS Box Model、DOM 结构等概念，对非技术背景的设计师和内容创作者来说门槛过高。市场上缺乏一种<strong>让设计师直接在浏览器中进行可视化编辑</strong>的轻量工具。</p>
+<p>同时，浏览器扩展生态正在快速发展。Chrome Extension API 和 WebExtension API 的标准化使得跨浏览器开发成为可能，为工具类扩展的诞生提供了技术基础。</p>
+<h3 id="_3">创立动机</h3>
+<p>Adam Argyle（Google Chrome Labs 的开发者关系工程师）创建 VisBug 的动机非常明确：<strong>"FireBug for designers"</strong>（为设计师打造的 FireBug）[来源：GitHub README]。</p>
+<p>FireBug 是早期 Firefox 上最受欢迎的开发者工具扩展，其核心理念是"直接在页面上检查和修改"。VisBug 继承了这一理念，但将目标用户从开发者转向了设计师和内容创作者。其核心主张是：</p>
+<blockquote>
+<p>"Bugs become design opportunities"（Bug 变成设计机会）</p>
+</blockquote>
+<p>这意味着 VisBug 的定位不是修复代码 Bug 的工具，而是将网页上的任何视觉"问题"转化为可即时编辑的"设计机会"。设计师无需写一行 CSS 代码，就可以直接在浏览器中移动元素、修改颜色、调整字体、替换图片——就像在 Figma 中一样。</p>
+<h3 id="_4">发展历程</h3>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>事件</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2018-11</td>
+<td>项目启动</td>
+<td>npm 包首次发布（v0.1.14），Chrome Dev Summit 2018 上首次公开展示</td>
+</tr>
+<tr>
+<td>2018-11</td>
+<td>Medium 文章发布</td>
+<td>Adam Argyle 发表 "VisBug 101" 官方介绍文章</td>
+</tr>
+<tr>
+<td>2019 年</td>
+<td>社区增长期</td>
+<td>被多个"最佳 Chrome 扩展"榜单收录，社区讨论活跃</td>
+</tr>
+<tr>
+<td>2020-11</td>
+<td>v0.3.0 发布</td>
+<td>"Cross Browser" 版本，新增 Firefox、Safari、Edge 支持</td>
+</tr>
+<tr>
+<td>2020-11 后</td>
+<td>进入低活跃维护期</td>
+<td>最后一次正式发版，后续仅有零星提交</td>
+</tr>
+<tr>
+<td>2024-11</td>
+<td>最后一次实质性提交</td>
+<td>代码库最后一次有意义的更新</td>
+</tr>
+<tr>
+<td>2026-04</td>
+<td>当前状态</td>
+<td>5,712 Stars，237 个未关闭 Issue，处于低活跃维护状态</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>VisBug 的设计哲学可以用三个关键词概括：</p>
+<p><strong>1. 所见即所得（WYSIWYG）</strong></p>
+<p>VisBug 将任何网页变成一个可交互的设计画板。用户看到的页面就是编辑对象，所有修改即时生效、即时可见。不存在"编辑模式"和"预览模式"的切换——页面本身既是画布也是工具。</p>
+<p><strong>2. 框架无关（Framework Agnostic）</strong></p>
+<p>根据 GitHub README 的明确声明，VisBug 可以在任何网页上工作，"regardless of framework"——无论是 WordPress、Angular、jQuery 还是 Bootstrap 构建的页面。这源于其底层机制：直接操作 DOM 和 inline styles，不依赖任何特定框架的渲染机制。</p>
+<p><strong>3. 非破坏性编辑（Non-destructive Editing）</strong></p>
+<p>VisBug 的所有修改都是通过 inline styles 应用的，不会修改页面源代码或外部 CSS 文件。这意味着用户可以自由实验各种设计调整，刷新页面即可恢复原始状态。这一设计决策降低了使用门槛和风险。</p>
+<h3 id="_7">核心算法/机制</h3>
+<p>VisBug 的核心工作机制可以概括为以下四个阶段：</p>
+<pre><code>页面加载 → 注入自定义元素 → 拦截交互事件 → 代理 DOM 操作
+</code></pre>
+<p><strong>阶段一：注入（Injection）</strong></p>
+<p>当用户激活 VisBug 扩展时，浏览器扩展的 content script 会向当前页面注入一个自定义 HTML 元素（Custom Element）。这个自定义元素即为 VisBug 的核心载体。</p>
+<pre><code class="language-javascript">// VisBug 作为自定义元素被创建和注入
+// 来源：基于 GitHub Wiki - Tool Architecture
+class VisBug extends HTMLElement {
+  // 自定义元素的构造逻辑
+}
+</code></pre>
+<p><strong>阶段二：交互拦截（Interaction Interception）</strong></p>
+<p>注入后，VisBug 拦截页面上的鼠标和键盘交互事件。当用户点击某个元素时，VisBug 不会触发该元素的原始行为（如链接跳转、按钮点击），而是将该元素"选中"（Select），使其进入可编辑状态。</p>
+<blockquote>
+<p>"VisBug is a custom element on your page that intercepts interactions, selecting the item(s) instead, and then provides keyboard driven patterns to manipulate the selected DOM nodes"
+— GitHub Wiki - Tool Architecture</p>
+</blockquote>
+<p><strong>阶段三：工具驱动（Tool-driven Manipulation）</strong></p>
+<p>用户选中元素后，通过 VisBug 提供的各种工具（Tool）对选中元素进行操作。每个工具是一个独立的函数，接收选中的元素列表，执行特定的编辑操作（如移动、修改颜色、调整间距等）。</p>
+<p><strong>阶段四：Inline Style 应用（Inline Style Application）</strong></p>
+<p>所有修改通过 inline styles 直接应用到 DOM 元素上。这种方式保证了即时生效，且不会影响页面的其他样式规则。</p>
+<h3 id="_8">数据流/执行流程</h3>
+<p>以下是用户使用 VisBug 修改一个按钮颜色的完整数据流：</p>
+<pre><code>1. 用户点击页面上的按钮
+   ↓
+2. VisBug 拦截 click 事件，阻止默认行为
+   ↓
+3. 将按钮元素添加到&quot;已选中&quot;列表
+   ↓
+4. 在按钮周围绘制选中高亮框（通过 Shadow DOM 中的 overlay 元素）
+   ↓
+5. 用户切换到颜色工具，选择新颜色
+   ↓
+6. VisBug 将新颜色作为 inline style 应用到按钮元素
+   → button.style.backgroundColor = &quot;#ff6600&quot;
+   ↓
+7. 页面即时更新显示新颜色
+   ↓
+8. 用户可以在样式检查器（Style Inspector）中查看已做的修改
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>VisBug 的架构分为四个主要层次：</p>
+<pre><code>┌──────────────────────────────────────────────────┐
+│                 浏览器扩展层（Extension）          │
+│  manifest.json / background.js / content script   │
+├──────────────────────────────────────────────────┤
+│                 核心编排层（Core）                  │
+│  VisBug.js — 自定义元素，工具调度，状态管理         │
+├──────────────────────────────────────────────────┤
+│                 功能模块层（Features）              │
+│  工具函数（移动/颜色/字体/间距/文字/图片...）       │
+├──────────────────────────────────────────────────┤
+│                 基础设施层（Libraries）             │
+│  共享工具库（DOM 操作/样式计算/事件处理）           │
+└──────────────────────────────────────────────────┘
+         ↕ 可选扩展
+┌──────────────────────────────────────────────────┐
+│                 插件层（Plugins）                   │
+│  自定义命令和功能扩展                               │
+└──────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>extension/（浏览器扩展模块）</strong> — 包含 <code>manifest.json</code>（扩展配置，当前为 Manifest V2）、<code>background.js</code>（后台脚本）和 content script（页面注入脚本）。负责浏览器扩展的生命周期管理和页面注入。⚠️ 注意：Chrome 138+ 已完全禁用所有 Manifest V2 扩展，VisBug 当前无法在标准 Chrome 浏览器上使用。 <!-- reviewed: P1 修正——Manifest V2 已被 Chrome 138+ 禁用，非"即将被淘汰" --></p>
+</li>
+<li>
+<p><strong>VisBug.js（核心编排模块）</strong> — VisBug 自定义元素的主入口。负责初始化工具栏、管理当前激活的工具、处理工具切换、协调选中元素和工具之间的交互。这是整个系统的"大脑"。</p>
+</li>
+<li>
+<p><strong>features/（功能模块）</strong> — 每个工具（如移动、颜色选择、字体调整、间距调整等）是一个独立的功能模块。根据 GitHub Wiki 的描述，每个工具遵循统一的接口模式：</p>
+</li>
+</ul>
+<pre><code class="language-javascript">// 工具的标准接口模式
+// 来源：基于 GitHub Wiki - Tool Architecture
+export default function myTool(selectedElements) {
+  // 对选中元素执行操作
+  // ...
+  return function cleanup() {
+    // 清理函数：当用户切换到其他工具时调用
+    // 移除事件监听器、临时 DOM 元素等
+  }
+}
+</code></pre>
+<ul>
+<li>
+<p><strong>libraries/（共享工具库）</strong> — 提供跨功能模块共享的基础能力，如 DOM 查询辅助、样式计算、坐标转换、事件处理包装器等。</p>
+</li>
+<li>
+<p><strong>plugins/（插件模块）</strong> — 可扩展的插件系统，允许用户和社区添加自定义功能。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>VisBug 提供了插件系统作为主要的扩展机制。插件系统位于 <code>plugins/</code> 目录下，具有以下特征：</p>
+<p><strong>插件结构：</strong></p>
+<pre><code class="language-javascript">// 插件的标准模板
+// 来源：基于 GitHub Wiki - Plugins
+export const commands = ['my-command']  // 通过 /my-command 调用
+export default async function({selected, query}) {
+  // selected: 当前被 VisBug 选中的元素 NodeList
+  // query: 查询工具
+  // 在这里实现插件逻辑
+}
+</code></pre>
+<p><strong>插件注册：</strong></p>
+<p>插件通过 <code>plugins/_registry.js</code> 文件统一注册：</p>
+<pre><code class="language-javascript">// 插件注册模式
+// 来源：基于 GitHub Wiki - Plugins
+import { commands as myPluginCommands, default as MyPlugin } from './my-plugin.js'
+commandsToHash(myPluginCommands, MyPlugin)
+</code></pre>
+<p><code>commandsToHash()</code> 函数将插件的命令字符串映射到对应的处理函数，形成命令→处理器的查找表。用户在 VisBug 中输入 <code>/</code> 加命令名即可调用对应的插件功能。</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="custom-element">自定义元素（Custom Element）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 基于 Web Components 标准中的 Custom Elements API 构建，将整个工具封装为一个自定义 HTML 元素注入到目标页面中。</li>
+<li><strong>作用：</strong> 自定义元素提供了生命周期钩子（connectedCallback、disconnectedCallback 等），使 VisBug 能够在注入和移除时执行初始化和清理逻辑。同时，自定义元素的封装性有助于与页面其他代码隔离。</li>
+<li><strong>使用场景：</strong> 当 VisBug 激活时，一个 <code>&lt;vis-bug&gt;</code> 自定义元素被添加到页面的 DOM 树中，成为所有工具 UI 和交互的容器。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-javascript">// 自定义元素的基本结构（基于官方源码架构）
+// 来源：基于 GitHub 源码结构和 Wiki - Tool Architecture
+class VisBugElement extends HTMLElement {
+  connectedCallback() {
+    // 初始化工具栏、事件监听器
+    this.toolbar = createToolbar()
+    this.appendChild(this.toolbar)
+  }
+
+  disconnectedCallback() {
+    // 清理所有事件监听器和临时 DOM
+    this.toolbar.remove()
+  }
+}
+
+// 注册自定义元素
+customElements.define('vis-bug', VisBugElement)
+</code></pre>
+<h3 id="shadow-dom-shadow-dom-isolation">Shadow DOM 隔离（Shadow DOM Isolation）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 使用 Shadow DOM 技术将其 UI 元素（工具栏、选中框、悬浮提示等）与宿主页面的 DOM 和 CSS 隔离。</li>
+<li><strong>作用：</strong> 这是 VisBug 架构中最关键的技术决策之一。Shadow DOM 确保了两件事：①宿主页面的 CSS 不会影响 VisBug 的 UI 样式（防止样式冲突）；②VisBug 的 CSS 不会泄漏到宿主页面（防止工具本身的样式污染用户页面）。</li>
+<li><strong>使用场景：</strong> 当 VisBug 在一个使用了 Tailwind CSS 或 Bootstrap 的页面上运行时，即使这些框架定义了与 VisBug 工具栏相同的 CSS 类名，也不会产生样式冲突，因为 Shadow DOM 提供了完整的样式隔离边界。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-javascript">// Shadow DOM 隔离模式
+// 来源：基于 GitHub 源码架构分析
+class VisBugElement extends HTMLElement {
+  connectedCallback() {
+    // 创建 Shadow Root，开启样式隔离
+    const shadow = this.attachShadow({ mode: 'open' })
+
+    // VisBug 的 UI 元素添加到 Shadow DOM 中
+    // 这些元素不受宿主页面 CSS 影响
+    const toolbar = document.createElement('div')
+    toolbar.className = 'visbug-toolbar'
+    shadow.appendChild(toolbar)
+  }
+}
+</code></pre>
+<h3 id="tool-system">工具系统（Tool System）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 的核心功能通过一系列独立的工具（Tool）实现，每个工具遵循统一的接口模式：一个接收选中元素列表的函数，返回一个清理函数。</li>
+<li><strong>作用：</strong> 工具系统实现了关注点分离——每个工具独立负责一个特定的编辑能力（移动、颜色、字体、间距等），工具之间互不干扰。统一的接口模式使得添加新工具变得简单。</li>
+<li><strong>使用场景：</strong> 用户通过工具栏或键盘快捷键在工具之间切换。切换时，当前工具的清理函数被调用（释放资源），新工具的函数被调用（接管交互）。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-javascript">// 工具的标准实现模式
+// 来源：基于 GitHub Wiki - Tool Architecture
+export default function moveTool(selectedElements) {
+  // 激活移动工具时的初始化逻辑
+  const handleMouseMove = (e) =&gt; {
+    // 根据鼠标移动更新选中元素的位置
+    selectedElements.forEach(el =&gt; {
+      el.style.transform = `translate(${dx}px, ${dy}px)`
+    })
+  }
+
+  const handleMouseUp = () =&gt; {
+    // 结束拖拽
+  }
+
+  // 添加事件监听
+  document.addEventListener('mousemove', handleMouseMove)
+  document.addEventListener('mouseup', handleMouseUp)
+
+  // 返回清理函数——当工具被切换走时自动调用
+  return function cleanup() {
+    document.removeEventListener('mousemove', handleMouseMove)
+    document.removeEventListener('mouseup', handleMouseUp)
+  }
+}
+</code></pre>
+<h3 id="multiselect">多选机制（Multiselect）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 支持同时选中多个 DOM 元素，并对这些元素执行批量操作。</li>
+<li><strong>作用：</strong> 多选是 VisBug 区别于简单元素检查器的关键特性。它允许设计师像在设计工具中一样框选多个元素，然后统一调整它们的共同属性。</li>
+<li><strong>使用场景：</strong> 用户可以通过框选（Marquee Select）或按住 Shift 点击来选择多个元素，然后一次修改所有选中元素的颜色、字体或间距。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-javascript">// 多选元素的处理模式
+// 来源：基于 GitHub Wiki - Tool Architecture
+export default function colorTool(selectedElements) {
+  // selectedElements 是一个 NodeList，可能包含多个元素
+  const handleColorChange = (newColor) =&gt; {
+    // 批量修改所有选中元素的颜色
+    selectedElements.forEach(el =&gt; {
+      el.style.color = newColor
+    })
+  }
+  // ...
+}
+</code></pre>
+<blockquote>
+<p>Wiki 明确指出："Features must be able to handle multiselect"——所有工具必须能够处理多选场景。</p>
+</blockquote>
+<h3 id="dom-dom-traversal">DOM 遍历（DOM Traversal）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 提供键盘快捷键在 DOM 树中进行父子兄弟节点的导航。</li>
+<li><strong>作用：</strong> 让用户无需理解 HTML 源码结构，就能通过直觉式的键盘操作在元素层级间导航。</li>
+<li><strong>使用场景：</strong> 用户选中一个元素后，可以通过 Tab 键进入子元素、Shift+Enter 返回父元素、Enter 进入或退出分组。这提供了一种在可视化和代码结构之间的桥梁。</li>
+</ul>
+<h3 id="style-inspector">样式检查器（Style Inspector）</h3>
+<ul>
+<li><strong>定义：</strong> VisBug 内置的样式查看面板，显示当前选中元素的所有 CSS 属性及其值，并追踪用户通过 VisBug 做出的本地修改。</li>
+<li><strong>作用：</strong> 让设计师能够查看和理解当前元素的设计参数，同时追踪自己做出的修改，便于与开发者沟通。</li>
+<li><strong>使用场景：</strong> 在 Medium 官方文章中提到，样式检查器会显示 "Local modifications"（本地修改），列出用户通过 VisBug 做出的所有样式变更。</li>
+</ul>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>VisBug</th>
+<th>Chrome DevTools</th>
+<th>CSS Peeper</th>
+<th>Pesticide</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>为设计师打造的可视化页面编辑器</td>
+<td>为开发者打造的全面调试工具</td>
+<td>CSS 样式提取和查看器</td>
+<td>CSS Box Model 可视化工具</td>
+</tr>
+<tr>
+<td>开源</td>
+<td>是（Apache 2.0）</td>
+<td>浏览器内置</td>
+<td>否（闭源）</td>
+<td>是（MIT）</td>
+</tr>
+<tr>
+<td>定价</td>
+<td>免费</td>
+<td>免费</td>
+<td>基础免费 / 高级付费</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>核心能力</td>
+<td>可视化编辑、移动元素、修改样式、文字编辑、图片替换</td>
+<td>DOM 检查、CSS 编辑、JavaScript 调试、网络分析</td>
+<td>CSS 属性查看、颜色提取、字体信息</td>
+<td>Box Model 边框可视化</td>
+</tr>
+<tr>
+<td>编辑能力</td>
+<td>强（直接在页面上编辑）</td>
+<td>强（通过面板编辑 CSS）</td>
+<td>无（只读查看）</td>
+<td>无（仅可视化）</td>
+</tr>
+<tr>
+<td>跨浏览器</td>
+<td>Chrome、Firefox、Safari、Edge</td>
+<td>各浏览器内置</td>
+<td>仅 Chrome</td>
+<td>Chrome、Firefox</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低（直觉式操作）</td>
+<td>高（需要理解 Web 技术）</td>
+<td>低（一键查看）</td>
+<td>极低（自动运行）</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>5,712</td>
+<td>不适用</td>
+<td>不适用</td>
+<td>~1,500-2,000 [来源：GitHub 搜索估算]</td>
+</tr>
+<tr>
+<td>社区活跃度</td>
+<td>低（低活跃维护）</td>
+<td>极高（Google 维护）</td>
+<td>中</td>
+<td>低</td>
+</tr>
+<tr>
+<td>适合用户</td>
+<td>设计师、内容创作者、QA</td>
+<td>前端开发者、全栈开发者</td>
+<td>设计师、前端开发者</td>
+<td>前端开发者、设计师</td>
+</tr>
+<tr>
+<td>框架兼容性</td>
+<td>完全无关（操作 DOM）</td>
+<td>完全无关</td>
+<td>完全无关</td>
+<td>完全无关</td>
+</tr>
+<tr>
+<td>可扩展性</td>
+<td>插件系统</td>
+<td>Chrome DevTools Extensions</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>对 DevTools 的影响</td>
+<td>VisBug 的功能直接影响了 Chrome DevTools 的演进方向</td>
+<td>—</td>
+<td>无明显影响</td>
+<td>无明显影响</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>数据来源说明：</strong> VisBug 数据来自 GitHub API（2026-04-09）；Chrome DevTools 为浏览器内置工具；CSS Peeper 用户数来自 Chrome Web Store 页面估算；Pesticide Stars 数来自 GitHub 搜索估算（2026-04-09）。Pesticide 的精确数据标注为待验证。</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>设计验收与快速原型调整</strong> — 设计师拿到开发实现后，无需等待开发者修改，可以直接在浏览器中调整间距、颜色、字体等视觉细节，然后将调整方案截图或记录给开发者参考。</p>
+</li>
+<li>
+<p><strong>内容编辑和文案修改</strong> — 内容创作者无需进入 CMS 后台，直接在页面上编辑文字内容，快速验证文案效果。Medium 官方文章中特别强调了这一用例。</p>
+</li>
+<li>
+<p><strong>深色模式 / 主题切换实验</strong> — 设计师可以在现有页面基础上快速实验深色主题效果，调整颜色方案而无需修改源码。Adam Argyle 本人在演示中多次展示了这一场景。</p>
+</li>
+<li>
+<p><strong>响应式设计调试</strong> — 在不同视口尺寸下直接调整布局，快速验证响应式断点处的视觉效果。</p>
+</li>
+<li>
+<p><strong>无障碍性（Accessibility）快速检查</strong> — 悬停检查器可以显示元素的 ARIA 属性和语义信息，帮助快速识别无障碍性问题。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>代码级别的调试</strong> — VisBug 不是开发者工具的替代品。JavaScript 调试、网络请求分析、性能瓶颈定位等任务仍需使用 Chrome DevTools。</p>
+</li>
+<li>
+<p><strong>持久化的代码修改</strong> — VisBug 的所有修改都是临时的（inline styles），刷新即消失。不适合用于需要持久保存的代码修改场景。</p>
+</li>
+<li>
+<p><strong>团队协作和版本控制</strong> — VisBug 是单用户工具，不支持多人协作编辑、修改历史版本控制或与 Git 集成。</p>
+</li>
+<li>
+<p><strong>自动化测试</strong> — VisBug 不提供自动化能力，无法集成到 CI/CD 流程中。需要自动化视觉回归测试的场景应使用 Chromatic、Percy 等专业工具。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>极低的使用门槛</strong> — VisBug 面向设计师而非开发者，所有操作都是直觉式的点击、拖拽、选择，无需理解 CSS 语法或 DOM 结构。这是其最大的竞争优势。</p>
+</li>
+<li>
+<p><strong>框架完全无关</strong> — 直接操作 DOM 和 inline styles 的方式使得 VisBug 可以在任何网页上工作，无论底层使用了什么技术栈（React、Vue、WordPress、原生 HTML 等）。</p>
+</li>
+<li>
+<p><strong>非破坏性实验</strong> — 所有修改通过 inline styles 应用，刷新即恢复，鼓励设计师大胆实验而无需担心"搞坏"页面。</p>
+</li>
+<li>
+<p><strong>开源且免费</strong> — Apache 2.0 许可证允许自由使用、修改和分发。社区可以贡献插件和功能扩展。</p>
+</li>
+<li>
+<p><strong>插件系统可扩展</strong> — 插件机制允许社区添加自定义功能，通过 <code>/command</code> 的方式调用，降低了扩展门槛。</p>
+</li>
+<li>
+<p><strong>Shadow DOM 隔离保证可靠性</strong> — 使用 Shadow DOM 将工具 UI 与宿主页面隔离，有效避免了样式冲突，保证了在不同页面上的稳定性。</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>项目维护活跃度极低</strong> — 最后正式发版在 2020 年 11 月（v0.3.0），距今已超过 5 年。237 个未关闭的 Issue 无人处理。项目存在被完全弃用的风险。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Manifest V2 已被 Chrome 禁用</strong> — 当前扩展使用 Manifest V2，而 Chrome 138+（2025 年中起）已完全禁用所有 Manifest V2 扩展，用户无法在标准 Chrome 上安装或使用 VisBug。虽然代码库中有向 V3 迁移的迹象，但尚未正式完成。Firefox 版本目前仍可正常使用。[置信度：高] <!-- reviewed: P1 修正——Manifest V2 非"即将被淘汰"而是已被 Chrome 138+ 禁用 --></p>
+</li>
+<li>
+<p><strong>修改无法持久化</strong> — 所有编辑都是临时的，刷新即丢失。缺乏将修改导出为 CSS 代码或同步到代码库的能力，限制了其在实际工作流中的实用性。</p>
+</li>
+<li>
+<p><strong>仅支持视觉样式编辑</strong> — 不支持结构性的 DOM 修改（如添加/删除元素、修改 HTML 结构），功能范围局限于 CSS 属性的调整。</p>
+</li>
+<li>
+<p><strong>缺乏团队协作功能</strong> — 不支持多人同时编辑、修改历史记录、评论标注等团队协作必需的功能。</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>项目可能被完全弃用</strong> — 主要维护者 Adam Argyle 的精力可能已转向其他项目（如 Chrome DevTools 本身）。如果 Google Chrome Labs 不再投入资源，项目可能永久停滞。<strong>影响：</strong> 用户依赖的工具可能不再获得安全更新和浏览器兼容性修复。<strong>缓解措施：</strong> 项目开源，社区可以 fork 继续维护；VisBug 的核心功能（可视化编辑）部分已被 Chrome DevTools 原生吸收。</p>
+</li>
+<li>
+<p><strong>浏览器兼容性风险</strong> — Chrome 138+ 已完全禁用 Manifest V2 扩展，VisBug 当前无法在标准 Chrome 上使用。<strong>影响：</strong> 最大的用户群体（Chrome 用户）已无法正常使用。<strong>缓解措施：</strong> Firefox 版本目前仍可正常工作；社区可以完成 V3 迁移以恢复 Chrome 支持。 <!-- reviewed: P1 修正——Chrome 已禁用 MV2，非"可能导致" --></p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 极少。插件系统虽然设计良好，但社区贡献的插件数量有限。GitHub 仓库中的 <code>plugins/</code> 目录仅包含少量示例插件。 [置信度：中]</li>
+<li><strong>第三方库支持：</strong> 无。VisBug 是一个独立的终端工具，不提供 API 供第三方库集成。</li>
+<li><strong>企业采用案例：</strong> 未发现知名企业公开使用 VisBug 的案例。主要用户群体是个人设计师和前端开发者。 [置信度：中]</li>
+<li><strong>文档质量：</strong> 中等。官方提供了 GitHub Wiki（包含 Tool Architecture 和 Plugins 页面）、Medium 入门文章和官方网站，但缺乏系统性的 API 文档和开发者指南。对于普通用户来说文档足够，但对于希望贡献代码或开发插件的开发者来说文档不足。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 中等偏低。作为浏览器扩展，VisBug 在简单页面上表现稳定，但在复杂的单页应用（SPA）或使用了大量 Shadow DOM 的页面上可能出现兼容性问题。237 个未关闭的 Issue 中包含多个功能性 Bug 报告。[置信度：中]</li>
+<li><strong>性能表现：</strong> 中等。VisBug 通过事件拦截和 DOM 操作工作，在元素较少的页面上性能良好。但在包含大量 DOM 节点（&gt;10,000 个元素）的页面上，选中高亮和悬停检查可能产生明显延迟。没有已知的性能优化基准测试数据。[置信度：低]</li>
+<li><strong>监控/可观测性：</strong> 不适用。VisBug 是一个客户端设计工具，不涉及服务端运行时监控。</li>
+<li><strong>故障恢复：</strong> 弱。VisBug 缺乏错误恢复机制。如果修改过程中出现异常，用户只能刷新页面恢复原始状态。没有 undo/redo 功能（尽管这在其长期路线图中）。</li>
+<li><strong>安全合规：</strong> 中等。作为浏览器扩展，VisBug 需要用户授予在页面上执行脚本的权限。Apache 2.0 开源许可证允许安全审计。但由于项目维护活跃度低，潜在的安全漏洞可能无法及时修复。</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li><strong>最低要求：</strong> 基本的浏览器使用能力。VisBug 的核心操作（点击选中、拖拽移动、颜色选择）不需要任何编程知识。</li>
+<li><strong>进阶使用：</strong> 了解 CSS 基本概念（颜色、字体、间距）有助于更有效地使用布局和样式工具。</li>
+<li>
+<p><strong>插件开发：</strong> 需要 JavaScript 编程能力、了解 DOM API 和 Web Components 标准。</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> <strong>5-10 分钟</strong>。安装扩展后，官方的 VisBug 101 文章和交互式引导足以让设计师在几分钟内掌握核心操作。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong></p>
+</li>
+<li><strong>日常使用：</strong> 1-2 小时。熟悉所有工具和键盘快捷键后即可高效使用。</li>
+<li><strong>插件开发：</strong> 2-4 小时。需要阅读源码和 Wiki 中的 Plugins 文档，理解工具接口模式。</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<h3 id="_26">综合评价</h3>
+<p>VisBug 是一个<strong>理念先进但维护不足</strong>的开源项目。它在 2018 年提出的设计理念——"为设计师打造浏览器内的可视化编辑器"——至今仍然具有价值。其技术架构（Custom Element + Shadow DOM 隔离 + 工具函数模式 + 插件系统）设计合理，代码结构清晰。</p>
+<p>然而，项目面临的现实挑战不容忽视：超过 5 年未正式发版、237 个未关闭 Issue、Manifest V2 迁移未完成（且 Chrome 已禁用 MV2）、主要维护者精力转移。这些因素使得 VisBug 在 2026 年的使用价值显著下降。 <!-- reviewed: P1 修正——补充 Chrome 已禁用 MV2 的事实 --></p>
+<p>值得注意的是，VisBug 的影响力超越了项目本身。其核心理念已经对 Chrome DevTools 的演进产生了直接影响——Chrome DevTools 近年来新增的许多可视化编辑功能（如 CSS 颜色选择器、Flexbox 可视化编辑器、Grid Inspector 等）都带有 VisBug 的影子。从这个角度看，VisBug 的使命已经部分通过 Chrome DevTools 的原生功能得以延续。</p>
+<h3 id="_27">使用建议</h3>
+<table>
+<thead>
+<tr>
+<th>用户类型</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>设计师（快速样式验证）</td>
+<td>可以尝试使用，但建议同时关注 Chrome DevTools 的最新可视化编辑功能</td>
+</tr>
+<tr>
+<td>前端开发者（日常调试）</td>
+<td>不推荐。Chrome DevTools 功能更全面、维护更积极</td>
+</tr>
+<tr>
+<td>QA 测试人员（视觉检查）</td>
+<td>可用于快速验证样式问题，但需注意浏览器兼容性风险</td>
+</tr>
+<tr>
+<td>开源贡献者（学习参考）</td>
+<td>推荐阅读源码。其 Custom Element + Shadow DOM 架构模式值得学习</td>
+</tr>
+<tr>
+<td>企业团队（生产工具）</td>
+<td>不推荐。项目维护状态不稳定，存在浏览器兼容性风险</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_28">替代方案推荐</h3>
+<p>如果 VisBug 的维护状态令人担忧，以下替代方案值得考虑：</p>
+<ol>
+<li><strong>Chrome DevTools（内置）</strong> — 功能最全面，持续更新，已吸收了许多 VisBug 的设计理念</li>
+<li><strong>Figma Dev Mode</strong> — 如果团队已使用 Figma，其 Dev Mode 提供了设计与开发之间的桥梁</li>
+<li><strong>Polypane 浏览器</strong> — 专为开发者设计的独立浏览器，内置丰富的调试和测试功能</li>
+</ol>
+<h2 id="_29">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> v0.3.0（最后正式发版，2020-11-05）；代码库最新提交（2024-11-15）</li>
+<li><strong>信息获取日期：</strong> 2026-04-09 至 2026-04-10</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/GoogleChromeLabs/ProjectVisBug">GitHub - GoogleChromeLabs/ProjectVisBug</a> — 源码结构、README、Releases</li>
+<li><a href="https://github.com/GoogleChromeLabs/ProjectVisBug/wiki/Tool-Architecture">GitHub Wiki - Tool Architecture</a> — 工具架构设计文档</li>
+<li><a href="https://github.com/GoogleChromeLabs/ProjectVisBug/wiki/Plugins">GitHub Wiki - Plugins</a> — 插件系统文档</li>
+<li><a href="https://medium.com/google-design/visbug-101-d2636120f8d7">Medium — VisBug 101</a> — Adam Argyle 官方入门文章</li>
+<li><a href="https://visbug.web.app/">VisBug 官方网站</a> — 在线体验和功能介绍</li>
+<li><a href="https://alternativeto.net/software/visbug/">AlternativeTo — VisBug</a> — 替代方案和社区评价</li>
+<li><a href="https://www.npmjs.com/package/visbug">npm - visbug</a> — npm 包信息</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

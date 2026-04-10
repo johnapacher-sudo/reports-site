@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeIsland - 质量审阅报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">审阅清单结果</a></li>
+<li><a href="#1" class="toc-h3">1. 事实准确性 — ⚠️ 不通过 → 已修复</a></li>
+<li><a href="#2" class="toc-h3">2. 代码可运行性 — ✅ 通过</a></li>
+<li><a href="#3" class="toc-h3">3. 内容完整性 — ✅ 通过</a></li>
+<li><a href="#4" class="toc-h3">4. 逻辑递进 — ✅ 通过</a></li>
+<li><a href="#5" class="toc-h3">5. 术语一致性 — ✅ 通过</a></li>
+<li><a href="#6" class="toc-h3">6. 时效性 — ✅ 通过</a></li>
+<li><a href="#7" class="toc-h3">7. 来源可溯 — ✅ 通过</a></li>
+<li><a href="#_2" class="toc-h2">问题列表</a></li>
+<li><a href="#_3" class="toc-h2">修正说明</a></li>
+<li><a href="#1p1" class="toc-h3">修正 #1：会话状态颜色（P1）</a></li>
+<li><a href="#2ai-p1" class="toc-h3">修正 #2：AI 工具颜色编码（P1）</a></li>
+<li><a href="#3hook-p1" class="toc-h3">修正 #3：Hook 配置标注（P1）</a></li>
+<li><a href="#_4" class="toc-h2">质量评分</a></li>
+<li><a href="#_5" class="toc-h2">审阅信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>CodeIsland - 质量审阅报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="codeisland-">CodeIsland - 质量审阅报告</h1>
+<p><strong>审阅日期：</strong> 2026-04-10
+<strong>审阅范围：</strong> 01-discovery.md、02-analysis.md、03-tutorial.md（全部 3 份文档）
+<strong>质量评分：</strong> C 级（有 P1 已修复，无 P0 未修复）</p>
+<hr />
+<h2 id="_1">审阅清单结果</h2>
+<h3 id="1">1. 事实准确性 — ⚠️ 不通过 → 已修复</h3>
+<p><strong>检查方式：</strong> 通过 WebSearch、Agent 子代理（截图分析）和已抓取的 dev.to 文章、GitHub README、GitHub API 元数据交叉验证。</p>
+<p><strong>发现：</strong>
+- <strong>P1</strong>：03-tutorial.md 1.1 节和 1.3 节中的会话状态颜色为编造内容。原文声称绿色=运行中、黄色=等待输入、蓝色=子代理、灰色=已完成、红色=出错。实际上 CodeIsland 使用官方状态点颜色：Cyan=工作中、Amber=需要审批、Purple=思考中、Green=完成/等待输入、Red=错误或超过 60s 未响应、Orange=超过 30s 未响应。<strong>已修复。</strong>
+- <strong>P1</strong>：03-tutorial.md 3.2 节中的 AI 工具颜色编码为编造内容。原文声称 Claude Code=橙色、Codex=绿色、Gemini=蓝色。实际上根据 Notch 面板截图分析：Claude Code=橙色（正确）、Codex=浅蓝色（非绿色）、Gemini=紫色（非蓝色）。且颜色编码主要对应会话状态而非工具类型。<strong>已修复。</strong>
+- <strong>P1</strong>：03-tutorial.md 3.1 节的 Hook 配置 JSON 呈现为实际配置，但实为基于 Claude Code hook 机制的概念性示例，非 CodeIsland 实际安装的精确配置。<strong>已修复</strong>（添加了说明标注）。
+- 版本号（v1.0.17, 2026-04-09）、Stars 数（682）、Forks 数（75）、License（MIT）、创建者（KrisYing）等基本信息经交叉验证准确无误。
+- 技术架构描述（Hook → Bridge → Unix Socket → SwiftUI UI）、Bridge 大小（~86KB）、Socket 路径格式与 dev.to 文章一致。
+- 竞品信息（claude-island、AgentNotch）经各项目 README 交叉验证准确。</p>
+<h3 id="2">2. 代码可运行性 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 逐个检查代码示例的语法正确性、完整性和预期输出一致性。</p>
+<p><strong>发现：</strong>
+- 02-analysis.md 中的代码示例（Hook 配置 JSON、Swift Socket 服务端伪代码、工具函数模式）均为架构示意代码，语法正确，注释清晰。
+- 03-tutorial.md 中的代码示例（bash 安装命令、验证脚本、Hook 配置 JSON、多工具并发管理脚本）语法正确，命令均为实际可执行的命令。
+- Hook 配置 JSON 已标注为概念性示例（审阅修正）。
+- 无伪代码或省略号占位符。</p>
+<h3 id="3">3. 内容完整性 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 对照审阅清单检查各文档的必要章节覆盖情况。</p>
+<p><strong>发现：</strong>
+- <strong>01-discovery.md</strong> 覆盖：基本信息、一句话定位、核心特性（9 条）、社区生态（Stars/Forks/Contributors/更新日期/Issue）、技术栈定位、竞品列表、关键链接汇总、信息来源。完整。
+- <strong>02-analysis.md</strong> 覆盖：技术背景与动机（行业背景+创立动机+发展历程）、核心原理（设计哲学+核心机制+数据流）、架构设计（整体架构+核心模块+扩展机制）、关键概念详解（6 个概念，每个含定义/作用/场景/代码示例）、同类技术横向对比（4 个竞品：claude-island、AgentNotch、手动终端切换，10+ 维度）、适用场景（5 个最佳+4 个不适用）、优缺点分析（6 优势+5 劣势+2 风险点）、生态成熟度、生产就绪度、学习曲线、总结与建议。完整。
+- <strong>03-tutorial.md</strong> 覆盖：环境搭建指南、入门篇（4 节）、进阶篇（4 节）、高级篇（3 节）、实战项目（含完整步骤+代码解析+扩展挑战）、常见问题与排查指南（8 条错误+3 条调试技巧）、学习路线推荐（官方文档顺序+进阶资源+术语对照表）。完整。
+- 横向对比包含 4 个竞品（claude-island、AgentNotch、手动终端切换，加上不同方案的 OTLP/HTTP 对比），超过最少 3 个的要求。</p>
+<h3 id="4">4. 逻辑递进 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 检查 03-tutorial.md 各章节之间的知识依赖关系。</p>
+<p><strong>发现：</strong>
+- 入门篇 1.1（Notch 面板基本交互）→ 1.2（Hook 自动安装机制）→ 1.3（会话状态监控）→ 1.4（Claude 使用量监控），递进合理。每节建立在前一节的基础上。
+- 进阶篇 2.1（权限审批与问题回答）→ 2.2（智能弹窗抑制）→ 2.3（一键终端跳转）→ 2.4（Claude 使用量监控），每节扩展了入门篇的知识。
+- 高级篇 3.1（Hook 配置深度定制）→ 3.2（多工具并发管理）→ 3.3（最佳实践），逻辑连贯。
+- 实战项目综合运用了 Notch 面板交互（1.1）、Hook 安装机制（1.2）、权限审批（2.1）、智能弹窗抑制（2.2）、一键终端跳转（2.3）共 5 个知识点，超过最少 3 个的要求。</p>
+<h3 id="5">5. 术语一致性 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 检查全文术语使用是否统一，中英文对应是否一致。</p>
+<p><strong>发现：</strong>
+- 核心术语全文统一：Notch（刘海）、Hook（钩子）、Bridge（桥接程序）、Unix Domain Socket（Unix 域套接字）、Smart Popup Suppression（智能弹窗抑制）、AskUserQuestion（多选问题）、Subagent（子代理）、Buddy（伙伴）。
+- 代码命名与文字描述对应一致（如 <code>codeisland-bridge</code>、<code>/tmp/codeisland-&lt;uid&gt;.sock</code> 等）。
+- 术语对照表（03-tutorial.md 第六部分）包含 11 个术语的中英文对照。</p>
+<h3 id="6">6. 时效性 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 验证信息获取日期是否标注，过时信息是否标记。</p>
+<p><strong>发现：</strong>
+- 所有文档均标注了信息获取日期（2026-04-10）。
+- 基于最新版本 v1.0.17（2026-04-09 发布）。
+- 项目刚发布 4 天，不存在过时信息的问题。
+- 版本更新日志（v1.0.8 → v1.0.17）基于 GitHub Releases 页面验证，时间线准确。</p>
+<h3 id="7">7. 来源可溯 — ✅ 通过</h3>
+<p><strong>检查方式：</strong> 检查关键信息是否标注来源，是否至少 3 个独立信息来源。</p>
+<p><strong>发现：</strong>
+- 独立信息来源共 7 个：GitHub 仓库（wxtsky/CodeIsland）、GitHub API、GitHub Releases、dev.to 文章 #1（Control Center）、dev.to 文章 #2（Buddy 系统）、claude-island GitHub 仓库、AgentNotch GitHub 仓库。超过最少 3 个的要求。
+- 关键数据点（Stars 数、版本号、License、Bridge 大小等）标注了来源和获取日期。
+- 代码示例标注了来源（"基于 GitHub README 和 dev.to 文章描述" 或 "基于 dev.to 文章描述的架构"）。
+- 横向对比表格底部有数据来源说明。</p>
+<hr />
+<h2 id="_2">问题列表</h2>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>级别</th>
+<th>所在文件</th>
+<th>问题描述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#1</td>
+<td>P1</td>
+<td>03-tutorial.md 1.1 节及 1.3 节</td>
+<td>会话状态颜色为编造内容。原文声称绿色=运行中、黄色=等待输入、蓝色=子代理等，与官方状态点颜色定义（Cyan/Amber/Green/Purple/Red/Orange）不符</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#2</td>
+<td>P1</td>
+<td>03-tutorial.md 3.2 节</td>
+<td>AI 工具颜色编码为编造内容。原文声称 Codex=绿色、Gemini=蓝色，实际 Codex=浅蓝色、Gemini=紫色。且颜色编码主要对应会话状态而非工具类型</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#3</td>
+<td>P1</td>
+<td>03-tutorial.md 3.1 节</td>
+<td>Hook 配置 JSON 呈现为实际配置，但实为概念性示例</td>
+<td>已修复</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">修正说明</h2>
+<h3 id="1p1">修正 #1：会话状态颜色（P1）</h3>
+<p><strong>修正文件：</strong> <code>03-tutorial.md</code>
+<strong>修正位置：</strong> 1.1 节收起状态描述、1.3 节会话状态类型表
+<strong>修正依据：</strong> dev.to 文章中描述的状态点颜色定义，以及 xmqywx/CodeIsland 仓库文档中的状态点颜色说明
+<strong>修正内容：</strong>
+- 1.1 节：将"绿色=运行中、黄色=等待输入、红色=出错、蓝色=子代理"替换为官方状态点颜色：Cyan=工作中、Amber=需要审批、Green=完成/等待输入、Purple=思考中、Red=错误或&gt;60s未响应、Orange=&gt;30s未响应
+- 1.3 节：将会话状态类型表更新为与官方状态点颜色一致的 6 种状态</p>
+<h3 id="2ai-p1">修正 #2：AI 工具颜色编码（P1）</h3>
+<p><strong>修正文件：</strong> <code>03-tutorial.md</code>
+<strong>修正位置：</strong> 3.2 节多工具并发管理
+<strong>修正依据：</strong> GitHub notch-panel.png 截图分析（Agent 子代理验证）和 dev.to 文章
+<strong>修正内容：</strong>
+- 将"Claude Code=橙色、Codex=绿色、Gemini=蓝色"替换为截图验证后的实际颜色：Claude Code=橙色、Codex=浅蓝色、Gemini=紫色
+- 补充说明颜色编码主要对应会话状态（而非工具类型），并列出完整的 6 种状态颜色</p>
+<h3 id="3hook-p1">修正 #3：Hook 配置标注（P1）</h3>
+<p><strong>修正文件：</strong> <code>03-tutorial.md</code>
+<strong>修正位置：</strong> 3.1 节 Hook 配置结构
+<strong>修正依据：</strong> 基于审阅中对 Claude Code hook 配置格式的验证
+<strong>修正内容：</strong>
+- 在 Hook 配置 JSON 代码块前添加说明："以下为 Claude Code hook 配置的概念性示例（基于 Claude Code hook 机制的通用格式，非 CodeIsland 实际安装的精确配置）"</p>
+<hr />
+<h2 id="_4">质量评分</h2>
+<p><strong>评级：C 级</strong>（有 P1 问题已修复，无 P0 问题未修复）</p>
+<p>评分依据：
+- P0 问题 0 个
+- P1 问题 3 个：会话状态颜色错误（已修复）、AI 工具颜色编码错误（已修复）、Hook 配置未标注为示例（已修复）
+- P2 问题 0 个</p>
+<p>所有 P0 和 P1 问题均已修复，源文件中已添加 <code>&lt;!-- reviewed: ... --&gt;</code> 标注。修正后无残留问题。</p>
+<hr />
+<h2 id="_5">审阅信息来源</h2>
+<ul>
+<li><a href="https://github.com/wxtsky/CodeIsland">GitHub - wxtsky/CodeIsland</a> — 验证项目信息、功能列表、Notch 面板截图</li>
+<li><a href="https://api.github.com/repos/wxtsky/CodeIsland">GitHub API</a> — 验证 Stars、Forks、Issues 等元数据</li>
+<li><a href="https://github.com/wxtsky/CodeIsland/releases">GitHub Releases</a> — 验证版本历史</li>
+<li><a href="https://dev.to/krisying/i-turned-my-macbooks-notch-into-a-control-center-for-ai-coding-agents-2o57">dev.to — Control Center for AI Coding Agents</a> — 验证功能描述、技术架构、终端支持、状态点颜色</li>
+<li><a href="https://dev.to/krisying/my-claude-code-buddy-moved-into-my-macbooks-notch-and-i-cant-stop-looking-at-it-3d6e">dev.to — Buddy Moved Into Notch</a> — 验证 Buddy 系统、技术栈</li>
+<li><a href="https://github.com/farouqaldori/claude-island">GitHub - farouqaldori/claude-island</a> — 验证竞品信息</li>
+<li><a href="https://github.com/appgram/agentnotch">GitHub - appgram/agentnotch</a> — 验证竞品信息</li>
+</ul>
+<p>信息获取日期：2026-04-10</p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>
