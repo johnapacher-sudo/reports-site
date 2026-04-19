@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitNexus - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 SitePoint 技术文章和 GitHub README</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#rag-client-side-rag-pipeline" class="toc-h4">客户端 RAG 管线（Client-Side RAG Pipeline）</a></li>
+<li><a href="#ast-ast-aware-chunking" class="toc-h4">AST 感知分块（AST-Aware Chunking）</a></li>
+<li><a href="#embedding-generation" class="toc-h4">向量嵌入生成（Embedding Generation）</a></li>
+<li><a href="#graph-storage" class="toc-h4">图谱存储（Graph Storage）</a></li>
+<li><a href="#vector-search-graph-augmented-retrieval" class="toc-h4">向量搜索与图增强检索（Vector Search + Graph-Augmented Retrieval）</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#client-side-knowledge-graph" class="toc-h3">客户端知识图谱（Client-Side Knowledge Graph）</a></li>
+<li><a href="#ast-ast-aware-chunking_1" class="toc-h3">AST 感知分块（AST-Aware Chunking）</a></li>
+<li><a href="#vector-embedding" class="toc-h3">向量嵌入（Vector Embedding）</a></li>
+<li><a href="#graph-augmented-retrieval" class="toc-h3">图增强检索（Graph-Augmented Retrieval）</a></li>
+<li><a href="#mcp-mcp-tool-integration" class="toc-h3">MCP 工具集成（MCP Tool Integration）</a></li>
+<li><a href="#multi-phase-indexing-pipeline" class="toc-h3">多阶段索引管线（Multi-Phase Indexing Pipeline）</a></li>
+<li><a href="#impact-analysis" class="toc-h3">影响分析（Impact Analysis）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GitNexus - 深度分析报告</h1>
+                        <div class="article-meta">基于 SitePoint 技术文章和 GitHub README</div>
+                    </header>
+                    <h1 id="gitnexus-">GitNexus - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2024-2026 年间，AI 编码助手（如 GitHub Copilot、Cursor、Claude Code）已成为开发者的标准工具。然而，一个核心瓶颈日益凸显：这些 AI 工具本质上是"盲目"的——它们能读取文件内容，但无法真正理解代码的结构关系。</p>
+<p>Medium 上的深度文章用了一个精准的比喻："AI coding agents are blind. They read files but don't see structure."（AI 编码代理是盲目的。它们读取文件，但看不到结构。）当开发者要求 AI 重构 <code>UserService.validate()</code> 时，AI 可能不知道这个方法被 47 个调用方跨 12 个文件引用，重构会导致连锁破坏。[置信度：高]</p>
+<p>行业面临的具体痛点包括：</p>
+<ol>
+<li>
+<p><strong>代码结构理解缺失</strong>：AI 编码工具通常通过文本匹配或简单语义搜索理解代码，无法感知函数调用链、类继承关系、模块依赖等结构性信息。这导致 AI 在重构、影响分析等需要结构理解的任务中表现不佳。</p>
+</li>
+<li>
+<p><strong>代码隐私与安全风险</strong>：现有的代码智能服务（如 Sourcegraph Cloud、Greptile）需要将代码上传到云端进行分析。对于企业团队和重视代码隐私的开发者，这意味着将源代码暴露给第三方。</p>
+</li>
+<li>
+<p><strong>AI 编码工具的上下文不足</strong>：即使是最先进的 AI 编码助手，其上下文窗口也有限。对于大型代码库（数千文件），AI 无法在一次对话中获取足够的结构信息来做出准确的决策。</p>
+</li>
+<li>
+<p><strong>多工具集成碎片化</strong>：开发者使用 Claude Code、Cursor、Windsurf 等不同的 AI 编码工具，每个工具有自己的插件和扩展机制。代码智能能力需要为每个工具单独实现，缺乏统一的协议。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>GitNexus 由独立开发者 Abhigyan Patwari（归属 akonlabs.com）于 2025 年 8 月创建，核心动机是：</p>
+<ol>
+<li>
+<p><strong>构建零服务端的代码智能引擎</strong>：所有计算——AST 解析、知识图谱构建、向量嵌入、语义搜索——完全在客户端完成。代码不离开开发者的机器，从根本上解决代码隐私问题。SitePoint 的技术文章将其定位为"Client-Side RAG"（客户端检索增强生成）。[置信度：高]</p>
+</li>
+<li>
+<p><strong>让 AI 真正理解代码结构</strong>：通过构建知识图谱（Knowledge Graph），GitNexus 不仅记录代码的文本内容，还记录实体间的关系——调用链、导入依赖、类继承、模块归属等。这使得 AI 工具能够执行影响分析、流程追踪等需要结构理解的高级操作。[置信度：高]</p>
+</li>
+<li>
+<p><strong>通过 MCP 统一 AI 工具集成</strong>：采用 Model Context Protocol（MCP）作为统一的工具协议，一次索引即可服务 Claude Code、Cursor、Codex、Windsurf、OpenCode 等多个 AI 编码工具，避免为每个工具单独开发插件。[置信度：高]</p>
+</li>
+<li>
+<p><strong>实现图增强检索（Graph-Augmented Retrieval）</strong>：不仅使用向量相似度搜索，还结合知识图谱的结构化关系进行图遍历（Graph Traversal），提供比纯向量搜索更准确的代码上下文。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2025-08-02</strong>：GitHub 仓库创建，发布 GitNexus 初始版本</li>
+<li><strong>2025 年 8-12 月</strong>：快速迭代，从 0 增长到 16,000+ Stars，获得 Reddit、Medium、HackerNoon 等平台关注</li>
+<li><strong>2026 年 1-3 月</strong>：持续迭代，新增多仓库 MCP、Wiki 生成、版本变更检测等功能。Medium 文章 "GitNexus: The Code Intelligence Engine That Reached 16K+ Stars in 7 Months" 发布</li>
+<li><strong>2026-03-22</strong>：Medium 发布深度技术文章 "The Tool That Gives AI Agents a Nervous System for Code"</li>
+<li><strong>2026 年 3-4 月</strong>：SitePoint 发布详细架构分析文章 "Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus"</li>
+<li><strong>2026-04-12</strong>：发布 v1.6.0，GitHub 最后推送日期（截至 2026-04-13），共 14 个 Release</li>
+<li><strong>2026-04-13</strong>：GitHub Stars 达到 26,818，Forks 3,030，Open Issues 262</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>GitNexus 的设计围绕四个核心理念：</p>
+<ol>
+<li>
+<p><strong>零服务端（Zero-Server）</strong>：所有计算在客户端完成——AST 解析通过 WebAssembly/Tree-sitter 在浏览器或本地进程中运行，向量嵌入通过 Transformers.js 在 Web Worker 中生成，知识图谱存储在 IndexedDB 中。不需要任何服务器基础设施，代码不离开开发者机器。[置信度：高]</p>
+</li>
+<li>
+<p><strong>隐私优先（Privacy-First）</strong>：由于所有处理都在本地完成，源代码永远不会被发送到外部服务器。这与需要云端处理的竞品（如 Sourcegraph Cloud、Greptile）形成鲜明对比。对于处理敏感代码库的企业团队，这是关键的安全保障。[置信度：高]</p>
+</li>
+<li>
+<p><strong>图增强检索（Graph-Augmented Retrieval）</strong>：GitNexus 不满足于纯向量相似度搜索。它在向量检索的基础上，通过知识图谱进行 1-2 跳的图遍历，拉取相关联的符号——调用方、导入关系、基类等。这种"向量+图谱"的混合检索策略显著提升了上下文质量。[置信度：高]</p>
+</li>
+<li>
+<p><strong>协议统一（Protocol Unification）</strong>：通过 MCP（Model Context Protocol）作为统一的工具协议，GitNexus 将代码智能能力以标准化的工具接口暴露给所有支持的 AI 编码工具。开发者一次配置，即可在 Claude Code、Cursor、Windsurf 等多个工具中使用。[置信度：高]</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>客户端性能 vs 服务器算力</strong>：GitNexus 选择客户端执行，获得了隐私和安全优势，但牺牲了服务器级别的算力。浏览器环境的 WASM 堆限制在 2-4GB，嵌入模型（all-MiniLM-L6-v2，22.7M 参数）在 MTEB 基准上弱于服务器级模型。对于超大型代码库（&gt;50,000 文件），性能可能成为瓶颈。[置信度：高]
+- <strong>通用性 vs 精度</strong>：支持 14 种编程语言意味着 AST 解析需要适配多种语法。GitNexus 使用 Tree-sitter 作为统一的解析器后端，但不同语言的结构特征差异可能导致索引精度不均。[置信度：中]
+- <strong>License 限制</strong>：GitForm Noncommercial 许可证允许非商业使用，但企业商用需要联系 akonlabs.com 获取商业许可。这限制了开源社区的商业贡献动力。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="rag-client-side-rag-pipeline">客户端 RAG 管线（Client-Side RAG Pipeline）</h4>
+<p>GitNexus 的核心是一个完全运行在客户端的检索增强生成（RAG）管线，分为 6 个阶段：</p>
+<pre><code>代码库输入
+  │
+  ├─ 1. Structure（结构提取）
+  │     → 扫描文件系统，识别文件类型和项目结构
+  │
+  ├─ 2. Parsing（AST 解析）
+  │     → 使用 Tree-sitter 解析为抽象语法树
+  │     → 提取函数、类、接口、变量等代码实体
+  │     → AST 感知分块（AST-Aware Chunking）
+  │
+  ├─ 3. Resolution（引用解析）
+  │     → 解析 import 语句和函数调用
+  │     → 建立实体间的引用关系（调用链、依赖图）
+  │
+  ├─ 4. Clustering（聚类分析）
+  │     → 基于模块/目录/功能对实体进行聚类
+  │     → 识别功能模块边界
+  │
+  ├─ 5. Processes（流程识别）
+  │     → 识别业务流程（如&quot;用户注册→验证→激活&quot;）
+  │     → 建立跨模块的流程链路
+  │
+  └─ 6. Search（搜索索引）
+        → 向量嵌入（Transformers.js + all-MiniLM-L6-v2）
+        → 存储到 IndexedDB（nodes/edges/vectors 三张表）
+        → 构建向量搜索索引
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 技术文章和 GitHub README</p>
+</blockquote>
+<h4 id="ast-ast-aware-chunking">AST 感知分块（AST-Aware Chunking）</h4>
+<p>传统代码搜索使用行号或字符数分块，容易在函数中间断开。GitNexus 使用 AST 感知分块，确保每个代码块对应完整的语法单元：</p>
+<pre><code class="language-typescript">// 基于 SitePoint 文章（&quot;Client-Side RAG: Building Knowledge Graphs in the Browser&quot;）
+// AST 感知分块原理（使用 @babel/parser 作为示例）
+
+import { parse } from &quot;@babel/parser&quot;;
+import traverse from &quot;@babel/traverse&quot;;
+
+function astAwareChunk(code: string, filePath: string): Chunk[] {
+  const ast = parse(code, {
+    sourceType: &quot;module&quot;,
+    plugins: [&quot;typescript&quot;, &quot;jsx&quot;, &quot;decorators-legacy&quot;],
+  });
+
+  const chunks: Chunk[] = [];
+
+  traverse(ast, {
+    // 提取函数声明为独立块
+    FunctionDeclaration(path) {
+      chunks.push({
+        filePath,
+        symbolName: path.node.id?.name ?? &quot;anonymous&quot;,
+        kind: &quot;function&quot;,
+        loc: path.node.loc,        // 起止行号
+        code: code.slice(path.node.start!, path.node.end!),
+      });
+    },
+    // 提取类声明为独立块
+    ClassDeclaration(path) {
+      chunks.push({
+        filePath,
+        symbolName: path.node.id?.name ?? &quot;anonymous&quot;,
+        kind: &quot;class&quot;,
+        loc: path.node.loc,
+        code: code.slice(path.node.start!, path.node.end!),
+      });
+    },
+    // 提取命名导出为独立块
+    ExportNamedDeclaration(path) {
+      // 处理 export const/function/class 声明
+    },
+  });
+
+  return chunks;
+}
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 文章 "Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus"</p>
+</blockquote>
+<h4 id="embedding-generation">向量嵌入生成（Embedding Generation）</h4>
+<p>GitNexus 使用 Transformers.js 在 Web Worker 中生成向量嵌入，避免阻塞主线程：</p>
+<pre><code class="language-typescript">// 基于 SitePoint 文章
+// 向量嵌入生成（Web Worker 中运行）
+
+import { pipeline } from &quot;@xenova/transformers&quot;;
+
+// 使用 all-MiniLM-L6-v2 模型（22.7M 参数，384 维）
+// 量化版本，适合浏览器环境
+const embedder = await pipeline(&quot;feature-extraction&quot;, &quot;Xenova/all-MiniLM-L6-v2&quot;);
+
+async function generateEmbedding(text: string): Promise&lt;Float32Array&gt; {
+  const output = await embedder(text, {
+    pooling: &quot;mean&quot;,
+    normalize: true,   // L2 归一化，使 dot product = cosine similarity
+  });
+
+  return output.data as Float32Array;  // 384 维浮点向量
+}
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 文章 "Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus"</p>
+</blockquote>
+<p><strong>模型选择说明：</strong>
+- <strong>all-MiniLM-L6-v2</strong>：22.7M 参数，输出 384 维向量，量化后适合浏览器运行。在 MTEB 基准上低于服务器级模型（如 text-embedding-3-large），但在客户端约束下是合理的平衡选择。[置信度：高]
+- <strong>L2 归一化</strong>：输出向量经过 L2 归一化后，dot product 等价于 cosine similarity，简化了相似度计算。[置信度：高]</p>
+<h4 id="graph-storage">图谱存储（Graph Storage）</h4>
+<p>GitNexus 使用 IndexedDB 作为持久化存储，设计为三张对象存储（Object Stores）：</p>
+<pre><code>IndexedDB Schema:
+
+Object Store: nodes
+  键: filePath + symbolName（复合主键）
+  值: {
+    filePath, symbolName, kind,
+    loc: { startLine, endLine },
+    code,           // 完整代码文本
+    embedding,      // Float32Array, 384 维
+    module,         // 所属模块/目录
+  }
+
+Object Store: edges
+  键: autoIncrement
+  索引: [sourceKey, targetKey, type]
+  值: {
+    sourceKey,      // 源实体 (filePath+symbolName)
+    targetKey,      // 目标实体
+    type,           // 关系类型: &quot;imports&quot; | &quot;calls&quot; | &quot;inherits&quot; | &quot;implements&quot;
+    weight,         // 关系权重
+  }
+
+Object Store: vectors
+  键: filePath + symbolName
+  索引: 无（全扫描 + cursor 迭代）
+  值: {
+    key,            // filePath+symbolName
+    vector,         // Float32Array, 384 维
+  }
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 文章 "Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus"</p>
+</blockquote>
+<p><strong>存储规模参考：</strong> 约 15,000 个代码块 + 384 维 float32 向量，存储约 22MB。实用限制约 10,000-50,000 文件，取决于代码库复杂度和浏览器资源限制。[置信度：中]</p>
+<h4 id="vector-search-graph-augmented-retrieval">向量搜索与图增强检索（Vector Search + Graph-Augmented Retrieval）</h4>
+<pre><code>用户查询（自然语言）
+  │
+  ├─ 1. 查询嵌入
+  │     → 使用相同的 Transformers.js pipeline 生成查询向量
+  │     → 384 维，L2 归一化
+  │
+  ├─ 2. 向量搜索（Vector Search）
+  │     → Cursor-based 迭代遍历 vectors store
+  │     → 计算查询向量与每个存储向量的 dot product（= cosine similarity）
+  │     → 使用 bounded heap（topK * 2）维护 top-K 结果
+  │     → 返回最相似的 K 个代码块
+  │
+  ├─ 3. 图遍历（Graph Traversal）
+  │     → 对 top-K 结果中的每个代码块，查询 edges store
+  │     → 遍历 1-2 跳：查找调用方、导入关系、基类、实现类
+  │     → 将关联符号加入结果集
+  │
+  └─ 4. 结果合并与排序
+        → 合并向量搜索结果和图遍历结果
+        → 去重，按相关性排序
+        → 返回增强后的上下文
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 文章 "Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus"</p>
+</blockquote>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>开发者启动索引（CLI 或 Web UI）
+  │
+  ├─ 1. 文件扫描
+  │     → 递归扫描项目目录
+  │     → 识别 14 种支持的编程语言文件
+  │     → 过滤 node_modules、.git、dist 等忽略目录
+  │
+  ├─ 2. 多阶段索引管线
+  │     → Structure: 建立文件目录树
+  │     → Parsing: Tree-sitter AST 解析，提取代码实体
+  │     → Resolution: 解析 import 和调用关系
+  │     → Clustering: 按模块/功能聚类
+  │     → Processes: 识别跨模块业务流程
+  │     → Search: 生成向量嵌入，构建搜索索引
+  │
+  ├─ 3. 存储
+  │     → 代码实体存储到 IndexedDB nodes store
+  │     → 关系存储到 edges store
+  │     → 向量存储到 vectors store
+  │     → 典型规模: 15k 块 ~ 22MB
+  │
+  ├─ 4. MCP 工具注册
+  │     → 启动 MCP 服务器（stdio 传输）
+  │     → 注册 16 个工具: get_code_overview, search_symbols,
+  │       find_impact_analysis, get_process_grouped_search_results 等
+  │
+  ├─ 5. AI 编码工具连接
+  │     → Claude Code / Cursor / Windsurf 等通过 MCP 协议连接
+  │     → 调用工具执行代码查询和分析
+  │     → 结果流式返回给 AI 工具
+  │
+  └─ 6. 增量更新（代码变更时）
+        → 监听文件变更
+        → 增量重新索引变更的文件
+        → 更新知识图谱和向量索引
+</code></pre>
+<blockquote>
+<p>基于 GitHub README 和 SitePoint 文章</p>
+</blockquote>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   使用模式层（Usage Mode Layer）               │
+│   CLI + MCP 模式（终端，集成 AI 编码工具）                     │
+│   Web UI 模式（Next.js，部署在 Vercel）                       │
+├─────────────────────────────────────────────────────────────┤
+│                   MCP 工具层（MCP Tools Layer）                │
+│   16 个 MCP 工具                                             │
+│   ├─ 代码概览: get_code_overview                             │
+│   ├─ 符号搜索: search_symbols                                │
+│   ├─ 影响分析: find_impact_analysis                          │
+│   ├─ 流程搜索: get_process_grouped_search_results            │
+│   ├─ 上下文视图: get_360_degree_context_view                 │
+│   ├─ 多文件重命名: get_multi_file_rename                     │
+│   ├─ 版本变更: find_all_changes_between_versions             │
+│   └─ ...（共 16 个工具）                                     │
+├─────────────────────────────────────────────────────────────┤
+│                   检索引擎层（Retrieval Engine Layer）          │
+│   向量搜索引擎（Cosine Similarity + Bounded Heap）            │
+│   图遍历引擎（1-2 跳 Graph Traversal）                       │
+│   混合检索（Vector + Graph 结果合并）                         │
+├─────────────────────────────────────────────────────────────┤
+│                   索引管线层（Indexing Pipeline Layer）        │
+│   Structure → Parsing → Resolution → Clustering →            │
+│   Processes → Search                                         │
+│   ├─ AST 解析器（Tree-sitter，14 种语言）                     │
+│   ├─ 嵌入生成器（Transformers.js + all-MiniLM-L6-v2）        │
+│   └─ 关系解析器（Import/Call/Inheritance Resolution）         │
+├─────────────────────────────────────────────────────────────┤
+│                   存储层（Storage Layer）                      │
+│   IndexedDB（nodes / edges / vectors 三张表）                │
+│   文件系统监听（增量更新）                                    │
+├─────────────────────────────────────────────────────────────┤
+│                   运行时层（Runtime Layer）                    │
+│   Bun 运行时（CLI 模式）                                     │
+│   浏览器运行时（Web UI 模式）                                │
+│   Web Workers（嵌入生成）                                    │
+│   WebAssembly（Tree-sitter 解析）                            │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p>基于 SitePoint 文章、Medium 文章和 GitHub README</p>
+</blockquote>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>索引管线（Indexing Pipeline）</strong> - 6 阶段处理引擎，从文件扫描到搜索索引的完整流水线。核心是 Tree-sitter 的 AST 解析，支持 14 种编程语言。使用 WebAssembly 在浏览器/本地进程中高效运行 Tree-sitter。</p>
+</li>
+<li>
+<p><strong>知识图谱（Knowledge Graph）</strong> - 以代码实体（函数、类、接口、变量）为节点，以代码关系（调用、导入、继承、实现）为边构成的图结构。存储在 IndexedDB 中，nodes store 存储实体，edges store 存储关系。</p>
+</li>
+<li>
+<p><strong>嵌入引擎（Embedding Engine）</strong> - 基于 Transformers.js 的向量嵌入生成器，使用 all-MiniLM-L6-v2 模型（384 维）在 Web Worker 中运行。量化模型大小约 22.7M 参数，适合客户端环境。</p>
+</li>
+<li>
+<p><strong>检索引擎（Retrieval Engine）</strong> - 双引擎设计：向量搜索引擎通过 cosine similarity 快速定位相关代码块，图遍历引擎通过 1-2 跳关系扩展拉取结构化上下文。两种结果合并后返回给 MCP 工具层。</p>
+</li>
+<li>
+<p><strong>MCP 服务器（MCP Server）</strong> - 实现 Model Context Protocol 的工具服务器，通过 stdio 传输与 AI 编码工具通信。注册 16 个标准化工具，支持 Claude Code 的 Skills、Prompts、Resources 全部 MCP 能力。</p>
+</li>
+<li>
+<p><strong>Web UI（基于 Next.js）</strong> - 提供可视化的代码库浏览界面，包括代码概览、符号搜索、知识图谱可视化等功能。部署在 Vercel 上，索引计算仍在客户端完成。</p>
+</li>
+<li>
+<p><strong>多仓库管理（Multi-Repo Manager）</strong> - 支持同时索引多个代码仓库，每个仓库维护独立的知识图谱。通过 MCP 的多仓库能力，AI 工具可以跨仓库搜索和分析代码。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>GitNexus 提供以下扩展方式：</p>
+<ol>
+<li>
+<p><strong>语言支持扩展</strong>：通过 Tree-sitter 的语法文件（grammar）添加对新编程语言的支持。Tree-sitter 社区已提供数十种语言的语法定义。</p>
+</li>
+<li>
+<p><strong>MCP 工具消费</strong>：任何实现 MCP 客户端的 AI 编码工具都可以连接 GitNexus。新工具只需支持 MCP 协议即可获得全部代码智能能力。</p>
+</li>
+<li>
+<p><strong>自定义嵌入模型</strong>：理论上可以替换 Transformers.js 的嵌入模型（如使用更大的模型或领域微调模型），但需要考虑客户端性能约束。</p>
+</li>
+<li>
+<p><strong>Web UI 定制</strong>：Web UI 基于 Next.js 构建，可以 fork 和定制界面以满足团队需求。</p>
+</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="client-side-knowledge-graph">客户端知识图谱（Client-Side Knowledge Graph）</h3>
+<ul>
+<li><strong>定义：</strong> 在客户端（浏览器或本地进程）中构建的代码结构图谱，以代码实体为节点、代码关系为边，存储实体属性和关系类型。</li>
+<li><strong>作用：</strong> 使 AI 编码工具能够理解代码的结构关系——调用链、依赖图、继承树——而非仅依赖文本匹配。这是 GitNexus 区别于传统代码搜索工具的核心能力。</li>
+<li><strong>使用场景：</strong> 影响分析（"哪些代码会受此函数修改影响"）、调用链追踪（"这个方法被谁调用"）、依赖分析（"这个模块依赖哪些其他模块"）、360度上下文视图。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 SitePoint 文章
+// 知识图谱节点和边的数据结构
+
+interface GraphNode {
+  filePath: string;       // 文件路径
+  symbolName: string;     // 符号名称（函数名/类名/变量名）
+  kind: string;           // 类型: &quot;function&quot; | &quot;class&quot; | &quot;interface&quot; | &quot;variable&quot;
+  loc: {                  // 源码位置
+    startLine: number;
+    endLine: number;
+  };
+  code: string;           // 完整代码文本
+  module: string;         // 所属模块/目录
+}
+
+interface GraphEdge {
+  sourceKey: string;      // 源节点 (filePath+symbolName)
+  targetKey: string;      // 目标节点
+  type: &quot;imports&quot; | &quot;calls&quot; | &quot;inherits&quot; | &quot;implements&quot;;
+  weight: number;         // 关系权重
+}
+</code></pre>
+<h3 id="ast-ast-aware-chunking_1">AST 感知分块（AST-Aware Chunking）</h3>
+<ul>
+<li><strong>定义：</strong> 基于抽象语法树（AST）结构的代码分块策略，确保每个代码块对应完整的语法单元（函数、类、接口），而非在语法结构中间截断。</li>
+<li><strong>作用：</strong> 保持代码块的语义完整性，使向量嵌入能够准确表示代码的含义。相比行号分块或字符数分块，AST 感知分块显著提升了搜索和检索的精度。</li>
+<li><strong>使用场景：</strong> 代码索引、语义搜索、相似代码检测、代码重构建议。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 SitePoint 文章
+// AST 感知分块核心逻辑（以 TypeScript 为例）
+
+import { parse } from &quot;@babel/parser&quot;;
+import traverse from &quot;@babel/traverse&quot;;
+
+interface Chunk {
+  filePath: string;
+  symbolName: string;
+  kind: &quot;function&quot; | &quot;class&quot; | &quot;interface&quot; | &quot;export&quot;;
+  loc: { start: number; end: number };
+  code: string;
+}
+
+function chunkFile(code: string, filePath: string): Chunk[] {
+  // 使用 @babel/parser 解析 TypeScript 代码
+  const ast = parse(code, {
+    sourceType: &quot;module&quot;,
+    plugins: [&quot;typescript&quot;, &quot;jsx&quot;],
+  });
+
+  const chunks: Chunk[] = [];
+
+  traverse(ast, {
+    // 函数声明 → 独立代码块
+    FunctionDeclaration(path) {
+      if (path.node.id) {
+        chunks.push({
+          filePath,
+          symbolName: path.node.id.name,
+          kind: &quot;function&quot;,
+          loc: { start: path.node.loc!.start.line, end: path.node.loc!.end.line },
+          code: code.slice(path.node.start!, path.node.end!),
+        });
+      }
+    },
+    // 类声明 → 独立代码块（包含所有方法）
+    ClassDeclaration(path) {
+      chunks.push({
+        filePath,
+        symbolName: path.node.id!.name,
+        kind: &quot;class&quot;,
+        loc: { start: path.node.loc!.start.line, end: path.node.loc!.end.line },
+        code: code.slice(path.node.start!, path.node.end!),
+      });
+    },
+  });
+
+  return chunks;
+}
+</code></pre>
+<h3 id="vector-embedding">向量嵌入（Vector Embedding）</h3>
+<ul>
+<li><strong>定义：</strong> 使用 Transformers.js 的 all-MiniLM-L6-v2 模型将代码文本转换为 384 维浮点向量，在 Web Worker 中运行以避免阻塞主线程。</li>
+<li><strong>作用：</strong> 使代码搜索从精确文本匹配升级为语义相似度匹配。用户可以用自然语言描述需求（如"处理用户认证的函数"），系统返回语义相关的代码块，即使关键词不完全匹配。</li>
+<li><strong>使用场景：</strong> 自然语言代码搜索、相似代码推荐、代码重复检测。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 SitePoint 文章
+// 向量嵌入生成（在 Web Worker 中运行）
+
+import { pipeline, Pipeline } from &quot;@xenova/transformers&quot;;
+
+let embedder: Pipeline | null = null;
+
+async function initEmbedder(): Promise&lt;Pipeline&gt; {
+  if (!embedder) {
+    // 加载 all-MiniLM-L6-v2 模型（22.7M 参数，384 维输出）
+    // 量化版本，模型大小约 30MB
+    embedder = await pipeline(&quot;feature-extraction&quot;, &quot;Xenova/all-MiniLM-L6-v2&quot;);
+  }
+  return embedder;
+}
+
+async function embed(text: string): Promise&lt;Float32Array&gt; {
+  const model = await initEmbedder();
+  const output = await model(text, {
+    pooling: &quot;mean&quot;,       // 平均池化
+    normalize: true,       // L2 归一化 → dot product = cosine similarity
+  });
+  // output.data 是 384 维的 Float32Array
+  return output.data as Float32Array;
+}
+
+// 计算两个向量的余弦相似度（归一化后即 dot product）
+function cosineSimilarity(a: Float32Array, b: Float32Array): number {
+  let dot = 0;
+  for (let i = 0; i &lt; a.length; i++) {
+    dot += a[i] * b[i];
+  }
+  return dot;  // L2 归一化后，dot product = cosine similarity
+}
+</code></pre>
+<h3 id="graph-augmented-retrieval">图增强检索（Graph-Augmented Retrieval）</h3>
+<ul>
+<li><strong>定义：</strong> 在向量相似度搜索的基础上，通过知识图谱进行图遍历（1-2 跳），拉取与搜索结果相关的调用方、导入关系、基类等结构化上下文。</li>
+<li><strong>作用：</strong> 纯向量搜索可能遗漏结构相关但不语义相似的代码。例如，搜索 <code>UserService.login()</code> 时，向量搜索可能返回 <code>login</code> 方法本身，但图遍历可以额外发现 <code>AuthService.verifyToken()</code>（被 login 调用）和 <code>LoginController.handleLogin()</code>（调用 login 的入口），提供更完整的上下文。</li>
+<li><strong>使用场景：</strong> 影响分析（"修改此函数会影响哪些代码"）、360度上下文视图、流程分组搜索。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 SitePoint 文章
+// 图增强检索流程
+
+async function graphAugmentedRetrieve(
+  query: string,
+  topK: number = 10,
+  hopDepth: number = 2
+): Promise&lt;SearchResult[]&gt; {
+  // 第一步: 向量搜索
+  const queryVector = await embed(query);
+  const vectorResults = await vectorSearch(queryVector, topK);
+
+  // 第二步: 图遍历扩展
+  const expandedResults = new Map&lt;string, SearchResult&gt;();
+
+  for (const result of vectorResults) {
+    // 添加原始向量搜索结果
+    expandedResults.set(result.key, result);
+
+    // 图遍历: 查找关联节点
+    const relatedNodes = await graphTraverse(result.key, hopDepth);
+    for (const node of relatedNodes) {
+      if (!expandedResults.has(node.key)) {
+        expandedResults.set(node.key, {
+          ...node,
+          source: &quot;graph&quot;,     // 标记来源为图遍历
+          relevanceScore: node.score * 0.8,  // 图遍历结果适当降权
+        });
+      }
+    }
+  }
+
+  // 第三步: 合并、去重、排序
+  return Array.from(expandedResults.values())
+    .sort((a, b) =&gt; b.relevanceScore - a.relevanceScore);
+}
+
+// 图遍历: BFS，1-2 跳
+async function graphTraverse(
+  startKey: string,
+  depth: number
+): Promise&lt;GraphNode[]&gt; {
+  const visited = new Set&lt;string&gt;();
+  const queue: { key: string; level: number }[] = [{ key: startKey, level: 0 }];
+  const results: GraphNode[] = [];
+
+  while (queue.length &gt; 0) {
+    const { key, level } = queue.shift()!;
+
+    if (level &gt;= depth || visited.has(key)) continue;
+    visited.add(key);
+
+    // 查询 edges store: 找出与 startKey 相关的所有边
+    const edges = await getEdges(key);
+    for (const edge of edges) {
+      const neighborKey = edge.sourceKey === key ? edge.targetKey : edge.sourceKey;
+      const node = await getNode(neighborKey);
+      if (node &amp;&amp; !visited.has(neighborKey)) {
+        results.push(node);
+        queue.push({ key: neighborKey, level: level + 1 });
+      }
+    }
+  }
+
+  return results;
+}
+</code></pre>
+<h3 id="mcp-mcp-tool-integration">MCP 工具集成（MCP Tool Integration）</h3>
+<ul>
+<li><strong>定义：</strong> 通过 Model Context Protocol 将 GitNexus 的代码智能能力以标准化工具接口暴露给 AI 编码工具。支持 Claude Code 的最深集成（Skills、Prompts、Resources），同时兼容 Cursor、Codex、Windsurf、OpenCode 等。</li>
+<li><strong>作用：</strong> 使 AI 编码工具能够调用 GitNexus 的知识图谱进行代码分析，而无需了解底层实现。MCP 协议统一了工具注册、调用和返回格式，一次配置即可服务多个工具。</li>
+<li><strong>使用场景：</strong> 在 Claude Code 中使用 <code>/gitnexus</code> 命令索引项目、在 Cursor 中通过 MCP 工具执行影响分析、在 Windsurf 中搜索代码符号。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GitNexus 官方 README
+# CLI + MCP 模式安装和配置
+
+# 安装 GitNexus CLI
+npm install -g gitnexus
+
+# 在项目目录中启动索引
+cd /path/to/your/project
+gitnexus index
+
+# 配置 Claude Code 集成（自动配置 MCP 工具）
+gitnexus setup --tool=claude-code
+
+# 配置 Cursor 集成
+gitnexus setup --tool=cursor
+
+# 启动 MCP 服务器（stdio 模式，供 AI 工具连接）
+gitnexus serve
+</code></pre>
+<pre><code class="language-json">// Claude Code 的 MCP 配置（自动生成）
+// 写入 .claude/claude_desktop_config.json 或等效位置
+{
+  &quot;mcpServers&quot;: {
+    &quot;gitnexus&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;],
+      &quot;cwd&quot;: &quot;/path/to/your/project&quot;
+    }
+  }
+}
+</code></pre>
+<h3 id="multi-phase-indexing-pipeline">多阶段索引管线（Multi-Phase Indexing Pipeline）</h3>
+<ul>
+<li><strong>定义：</strong> 6 阶段的代码索引流水线：Structure → Parsing → Resolution → Clustering → Processes → Search。每个阶段有明确的输入和输出，支持增量更新。</li>
+<li><strong>作用：</strong> 将原始代码文件转换为结构化的知识图谱和搜索索引。渐进式的管线设计使每个阶段专注于单一职责，且可以独立优化和并行化。</li>
+<li><strong>使用场景：</strong> 新项目索引、增量更新（文件变更后重新索引）、多仓库索引。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GitNexus 官方 README
+# 多阶段索引管线执行过程
+
+# 启动索引（自动执行 6 个阶段）
+$ gitnexus index /path/to/project
+
+# 典型输出:
+# [Structure] Scanning project files...         → 发现 1,247 个文件
+# [Parsing] AST parsing with Tree-sitter...     → 提取 8,342 个代码实体
+# [Resolution] Resolving references...           → 建立 12,567 条关系边
+# [Clustering] Clustering by module...           → 识别 23 个功能模块
+# [Processes] Identifying business processes...  → 发现 15 条流程链路
+# [Search] Building search index...              → 生成 8,342 个向量嵌入
+
+# 索引完成，存储到 IndexedDB
+# 总存储: ~18MB（包含节点、边和向量数据）
+</code></pre>
+<h3 id="impact-analysis">影响分析（Impact Analysis）</h3>
+<ul>
+<li><strong>定义：</strong> 利用知识图谱的边（edges）追踪代码变更的影响范围。当某个函数或类被修改时，通过图遍历找出所有直接和间接引用它的代码实体。</li>
+<li><strong>作用：</strong> 帮助开发者和 AI 工具评估代码修改的风险。例如，修改 <code>UserService.validate()</code> 方法时，影响分析可以发现 12 个文件中 47 个调用方，提醒开发者逐一检查。</li>
+<li><strong>使用场景：</strong> 代码重构前的风险评估、PR Review 中的变更影响理解、AI 辅助代码修改的安全检查。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GitNexus 官方 README
+# 使用 MCP 工具执行影响分析
+
+# 在 AI 编码工具中调用 find_impact_analysis 工具
+# 参数: { &quot;symbol&quot;: &quot;UserService.validate&quot;, &quot;depth&quot;: 2 }
+
+# 典型返回结果:
+# {
+#   &quot;symbol&quot;: &quot;UserService.validate&quot;,
+#   &quot;direct_impact&quot;: [
+#     &quot;auth/LoginController.handleLogin()&quot;,
+#     &quot;auth/RegistrationController.register()&quot;,
+#     &quot;api/UserAPI.updateProfile()&quot;,
+#     ...
+#   ],
+#   &quot;indirect_impact&quot;: [
+#     &quot;routes/auth.ts → LoginController&quot;,
+#     &quot;middleware/auth.ts → tokenRefresh()&quot;,
+#     ...
+#   ],
+#   &quot;total_affected_files&quot;: 12,
+#   &quot;total_affected_symbols&quot;: 47,
+#   &quot;risk_level&quot;: &quot;high&quot;
+# }
+</code></pre>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GitNexus</th>
+<th>DeepWiki / OpenDeepWiki</th>
+<th>Sourcegraph / Cody</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>零服务端客户端代码智能引擎，通过知识图谱让 AI 理解代码结构</td>
+<td>将 GitHub 仓库转化为 Wiki 风格的知识库，自动生成文档</td>
+<td>代码搜索平台 + AI 编码助手，基于云端代码索引</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>26,818（2026-04-13）</td>
+<td>OpenDeepWiki: ~5,000（2026-03）</td>
+<td>Sourcegraph: ~104,000（2026-03）</td>
+</tr>
+<tr>
+<td>最新版本</td>
+<td>v1.6.0（2026-04-12）</td>
+<td>持续更新（.NET 9 基础）</td>
+<td>Cody 持续更新</td>
+</tr>
+<tr>
+<td>License</td>
+<td>PolyForm Noncommercial（非商用）</td>
+<td>MIT</td>
+<td>Apache 2.0（Sourcegraph OSS）/ 商业许可（Cody Enterprise）</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>TypeScript 97.7%</td>
+<td>C# / .NET 9</td>
+<td>Go（Sourcegraph）/ TypeScript（Cody）</td>
+</tr>
+<tr>
+<td>代码理解方式</td>
+<td>客户端知识图谱（AST + 向量嵌入 + 图遍历）</td>
+<td>AI 生成的 Wiki 文档</td>
+<td>服务端代码索引 + 正则/语义搜索</td>
+</tr>
+<tr>
+<td>运行方式</td>
+<td>完全客户端（浏览器或本地 CLI）</td>
+<td>服务端部署（需要服务器）</td>
+<td>云端服务（Sourcegraph Cloud）或自托管</td>
+</tr>
+<tr>
+<td>代码隐私</td>
+<td>极好（代码不离开本地）</td>
+<td>取决于部署方式</td>
+<td>云端模式需上传代码；自托管可本地</td>
+</tr>
+<tr>
+<td>AI 工具集成</td>
+<td>MCP 协议（16 个工具），深度集成 Claude Code/Cursor/Windsurf</td>
+<td>独立使用，不直接集成 AI 编码工具</td>
+<td>Cody 自有 AI 助手，VS Code/JetBrains 插件</td>
+</tr>
+<tr>
+<td>语言支持</td>
+<td>14 种（Tree-sitter）</td>
+<td>取决于 AI 模型</td>
+<td>多语言（正则索引支持所有文本语言）</td>
+</tr>
+<tr>
+<td>影响分析</td>
+<td>是（基于知识图谱图遍历）</td>
+<td>否（文档生成为主）</td>
+<td>是（基于代码索引的引用查找）</td>
+</tr>
+<tr>
+<td>向量搜索</td>
+<td>是（Transformers.js + all-MiniLM-L6-v2）</td>
+<td>否</td>
+<td>是（ZOekt 语义搜索）</td>
+</tr>
+<tr>
+<td>知识图谱</td>
+<td>是（nodes + edges + vectors 三表结构）</td>
+<td>否（生成文档为主）</td>
+<td>否（索引为主）</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>中（需理解 MCP 配置和索引概念）</td>
+<td>低（输入仓库 URL 即可）</td>
+<td>低-中（插件安装即可使用）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>中（v1.6.0 活跃开发中，非商用 License 限制）</td>
+<td>中（开源版本较新）</td>
+<td>高（企业级产品，成熟稳定）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。GitNexus Stars 来自 GitHub API 实时查询。DeepWiki/OpenDeepWiki Stars 基于搜索结果中的社区报告。Sourcegraph Stars 基于公开 GitHub 仓库数据。[置信度：GitNexus 高，DeepWiki 中，Sourcegraph 中-高]</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>AI 编码工具的代码结构理解增强</strong>：GitNexus 最核心的使用场景是为 AI 编码工具（特别是 Claude Code、Cursor）提供代码结构理解能力。当 AI 需要执行重构、影响分析、跨文件代码修改时，GitNexus 的知识图谱提供了传统文本搜索无法提供的结构化上下文。适合个人开发者和团队在 AI 辅助编码工作流中集成。[置信度：高]</p>
+</li>
+<li>
+<p><strong>代码隐私要求高的环境</strong>：对于不能将源代码上传到云端的团队（如金融、医疗、国防行业），GitNexus 的零服务端架构是关键优势。所有索引和搜索都在本地完成，代码不离开开发者机器。[置信度：高]</p>
+</li>
+<li>
+<p><strong>大型代码库的代码探索和知识管理</strong>：通过知识图谱和流程分组搜索，开发者可以快速理解陌生代码库的结构和业务流程。对于新加入团队的成员或接手遗留代码的开发者，GitNexus 可以显著降低理解成本。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>多仓库代码智能</strong>：GitNexus 的多仓库 MCP 能力允许同时索引多个代码仓库，进行跨仓库的代码搜索和影响分析。适合微服务架构或 monorepo 管理场景。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>超大型代码库（&gt;50,000 文件）</strong>：受浏览器/客户端资源限制（WASM 堆 2-4GB），GitNexus 的实用上限约 10,000-50,000 文件。对于包含数十万文件的超大型 monorepo，性能可能不足。此类场景更适合 Sourcegraph 的服务端架构。</p>
+</li>
+<li>
+<p><strong>商业用途（未经授权）</strong>：PolyForm Noncommercial 许可证明确禁止商业使用。企业团队需要联系 akonlabs.com 获取商业许可，这增加了采用门槛和成本不确定性。</p>
+</li>
+<li>
+<p><strong>纯文档生成需求</strong>：如果主要需求是从代码库生成 Wiki 文档或 API 文档，DeepWiki 等专用工具可能更适合，因为 GitNexus 的核心价值在于知识图谱和 AI 工具集成，而非文档生成。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>零服务端架构的独特价值</strong> - GitNexus 是目前唯一将完整的代码智能引擎（AST 解析 + 知识图谱 + 向量搜索 + 图遍历）完全运行在客户端的工具。这不仅是隐私优势，还意味着零基础设施成本——不需要服务器、数据库或云服务。对于个人开发者和小团队，这是极大的便利。[置信度：高]</p>
+</li>
+<li>
+<p><strong>图增强检索的精度优势</strong> - 纯向量搜索在代码场景中有已知局限：语义相似但结构无关的代码可能被错误关联。GitNexus 的"向量+图谱"混合检索策略通过图遍历补充结构上下文，在影响分析和上下文视图等场景中明显优于纯向量搜索。[置信度：高]</p>
+</li>
+<li>
+<p><strong>MCP 协议的生态统一</strong> - 通过 MCP 协议一次集成即可服务多个 AI 编码工具，避免了为每个工具单独开发插件的碎片化问题。与 Claude Code 的深度集成（支持 Skills、Prompts、Resources）提供了优秀的用户体验。[置信度：高]</p>
+</li>
+<li>
+<p><strong>7 个月 26,818 Stars 的社区验证</strong> - 在不到 8 个月的时间内获得 26,818 Stars，表明市场对零服务端代码智能的强烈需求。活跃的发布节奏（14 个 Release）和持续更新（最后推送 2026-04-12）表明项目健康发展。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>客户端性能瓶颈</strong> - 浏览器环境的 WASM 堆限制在 2-4GB，嵌入模型（all-MiniLM-L6-v2）在 MTEB 基准上弱于服务器级模型。对于大型代码库，索引时间可能较长，搜索延迟可能高于服务端方案。实际限制约 10,000-50,000 文件。[置信度：高]</p>
+</li>
+<li>
+<p><strong>非商用 License 限制</strong> - PolyForm Noncommercial 许可证明确禁止商业使用，这阻止了企业团队在未经授权的情况下将 GitNexus 用于商业项目。商业许可的定价和条款不透明（需联系 akonlabs.com），增加了采用决策的不确定性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>嵌入模型质量有限</strong> - all-MiniLM-L6-v2（22.7M 参数，384 维）是为通用文本设计的轻量模型，在代码搜索任务上的表现可能不如专门的代码嵌入模型（如 CodeBERT、UniXcoder）。SitePoint 文章也指出了这一局限性。[置信度：中]</p>
+</li>
+<li>
+<p><strong>个人维护者风险</strong> - 项目核心维护者为 Abhigyan Patwari 一人。26,818 Stars 的项目仅由个人维护，bus factor（巴士因子）为 1，长期可持续性存在风险。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>License 合规风险</strong> - PolyForm Noncommercial 许可证的限制性较强。企业团队可能在不经意间违反许可条款（如在商业项目中使用）。建议在采用前咨询法律意见或联系 akonlabs.com 获取明确的商业授权。[置信度：高]</p>
+</li>
+<li>
+<p><strong>项目可持续性风险</strong> - 个人维护者 + 快速增长的社区期望可能导致维护者精疲力竭。262 个 Open Issues 的处理速度需要关注。如果维护者停止更新，项目的长期健康将受到影响。[置信度：中]</p>
+</li>
+<li>
+<p><strong>技术架构的天花板</strong> - 客户端架构虽然隐私优势明显，但受浏览器/本地进程资源限制。随着代码库规模增长，可能需要引入混合架构（客户端图谱 + 服务端推理），但这与"零服务端"的核心理念存在张力。[置信度：中]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>插件/扩展数量：</strong> GitNexus 本身不采用插件架构，而是通过 MCP 协议作为工具提供者。16 个 MCP 工具覆盖了主要的代码智能场景。语言支持通过 Tree-sitter 语法文件扩展，已有 14 种语言。生态扩展主要在消费端（AI 工具集成）而非提供端。[置信度：中]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> 核心依赖 Tree-sitter（AST 解析）、Transformers.js（嵌入生成）、IndexedDB（存储）、MCP SDK（工具协议）。这些上游依赖本身成熟稳定。项目使用 Bun 作为运行时（CLI 模式），较新的运行时但社区活跃。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> 公开的企业采用案例较少。akonlabs.com 提供企业方案，但具体的客户案例和使用规模未公开。26,818 Stars 表明社区关注度极高，但转化为生产级企业采用仍需时间。[置信度：低]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> 中。GitHub README 提供了完整的安装、配置和使用指南。SitePoint 和 Medium 上有详细的架构分析文章。但缺乏独立的 API 参考文档和开发者指南。MCP 工具的参数说明散布在 README 中，未形成结构化文档。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 中。v1.6.0 是活跃开发版本，14 个 Release 表明迭代节奏健康。262 个 Open Issues 需要关注。项目整体处于快速成长期，API 可能在后续版本中调整。PolyForm Noncommercial License 对商业使用有限制。[置信度：中]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> 受客户端资源约束。索引速度取决于代码库大小和本地算力。搜索性能受 IndexedDB 的 cursor-based 迭代限制，对于大规模向量集可能较慢。SitePoint 文章建议的实际文件上限约 50,000 个。[置信度：中]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> 有限。CLI 模式提供基本的日志输出（索引进度、文件计数等）。缺乏专门的监控仪表板或性能指标系统。调试主要依赖日志和浏览器开发者工具（Web UI 模式）。[置信度：中]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> 增量索引机制支持文件变更后的部分重新索引，无需全量重建。IndexedDB 数据持久化在浏览器或本地文件系统中。但缺乏自动备份、版本回滚等高级恢复机制。[置信度：中]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> 零服务端架构本身是安全优势——代码不离开本地。IndexedDB 存储在客户端，受浏览器安全沙盒保护。但作为客户端工具，缺乏企业级的安全审计、访问控制和合规认证。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>命令行基本操作（CLI 模式使用）</li>
+<li>MCP 协议基本概念（理解 AI 工具集成）</li>
+<li>代码库结构基本概念（理解索引和搜索结果）</li>
+<li>
+<p>npm/Node.js 基础（安装 GitNexus CLI）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 30 分钟-1 小时。安装 CLI，在项目目录中执行索引，配置 AI 工具连接即可开始使用。基本操作非常简单。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 2-3 天。需要理解知识图谱的概念、AST 感知分块的原理、向量搜索和图遍历的机制、MCP 工具的参数和使用场景。对于高级定制（如替换嵌入模型、扩展语言支持），需要更长时间。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>GitNexus 在"零服务端代码智能"这一新兴领域建立了独特且引人注目的定位。它的核心创新在于：</p>
+<ol>
+<li><strong>完全客户端的代码智能</strong>：将 AST 解析、知识图谱构建、向量嵌入和语义搜索全部运行在客户端，代码不离开开发者机器。</li>
+<li><strong>图增强检索</strong>：在向量搜索基础上通过知识图谱进行图遍历，提供比纯向量搜索更准确的结构化上下文。</li>
+<li><strong>MCP 协议统一集成</strong>：一次配置即可服务 Claude Code、Cursor、Windsurf 等多个 AI 编码工具。</li>
+</ol>
+<p>26,818 Stars 和 7 个月内的快速增长验证了市场对这一方向的强烈需求。</p>
+<p><strong>推荐使用：</strong> 注重代码隐私的个人开发者和团队（代码不离开本地）；使用 Claude Code 或 Cursor 等 AI 编码工具并希望增强代码结构理解的开发者；中小型代码库（&lt;50,000 文件）的代码探索和知识管理。</p>
+<p><strong>谨慎使用：</strong> 超大型代码库（&gt;50,000 文件）——考虑 Sourcegraph 等服务端方案；需要商业使用的团队——需先获取 akonlabs.com 的商业授权；对稳定性有严格要求的关键生产环境——项目仍在快速迭代中。</p>
+<p><strong>综合评分：</strong> 7.5/10。在"零服务端代码智能"细分领域几乎没有竞品，创新性强，与 AI 编码工具的集成体验优秀。扣分主要来自客户端性能限制（大代码库瓶颈）、嵌入模型质量有限、非商用 License 的采用门槛、以及个人维护者的可持续性风险。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> GitNexus v1.6.0（2026-04-12 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/abhigyanpatwari/GitNexus">GitHub 仓库 abhigyanpatwari/GitNexus</a> — 源码、README、Releases</li>
+<li><a href="https://api.github.com/repos/abhigyanpatwari/GitNexus">GitHub API - abhigyanpatwari/GitNexus</a>（Stars: 26,818, Forks: 3,030, Open Issues: 262）</li>
+<li><a href="https://www.sitepoint.com/">SitePoint - Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus</a> — 详细架构分析，包含 AST 分块、嵌入生成、向量搜索、图遍历的代码示例</li>
+<li><a href="https://medium.com/">Medium - GitNexus: The Tool That Gives AI Agents a Nervous System for Code</a> — 技术动机和场景分析（2026-03-22）</li>
+<li><a href="https://rywalker.com/">rywalker.com - Code Intelligence Tools Comparison</a> — 竞品对比数据</li>
+<li><a href="https://github.com/AsyncFuncAI/deepwiki-open">GitHub 仓库 AsyncFuncAI/deepwiki-open</a> — DeepWiki/OpenDeepWiki 竞品数据</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

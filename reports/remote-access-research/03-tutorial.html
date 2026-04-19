@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网双机远程访问 - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-10 小时 | **前置知识：** 基本计算机操作、了解 IP 地址概念、会使用命令行终端</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-ssh" class="toc-h3">1.1 SSH 远程登录——最基础的远程访问</a></li>
+<li><a href="#12-ssh" class="toc-h3">1.2 SSH 密钥认证——告别密码登录</a></li>
+<li><a href="#13-windows-rdp" class="toc-h3">1.3 Windows RDP 远程桌面——图形化远程控制</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-ssh" class="toc-h3">2.1 SSH 端口转发——加密隧道中转任意流量</a></li>
+<li><a href="#22-vnc" class="toc-h3">2.2 VNC 远程桌面——跨平台的经典方案</a></li>
+<li><a href="#23-rustdesk" class="toc-h3">2.3 RustDesk——开箱即用的跨平台方案</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-ssh" class="toc-h3">3.1 SSH 安全加固</a></li>
+<li><a href="#32-ssh" class="toc-h3">3.2 SSH 配置文件简化连接</a></li>
+<li><a href="#33-rustdesk" class="toc-h3">3.3 RustDesk 自托管服务器</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>局域网双机远程访问 - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-10 小时<br>**前置知识：** 基本计算机操作、了解 IP 地址概念、会使用命令行终端</div>
+                    </header>
+                    <h1 id="-">局域网双机远程访问 - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-10 小时
+<strong>前置知识：</strong> 基本计算机操作、了解 IP 地址概念、会使用命令行终端</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<p>本教程覆盖 Windows、macOS、Linux 三大平台。你需要两台连接到同一局域网的计算机（以下称为"本机"和"远程机"）：</p>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>最低要求</th>
+<th>推荐配置</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>网络</td>
+<td>同一局域网，百兆以太网或 Wi-Fi</td>
+<td>千兆以太网</td>
+</tr>
+<tr>
+<td>操作系统</td>
+<td>Windows 10+ / macOS 12+ / Ubuntu 20.04+</td>
+<td>任意组合均可互通</td>
+</tr>
+<tr>
+<td>权限</td>
+<td>远程机需要管理员/sudo 权限</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>确认两台机器在同一局域网：</strong></p>
+<pre><code class="language-bash"># 在本机执行，查看本机 IP
+# macOS/Linux
+ifconfig | grep &quot;inet &quot; | grep -v 127.0.0.1
+
+# Windows
+ipconfig | findstr &quot;IPv4&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># macOS 示例输出
+inet 192.168.1.10 netmask 0xffffff00 broadcast 192.168.1.255
+
+# Windows 示例输出
+IPv4 地址 . . . . . . . . . . . . . . . . . . . . 192.168.1.20
+</code></pre>
+<p>确认两台机器的 IP 地址在同一网段（如都是 192.168.1.x），然后验证互通：</p>
+<pre><code class="language-bash"># 在本机 ping 远程机（替换为远程机的实际 IP）
+ping -c 4 192.168.1.100    # macOS/Linux
+ping -n 4 192.168.1.100    # Windows
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>64 bytes from 192.168.1.100: icmp_seq=0 ttl=64 time=0.352 ms
+64 bytes from 192.168.1.100: icmp_seq=1 ttl=64 time=0.289 ms
+64 bytes from 192.168.1.100: icmp_seq=2 ttl=64 time=0.315 ms
+--- 192.168.1.100 ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+</code></pre>
+<p>如果 ping 通，说明两台机器网络互通，可以继续。</p>
+<h3 id="_3">安装步骤</h3>
+<p>本教程涉及四个工具，按需安装：</p>
+<pre><code class="language-bash"># 1. SSH（通常系统已内置，无需安装）
+# 验证：
+ssh -V
+
+# 2. Windows RDP（Windows Pro/Enterprise 内置，Home 版不支持被控）
+# Windows 上启用：设置 → 系统 → 远程桌面 → 启用远程桌面
+
+# 3. RustDesk（跨平台图形化远程桌面）
+# macOS
+brew install --cask rustdesk
+
+# Ubuntu/Debian
+wget https://github.com/rustdesk/rustdesk/releases/download/1.4.6/rustdesk-1.4.6-x86_64.deb
+sudo dpkg -i rustdesk-1.4.6-x86_64.deb
+
+# Windows
+# 从 https://rustdesk.com/ 下载安装包
+
+# 4. VNC（以 TigerVNC 为例，Linux 场景）
+# Ubuntu/Debian
+sudo apt install tigervnc-standalone-server tigervncviewer
+
+# macOS 使用内置的&quot;屏幕共享&quot;应用（VNC 兼容）
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 验证 SSH
+ssh -V
+# 预期输出：OpenSSH_9.6p1, LibreSSL 3.3.6 (或其他版本号)
+
+# 验证 RustDesk（通过 GUI 查看版本）
+# 打开 RustDesk → 关于 → 查看版本号
+# 当前最新稳定版：1.4.6
+
+# 验证 VNC（Linux）
+vncserver -version
+# 预期输出：TigerVNC Server 1.13.x
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-ssh">1.1 SSH 远程登录——最基础的远程访问</h3>
+<p><strong>概念讲解：</strong></p>
+<p>SSH（Secure Shell）是局域网远程访问的基石。它通过加密通道让你在本机终端上操作远程机的命令行。SSH 采用客户端-服务器模型：远程机运行 SSH 服务端（sshd），本机使用 SSH 客户端连接。</p>
+<p>SSH 的安全性来自三层协议架构：
+- <strong>传输层</strong>：使用 Diffie-Hellman 或 Curve25519 算法协商加密密钥，建立加密隧道
+- <strong>认证层</strong>：验证你的身份（密码或公钥）
+- <strong>连接层</strong>：在加密隧道中打开多个逻辑通道（shell、文件传输、端口转发）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 第一步：确保远程机的 SSH 服务已启动
+# 在远程机上执行：
+# macOS：系统设置 → 通用 → 共享 → 远程登录（开启）
+# Linux：
+sudo systemctl start sshd
+sudo systemctl enable sshd    # 开机自启
+
+# 第二步：从本机连接远程机
+# 基本格式：ssh 用户名@远程机IP
+ssh user@192.168.1.100
+
+# 首次连接会提示确认指纹，输入 yes
+# 然后输入远程机用户密码
+
+# 第三步：连接成功后，你就在远程机的终端中了
+# 可以执行任何远程机命令
+whoami           # 显示当前用户
+hostname         # 显示远程机主机名
+uptime           # 显示运行时间
+ls -la /home     # 列出远程机 home 目录
+
+# 第四步：退出远程连接
+exit
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ ssh user@192.168.1.100
+The authenticity of host '192.168.1.100 (192.168.1.100)' can't be established.
+ED25519 key fingerprint is SHA256:abc123def456...
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '192.168.1.100' (ED25519) to the known hosts.
+user@192.168.1.100's password:
+Welcome to Ubuntu 24.04 LTS
+Last login: Sat Apr 12 10:00:00 2026
+
+$ whoami
+user
+$ hostname
+remote-server
+$ uptime
+ 10:30:00 up 5 days,  3:20,  1 user,  load average: 0.05, 0.02, 0.00
+$ exit
+Connection to 192.168.1.100 closed.
+</code></pre>
+<p><strong>练习题：</strong>
+1. 使用 SSH 连接到远程机，执行 <code>uname -a</code> 查看远程机的系统信息
+2. 尝试使用 <code>ssh -p 2222 user@192.168.1.100</code> 指定非默认端口连接（需要远程机配置了 2222 端口）</p>
+<hr />
+<h3 id="12-ssh">1.2 SSH 密钥认证——告别密码登录</h3>
+<p><strong>概念讲解：</strong></p>
+<p>密码认证存在被暴力破解的风险。SSH 密钥认证使用非对称加密（公钥/私钥对）替代密码，更安全也更方便。原理：你在本机生成一对密钥（私钥 + 公钥），将公钥放到远程机上。连接时，SSH 用私钥做数学证明你拥有对应的公钥，无需传输密码。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 第一步：在本机生成密钥对（使用 Ed25519 算法，比 RSA 更安全更短）
+ssh-keygen -t ed25519 -C &quot;my-lan-key&quot;
+
+# 按三次回车使用默认值：
+# 1. 密钥保存位置（默认 ~/.ssh/id_ed25519）
+# 2. 密钥口令（可选，留空则无口令）
+# 3. 确认口令
+
+# 第二步：将公钥复制到远程机
+ssh-copy-id user@192.168.1.100
+
+# 输入远程机密码（这是最后一次需要密码）
+
+# 第三步：测试免密码登录
+ssh user@192.168.1.100
+# 不再需要密码，直接登录成功
+
+# 第四步：查看生成的密钥文件
+ls ~/.ssh/
+# id_ed25519      ← 私钥（绝不能泄露）
+# id_ed25519.pub  ← 公钥（可以公开）
+# known_hosts     ← 已信任的远程机指纹
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ ssh-keygen -t ed25519 -C &quot;my-lan-key&quot;
+Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/user/.ssh/id_ed25519):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/user/.ssh/id_ed25519
+Your public key has been saved in /home/user/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:xyz789abc456... my-lan-key
+The key's randomart image is:
++--[ED25519 256]--+
+|       .o o      |
+|      ...= .     |
+|     . +o *      |
++----[SHA256]-----+
+
+$ ssh-copy-id user@192.168.1.100
+/usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: &quot;/home/user/.ssh/id_ed25519.pub&quot;
+user@192.168.1.100's password:
+Number of key(s) added: 1
+Now try logging into the machine, with:   &quot;ssh 'user@192.168.1.100'&quot;
+and check to make sure that only the key(s) you wanted were added.
+
+$ ssh user@192.168.1.100
+Welcome to Ubuntu 24.04 LTS
+Last login: Sat Apr 12 10:30:00 2026
+# 直接登录，无需密码！
+</code></pre>
+<p><strong>练习题：</strong>
+1. 生成一个新的 Ed25519 密钥对，并设置一个密钥口令（passphrase），体验双重保护
+2. 查看远程机上的 <code>~/.ssh/authorized_keys</code> 文件，确认公钥已添加</p>
+<hr />
+<h3 id="13-windows-rdp">1.3 Windows RDP 远程桌面——图形化远程控制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>RDP（Remote Desktop Protocol）是 Microsoft 开发的远程桌面协议，深度集成在 Windows 中。与 SSH 的纯命令行不同，RDP 传输的是完整的图形界面，你在本机看到的就是远程机的桌面。</p>
+<p>RDP 的核心技术是"命令级渲染"——它不传输原始像素，而是传输绘图指令（如"在坐标 (x,y) 绘制一个按钮"），客户端在本地重新执行这些指令来呈现画面。这让 RDP 在局域网中带宽消耗极低（0.5-2 Mbps），延迟仅 10-30ms。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># ===== 在远程机（Windows）上启用 RDP =====
+
+# 方法一：GUI 操作
+# 设置 → 系统 → 远程桌面 → 开启&quot;远程桌面&quot;
+# 注意：需要 Windows Pro/Enterprise 版本
+
+# 方法二：命令行启用（以管理员运行 PowerShell）
+Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name &quot;fDenyTSConnections&quot; -value 0
+Enable-NetFirewallRule -DisplayGroup &quot;Remote Desktop&quot;
+
+# ===== 在本机连接 =====
+
+# macOS：安装 Microsoft Remote Desktop
+# 从 App Store 搜索 &quot;Microsoft Remote Desktop&quot; 安装
+# 打开应用 → 添加 PC → 输入 192.168.1.100 → 输入 Windows 用户名密码
+
+# Linux：使用 FreeRDP 或 Remmina
+# FreeRDP 方式
+xfreerdp3 /v:192.168.1.100 /u:username
+
+# Windows：自带远程桌面连接
+# 按 Win+R → 输入 mstsc → 回车 → 输入远程机 IP → 连接
+</code></pre>
+<pre><code class="language-powershell"># Windows PowerShell：快速启动远程桌面连接
+mstsc /v:192.168.1.100
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># FreeRDP 连接成功的输出示例
+$ xfreerdp3 /v:192.168.1.100 /u:admin
+Password:
+[10:35:00:000] [INFO] Connected to 192.168.1.100:3389
+[10:35:00:123] [INFO] SSL/TLS connected with protocol TLS 1.3
+[10:35:00:456] [INFO] Authentication: NLA
+[10:35:01:789] [INFO] Desktop resolution: 1920x1080
+# 随后弹出远程桌面窗口，可以看到远程机的完整桌面
+</code></pre>
+<p><strong>练习题：</strong>
+1. 在两台 Windows 电脑之间建立 RDP 连接，尝试在远程桌面中打开一个应用程序
+2. 在远程桌面中尝试复制一段文字，在本机粘贴，体验剪贴板同步功能</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-ssh">2.1 SSH 端口转发——加密隧道中转任意流量</h3>
+<p><strong>概念讲解：</strong></p>
+<p>SSH 端口转发（又称 SSH 隧道）是 SSH 最强大的扩展能力。它可以在加密的 SSH 连接中"穿透"任意 TCP 流量。三种模式：</p>
+<ul>
+<li><strong>本地转发（-L）</strong>：将本机端口转发到远程网络中的目标</li>
+<li><strong>远程转发（-R）</strong>：将远程机端口转发到本地网络中的目标</li>
+<li><strong>动态转发（-D）</strong>：创建 SOCKS 代理，按需转发</li>
+</ul>
+<p>典型用途：为不加密的 VNC 连接加上 SSH 加密保护。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 场景：通过 SSH 隧道安全访问远程机上的 VNC 服务（端口 5900）
+
+# 第一步：建立本地端口转发
+# 将本机 5901 端口 → SSH 隧道 → 远程机 localhost:5900
+ssh -L 5901:localhost:5900 user@192.168.1.100
+
+# 这个 SSH 会话保持打开状态，充当隧道
+
+# 第二步：在另一个终端，连接本机 5901 端口（实际访问远程机的 VNC）
+# 使用 VNC 客户端连接 localhost:5901
+# 流量路径：VNC客户端 → localhost:5901 → SSH加密隧道 → 远程机:5900
+
+# 第三步：远程端口转发示例
+# 让远程网络的用户访问本机的 Web 服务（端口 80）
+ssh -R 8080:localhost:80 user@192.168.1.100
+# 远程机上的用户访问 localhost:8080 即可看到本机的 Web 服务
+
+# 第四步：动态端口转发（SOCKS 代理）
+ssh -D 1080 user@192.168.1.100
+# 本机 1080 端口变成 SOCKS5 代理
+# 浏览器设置 SOCKS5 代理为 localhost:1080 即可通过远程机上网
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ ssh -L 5901:localhost:5900 user@192.168.1.100
+Welcome to Ubuntu 24.04 LTS
+Last login: Sat Apr 12 10:35:00 2026
+# 此终端保持连接状态，隧道已建立
+
+# 另一个终端验证隧道：
+$ vncviewer localhost:5901
+# 连接成功，VNC 流量通过 SSH 加密传输
+</code></pre>
+<p><strong>注意事项：</strong>
+- SSH 隧道会话不能关闭，关闭则隧道断开
+- 可以加 <code>-f -N</code> 参数让隧道在后台运行：<code>ssh -f -N -L 5901:localhost:5900 user@192.168.1.100</code>
+- 如果报错 <code>bind: Address already in use</code>，说明端口被占用，换一个端口号</p>
+<p><strong>练习题：</strong>
+1. 建立一个 SSH 隧道，将本机 8080 端口转发到远程机的 80 端口，然后用浏览器访问 localhost:8080
+2. 使用 <code>-f -N</code> 参数让隧道在后台运行，然后用 <code>ps aux | grep ssh</code> 确认隧道进程存在</p>
+<hr />
+<h3 id="22-vnc">2.2 VNC 远程桌面——跨平台的经典方案</h3>
+<p><strong>概念讲解：</strong></p>
+<p>VNC（Virtual Network Computing）基于 RFB 协议，采用"帧缓冲"模型：服务端维护屏幕的像素矩阵，客户端请求变化区域并重建画面。与 RDP 的"命令级渲染"不同，VNC 传输的是实际像素数据，因此带宽消耗更大，但平台无关性极好。</p>
+<p>VNC 的增量更新机制：客户端请求"仅发送自上次更新以来变化的区域"，服务端只传输变化矩形的像素数据。CopyRect 编码在窗口拖动时仅传输"从 A 位置复制到 B 位置"的指令，而非整块像素。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># ===== 在远程机（Linux）上配置 VNC 服务端 =====
+
+# 第一步：设置 VNC 密码
+vncpasswd
+# 输入并确认密码（6-8 位）
+# 提示是否设置 view-only 密码，选 n
+
+# 第二步：配置桌面环境
+# 创建 VNC 启动配置文件
+mkdir -p ~/.vnc
+cat &gt; ~/.vnc/xstartup &lt;&lt; 'EOF'
+#!/bin/bash
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+exec startxfce4    # 使用 XFCE 桌面（需安装 xfce4）
+EOF
+chmod +x ~/.vnc/xstartup
+
+# 第三步：启动 VNC 服务
+vncserver :1 -geometry 1920x1080 -depth 24
+# :1 表示显示编号 1，对应端口 5901（5900 + 1）
+# -geometry 分辨率
+# -depth 色深
+
+# 第四步：从本机连接
+# Linux：
+vncviewer 192.168.1.100:5901
+
+# macOS：使用内置&quot;屏幕共享&quot;
+# Finder → 前往 → 连接服务器 → vnc://192.168.1.100:5901
+
+# 第五步：通过 SSH 隧道加密连接（推荐）
+# 先建隧道
+ssh -f -N -L 5901:localhost:5901 user@192.168.1.100
+# 然后连接本地端口
+vncviewer localhost:5901
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ vncpasswd
+Password:
+Verify:
+Would you like to enter a view-only password (y/n)? n
+
+$ vncserver :1 -geometry 1920x1080 -depth 24
+New 'remote-server:1 (user)' desktop is remote-server:1
+Starting applications specified in /home/user/.vnc/xstartup
+Log file is /home/user/.vnc/remote-server:1.log
+
+$ vncviewer 192.168.1.100:5901
+# 弹出远程桌面窗口，可以操作远程机的 XFCE 桌面
+</code></pre>
+<p><strong>注意事项：</strong>
+- 标准 VNC 默认不加密，务必通过 SSH 隧道使用
+- VNC 端口规则：显示编号 <code>:N</code> 对应端口 <code>5900+N</code>
+- 关闭 VNC 服务：<code>vncserver -kill :1</code>
+- 如果连接黑屏，检查 xstartup 文件是否正确配置了桌面环境</p>
+<p><strong>练习题：</strong>
+1. 在远程机上启动 VNC 服务，从本机连接并尝试在远程桌面中打开终端
+2. 通过 SSH 隧道加密连接 VNC，比较直接连接和隧道连接的安全性差异</p>
+<hr />
+<h3 id="23-rustdesk">2.3 RustDesk——开箱即用的跨平台方案</h3>
+<p><strong>概念讲解：</strong></p>
+<p>RustDesk 是一个开源的远程桌面工具，使用 Rust 语言编写。它的核心架构是 P2P（点对点）优先：在局域网中，两台电脑直接通过 IP 地址发现对方并建立连接，无需任何中继服务器。</p>
+<p>RustDesk 使用 VP8/VP9/AV1 视频编码器压缩屏幕画面，配合 NaCl 加密库（x25519 + XSalsa20 + Poly1305）实现端到端加密。在局域网中延迟通常 10-50ms，体验接近本地操作。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># ===== 最简方式：局域网直连 =====
+
+# 第一步：在两台机器上分别安装并启动 RustDesk
+# macOS
+open /Applications/RustDesk.app
+
+# Linux
+rustdesk &amp;
+
+# Windows：双击桌面图标启动
+
+# 第二步：在远程机上查看 ID 和设置密码
+# RustDesk 主界面显示一个 9 位数字 ID（如 123 456 789）
+# 点击&quot;设置密码&quot;输入一个连接密码
+
+# 第三步：在本机连接远程机
+# 在 RustDesk 本机界面输入远程机的 ID
+# 输入密码即可连接
+
+# ===== 命令行/服务方式 =====
+
+# 在远程机以服务模式启动 RustDesk（Linux）
+# 注意：RustDesk 主要通过 GUI 操作，CLI 功能有限
+# Linux 上以服务方式运行：
+rustdesk --service
+
+# 从命令行直接连接（传入对方 ID 或 IP）
+# 局域网中可直接使用 IP 地址
+rustdesk 192.168.1.100
+
+# 注意：密码设置和文件传输建议通过 GUI 完成
+# RustDesk GUI → 设置 → 安全 → 设置固定密码
+# RustDesk GUI → 连接后工具栏 → 文件传输
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># RustDesk 启动后的主界面显示：
+# ┌─────────────────────────┐
+# │  您的桌面 ID:           │
+# │     123 456 789         │
+# │                         │
+# │  [设置密码]             │
+# │                         │
+# │  远程桌面 ID:           │
+# │  [________________]     │
+# │  [连接]                 │
+# └─────────────────────────┘
+
+# 输入对方 ID 并连接后，弹出远程桌面窗口
+</code></pre>
+<p><strong>注意事项：</strong>
+- 局域网中使用 IP 直连更快，不需要经过注册服务器
+- 首次连接会提示确认对方指纹，类似 SSH
+- 如果连接不上，检查防火墙是否放行了 RustDesk 端口（默认 21116-21119）</p>
+<p><strong>练习题：</strong>
+1. 在两台不同操作系统的电脑上安装 RustDesk，建立跨平台远程连接
+2. 使用 RustDesk 的文件传输功能，从本机发送一个文件到远程机</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-ssh">3.1 SSH 安全加固</h3>
+<p>生产环境中的 SSH 需要额外的安全配置：</p>
+<pre><code class="language-bash"># 编辑远程机的 SSH 配置文件
+sudo nano /etc/ssh/sshd_config
+
+# 推荐的安全配置（修改以下项）：
+Port 22                          # 可改为非标准端口（如 2222）
+PermitRootLogin no               # 禁止 root 直接登录
+PasswordAuthentication no        # 禁用密码登录（仅密钥认证）
+MaxAuthTries 3                   # 最多尝试 3 次认证
+ClientAliveInterval 300          # 5 分钟无操作发送心跳
+ClientAliveCountMax 2            # 2 次无响应则断开
+
+# 保存后重启 SSH 服务
+sudo systemctl restart sshd
+</code></pre>
+<pre><code class="language-bash"># 安装 fail2ban 防止暴力破解
+sudo apt install fail2ban    # Debian/Ubuntu
+sudo systemctl enable fail2ban
+sudo systemctl start fail2ban
+
+# 默认配置已足够：5 次失败登录后封禁 IP 10 分钟
+# 配置文件：/etc/fail2ban/jail.local
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ sudo systemctl restart sshd
+# 无输出表示成功
+
+$ sudo fail2ban-client status sshd
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed: 0
+|  |- Total failed:     0
+`- Actions
+   |- Currently banned: 0
+   |- Total banned:     0
+</code></pre>
+<h3 id="32-ssh">3.2 SSH 配置文件简化连接</h3>
+<p>每次输入 <code>ssh user@192.168.1.100</code> 很繁琐，可以用配置文件简化：</p>
+<pre><code class="language-bash"># 编辑 SSH 客户端配置文件
+nano ~/.ssh/config
+
+# 添加以下内容
+Host myserver
+    HostName 192.168.1.100
+    User admin
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    LocalForward 5901 localhost:5901
+
+Host win-desktop
+    HostName 192.168.1.50
+    User administrator
+    Port 22
+
+# 保存后，直接使用别名连接
+ssh myserver       # 等效于 ssh -i ~/.ssh/id_ed25519 -L 5901:localhost:5901 admin@192.168.1.100
+ssh win-desktop     # 等效于 ssh -p 22 administrator@192.168.1.50
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ ssh myserver
+Welcome to Ubuntu 24.04 LTS
+Last login: Sat Apr 12 11:00:00 2026 from 192.168.1.10
+# 一条命令直接连接，自动使用密钥认证和端口转发
+</code></pre>
+<h3 id="33-rustdesk">3.3 RustDesk 自托管服务器</h3>
+<p>在需要管理多台机器的场景中，搭建自托管服务器实现集中管理：</p>
+<pre><code class="language-bash"># ===== 在局域网内一台服务器上部署 RustDesk Server =====
+
+# 第一步：下载 RustDesk Server
+wget https://github.com/rustdesk/rustdesk-server/releases/download/1.1.15/rustdesk-server-linux-amd64.zip
+unzip rustdesk-server-linux-amd64.zip
+
+# 第二步：启动注册服务器（hbbs）
+./hbbs
+# 默认监听端口 21115（TCP）、21116（TCP/UDP）
+# 负责设备注册和发现
+
+# 第三步：启动中继服务器（hbbr）
+./hbbr
+# 默认监听端口 21117（TCP）
+# 在 P2P 直连失败时转发流量
+
+# 第四步：在客户端配置服务器地址
+# RustDesk → 设置 → 网络 → ID/中继服务器
+# 填入服务器 IP：192.168.1.50
+# Key：hbbs 启动时生成的密钥
+
+# 第五步：验证
+# 所有配置了相同服务器的客户端可以互相发现和连接
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>$ ./hbbs
+[2026-04-12 11:05:00.123456 +08:00] INFO [src/common.rs:113] Private key file id_ed25519 not found, generating one...
+[2026-04-12 11:05:00.234567 +08:00] INFO [src/rendezvous_mediator.rs:89] Key: abc123xyz456...
+[2026-04-12 11:05:00.345678 +08:00] INFO listening on tcp :21115
+[2026-04-12 11:05:00.456789 +08:00] INFO listening on websocket tcp :21116
+
+$ ./hbbr
+[2026-04-12 11:05:01.123456 +08:00] INFO listening on tcp :21117
+</code></pre>
+<p><strong>最佳实践：</strong>
+1. SSH 始终使用密钥认证，禁用密码登录
+2. VNC 必须通过 SSH 隧道使用，不要裸连
+3. 定期更新所有远程访问工具到最新版本
+4. 为不同场景使用不同方案：命令行用 SSH，图形化用 RustDesk/RDP
+5. 局域网中优先使用 IP 直连，减少中间环节</p>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>搭建一个完整的局域网远程管理环境，实现：
+- 通过 SSH 安全管理远程 Linux 服务器
+- 通过 RustDesk 图形化操作远程桌面
+- 通过 SSH 隧道加密 VNC 连接作为备用图形化方案
+- 使用 SSH 配置文件简化日常连接</p>
+<p>综合运用教程中的 5 个知识点：SSH 密钥认证、SSH 端口转发、SSH 配置文件、VNC 配置、RustDesk 部署。</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>本机 (192.168.1.10, macOS)
+  │
+  ├── SSH ──────────→ 远程机 (192.168.1.100, Ubuntu)
+  │   ├── 命令行管理         │
+  │   └── SSH 隧道 → VNC     │
+  │                          │
+  └── RustDesk ─────→ 远程机
+      └── 图形化远程桌面       │
+                               │
+                    RustDesk Server (192.168.1.50)
+                    （可选：集中管理）
+</code></pre>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-bash">#!/bin/bash
+# setup-remote-access.sh
+# 在本机执行，一键配置局域网远程访问环境
+# 用法：./setup-remote-access.sh &lt;远程机IP&gt; &lt;用户名&gt;
+
+set -e
+
+REMOTE_IP=${1:-&quot;192.168.1.100&quot;}
+REMOTE_USER=${2:-&quot;user&quot;}
+
+echo &quot;===== 局域网远程访问环境配置 =====&quot;
+echo &quot;远程机：$REMOTE_USER@$REMOTE_IP&quot;
+echo &quot;&quot;
+
+# 1. 生成 SSH 密钥（如果不存在）
+if [ ! -f ~/.ssh/id_ed25519 ]; then
+    echo &quot;[Step 1/5] 生成 SSH 密钥...&quot;
+    ssh-keygen -t ed25519 -C &quot;lan-remote-$(date +%Y%m%d)&quot; -f ~/.ssh/id_ed25519 -N &quot;&quot;
+    echo &quot;密钥已生成：~/.ssh/id_ed25519&quot;
+else
+    echo &quot;[Step 1/5] SSH 密钥已存在，跳过生成&quot;
+fi
+
+# 2. 复制公钥到远程机
+echo &quot;[Step 2/5] 复制公钥到远程机（需要输入密码）...&quot;
+ssh-copy-id -i ~/.ssh/id_ed25519.pub &quot;$REMOTE_USER@$REMOTE_IP&quot;
+
+# 3. 配置 SSH 配置文件
+echo &quot;[Step 3/5] 配置 SSH 快捷连接...&quot;
+SSH_CONFIG_ENTRY=$(cat &lt;&lt;EOF
+
+# 自动生成 - 局域网远程访问配置
+Host remote
+    HostName $REMOTE_IP
+    User $REMOTE_USER
+    IdentityFile ~/.ssh/id_ed25519
+    LocalForward 5901 localhost:5901
+    ServerAliveInterval 60
+    ServerAliveCountMax 3
+EOF
+)
+
+# 避免重复添加
+if ! grep -q &quot;Host remote&quot; ~/.ssh/config 2&gt;/dev/null; then
+    mkdir -p ~/.ssh
+    echo &quot;$SSH_CONFIG_ENTRY&quot; &gt;&gt; ~/.ssh/config
+    echo &quot;已添加 'remote' 别名到 ~/.ssh/config&quot;
+else
+    echo &quot;'remote' 别名已存在，跳过&quot;
+fi
+
+# 4. 在远程机上安装和配置 VNC（通过 SSH）
+echo &quot;[Step 4/5] 在远程机上配置 VNC...&quot;
+ssh remote &lt;&lt; 'REMOTE_SCRIPT'
+# 安装 VNC 服务端和 XFCE 桌面（如未安装）
+if ! command -v vncserver &amp;&gt; /dev/null; then
+    echo &quot;安装 TigerVNC 和 XFCE...&quot;
+    sudo apt update
+    sudo apt install -y tigervnc-standalone-server tigervncviewer xfce4 xfce4-goodies
+fi
+
+# 配置 VNC
+mkdir -p ~/.vnc
+cat &gt; ~/.vnc/xstartup &lt;&lt; 'EOF'
+#!/bin/bash
+unset SESSION_MANAGER
+unset DBUS_SESSION_BUS_ADDRESS
+exec startxfce4
+EOF
+chmod +x ~/.vnc/xstartup
+
+# 设置 VNC 密码（如果尚未设置）
+if [ ! -f ~/.vnc/passwd ]; then
+    echo &quot;请设置 VNC 密码：&quot;
+    vncpasswd
+fi
+
+echo &quot;VNC 配置完成&quot;
+REMOTE_SCRIPT
+
+# 5. 启动 VNC 服务（通过 SSH）
+echo &quot;[Step 5/5] 启动远程 VNC 服务...&quot;
+ssh remote 'vncserver -kill :1 2&gt;/dev/null || true; vncserver :1 -geometry 1920x1080 -depth 24'
+
+echo &quot;&quot;
+echo &quot;===== 配置完成 =====&quot;
+echo &quot;&quot;
+echo &quot;使用方法：&quot;
+echo &quot;  SSH 命令行：  ssh remote&quot;
+echo &quot;  VNC（加密）：  先执行 ssh remote，然后在另一终端执行 vncviewer localhost:5901&quot;
+echo &quot;  RustDesk：    在本机和远程机启动 RustDesk，输入 ID 连接&quot;
+echo &quot;&quot;
+echo &quot;快速启动加密 VNC：&quot;
+echo &quot;  ssh -f -N remote &amp;&amp; vncviewer localhost:5901&quot;
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<table>
+<thead>
+<tr>
+<th>代码段</th>
+<th>运用的知识点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ssh-keygen -t ed25519</code></td>
+<td>1.2 SSH 密钥认证</td>
+<td>生成 Ed25519 密钥对</td>
+</tr>
+<tr>
+<td><code>ssh-copy-id</code></td>
+<td>1.2 SSH 密钥认证</td>
+<td>将公钥部署到远程机</td>
+</tr>
+<tr>
+<td><code>~/.ssh/config</code> 配置</td>
+<td>3.2 SSH 配置文件</td>
+<td>别名 + 自动密钥 + 端口转发</td>
+</tr>
+<tr>
+<td><code>LocalForward 5901</code></td>
+<td>2.1 SSH 端口转发</td>
+<td>每次连接自动建立 VNC 隧道</td>
+</tr>
+<tr>
+<td><code>vncserver :1</code> 配置</td>
+<td>2.2 VNC 远程桌面</td>
+<td>设置分辨率、色深、桌面环境</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加自动重连</strong>：编写一个 <code>watchdog.sh</code> 脚本，监控 SSH 隧道是否断开，断开后自动重连</li>
+<li><strong>多机管理</strong>：扩展脚本支持多台远程机的配置，在 SSH config 中为每台机器创建独立别名</li>
+<li><strong>RustDesk Server 集成</strong>：在脚本中加入 RustDesk Server 的自动部署，实现集中管理</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Connection refused</code> (SSH)</td>
+<td>远程机未启动 SSH 服务</td>
+<td><code>sudo systemctl start sshd</code></td>
+</tr>
+<tr>
+<td><code>Connection refused</code> (RDP)</td>
+<td>远程机未启用远程桌面</td>
+<td>Windows 设置中开启远程桌面</td>
+</tr>
+<tr>
+<td><code>Connection refused</code> (VNC)</td>
+<td>VNC 服务未启动或端口错误</td>
+<td><code>vncserver :1</code> 启动，确认端口 5901</td>
+</tr>
+<tr>
+<td><code>Permission denied (publickey)</code></td>
+<td>密钥未部署或被禁用密码登录</td>
+<td>重新执行 <code>ssh-copy-id</code>，或临时启用密码登录</td>
+</tr>
+<tr>
+<td><code>Host key verification failed</code></td>
+<td>远程机重装系统导致指纹变化</td>
+<td><code>ssh-keygen -R 192.168.1.100</code> 删除旧指纹</td>
+</tr>
+<tr>
+<td><code>bind: Address already in use</code></td>
+<td>端口转发端口被占用</td>
+<td>更换本地端口号，如 <code>-L 5902:localhost:5901</code></td>
+</tr>
+<tr>
+<td>VNC 黑屏</td>
+<td>xstartup 未正确配置桌面环境</td>
+<td>检查 <code>~/.vnc/xstartup</code> 是否指定了桌面环境</td>
+</tr>
+<tr>
+<td>RustDesk 连接超时</td>
+<td>防火墙阻止或不在同一网段</td>
+<td>检查防火墙设置，确认网络互通</td>
+</tr>
+<tr>
+<td><code>WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED</code></td>
+<td>远程机重装或密钥变更</td>
+<td>删除 known_hosts 中对应条目后重连</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li><strong>SSH 详细日志</strong>：使用 <code>ssh -vvv user@192.168.1.100</code> 查看连接过程的每一步详情，定位认证或网络问题</li>
+<li><strong>端口检测</strong>：使用 <code>nc -zv 192.168.1.100 22</code> 快速检测远程端口是否可达，不需要建立完整连接</li>
+<li><strong>VNC 日志分析</strong>：检查 <code>~/.vnc/机器名:1.log</code> 文件，VNC 启动或连接错误信息都在此文件中</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<p><strong>SSH/OpenSSH：</strong>
+1. <a href="https://www.openssh.com/manual.html">OpenSSH 官方手册</a> — 理解 ssh、sshd、ssh_config 的完整参数
+2. <a href="https://datatracker.ietf.org/doc/html/rfc4251">RFC 4251 - SSH Protocol Architecture</a> — 理解三层协议设计
+3. <a href="https://datatracker.ietf.org/doc/html/rfc4254">RFC 4254 - SSH Connection Protocol</a> — 深入理解端口转发和通道复用</p>
+<p><strong>RDP：</strong>
+1. <a href="https://learn.microsoft.com/zh-cn/windows-server/remote/remote-desktop-services/">Microsoft 远程桌面服务文档</a> — 部署和配置指南
+2. <a href="https://learn.microsoft.com/en-us/troubleshoot/windows-server/remote/understanding-remote-desktop-protocol">Understanding RDP</a> — 协议原理</p>
+<p><strong>VNC/RFB：</strong>
+1. <a href="https://datatracker.ietf.org/doc/html/rfc6143">RFC 6143 - The Remote Framebuffer Protocol</a> — VNC 协议规范
+2. <a href="https://github.com/TigerVNC/tigervnc/wiki">TigerVNC 项目文档</a> — 实现细节</p>
+<p><strong>RustDesk：</strong>
+1. <a href="https://rustdesk.com/docs/en/">RustDesk 官方文档</a> — 安装、配置、自托管
+2. <a href="https://github.com/rustdesk/rustdesk/wiki">RustDesk GitHub Wiki</a> — FAQ 和高级配置</p>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong>书籍</strong>：《SSH Mastery》（Michael W. Lucas 著）— SSH 的权威实践指南</li>
+<li><strong>课程</strong>：Linux Foundation 的 Linux 系统管理课程 — 包含 SSH 和远程管理的系统讲解</li>
+<li><strong>开源项目</strong>：<a href="https://github.com/FreeRDP/FreeRDP">FreeRDP</a> — 开源 RDP 客户端，阅读源码理解协议实现</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

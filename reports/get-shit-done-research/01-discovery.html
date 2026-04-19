@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD (Get Shit Done) - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">GSD 是一个轻量级的元提示（meta-prompting）、上下文工程（context engineering）和规格驱动开发（spec-driven development）系统，专为 Claude Code 等 AI 编码代理设计，解决长会话中 AI 输出质量随上下文窗口填满而退化的"上下文腐化"问题。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">官方资源</a></li>
+<li><a href="#_8" class="toc-h3">教程资源</a></li>
+<li><a href="#_9" class="toc-h3">社区资源</a></li>
+<li><a href="#_10" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD (Get Shit Done) - 技术发现报告</h1>
+                        <div class="article-meta">GSD 是一个轻量级的元提示（meta-prompting）、上下文工程（context engineering）和规格驱动开发（spec-driven development）系统，专为 Claude Code 等 AI 编码代理设计，解决长会话中 AI 输出质量随上下文窗口填满而退化的"上下文腐化"问题。</div>
+                    </header>
+                    <h1 id="gsd-get-shit-done-">GSD (Get Shit Done) - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> GSD (Get Shit Done)</li>
+<li><strong>官方地址：</strong> https://gsd.build</li>
+<li><strong>GitHub 仓库：</strong> https://github.com/gsd-build/get-shit-done</li>
+<li><strong>当前版本：</strong> v1.35.0（最新 Release，发布于 2026-04-11）；npm 包 <code>get-shit-done-cc</code> 最新版本 1.34.2</li>
+<li><strong>License：</strong> MIT License</li>
+<li><strong>主要编程语言：</strong> JavaScript (82.3%)、TypeScript (16.9%)、Shell (0.8%)</li>
+<li><strong>首次发布日期：</strong> 2025 年（确切首次发布日期待验证，项目在 2025 年中期开始获得关注）</li>
+<li><strong>创建者/维护团队：</strong> TACHES（Lex Christopherson），组织名为 gsd-build</li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>GSD 是一个轻量级的元提示（meta-prompting）、上下文工程（context engineering）和规格驱动开发（spec-driven development）系统，专为 Claude Code 等 AI 编码代理设计，解决长会话中 AI 输出质量随上下文窗口填满而退化的"上下文腐化"问题。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li><strong>上下文工程（Context Engineering）</strong> - 通过 PROJECT.md、REQUIREMENTS.md、ROADMAP.md、STATE.md 等结构化文件为 AI 提供精确的项目上下文，确保 AI 在任何会话阶段都能获取足够的背景信息，避免"上下文腐化"导致的输出质量下降。</li>
+<li><strong>多代理编排（Multi-Agent Orchestration）</strong> - 每个阶段由轻量编排器（orchestrator）分派专用代理（researcher、planner、checker、executor、verifier）并行工作，研究阶段 4 个并行研究员同时调查技术栈、特性、架构和陷阱；执行阶段每个计划在独立的 200k token 上下文中实施，主会话上下文保持 30-40% 占用。</li>
+<li><strong>规格驱动开发（Spec-Driven Development）</strong> - 核心工作流为"讨论 -&gt; 计划 -&gt; 执行 -&gt; 验证 -&gt; 交付"的循环，每个阶段产出 XML 结构化的任务计划，内置验证步骤，每个任务完成后自动生成原子 Git 提交，支持 wave 并行执行依赖无关的任务。</li>
+<li><strong>多运行时支持</strong> - 除 Claude Code 外，还支持 OpenCode、Gemini CLI、Kilo、Codex、Copilot、Cursor、Windsurf、Antigravity、Augment、Trae、Qwen Code、CodeBuddy、Cline 等 14+ 种 AI 编码工具。</li>
+<li><strong>安全硬化</strong> - 自 v1.27 起内置路径遍历防护、提示注入检测、PreToolUse 提示守卫 hook、安全 JSON 解析、Shell 参数验证等多层安全机制。</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> 49,200+（截至 2026-04-12，来源：<a href="https://www.star-history.com/gsd-build/get-shit-done">Star History</a>）<!-- reviewed: 修正 Stars 数量，原为 50,600+，实际约 49.2K（来源：Star History 页面数据） --></li>
+<li><strong>GitHub Forks：</strong> 4,200+</li>
+<li><strong>GitHub Watchers：</strong> 223</li>
+<li><strong>Contributors：</strong> 社区贡献者参与（具体数量因页面加载问题未能精确获取）</li>
+<li><strong>最近更新日期：</strong> 2026-04-11（v1.35.0 Release），项目处于高度活跃状态，已发布 48 个 Release</li>
+<li><strong>社区讨论热度：</strong> 极高。Reddit r/ClaudeAI 和 r/ClaudeCode 多个热帖；Hacker News 前页讨论；YouTube 多个评测视频；Discord 社区活跃</li>
+<li><strong>npm 下载量：</strong> 具体数值待验证（npm 页面显示有下载追踪徽章，根据社区帖子早期即突破 15,000 下载）</li>
+<li><strong>Releases 数量：</strong> 48 个版本（截至 2026-04-12）</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> AI 辅助编码 / AI Agent 工作流编排 / 上下文工程</li>
+<li><strong>解决的核心问题：</strong> AI 编码代理在长会话中因上下文窗口填满导致输出质量退化（"context rot"）；缺乏结构化的项目规划、任务分解和质量验证机制；Vibecoding 产生不可维护的"意大利面条式代码"</li>
+<li><strong>替代/竞品技术：</strong></li>
+<li><strong>BMAD</strong> - 四阶段敏捷循环框架</li>
+<li><strong>Superpowers</strong> - 全功能开发工作流工具包，定位为 AI 编码的"外脑"</li>
+<li><strong>SpecKit</strong> - 门控阶段与显式检查点的规格驱动框架，约 70K-84K GitHub Stars（来源：<a href="https://githublb.vercel.app/repo/github/spec-kit">GitHub Stars Leaderboard</a> 和 <a href="https://www.augmentcode.com/tools/intent-vs-github">Augment Code</a>）<!-- reviewed: 修正 SpecKit Stars 数据，原为 86k，来源显示 70K-84K 不等 --></li>
+<li><strong>G Stack</strong> - CEO 风格的计划/审查系统，约 50K Stars（来源：<a href="https://ossinsight.io/blog/personal-ai-stacks-2026">OSS Insight</a>）<!-- reviewed: 修正 G Stack Stars 数据，原为 67k，实际约 50K（16 天内达到） --></li>
+<li><strong>OpenSpec</strong> - 开放规格框架</li>
+<li><strong>Taskmaster</strong> - 任务管理框架</li>
+<li><strong>依赖的上游技术：</strong> Claude Code (Anthropic)、Node.js/npm、Git、各 AI 编码运行时</li>
+<li><strong>下游使用者/集成方：</strong> Solo 开发者、小型团队；据称有 Amazon、Google、Shopify、Webflow 等公司工程师使用</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">官方资源</h3>
+<ul>
+<li><a href="https://gsd.build">官方网站 - gsd.build</a></li>
+<li><a href="https://github.com/gsd-build/get-shit-done">GitHub 仓库 - gsd-build/get-shit-done</a></li>
+<li><a href="https://github.com/gsd-build/get-shit-done/blob/main/CHANGELOG.md">更新日志 - CHANGELOG.md</a></li>
+<li><a href="https://www.npmjs.com/package/get-shit-done-cc">npm 包 - get-shit-done-cc</a></li>
+<li><a href="https://github.com/gsd-build/get-shit-done/blob/main/CONTRIBUTING.md">贡献指南 - CONTRIBUTING.md</a></li>
+</ul>
+<h3 id="_8">教程资源</h3>
+<ul>
+<li><a href="https://github.com/gsd-build/get-shit-done#getting-started">快速入门 - npx get-shit-done-cc@latest</a></li>
+<li><a href="https://dev.to/alikazmidev/the-complete-beginners-guide-to-gsd-get-shit-done-framework-for-claude-code-24h0">完整初学者指南 - dev.to</a></li>
+<li><a href="https://github.com/gsd-build/get-shit-done/blob/main/docs/USER-GUIDE.md">用户指南 - docs/USER-GUIDE.md</a></li>
+</ul>
+<h3 id="_9">社区资源</h3>
+<ul>
+<li><a href="https://discord.gg/gsd">Discord 社区</a>（通过 <code>/gsd-join-discord</code> 命令加入）</li>
+<li><a href="https://www.reddit.com/r/ClaudeAI/comments/1q4yjo0/get_shit_done_the_1_cc_framework_for_people_tired/">Reddit 讨论 - r/ClaudeAI</a></li>
+<li><a href="https://www.reddit.com/r/ClaudeCode/comments/1qf6vcc/ive_massively_improved_gsd_get_shit_done/">Reddit 讨论 - r/ClaudeCode</a></li>
+<li><a href="https://news.ycombinator.com/item?id=47417804">Hacker News 讨论</a></li>
+<li><a href="https://agentnativedev.medium.com/get-sh-t-done-meta-prompting-and-spec-driven-development-for-claude-code-and-codex-d1cde082e103">Medium 深度文章 - Meta-prompting and Spec-driven Development</a></li>
+<li><a href="https://www.claudepluginhub.com/plugins/glittercowboy-get-shit-done">Claude Plugin Hub 页面</a></li>
+<li><a href="https://www.youtube.com/watch?v=uEit1oOJK0w">YouTube - "GSD Is the Missing Piece For Claude Code"</a></li>
+<li><a href="https://x.com/gsd__foundation">X/Twitter - @gsd__foundation</a></li>
+</ul>
+<h2 id="_10">信息来源</h2>
+<ul>
+<li><a href="https://gsd.build">gsd.build 官网</a> - 获取日期：2026-04-12</li>
+<li><a href="https://github.com/gsd-build/get-shit-done">GitHub 仓库 gsd-build/get-shit-done</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.npmjs.com/package/get-shit-done-cc">npm - get-shit-done-cc</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.reddit.com/r/ClaudeAI/comments/1q4yjo0/get_shit_done_the_1_cc_framework_for_people_tired/">Reddit r/ClaudeAI 讨论</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.reddit.com/r/ClaudeCode/comments/1qxfprh/gsd_vs_superpowers_vs_speckit_what_are_you_using/">Reddit r/ClaudeCode - GSD vs Superpowers vs Speckit</a> - 获取日期：2026-04-12</li>
+<li><a href="https://news.ycombinator.com/item?id=47417804">Hacker News 讨论</a> - 获取日期：2026-04-12</li>
+<li><a href="https://ai.plainenglish.io/the-great-framework-showdown-superpowers-vs-bmad-vs-speckit-vs-gsd-360983101c10">Medium - The Great Framework Showdown</a> - 获取日期：2026-04-12</li>
+<li><a href="https://dev.to/alikazmidev/the-complete-beginners-guide-to-gsd-get-shit-done-framework-for-claude-code-24h0">dev.to 初学者指南</a> - 获取日期：2026-04-12</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

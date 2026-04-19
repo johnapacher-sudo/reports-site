@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenViking - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 6-8 小时 | **前置知识：** Python 3.10+ 基础、命令行操作、AI Agent 基本概念、向量检索（RAG）基础认知</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">配置服务器</a></li>
+<li><a href="#_5" class="toc-h3">验证安装</a></li>
+<li><a href="#_6" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-viking" class="toc-h3">1.1 理解 viking:// 文件系统范式</a></li>
+<li><a href="#12-l0l1l2" class="toc-h3">1.2 L0/L1/L2 分层上下文加载</a></li>
+<li><a href="#_7" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 语义搜索与目录递归检索</a></li>
+<li><a href="#22" class="toc-h3">2.2 会话管理与记忆提炼</a></li>
+<li><a href="#_8" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-provider-vikingdb" class="toc-h3">3.1 多 Provider 配置与 VikingDB 云端模式</a></li>
+<li><a href="#32-token" class="toc-h3">3.2 Token 预算管理与性能优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_9" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_10" class="toc-h3">项目需求</a></li>
+<li><a href="#_11" class="toc-h3">项目设计</a></li>
+<li><a href="#_12" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_13" class="toc-h3">代码解析</a></li>
+<li><a href="#_14" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_15" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_16" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_17" class="toc-h3">调试技巧</a></li>
+<li><a href="#_18" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_19" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_20" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenViking - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 6-8 小时<br>**前置知识：** Python 3.10+ 基础、命令行操作、AI Agent 基本概念、向量检索（RAG）基础认知</div>
+                    </header>
+                    <h1 id="openviking-">OpenViking - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 6-8 小时
+<strong>前置知识：</strong> Python 3.10+ 基础、命令行操作、AI Agent 基本概念、向量检索（RAG）基础认知</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS 12+、Ubuntu 20.04+、Windows 10+（WSL2）</li>
+<li>Python：3.10 或更高版本</li>
+<li>pip：最新版本</li>
+<li>磁盘空间：至少 2GB（含 VikingDB 本地索引）</li>
+<li>可选：Docker（用于服务端部署）、Rust 工具链（用于编译 CLI 工具）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 第一步：安装 OpenViking Python 包
+pip install openviking --upgrade --force-reinstall
+
+# 第二步（可选）：安装 VikingBot Agent 框架
+pip install &quot;openviking[bot]&quot;
+
+# 第三步（可选）：安装 Rust CLI 工具 ov
+# 需要 Rust 工具链（curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh）
+cd /tmp &amp;&amp; git clone https://github.com/volcengine/OpenViking.git
+cd OpenViking/cli &amp;&amp; cargo install --path .
+</code></pre>
+<h3 id="_4">配置服务器</h3>
+<pre><code class="language-bash"># 创建配置文件目录
+mkdir -p ~/.openviking
+
+# 创建配置文件（使用本地模式，无需云端账号）
+cat &gt; ~/.openviking/ov.conf &lt;&lt; 'EOF'
+{
+    &quot;storage&quot;: {
+        &quot;backend&quot;: &quot;local&quot;,
+        &quot;path&quot;: &quot;~/.openviking/data&quot;
+    },
+    &quot;embedding&quot;: {
+        &quot;provider&quot;: &quot;openai&quot;,
+        &quot;model&quot;: &quot;text-embedding-3-small&quot;,
+        &quot;api_key&quot;: &quot;YOUR_OPENAI_API_KEY&quot;
+    },
+    &quot;vlm&quot;: {
+        &quot;provider&quot;: &quot;openai&quot;,
+        &quot;model&quot;: &quot;gpt-4o-mini&quot;,
+        &quot;api_key&quot;: &quot;YOUR_OPENAI_API_KEY&quot;
+    }
+}
+EOF
+
+# 启动 OpenViking 服务器（端口 1933）
+openviking-server
+</code></pre>
+<h3 id="_5">验证安装</h3>
+<pre><code class="language-bash"># 验证 Python 包安装成功
+python -c &quot;import openviking; print(f'OpenViking 版本: {openviking.__version__}')&quot;
+# 预期输出: OpenViking 版本: 0.1.12
+
+# 验证 CLI 工具（如果安装了 Rust 版本）
+ov status
+# 预期输出: Server: http://localhost:1933  Status: running
+
+# 验证服务器正在运行
+curl http://localhost:1933/health
+# 预期输出: {&quot;status&quot;: &quot;ok&quot;}
+</code></pre>
+<hr />
+<h2 id="_6">第一部分：入门篇</h2>
+<h3 id="11-viking">1.1 理解 viking:// 文件系统范式</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenViking 的核心理念是将 AI Agent 的所有上下文信息（记忆、资源、技能）统一组织为一个虚拟文件系统。就像你在电脑上用文件夹和文件管理文档一样，OpenViking 用 <code>viking://</code> 协议前缀的 URI 来管理 Agent 的知识。</p>
+<p>为什么需要这个？传统 RAG 系统把文档切成扁平的文本片段（Chunk），检索时只能靠语义相似度匹配——你不知道返回的片段属于哪个文档、和什么内容关联。OpenViking 的文件系统范式让你可以：
+- <strong>确定性定位</strong>：直接访问 <code>viking://resources/docs/auth/oauth.md</code> 而不是模糊搜索
+- <strong>层次化浏览</strong>：像浏览目录树一样了解知识库的结构
+- <strong>统一管理</strong>：记忆、资源、技能都在同一个文件系统下</p>
+<p><code>viking://</code> 文件系统的目录结构：</p>
+<pre><code>viking://
+├── resources/          # 外部资源（文档、代码仓库、网页）
+│   ├── docs/
+│   ├── repos/
+│   └── web/
+├── user/
+│   └── memories/       # 用户级记忆（偏好、历史信息）
+└── agent/
+    ├── memories/       # Agent 级记忆（任务经验）
+    └── skills/         # Agent 技能（工具使用经验）
+</code></pre>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档，PyPI 包 openviking v0.1.x
+from openviking import OpenVikingClient
+
+# 连接到本地 OpenViking 服务器
+client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+# 添加一个文档资源到 viking:// 文件系统
+client.add_resource(
+    uri=&quot;viking://resources/docs/python-guide&quot;,
+    content=&quot;# Python 快速入门指南\n\n## 变量与数据类型\nPython 是动态类型语言...\n\n## 函数定义\n使用 def 关键字定义函数...&quot;
+)
+
+# 列出 resources 目录下的所有内容
+items = client.ls(&quot;viking://resources/docs/&quot;)
+for item in items:
+    print(f&quot;名称: {item.name}, 类型: {item.type}, URI: {item.uri}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>名称: python-guide, 类型: resource, URI: viking://resources/docs/python-guide
+</code></pre>
+<p><strong>练习题：</strong>
+1. 尝试添加三个不同类型的资源（一个技术文档、一个代码片段、一个产品说明），分别放到 <code>viking://resources/docs/</code>、<code>viking://resources/repos/</code>、<code>viking://resources/web/</code> 目录下。
+2. 使用 <code>client.tree("viking://resources/")</code> 查看完整的目录树结构，观察资源的组织方式。</p>
+<hr />
+<h3 id="12-l0l1l2">1.2 L0/L1/L2 分层上下文加载</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在理解了文件系统范式之后，下一个关键概念是分层上下文加载。当你添加一个资源时，OpenViking 会自动生成三个层次的信息：</p>
+<ul>
+<li><strong>L0（摘要层，约 100 tokens）</strong>：超短摘要，用于快速判断"这个文件跟我有关吗？"</li>
+<li><strong>L1（概述层，约 2,000 tokens）</strong>：结构化概述，包含章节列表和导航指引，告诉 Agent "这里有什么，怎么访问"</li>
+<li><strong>L2（详情层，完整内容）</strong>：原始文件的全部内容，仅在确认需要时才加载</li>
+</ul>
+<p>这就像看一本书：L0 是封底简介（100 字判断感不感兴趣），L1 是目录（了解章节结构），L2 是正文（需要时再翻到具体页面）。</p>
+<p>每个目录下的分层文件结构：</p>
+<pre><code>viking://resources/docs/auth/
+├── .abstract.md          # L0: ~100 tokens 摘要
+├── .overview.md          # L1: ~2,000 tokens 概述
+├── .relations.json       # 关联资源关系
+├── oauth.md              # L2: 完整内容
+├── jwt.md                # L2: 完整内容
+└── api-keys.md           # L2: 完整内容
+</code></pre>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档 concepts/context-layers
+from openviking import OpenVikingClient
+
+client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+# 添加一个包含多个章节的完整文档
+client.add_resource(
+    uri=&quot;viking://resources/docs/auth-guide&quot;,
+    content=&quot;&quot;&quot;# API 认证完整指南
+
+## OAuth 2.0 配置
+OAuth 2.0 是推荐的用户端认证方式。
+步骤一：在开发者平台注册应用...
+步骤二：配置回调 URL...
+步骤三：获取 access_token...
+
+## JWT Token 使用
+JWT 适用于服务间通信。
+Token 生成：使用 HS256 算法签名...
+Token 验证：检查签名和过期时间...
+
+## API Key 管理
+最简单的认证方式，适合开发测试。
+在控制台创建 API Key...
+设置请求头 Authorization: Bearer &lt;key&gt;...
+&quot;&quot;&quot;
+)
+
+# 获取 L0 摘要——快速判断相关性（约 100 tokens）
+abstract = client.abstract(&quot;viking://resources/docs/auth-guide&quot;)
+print(&quot;=== L0 摘要 ===&quot;)
+print(abstract)
+
+# 获取 L1 概述——了解内容结构（约 2,000 tokens）
+overview = client.overview(&quot;viking://resources/docs/auth-guide&quot;)
+print(&quot;\n=== L1 概述 ===&quot;)
+print(overview)
+
+# 按需加载 L2 完整内容（仅在需要时）
+content = client.read(&quot;viking://resources/docs/auth-guide&quot;)
+print(&quot;\n=== L2 完整内容（前 200 字符）===&quot;)
+print(content[:200])
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>=== L0 摘要 ===
+API authentication guide covering OAuth 2.0, JWT tokens, and API keys for secure access.
+
+=== L1 概述 ===
+# Authentication Guide Overview
+
+This guide covers three authentication methods for the API:
+
+## Sections
+- **OAuth 2.0** (L2: oauth.md): Complete OAuth flow with code examples
+- **JWT Tokens** (L2: jwt.md): Token generation and validation
+- **API Keys** (L2: api-keys.md): Simple key-based authentication
+
+## Key Points
+- OAuth 2.0 recommended for user-facing applications
+- JWT for service-to-service communication
+
+## Access
+Use `read(&quot;viking://resources/docs/auth-guide&quot;)` for full documentation.
+
+=== L2 完整内容（前 200 字符）===
+# API 认证完整指南
+
+## OAuth 2.0 配置
+OAuth 2.0 是推荐的用户端认证方式。
+步骤一：在开发者平台注册应用...
+步骤二：配置回调 URL...
+</code></pre>
+<p><strong>练习题：</strong>
+1. 添加一个超过 5,000 字的长文档，分别查看其 L0、L1、L2 的内容差异，体会三层分层如何帮你快速定位信息。
+2. 思考：在什么场景下只需要 L0 就够了？什么场景必须加载 L2？</p>
+<hr />
+<h2 id="_7">第二部分：进阶篇</h2>
+<h3 id="21">2.1 语义搜索与目录递归检索</h3>
+<p><strong>详细讲解：</strong></p>
+<p>在理解了文件系统范式和分层加载后，我们来学习 OpenViking 的核心检索机制。与传统 RAG 的"全库扁平搜索"不同，OpenViking 采用"目录导航 + 语义检索"的组合策略：</p>
+<ol>
+<li><strong>全局向量搜索</strong>：用 L0 摘要在全库范围内找出 Top-3 相关<strong>目录</strong>作为种子</li>
+<li><strong>目录递归检索</strong>：在种子目录内二次检索，递归进入子目录</li>
+<li><strong>分数传播</strong>：<code>final_score = α × child_score + (1-α) × parent_score</code>（α 默认 0.5）</li>
+<li><strong>收敛检测</strong>：Top-K 结果连续 3 轮不变时提前终止</li>
+</ol>
+<p>这意味着 Agent 不是在全库里盲目搜索，而是先定位到相关目录，再在目录内精确查找——就像你先找到书架上的"编程"区域，再在书架上找具体的书。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档
+from openviking import OpenVikingClient
+
+client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+# 先添加一批文档，构建有层次的知识库
+docs = {
+    &quot;viking://resources/docs/backend/auth&quot;: &quot;OAuth 2.0 认证配置指南，包含授权码模式、客户端模式...&quot;,
+    &quot;viking://resources/docs/backend/database&quot;: &quot;PostgreSQL 数据库优化指南，索引策略、查询调优...&quot;,
+    &quot;viking://resources/docs/backend/api&quot;: &quot;RESTful API 设计规范，URL 命名、状态码使用...&quot;,
+    &quot;viking://resources/docs/frontend/react&quot;: &quot;React 19 新特性指南，Server Components、Suspense...&quot;,
+    &quot;viking://resources/docs/frontend/css&quot;: &quot;Tailwind CSS 4 使用指南，原子化 CSS、主题定制...&quot;,
+    &quot;viking://resources/docs/devops/docker&quot;: &quot;Docker 容器化部署指南，Dockerfile 编写、多阶段构建...&quot;,
+}
+
+for uri, content in docs.items():
+    client.add_resource(uri=uri, content=content)
+
+# 语义搜索：查找与&quot;用户登录认证&quot;相关的文档
+results = client.find(&quot;用户登录认证如何实现&quot;)
+print(&quot;=== 语义搜索结果 ===&quot;)
+for r in results:
+    print(f&quot;URI: {r.uri}&quot;)
+    print(f&quot;得分: {r.score:.4f}&quot;)
+    print(f&quot;摘要: {client.abstract(r.uri)}&quot;)
+    print(&quot;---&quot;)
+
+# 使用 grep 进行关键词搜索
+grep_results = client.grep(&quot;OAuth&quot;)
+print(&quot;\n=== 关键词搜索 'OAuth' ===&quot;)
+for r in grep_results:
+    print(f&quot;URI: {r.uri}, 匹配位置: {r.match}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>=== 语义搜索结果 ===
+URI: viking://resources/docs/backend/auth
+得分: 0.9234
+摘要: OAuth 2.0 authentication guide covering authorization code and client credentials modes.
+---
+URI: viking://resources/docs/backend/api
+得分: 0.6891
+摘要: RESTful API design specification covering URL naming, status codes usage.
+---
+
+=== 关键词搜索 'OAuth' ===
+URI: viking://resources/docs/backend/auth, 匹配位置: OAuth 2.0 认证配置指南
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>固定 α 可能影响排序</strong>：分数传播的 α 固定为 0.5，当目录层次较深（超过 5-6 层）且父子语义差异大时，可能导致父节点"拖分"或"抬分"。建议将目录结构控制在 3-4 层以内。
+- <strong>Rerank 模型与 Embedding 模型需配套</strong>：如果 Rerank 模型和 Embedding 模型的语义空间不一致，检索质量会波动。官方建议使用 Volcengine 配套的 <code>doubao-seed-rerank</code>。
+- <strong>超长单文件需预处理</strong>：当前没有多级 L1 策略，超长单文件的 L1 质量可能不理想。建议在摄入前做人工结构化切分。</p>
+<p><strong>练习题：</strong>
+1. 添加 10 个以上不同主题的文档，尝试用不同的查询词搜索，观察目录递归检索如何定位到相关目录。
+2. 尝试搜索一个跨主题的问题（如"如何部署带认证的 API 服务"），观察 OpenViking 如何从多个目录中检索相关信息。</p>
+<hr />
+<h3 id="22">2.2 会话管理与记忆提炼</h3>
+<p><strong>详细讲解：</strong></p>
+<p>在掌握了检索机制后，我们学习 OpenViking 如何让 Agent "越用越聪明"。通过 <code>session.commit()</code> 机制，系统会在对话结束后自动分析本次交互，提炼出长期记忆和技能经验：</p>
+<ul>
+<li><strong>用户记忆</strong>（<code>viking://user/memories/</code>）：用户偏好、习惯、常见需求</li>
+<li><strong>Agent 记忆</strong>（<code>viking://agent/memories/</code>）：任务执行经验、问题解决模式</li>
+<li><strong>Agent 技能</strong>（<code>viking://agent/skills/</code>）：工具使用经验、最佳操作序列</li>
+</ul>
+<p>关键设计决策：<code>commit()</code> 是<strong>异步</strong>的——调用后立即返回，不阻塞当前会话。后台由 SessionCompressor 处理提炼逻辑。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档 session commit 示例
+from openviking import OpenVikingClient
+
+client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+# 创建一个新会话
+session = client.create_session(user_id=&quot;user_alice&quot;)
+
+# 模拟 Agent 与用户的交互过程
+# 在实际应用中，这里会接入 LLM 进行多轮对话
+session.add_message(role=&quot;user&quot;, content=&quot;帮我配置 OAuth 2.0 认证&quot;)
+session.add_message(role=&quot;assistant&quot;, content=&quot;好的，我来帮你配置。首先需要注册应用...&quot;)
+session.add_message(role=&quot;user&quot;, content=&quot;我更喜欢用 JWT Token，不用 OAuth&quot;)
+session.add_message(role=&quot;assistant&quot;, content=&quot;了解，改用 JWT Token 方案...&quot;)
+
+# 提交会话，后台异步提炼记忆
+session.commit()
+print(&quot;会话已提交，后台正在提炼记忆...&quot;)
+
+# 等待后台处理完成
+client.wait_processed()
+print(&quot;记忆提炼完成！&quot;)
+
+# 查看提炼出的用户记忆
+user_memories = client.ls(&quot;viking://user/memories/&quot;)
+print(&quot;\n=== 用户记忆 ===&quot;)
+for mem in user_memories:
+    print(f&quot;URI: {mem.uri}&quot;)
+    print(f&quot;摘要: {client.abstract(mem.uri)}&quot;)
+
+# 查看提炼出的 Agent 记忆
+agent_memories = client.ls(&quot;viking://agent/memories/&quot;)
+print(&quot;\n=== Agent 记忆 ===&quot;)
+for mem in agent_memories:
+    print(f&quot;URI: {mem.uri}&quot;)
+    print(f&quot;摘要: {client.abstract(mem.uri)}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>会话已提交，后台正在提炼记忆...
+记忆提炼完成！
+
+=== 用户记忆 ===
+URI: viking://user/memories/user_alice_pref_001
+摘要: 用户 Alice 偏好使用 JWT Token 进行认证，不喜欢 OAuth 2.0。
+
+=== Agent 记忆 ===
+URI: viking://agent/memories/auth_config_exp_001
+摘要: 为用户配置认证方案时，先确认用户偏好（JWT vs OAuth），再提供具体方案。
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>并发 commit 无冲突检测</strong>：多个会话同时 commit 时，记忆可能出现覆盖或乱序。建议控制并发 commit 数量。
+- <strong>commit 是异步的</strong>：调用后立即返回，如需等待完成须调用 <code>client.wait_processed()</code>。
+- <strong>异常处理以降级为主</strong>：记忆提炼失败时系统会记录错误并跳过，不会导致主流程中断。这意味着某些会话的记忆可能没有被提炼。</p>
+<p><strong>练习题：</strong>
+1. 创建两个不同用户的会话，分别提交后观察各自的记忆差异。
+2. 连续创建多个会话并 commit，不调用 <code>wait_processed()</code>，然后立即查看记忆目录，观察异步处理的效果。</p>
+<hr />
+<h2 id="_8">第三部分：高级篇</h2>
+<h3 id="31-provider-vikingdb">3.1 多 Provider 配置与 VikingDB 云端模式</h3>
+<p><strong>详细讲解：</strong></p>
+<p>在生产环境中，你可能需要切换不同的 LLM 提供商或将存储迁移到云端。OpenViking 支持多种 Provider 灵活配置。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档配置说明
+import json
+import os
+
+# 配置文件路径
+config_path = os.path.expanduser(&quot;~/.openviking/ov.conf&quot;)
+
+# 配置使用 Volcengine（火山引擎）作为 Embedding 和 VLM 提供商
+volcengine_config = {
+    &quot;storage&quot;: {
+        &quot;backend&quot;: &quot;vikingdb&quot;,           # 使用云端 VikingDB
+        &quot;region&quot;: &quot;cn-beijing&quot;
+    },
+    &quot;embedding&quot;: {
+        &quot;provider&quot;: &quot;volcengine&quot;,         # 使用火山引擎 Embedding
+        &quot;model&quot;: &quot;doubao-embedding&quot;,
+        &quot;api_key&quot;: &quot;YOUR_VOLCENGINE_API_KEY&quot;,
+        &quot;endpoint&quot;: &quot;https://api.volcengine.com&quot;
+    },
+    &quot;vlm&quot;: {
+        &quot;provider&quot;: &quot;volcengine&quot;,         # 使用豆包模型
+        &quot;model&quot;: &quot;doubao-pro-4k&quot;,
+        &quot;api_key&quot;: &quot;YOUR_VOLCENGINE_API_KEY&quot;,
+        &quot;endpoint&quot;: &quot;https://api.volcengine.com&quot;
+    },
+    &quot;rerank&quot;: {
+        &quot;provider&quot;: &quot;volcengine&quot;,
+        &quot;model&quot;: &quot;doubao-seed-rerank&quot;     # 官方推荐配套 Rerank 模型
+    }
+}
+
+# 写入配置文件
+with open(config_path, &quot;w&quot;) as f:
+    json.dump(volcengine_config, f, indent=4, ensure_ascii=False)
+
+print(f&quot;配置已写入: {config_path}&quot;)
+print(f&quot;存储后端: {volcengine_config['storage']['backend']}&quot;)
+print(f&quot;Embedding 提供商: {volcengine_config['embedding']['provider']}&quot;)
+print(f&quot;VLM 提供商: {volcengine_config['vlm']['provider']}&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>配置已写入: /Users/yourname/.openviking/ov.conf
+存储后端: vikingdb
+Embedding 提供商: volcengine
+VLM 提供商: volcengine
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>本地到云迁移无现成工具</strong>：LocalCollection 的持久化格式与云端 VikingDB 的 schema 不同。如果从 PoC 迁移到生产，建议评估阶段就直接用云端模式。
+- <strong>配套 Rerank 模型提升质量</strong>：使用 <code>doubao-seed-rerank</code> 与 Volcengine Embedding 配套可以获得最佳检索质量。跨厂商混用时可能出现语义空间偏差。</p>
+<hr />
+<h3 id="32-token">3.2 Token 预算管理与性能优化</h3>
+<p><strong>详细讲解：</strong></p>
+<p>在生产环境中，Token 成本是关键考量。以下策略可以帮助优化 Token 使用。</p>
+<p><strong>优化策略 1：优先使用 L1，按需加载 L2</strong></p>
+<pre><code class="language-python"># 基于 OpenViking 官方文档 best practices
+from openviking import OpenVikingClient
+
+client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+def retrieve_with_budget(client, query, max_tokens=4000):
+    &quot;&quot;&quot;
+    在 Token 预算内检索最相关的上下文
+    策略：先用 L1 概述填充大部分预算，仅对最相关的一条加载 L2
+    &quot;&quot;&quot;
+    # 第一步：语义搜索，获取相关 URI 列表
+    results = client.find(query)
+
+    total_tokens = 0
+    contexts = []
+
+    for r in results[:5]:  # 最多取 5 条结果
+        # 第二步：优先获取 L1 概述（约 2000 tokens）
+        overview = client.overview(r.uri)
+        estimated_tokens = len(overview) // 4  # 粗略估算 Token 数
+
+        if total_tokens + estimated_tokens &lt;= max_tokens:
+            contexts.append({
+                &quot;uri&quot;: r.uri,
+                &quot;content&quot;: overview,
+                &quot;layer&quot;: &quot;L1&quot;,
+                &quot;score&quot;: r.score
+            })
+            total_tokens += estimated_tokens
+        else:
+            break
+
+    # 第三步：对得分最高的一条，如果有剩余预算，加载 L2 详情
+    remaining = max_tokens - total_tokens
+    if contexts and remaining &gt; 500:
+        best = contexts[0]
+        detail = client.read(best[&quot;uri&quot;])
+        detail_tokens = min(len(detail) // 4, remaining)
+        best[&quot;content&quot;] = detail[:detail_tokens * 4]
+        best[&quot;layer&quot;] = &quot;L2&quot;
+
+    print(f&quot;总使用 Token 估算: {total_tokens}/{max_tokens}&quot;)
+    return contexts
+
+# 使用示例
+contexts = retrieve_with_budget(client, &quot;如何配置认证&quot;, max_tokens=4000)
+for ctx in contexts:
+    print(f&quot;[{ctx['layer']}] {ctx['uri']} (得分: {ctx['score']:.4f})&quot;)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>总使用 Token 估算: 3200/4000
+[L2] viking://resources/docs/auth-guide (得分: 0.9234)
+[L1] viking://resources/docs/backend/api (得分: 0.6891)
+</code></pre>
+<p><strong>优化策略 2：目录结构优化减少检索噪声</strong></p>
+<pre><code class="language-python"># 良好的目录结构设计示例
+# 按业务域组织，每个域不超过 3-4 层深度
+well_structured_uris = [
+    &quot;viking://resources/docs/auth/oauth&quot;,           # 认证 &gt; OAuth
+    &quot;viking://resources/docs/auth/jwt&quot;,              # 认证 &gt; JWT
+    &quot;viking://resources/docs/auth/api-keys&quot;,         # 认证 &gt; API Keys
+    &quot;viking://resources/docs/database/postgresql&quot;,   # 数据库 &gt; PostgreSQL
+    &quot;viking://resources/docs/database/redis&quot;,         # 数据库 &gt; Redis
+    &quot;viking://resources/docs/deploy/docker&quot;,          # 部署 &gt; Docker
+    &quot;viking://resources/docs/deploy/kubernetes&quot;,      # 部署 &gt; K8s
+]
+
+# 避免的设计：过深或过浅
+# 过深（超过 5 层，分数传播会失真）
+bad_deep = &quot;viking://resources/docs/backend/java/spring/security/oauth/config&quot;
+
+# 过浅（所有文件平铺，失去目录导航优势）
+bad_flat = &quot;viking://resources/docs/oauth-config&quot;
+</code></pre>
+<hr />
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li><strong>URI 规范设计</strong>：按业务域组织目录，保持 3-4 层深度。使用有意义的目录名（如 <code>auth/</code>、<code>database/</code>、<code>deploy/</code>），避免过深嵌套。</li>
+<li><strong>分层策略选择</strong>：大多数 Agent 决策场景使用 L1 概述即可满足需求；仅对确需精确执行的操作加载 L2 详情。</li>
+<li><strong>队列监控</strong>：生产环境必须监控 EmbeddingQueue 的 pending 和 error_count，防止摄入速度超过处理速度。</li>
+<li><strong>定期审计记忆</strong>：长期运行后，agent/memories/ 和 agent/skills/ 可能积累过时或噪声记忆，建议定期清理。</li>
+<li><strong>配置配套模型</strong>：使用同一厂商的 Embedding 和 Rerank 模型（如 Volcengine 的 doubao-embedding + doubao-seed-rerank），避免语义空间偏差。</li>
+</ol>
+<hr />
+<h2 id="_9">第四部分：实战项目</h2>
+<h3 id="_10">项目需求</h3>
+<p>构建一个 <strong>智能技术文档助手</strong>，具备以下能力：
+- 管理多个技术项目的文档资源
+- 根据用户问题语义检索相关文档
+- 记住用户的偏好和常用查询模式
+- 跨会话积累检索和回答经验</p>
+<h3 id="_11">项目设计</h3>
+<ul>
+<li><strong>技术选型</strong>：OpenViking Python SDK + OpenAI API</li>
+<li><strong>架构</strong>：三层架构（文档管理层 + 检索决策层 + 会话交互层）</li>
+<li><strong>核心模块</strong>：文档摄入、分层检索、Token 预算管理、会话记忆提炼</li>
+</ul>
+<h3 id="_12">完整实现代码</h3>
+<pre><code class="language-python"># 基于 OpenViking Python SDK v0.1.x + OpenAI API
+# 文件名: tech_doc_assistant.py
+
+import os
+from openviking import OpenVikingClient
+
+# ============================================================
+# 知识点 1: viking:// 文件系统范式 —— 管理文档资源
+# ============================================================
+
+class DocumentManager:
+    &quot;&quot;&quot;文档管理器：负责将技术文档摄入到 viking:// 文件系统&quot;&quot;&quot;
+
+    def __init__(self, client: OpenVikingClient):
+        self.client = client
+
+    def ingest_project_docs(self, project_name: str, docs: dict):
+        &quot;&quot;&quot;
+        将一个项目的多个文档批量导入 OpenViking
+        按项目名和文档类型组织目录结构
+        &quot;&quot;&quot;
+        for doc_name, content in docs.items():
+            # 使用 viking:// URI 规范组织文档
+            uri = f&quot;viking://resources/docs/{project_name}/{doc_name}&quot;
+            self.client.add_resource(uri=uri, content=content)
+            print(f&quot;  已导入: {uri}&quot;)
+
+        # 验证导入结果
+        tree = self.client.tree(f&quot;viking://resources/docs/{project_name}/&quot;)
+        print(f&quot;\n项目 [{project_name}] 目录结构:\n{tree}&quot;)
+
+
+# ============================================================
+# 知识点 2: L0/L1/L2 分层上下文加载 —— Token 预算检索
+# ============================================================
+
+class SmartRetriever:
+    &quot;&quot;&quot;智能检索器：使用分层加载策略在 Token 预算内检索最相关上下文&quot;&quot;&quot;
+
+    def __init__(self, client: OpenVikingClient, token_budget: int = 4000):
+        self.client = client
+        self.token_budget = token_budget
+
+    def retrieve(self, query: str) -&gt; list:
+        &quot;&quot;&quot;
+        分层检索策略：
+        1. 用 find() 语义搜索获取候选列表
+        2. 优先加载 L1 概述
+        3. 对最相关的一条加载 L2 详情（如果预算允许）
+        &quot;&quot;&quot;
+        # 语义搜索获取候选
+        results = self.client.find(query)
+
+        total_tokens = 0
+        contexts = []
+
+        for r in results[:5]:
+            # 先获取 L1 概述
+            overview = self.client.overview(r.uri)
+            estimated_tokens = len(overview) // 4
+
+            if total_tokens + estimated_tokens &lt;= self.token_budget:
+                contexts.append({
+                    &quot;uri&quot;: r.uri,
+                    &quot;content&quot;: overview,
+                    &quot;layer&quot;: &quot;L1&quot;,
+                    &quot;score&quot;: r.score
+                })
+                total_tokens += estimated_tokens
+            else:
+                break
+
+        # 对最相关的一条按需加载 L2
+        remaining = self.token_budget - total_tokens
+        if contexts and remaining &gt; 500:
+            best = contexts[0]
+            detail = self.client.read(best[&quot;uri&quot;])
+            detail_tokens = min(len(detail) // 4, remaining)
+            best[&quot;content&quot;] = detail[:detail_tokens * 4]
+            best[&quot;layer&quot;] = &quot;L2&quot;
+
+        return contexts
+
+
+# ============================================================
+# 知识点 3: 会话管理与记忆提炼 —— 跨会话学习能力
+# ============================================================
+
+class SessionManager:
+    &quot;&quot;&quot;会话管理器：管理对话历史和记忆提炼&quot;&quot;&quot;
+
+    def __init__(self, client: OpenVikingClient):
+        self.client = client
+        self.session = None
+
+    def start_session(self, user_id: str):
+        &quot;&quot;&quot;创建新会话&quot;&quot;&quot;
+        self.session = self.client.create_session(user_id=user_id)
+        print(f&quot;会话已创建: user={user_id}&quot;)
+
+        # 加载用户历史偏好（如果有的话）
+        memories = self.client.ls(f&quot;viking://user/memories/&quot;)
+        if memories:
+            print(f&quot;发现 {len(memories)} 条用户历史记忆&quot;)
+        return self.session
+
+    def chat(self, user_message: str) -&gt; str:
+        &quot;&quot;&quot;处理用户消息并返回回答（简化版，实际应接入 LLM）&quot;&quot;&quot;
+        self.session.add_message(role=&quot;user&quot;, content=user_message)
+
+        # 这里简化处理，实际应调用 LLM 生成回答
+        response = f&quot;基于文档检索结果，这里是关于 '{user_message}' 的回答...&quot;
+        self.session.add_message(role=&quot;assistant&quot;, content=response)
+        return response
+
+    def end_session(self):
+        &quot;&quot;&quot;结束会话，提交记忆提炼&quot;&quot;&quot;
+        if self.session:
+            self.session.commit()
+            print(&quot;会话已提交，正在后台提炼记忆...&quot;)
+            self.client.wait_processed()
+            print(&quot;记忆提炼完成！&quot;)
+
+            # 展示新增的记忆
+            self._show_new_memories()
+
+    def _show_new_memories(self):
+        &quot;&quot;&quot;展示提炼后的记忆&quot;&quot;&quot;
+        print(&quot;\n=== 用户记忆 ===&quot;)
+        user_mems = self.client.ls(&quot;viking://user/memories/&quot;)
+        for mem in user_mems:
+            print(f&quot;  {mem.uri}: {self.client.abstract(mem.uri)}&quot;)
+
+        print(&quot;\n=== Agent 记忆 ===&quot;)
+        agent_mems = self.client.ls(&quot;viking://agent/memories/&quot;)
+        for mem in agent_mems:
+            print(f&quot;  {mem.uri}: {self.client.abstract(mem.uri)}&quot;)
+
+
+# ============================================================
+# 主程序：组装三个模块，运行完整流程
+# ============================================================
+
+def main():
+    # 初始化客户端
+    client = OpenVikingClient(base_url=&quot;http://localhost:1933&quot;)
+
+    # 第一步：摄入文档（知识点 1: viking:// 文件系统范式）
+    print(&quot;=&quot; * 60)
+    print(&quot;第一步：摄入技术文档&quot;)
+    print(&quot;=&quot; * 60)
+    doc_manager = DocumentManager(client)
+    doc_manager.ingest_project_docs(&quot;myapp&quot;, {
+        &quot;api-design&quot;: &quot;# API 设计规范\n\nRESTful API 设计原则...\nURL 命名使用 kebab-case...\n状态码规范: 200/201/400/404/500...&quot;,
+        &quot;auth-config&quot;: &quot;# 认证配置\n\n支持 OAuth 2.0 和 JWT Token...\n推荐用户端使用 OAuth 2.0...\n服务间通信使用 JWT...&quot;,
+        &quot;database-tuning&quot;: &quot;# 数据库调优\n\nPostgreSQL 索引优化策略...\n查询计划分析使用 EXPLAIN ANALYZE...\n连接池配置建议...&quot;,
+        &quot;deploy-guide&quot;: &quot;# 部署指南\n\nDocker 容器化部署...\nDockerfile 多阶段构建...\nKubernetes 编排配置...&quot;,
+    })
+
+    # 第二步：智能检索（知识点 2: L0/L1/L2 分层加载）
+    print(&quot;\n&quot; + &quot;=&quot; * 60)
+    print(&quot;第二步：智能检索&quot;)
+    print(&quot;=&quot; * 60)
+    retriever = SmartRetriever(client, token_budget=4000)
+    contexts = retriever.retrieve(&quot;如何配置认证&quot;)
+    for ctx in contexts:
+        print(f&quot;  [{ctx['layer']}] {ctx['uri']} (得分: {ctx['score']:.4f})&quot;)
+
+    # 第三步：会话交互与记忆提炼（知识点 3: 会话管理）
+    print(&quot;\n&quot; + &quot;=&quot; * 60)
+    print(&quot;第三步：会话交互与记忆提炼&quot;)
+    print(&quot;=&quot; * 60)
+    session_mgr = SessionManager(client)
+    session_mgr.start_session(&quot;user_alice&quot;)
+    session_mgr.chat(&quot;帮我配置 OAuth 2.0 认证&quot;)
+    session_mgr.chat(&quot;我更习惯用 PostgreSQL，不用 MySQL&quot;)
+    session_mgr.end_session()
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<h3 id="_13">代码解析</h3>
+<ol>
+<li>
+<p><strong>DocumentManager</strong> 运用了<strong>知识点 1（viking:// 文件系统范式）</strong>：将技术文档按 <code>viking://resources/docs/{project}/{doc_name}</code> 的 URI 规范组织到虚拟文件系统中。使用 <code>add_resource()</code> 添加文档，<code>tree()</code> 验证目录结构。</p>
+</li>
+<li>
+<p><strong>SmartRetriever</strong> 运用了<strong>知识点 2（L0/L1/L2 分层上下文加载）</strong>：先通过 <code>find()</code> 语义搜索获取候选 URI 列表，然后优先加载 L1 概述（<code>overview()</code>），仅在 Token 预算允许时对最相关的一条加载 L2 详情（<code>read()</code>）。这实现了 Token 预算管理。</p>
+</li>
+<li>
+<p><strong>SessionManager</strong> 运用了<strong>知识点 3（会话管理与记忆提炼）</strong>：通过 <code>create_session()</code> 创建会话，<code>add_message()</code> 记录对话历史，<code>commit()</code> 异步提炼记忆，<code>wait_processed()</code> 等待提炼完成。提炼后的记忆自动存储到 <code>viking://user/memories/</code> 和 <code>viking://agent/memories/</code>。</p>
+</li>
+</ol>
+<h3 id="_14">扩展挑战</h3>
+<ol>
+<li><strong>接入真实 LLM</strong>：将 <code>chat()</code> 方法中的简化回答替换为真实的 OpenAI/Claude API 调用，将检索到的上下文注入到 prompt 中。</li>
+<li><strong>添加 Rerank 策略</strong>：在 <code>SmartRetriever.retrieve()</code> 中添加 Rerank 步骤，对 L0 摘要进行重排序后再加载 L1。</li>
+<li><strong>多用户支持</strong>：为不同用户维护独立的会话和记忆空间，实现个性化文档助手。</li>
+</ol>
+<hr />
+<h2 id="_15">第五部分：常见问题与排查指南</h2>
+<h3 id="_16">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Connection refused: localhost:1933</code></td>
+<td>OpenViking 服务器未启动</td>
+<td>运行 <code>openviking-server</code> 启动服务器</td>
+</tr>
+<tr>
+<td><code>Failed to acquire mv lock</code></td>
+<td>SemanticProcessor 生成 L0/L1 时文件锁冲突</td>
+<td>等待后重试，或检查是否有其他进程在操作同一目录</td>
+</tr>
+<tr>
+<td><code>Embedding API error: 401</code></td>
+<td>Embedding 提供商 API Key 无效或过期</td>
+<td>检查 <code>~/.openviking/ov.conf</code> 中的 <code>embedding.api_key</code> 配置</td>
+</tr>
+<tr>
+<td><code>Queue pending count keeps growing</code></td>
+<td>摄入速度超过向量生成速度，队列积压</td>
+<td>降低摄入频率，或升级 Embedding 提供商的 QPS 限制</td>
+</tr>
+<tr>
+<td><code>L0/L1 files missing for resource</code></td>
+<td>SemanticProcessor 异步生成失败</td>
+<td>检查 VLM 配置是否正确，查看日志中的错误信息</td>
+</tr>
+<tr>
+<td><code>Session commit returns empty memories</code></td>
+<td>会话交互内容过少，无法提炼有效记忆</td>
+<td>确保会话中有多轮有意义的交互内容</td>
+</tr>
+<tr>
+<td><code>ImportError: No module named 'openviking'</code></td>
+<td>Python 包未安装或环境不正确</td>
+<td>运行 <code>pip install openviking</code>，确认 Python 版本 &gt;= 3.10</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_17">调试技巧</h3>
+<ol>
+<li>
+<p><strong>使用 <code>ov status</code> 检查系统状态</strong>：Rust CLI 工具 <code>ov status</code> 可以快速检查服务器状态、队列积压情况、存储使用量等关键指标。</p>
+</li>
+<li>
+<p><strong>查看 L0/L1 文件验证分层生成</strong>：使用 <code>client.abstract(uri)</code> 和 <code>client.overview(uri)</code> 检查自动生成的分层文件是否正确。如果摘要或概述内容不准确，可能是 VLM 模型质量问题——尝试切换更强的模型（如从 gpt-4o-mini 升级到 gpt-4o）。</p>
+</li>
+<li>
+<p><strong>监控 QueueObserver 追踪异步处理</strong>：生产环境中，关注 QueueObserver 的 pending（待处理数）、error_count（错误数）和处理时延指标。当 pending 持续增长时，说明摄入速度需要限流。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_18">第六部分：学习路线推荐</h2>
+<h3 id="_19">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>About OpenViking</strong> (<code>docs/en/about/01-about-us.md</code>) — 理解项目定位和设计理念</li>
+<li><strong>Context Types</strong> (<code>docs/en/concepts/01-context-types.md</code>) — 理解三种上下文类型（记忆、资源、技能）</li>
+<li><strong>Viking URI</strong> (<code>docs/en/concepts/02-viking-uri.md</code>) — 掌握 URI 规范和寻址方式</li>
+<li><strong>Context Layers</strong> (<code>docs/en/concepts/03-context-layers.md</code>) — 深入理解 L0/L1/L2 分层机制</li>
+<li><strong>Retrieval Mechanism</strong> (<code>docs/en/concepts/retrieval.md</code>) — 目录递归检索算法详解</li>
+<li><strong>VikingBot</strong> (<code>docs/en/guides/vikingbot.md</code>) — 使用内置 Agent 框架构建应用</li>
+</ol>
+<h3 id="_20">推荐进阶资源</h3>
+<ul>
+<li><strong>53AI 深度分析文章</strong> — <a href="https://www.53ai.com/news/OpenSourceLLM/2026022057280.html">拆解 OpenViking：把 Agent 上下文从"向量碎片"变成"可操作文件系统"</a>，包含源码级别的架构分析</li>
+<li><strong>火山引擎开发者教程</strong> — <a href="https://developer.volcengine.com/articles/7601061353612116004">OpenViking：面向Agent的上下文数据库</a>，官方出品的使用教程和最佳实践</li>
+<li><strong>OpenClaw 集成案例</strong> — GitHub 仓库中的 OpenClaw 集成示例，展示了 OpenViking 在真实 Agent 中的使用方式</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

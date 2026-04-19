@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Agent-Team - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于官方 README v2.0.1</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#agent-configuration" class="toc-h4">智能体配置机制（Agent Configuration）</a></li>
+<li><a href="#thread-manager" class="toc-h4">Thread Manager 语义搜索</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#agent-roles" class="toc-h3">智能体角色（Agent Roles）</a></li>
+<li><a href="#thread-manager_1" class="toc-h3">Thread Manager（线程管理器）</a></li>
+<li><a href="#mcp-servermodel-context-protocol" class="toc-h3">MCP Server（Model Context Protocol 服务）</a></li>
+<li><a href="#skills" class="toc-h3">技能（Skills）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI-Agent-Team - 深度分析报告</h1>
+                        <div class="article-meta">基于官方 README v2.0.1</div>
+                    </header>
+                    <h1 id="ai-agent-team-">AI-Agent-Team - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025 年下半年，AI 辅助编程工具生态快速成熟。Claude Code 作为 Anthropic 推出的命令行 AI 编程助手，凭借对代码仓库的深度理解和自主执行能力，迅速获得开发者青睐。但 Claude Code 原生使用体验存在以下痛点：</p>
+<ul>
+<li><strong>缺乏专业角色分工</strong>：默认的 Claude Code 实例是通用型助手，用户需要手动编写复杂的 System Prompt 才能获得专业化行为（如产品经理视角的需求分析、QA 视角的测试设计）。</li>
+<li><strong>对话上下文丢失</strong>：Claude Code 原生的对话历史在会话结束后丢失，无法跨会话保持项目上下文，对于长期项目而言需要反复重复背景信息。</li>
+<li><strong>多任务管理缺失</strong>：开发者通常同时进行多个任务（前端开发、后端 API、测试），但 Claude Code 原生缺乏线程级别的任务隔离和切换能力。</li>
+<li><strong>配置门槛较高</strong>：Claude Code 的 <code>.claude/agents/</code> 自定义智能体和 <code>.claude/skills/</code> 技能系统虽然强大，但需要开发者理解 Markdown 配置格式和 MCP 协议。</li>
+</ul>
+<h3 id="_3">创立动机</h3>
+<p>AI-Agent-Team 由 Peter Fei 于 2025 年 11 月创建，核心动机是：</p>
+<ol>
+<li><strong>预配置专业角色，降低使用门槛</strong>：将 PM、前端开发、后端开发、QA、DevOps、Tech Lead 六个常见软件团队角色的 System Prompt、工具权限和工作流程预定义为标准配置文件，用户通过 <code>/pm</code>、<code>/fe</code> 等快捷命令一键调用。</li>
+<li><strong>解决上下文持久化问题</strong>：通过 Thread Manager MCP Server 为 Claude Code 添加基于 SQLite + 向量搜索的持久化记忆层，实现跨会话的上下文保持和语义检索。</li>
+<li><strong>提供实用工具集</strong>：打包 DrawNote（可视化笔记）、TidyMyDesktop（桌面整理）、Changelog Generator（变更日志）、SoftCopyright（软著材料生成）四个实用技能，扩展 Claude Code 的日常使用场景。</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2025-11-07</strong>：项目首次发布，提供 6 个角色智能体配置和基础 CLI 工具</li>
+<li><strong>2025-11-11</strong>：v1.0.1 新增 DrawNote Skill（可视化笔记生成器）</li>
+<li><strong>2025-11 月下旬</strong>：v1.0.2 新增 TidyMyDesktop Skill（桌面文件整理工具）</li>
+<li><strong>2025-12 月初</strong>：v2.0.0 重大更新，引入 Thread Manager 记忆系统，支持语义搜索和线程管理</li>
+<li><strong>2025-12-12</strong>：v2.0.1 当前最新稳定版，内置 Xenova/all-MiniLM-L6-v2 离线向量模型，实现离线优先的语义搜索</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>AI-Agent-Team 的设计围绕三个核心理念：</p>
+<ol>
+<li>
+<p><strong>预配置优于自配置（Convention over Configuration）</strong>：将软件团队中最常见的六个角色的行为规范、工具权限和输出格式预定义为标准配置文件。用户无需从零编写 System Prompt，直接使用 <code>/pm</code>、<code>/fe</code> 等命令即可获得专业化 AI 辅助。</p>
+</li>
+<li>
+<p><strong>离线优先（Offline-First）</strong>：Thread Manager 的向量嵌入模型（Xenova/all-MiniLM-L6-v2）直接打包到 npm 安装包中，无需联网下载。这一设计主要针对中国国内网络环境，确保安装成功率 100%。</p>
+</li>
+<li>
+<p><strong>Claude Code 原生集成（Native Integration）</strong>：完全基于 Claude Code 的 <code>.claude/agents/</code>（智能体配置）和 <code>.claude/skills/</code>（技能配置）体系构建，不引入额外框架或运行时。项目本质上是精心编排的 Markdown 配置文件集合。</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>角色固定 vs 角色灵活</strong>：选择了 6 个固定角色模板，牺牲了灵活性换取开箱即用体验。用户可通过修改 <code>.md</code> 文件自定义角色。
+- <strong>本地存储 vs 云端存储</strong>：Thread Manager 使用本地 SQLite 数据库，数据安全但无法跨设备同步。
+- <strong>包体积 vs 离线能力</strong>：因内置向量模型，安装包从约 200KB 增至 16-25MB，换取完全离线的语义搜索能力。</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="agent-configuration">智能体配置机制（Agent Configuration）</h4>
+<p>AI-Agent-Team 的核心是一组 Markdown 格式的智能体配置文件，存放在 <code>.claude/agents/</code> 目录下。每个配置文件定义了：</p>
+<ul>
+<li>角色身份和职责描述</li>
+<li>系统指令（System Instructions）</li>
+<li>工具使用权限</li>
+<li>输出格式规范</li>
+</ul>
+<p>Claude Code 原生支持从 <code>.claude/agents/*.md</code> 加载自定义智能体配置。AI-Agent-Team 利用这一机制，为六个预定义角色各创建一个 Markdown 文件：</p>
+<pre><code>.claude/agents/
+├── product_manager.md    # PM 角色
+├── frontend_dev.md       # 前端开发角色
+├── backend_dev.md        # 后端开发角色
+├── qa_engineer.md        # QA 角色
+├── devops_engineer.md    # DevOps 角色
+└── tech-leader.md        # Tech Lead 角色
+</code></pre>
+<p>同时通过 <code>.claude/commands/</code> 目录创建快捷命令映射：</p>
+<pre><code>.claude/commands/
+├── pm.md    # 映射到 product_manager 智能体
+├── fe.md    # 映射到 frontend_dev 智能体
+├── be.md    # 映射到 backend_dev 智能体
+├── qa.md    # 映射到 qa_engineer 智能体
+├── ops.md   # 映射到 devops_engineer 智能体
+└── tl.md    # 映射到 tech-leader 智能体
+</code></pre>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h4 id="thread-manager">Thread Manager 语义搜索</h4>
+<p>Thread Manager 是 AI-Agent-Team 的核心差异化组件，作为 MCP Server 运行。其工作流程：</p>
+<pre><code>用户查询（自然语言）
+  │
+  ▼
+Claude Code → 调用 MCP Tool（search_threads）
+  │
+  ▼
+Thread Manager MCP Server
+  ├─ 1. Xenova/all-MiniLM-L6-v2 模型将查询文本转为向量
+  ├─ 2. 在 SQLite 向量索引中搜索相似消息
+  ├─ 3. 返回最相关的 K 条历史消息
+  └─ 4. Claude 基于检索结果生成回复
+</code></pre>
+<p>技术栈：
+- <strong>存储层</strong>：SQLite 数据库（本地文件，无需额外服务）
+- <strong>嵌入模型</strong>：Xenova/all-MiniLM-L6-v2（基于 ONNX Runtime 的 JavaScript 推理，无需 Python 环境）
+- <strong>向量索引</strong>：内置向量搜索（非专用向量数据库）
+- <strong>协议层</strong>：MCP（Model Context Protocol），作为 Claude Code 的 MCP Server 运行</p>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>用户输入 /pm &quot;设计用户认证系统&quot;
+  │
+  ▼
+Claude Code 解析命令
+  ├─ 加载 .claude/commands/pm.md
+  ├─ 映射到 .claude/agents/product_manager.md
+  └─ 以 PM 角色身份处理用户请求
+  │
+  ├─ PM 智能体分析需求
+  │     ├─ 如果需要历史上下文 → 调用 Thread Manager MCP 搜索
+  │     └─ 生成需求分析报告
+  │
+  ├─ Thread Manager 操作
+  │     ├─ 创建新线程（pm-start 命令）
+  │     ├─ 语义搜索历史消息（search_threads 工具）
+  │     ├─ 保存消息到 SQLite（add_message 工具）
+  │     └─ 自动生成向量嵌入（Xenova 模型推理）
+  │
+  └─ 输出结果给用户
+        └─ Thread Manager 自动保存对话记录
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<pre><code>┌───────────────────────────────────────────────┐
+│           用户交互层（User Interface）          │
+│   Claude Code CLI / 快捷命令（/pm, /fe...）    │
+├───────────────────────────────────────────────┤
+│           智能体层（Agent Layer）               │
+│   .claude/agents/*.md 角色配置                  │
+│   .claude/commands/*.md 命令映射               │
+├───────────────────────────────────────────────┤
+│           技能层（Skills Layer）                │
+│   DrawNote / TidyMyDesktop / Changelog /      │
+│   SoftCopyright / Thread Manager              │
+├───────────────────────────────────────────────┤
+│           基础层（Infrastructure）              │
+│   Claude Code Runtime / MCP Protocol /        │
+│   SQLite / Xenova Transformers (ONNX)         │
+└───────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li><strong>Agent 配置文件（.claude/agents/）</strong> - 6 个 Markdown 格式的智能体角色定义，包含角色描述、职责范围、输出格式和工具使用指令。Claude Code 原生加载这些文件作为 System Prompt。</li>
+<li><strong>命令映射（.claude/commands/）</strong> - 快捷命令到智能体配置的映射文件，<code>/pm</code> → <code>product_manager.md</code>，简化调用流程。</li>
+<li><strong>Thread Manager MCP Server</strong> - 基于 MCP 协议的持久化记忆服务，提供线程创建/切换/语义搜索/消息存储等工具，使用 SQLite + 向量嵌入实现。</li>
+<li><strong>DrawNote Skill</strong> - 基于 Playwright 的可视化笔记生成器，将文本内容转换为 HTML/PNG 格式的信息图。</li>
+<li><strong>TidyMyDesktop Skill</strong> - 文件分类和整理工具，支持智能分类、版本去重和 dry-run 安全模式。</li>
+<li><strong>Changelog Generator Skill</strong> - 基于 Git 历史的变更日志生成器，支持 Markdown/HTML 输出和 GitHub Release 集成。</li>
+<li><strong>SoftCopyright Skill</strong> - 软件著作权申请材料生成器，自动分析项目源码并生成符合格式要求的说明书和源代码文档。</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<ol>
+<li><strong>自定义智能体</strong>：复制现有 <code>.claude/agents/*.md</code> 文件并修改角色定义，即可创建新的专业角色。</li>
+<li><strong>自定义技能</strong>：在 <code>.claude/skills/</code> 目录下创建新目录，编写 <code>SKILL.md</code> 描述文件和配套脚本。</li>
+<li><strong>MCP Server 扩展</strong>：Thread Manager 作为 MCP Server 的设计允许其他 MCP 兼容工具（如 Cursor）接入。</li>
+<li><strong>CLI 工具扩展</strong>：项目提供 <code>cli.sh</code> / <code>cli.ps1</code> 脚本，支持中英文智能体名称映射。</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="agent-roles">智能体角色（Agent Roles）</h3>
+<ul>
+<li><strong>定义：</strong> 预配置的 Claude Code 自定义智能体，封装了特定软件团队角色的 System Prompt、工具权限和行为规范。</li>
+<li><strong>作用：</strong> 让用户无需手动编写复杂 Prompt，即可获得专业化的 AI 辅助。每个角色针对其领域优化了输出格式和决策逻辑。</li>
+<li><strong>使用场景：</strong> 软件开发全流程中的需求分析（PM）、UI 开发（FE）、API 开发（BE）、测试设计（QA）、部署运维（Ops）、架构评审（TL）。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 调用产品经理智能体分析需求
+/pm &quot;设计电商购物车功能，包括商品添加、数量调整、价格计算和结算流程&quot;
+
+# 调用前端开发智能体实现 UI
+/fe &quot;基于产品需求，创建 React 购物车组件，支持响应式设计&quot;
+
+# 调用后端开发智能体实现 API
+/be &quot;设计购物车 RESTful API，包含增删改查和结算接口&quot;
+
+# 调用 QA 智能体设计测试
+/qa &quot;设计购物车功能的完整测试用例，包括边界条件和并发场景&quot;
+
+# 调用 DevOps 智能体部署
+/ops &quot;配置购物车服务的 Docker 容器化和 CI/CD 流水线&quot;
+
+# 调用 Tech Lead 智能体做架构评审
+/tl &quot;评审购物车系统的技术架构，评估性能和可扩展性&quot;
+</code></pre>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h3 id="thread-manager_1">Thread Manager（线程管理器）</h3>
+<ul>
+<li><strong>定义：</strong> 基于 MCP 协议的持久化记忆服务，为 Claude Code 提供跨会话的上下文保存和语义检索能力。</li>
+<li><strong>作用：</strong> 解决 Claude Code 原生会话结束后上下文丢失的问题，支持多任务线程管理和历史对话语义搜索。</li>
+<li><strong>使用场景：</strong> 长期项目管理、多任务并行开发、跨会话的上下文恢复。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 创建产品经理任务线程
+/pm-start &quot;设计用户认证系统&quot;
+
+# 创建多个并行任务线程
+/be-start &quot;实现认证 API&quot;
+/fe-start &quot;设计登录界面&quot;
+/qa-start &quot;测试认证流程&quot;
+
+# 查看所有活跃线程
+/threads
+
+# 切换到特定线程（完整恢复上下文）
+/thread switch abc123
+</code></pre>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h3 id="mcp-servermodel-context-protocol">MCP Server（Model Context Protocol 服务）</h3>
+<ul>
+<li><strong>定义：</strong> 实现 MCP 协议的服务端程序，作为 Claude Code 的外部工具服务器运行，提供额外的能力扩展。</li>
+<li><strong>作用：</strong> Thread Manager 通过 MCP 协议向 Claude Code 暴露线程管理、消息存储和语义搜索等工具，Claude Code 可以像调用内置工具一样调用这些能力。</li>
+<li><strong>使用场景：</strong> 为 Claude Code 添加持久化存储、向量搜索等原生不具备的能力。</li>
+<li><strong>配置示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 将 Thread Manager 注册为 Claude Code 的 MCP Server
+claude mcp add thread-manager node &quot;/path/to/.claude/skills/thread-manager/dist/index.js&quot;
+</code></pre>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h3 id="skills">技能（Skills）</h3>
+<ul>
+<li><strong>定义：</strong> Claude Code 的扩展功能模块，以 <code>.claude/skills/</code> 目录下的 <code>SKILL.md</code> 描述文件和配套脚本组成。</li>
+<li><strong>作用：</strong> 为 Claude Code 添加领域特定能力，如可视化笔记生成、文件整理、变更日志生成等。</li>
+<li><strong>使用场景：</strong> 日常开发辅助、文档生成、文件管理。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># DrawNote - 生成可视化笔记
+&quot;请用彩色手写笔记风格生成'微服务架构设计模式'的信息图&quot;
+
+# TidyMyDesktop - 整理桌面文件
+&quot;帮我整理桌面，按文件类型分类&quot;
+
+# Changelog Generator - 生成变更日志
+changelog-generate generate --all --format html
+
+# SoftCopyright - 生成软著材料
+&quot;帮我生成这个项目的软件著作权申请材料&quot;
+</code></pre>
+<blockquote>
+<p>基于官方 README v2.0.1</p>
+</blockquote>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>AI-Agent-Team</th>
+<th>Claude Code 原生自定义</th>
+<th>Cline</th>
+<th>Aider</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>Claude Code 预配置角色插件包</td>
+<td>手动编写 .claude/ 配置文件</td>
+<td>VS Code AI 编程助手扩展</td>
+<td>终端 AI 编程助手</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>323</td>
+<td>112,770（Claude Code 仓库）</td>
+<td>60,175</td>
+<td>43,190</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>Apache-2.0</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td>底层平台</td>
+<td>Claude Code CLI</td>
+<td>Claude Code CLI</td>
+<td>VS Code + 多模型后端</td>
+<td>终端 + 多模型后端</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>轻量级，纯配置文件 + SQLite</td>
+<td>最轻量，纯文本配置</td>
+<td>中等，VS Code 扩展有额外开销</td>
+<td>轻量级，终端原生运行</td>
+</tr>
+<tr>
+<td>易用性</td>
+<td>高（一键安装，快捷命令）</td>
+<td>低（需手动编写配置文件）</td>
+<td>高（VS Code 图形界面）</td>
+<td>中（命令行操作，需记命令）</td>
+</tr>
+<tr>
+<td>角色系统</td>
+<td>6 个预定义角色（PM/FE/BE/QA/Ops/TL）</td>
+<td>无预定义，需自行编写</td>
+<td>无预定义角色</td>
+<td>无预定义角色</td>
+</tr>
+<tr>
+<td>记忆/持久化</td>
+<td>Thread Manager + SQLite + 语义搜索</td>
+<td>无内置持久化</td>
+<td>VS Code 会话管理</td>
+<td>无内置持久化</td>
+</tr>
+<tr>
+<td>多模型支持</td>
+<td>仅 Claude（Claude Code 绑定）</td>
+<td>仅 Claude（Claude Code 绑定）</td>
+<td>Claude、GPT-4、Gemini 等多模型</td>
+<td>Claude、GPT-4、Gemini、本地模型</td>
+</tr>
+<tr>
+<td>生态丰富度</td>
+<td>低（个人项目，4 个技能）</td>
+<td>中（官方支持，社区增长中）</td>
+<td>高（VS Code 市场、丰富配置）</td>
+<td>中（Git 集成、多编辑器支持）</td>
+</tr>
+<tr>
+<td>社区规模</td>
+<td>1 位主要贡献者</td>
+<td>Anthropic 官方维护</td>
+<td>600+ 贡献者</td>
+<td>300+ 贡献者</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低（安装即用，无需编程）</td>
+<td>中（需理解配置格式和 MCP）</td>
+<td>低（VS Code 用户友好）</td>
+<td>中（需理解 Git 和命令行）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>低（个人项目，更新停滞）</td>
+<td>高（官方维护，活跃更新）</td>
+<td>高（活跃维护，企业使用）</td>
+<td>高（活跃维护，社区成熟）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>Claude Code 用户快速搭建 AI 团队</td>
+<td>希望完全自定义的 Claude Code 用户</td>
+<td>VS Code 用户的 AI 编程辅助</td>
+<td>终端用户的 AI 编程辅助</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-12。Stars 数据来自 GitHub API 实时查询。Cursor 为闭源 IDE，不纳入对比。Claude Code 原生自定义指用户手动创建 <code>.claude/agents/</code> 和 <code>.claude/commands/</code> 配置文件，不使用任何第三方插件。 <!-- reviewed: 补充第 3 个竞品（Claude Code 原生自定义）以满足审阅清单要求 --></p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>Claude Code 重度用户的个人项目</strong>：已熟悉 Claude Code CLI 的个人开发者，希望快速获得专业角色分工和上下文记忆能力，AI-Agent-Team 提供零配置的开箱即用体验。</p>
+</li>
+<li>
+<p><strong>软件开发教学和培训</strong>：预定义的六个角色（PM/FE/BE/QA/Ops/TL）清晰映射了真实软件团队分工，适合用于编程教学中演示软件开发全流程。</p>
+</li>
+<li>
+<p><strong>快速原型开发</strong>：初创团队或个人开发者需要快速从需求分析到部署的完整 AI 辅助链路，AI-Agent-Team 的工作流模板可加速这一过程。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>需要多模型后端的项目</strong>：AI-Agent-Team 完全绑定 Claude Code 和 Anthropic Claude API，无法切换到 GPT-4、Gemini 等其他模型。需要多模型支持的场景建议使用 Cline 或 Aider。</p>
+</li>
+<li>
+<p><strong>企业级团队协作</strong>：Thread Manager 的数据存储在本地 SQLite，无法跨设备同步或多人共享。企业团队协作场景需要考虑云端存储方案。</p>
+</li>
+<li>
+<p><strong>需要持续维护和社区支持的项目</strong>：项目由个人维护，最后一次更新在 2025-12-12，距今约 4 个月无更新。对于需要长期稳定支持的项目，建议选择 Cline 或 Aider 等社区更活跃的方案。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>极致的开箱即用体验</strong> - 通过 <code>npm install -g ai-agent-team</code> 一键安装，自动配置所有智能体和技能文件。用户无需理解 Claude Code 的配置体系即可使用六个专业角色。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Thread Manager 语义搜索是差异化亮点</strong> - 基于本地向量嵌入的语义搜索为 Claude Code 添加了跨会话的上下文记忆能力，这在同类工具中较为少见。离线优先的设计（内置 Xenova 模型）确保了国内网络环境的可用性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>实用工具技能丰富</strong> - DrawNote、TidyMyDesktop、Changelog Generator、SoftCopyright 四个技能覆盖了开发者的多种日常需求，超出纯编程辅助的范畴。[置信度：高]</p>
+</li>
+<li>
+<p><strong>中文友好</strong> - 项目文档、命令映射和智能体配置均支持中文，CLI 工具支持中英文智能体名称映射，对中国开发者友好。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>社区规模极小</strong> - 323 Stars 和 1 位主要贡献者，与 Cline（60,175 Stars）和 Aider（43,190 Stars）差距巨大。社区活跃度低意味着 Bug 修复慢、功能更新少、第三方贡献匮乏。[置信度：高]</p>
+</li>
+<li>
+<p><strong>项目更新停滞风险</strong> - 最后更新日期为 2025-12-12（v2.0.1），距今约 4 个月无新版本或提交。对于依赖 Claude Code API 的工具而言，API 变更可能导致兼容性问题。[置信度：中]</p>
+</li>
+<li>
+<p><strong>Claude 生态强绑定</strong> - 完全依赖 Claude Code CLI 和 Anthropic Claude API，无法用于 Cursor、VS Code + Cline 等其他 AI 编程工具。[置信度：高]</p>
+</li>
+<li>
+<p><strong>角色配置缺乏深度定制</strong> - 6 个预定义角色为通用模板，无法根据特定项目或团队的工作流程进行细粒度调整。虽然可以手动编辑 Markdown 文件，但缺乏配置管理工具。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>个人维护风险</strong> - 项目仅由 peterfei 一人维护，如果维护者失去兴趣或无法继续投入，项目可能成为孤儿项目。MIT 协议允许 Fork，但社区规模太小难以形成有效的社区接管。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Claude Code API 变更风险</strong> - Claude Code 的 <code>.claude/agents/</code> 和 <code>.claude/skills/</code> 配置格式可能随版本更新而变化，导致 AI-Agent-Team 的配置文件失效。[置信度：中]</p>
+</li>
+<li>
+<p><strong>包体积问题</strong> - 内置 Xenova 向量模型使安装包体积达 16-25MB，对于仅需智能体配置而不需要 Thread Manager 的用户而言是不必要的负担。[置信度：高]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 较少。包含 6 个智能体配置、4 个实用技能和 1 个 MCP Server。无插件市场，扩展需手动编辑配置文件。[置信度：高]</li>
+<li><strong>第三方库支持：</strong> 极低。项目本身不提供 API 或 SDK，无法被其他项目集成。依赖的第三方库包括 Playwright（DrawNote）、Xenova/transformers（向量嵌入）。[置信度：高]</li>
+<li><strong>企业采用案例：</strong> 未发现公开的企业采用案例。项目定位偏向个人开发者和教育场景。[置信度：高]</li>
+<li><strong>文档质量：</strong> 中等偏上。README 文档非常详尽（超过 500 行），包含安装指南、使用示例、常见问题和项目结构说明。但缺乏 API 参考文档和架构设计文档。[置信度：高]</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 较低。个人项目，无 CI/CD 配置，无自动化测试报告，发布频率低（2 个月 2 个大版本后停止更新）。v2.0.1 无已知重大 Bug，但缺乏长期维护保障。[置信度：中]</li>
+<li><strong>性能表现：</strong> 轻量级。智能体配置为纯 Markdown 文件，加载开销为零。Thread Manager 的向量搜索基于 SQLite，在小规模数据（万级消息）下性能足够。大规模数据（十万级以上）可能存在性能瓶颈，无独立基准测试。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 无内置监控。Thread Manager 提供 <code>/threads</code> 和 <code>/thread info</code> 命令查看线程状态，但无日志级别控制、性能指标输出或远程监控能力。[置信度：高]</li>
+<li><strong>故障恢复：</strong> 基础。Thread Manager 数据存储在本地 SQLite 文件中，可通过文件备份恢复。无内置的数据迁移、压缩或修复工具。[置信度：中]</li>
+<li><strong>安全合规：</strong> 基础。Thread Manager 使用本地存储，数据不外传。但缺乏 PII 脱敏、访问控制、审计日志等企业级安全特性。npm 包的供应链安全性依赖 peterfei 的账号安全。[置信度：中]</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>Claude Code CLI 基本使用（安装、启动、基本命令）</li>
+<li>npm / Node.js 基础（全局安装包）</li>
+<li>
+<p>软件开发流程概念（需求分析、设计、开发、测试、部署等角色分工）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 10-30 分钟。执行 <code>npm install -g ai-agent-team</code> + <code>ai-agent-team init</code> + MCP Server 配置三个步骤即可开始使用。无需编程。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 2-3 天。需要理解 Claude Code 的 <code>.claude/</code> 目录结构、自定义智能体配置格式、MCP Server 工作原理，以及如何修改预定义角色以适应特定项目需求。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>AI-Agent-Team 是一个定位精准的 Claude Code 插件包，核心价值在于通过预配置的专业角色和 Thread Manager 记忆系统，大幅降低 Claude Code 用户的使用门槛。</p>
+<p><strong>推荐使用：</strong> 已在使用 Claude Code 的个人开发者，希望快速获得专业角色分工和跨会话记忆能力，且不介意个人项目的维护风险。</p>
+<p><strong>谨慎使用：</strong> 需要多模型支持、企业级团队协作、长期稳定维护保障的场景。</p>
+<p><strong>综合评分：</strong> 5.5/10。创意和实用性不错，但社区规模小、更新停滞、Claude 强绑定是主要短板。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> AI-Agent-Team v2.0.1（2025-12-12 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-12</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/peterfei/ai-agent-team">GitHub 仓库 peterfei/ai-agent-team</a></li>
+<li><a href="https://api.github.com/repos/peterfei/ai-agent-team">GitHub API - peterfei/ai-agent-team</a></li>
+<li><a href="https://www.npmjs.com/package/ai-agent-team">npm - ai-agent-team</a></li>
+<li><a href="https://api.github.com/repos/cline/cline">GitHub API - cline/cline</a></li>
+<li><a href="https://api.github.com/repos/Aider-AI/aider">GitHub API - Aider-AI/aider</a></li>
+<li><a href="https://code.claude.com/docs/en/plugins">Claude Code Plugins 文档</a></li>
+<li><a href="https://juejin.cn/post/7580174845770973193">AI Agent Team v2.0.0 发布 - 稀土掘金</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD2 - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 3-4 小时 | **前置知识：** 命令行基本操作（cd、ls、npm、git）、了解 AI 编码代理的基本概念（知道什么是 LLM、API 密钥）、Git 基础操作（commit、branch、merge）、对软件项目结构有基本概念</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-step" class="toc-h3">1.1 第一次使用：Step 模式逐步执行</a></li>
+<li><a href="#12" class="toc-h3">1.2 理解三级分解：里程碑、切片和任务</a></li>
+<li><a href="#_5" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-auto" class="toc-h3">2.1 使用 Auto 模式实现全自动开发</a></li>
+<li><a href="#22-token" class="toc-h3">2.2 配置每阶段模型选择和 Token 优化</a></li>
+<li><a href="#23-worktree" class="toc-h3">2.3 理解崩溃恢复和 Worktree 隔离</a></li>
+<li><a href="#_6" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-headless-cicd" class="toc-h3">3.1 Headless 模式和 CI/CD 集成</a></li>
+<li><a href="#32-mcp-server" class="toc-h3">3.2 MCP Server 模式</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践与避坑指南</a></li>
+<li><a href="#_7" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_8" class="toc-h3">项目需求</a></li>
+<li><a href="#_9" class="toc-h3">项目设计</a></li>
+<li><a href="#_10" class="toc-h3">完整实施步骤</a></li>
+<li><a href="#_11" class="toc-h3">代码解析</a></li>
+<li><a href="#_12" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_13" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_14" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_15" class="toc-h3">调试技巧</a></li>
+<li><a href="#_16" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_17" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_18" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_19" class="toc-h3">进阶方向建议</a></li>
+<li><a href="#_20" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD2 - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 3-4 小时<br>**前置知识：** 命令行基本操作（cd、ls、npm、git）、了解 AI 编码代理的基本概念（知道什么是 LLM、API 密钥）、Git 基础操作（commit、branch、merge）、对软件项目结构有基本概念</div>
+                    </header>
+                    <h1 id="gsd2-">GSD2 - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 3-4 小时
+<strong>前置知识：</strong> 命令行基本操作（cd、ls、npm、git）、了解 AI 编码代理的基本概念（知道什么是 LLM、API 密钥）、Git 基础操作（commit、branch、merge）、对软件项目结构有基本概念</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS / Linux / Windows（WSL2）</li>
+<li>Node.js：18.x 及以上</li>
+<li>npm：9.x 及以上</li>
+<li>Git：2.x 及以上（需要 worktree 支持）</li>
+<li>AI 模型 API 密钥：至少一个提供商（推荐 Anthropic Claude）</li>
+<li>磁盘空间：约 200MB（Node.js 模块 + 项目文件）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>第一步：检查前置依赖</strong></p>
+<pre><code class="language-bash"># 检查 Node.js 版本
+node --version
+# 需要 v18.x 及以上
+
+# 检查 npm 版本
+npm --version
+# 需要 9.x 及以上
+
+# 检查 Git 版本（需要 worktree 支持）
+git --version
+# 需要 2.x 及以上
+</code></pre>
+<p><strong>第二步：安装 GSD2 CLI</strong></p>
+<pre><code class="language-bash"># 全局安装 GSD2 CLI
+npm install -g gsd-pi@latest
+
+# 验证安装
+gsd --version
+# 预期输出: 2.71.x（或更高版本）
+</code></pre>
+<p><strong>第三步：配置 AI 模型提供商</strong></p>
+<pre><code class="language-bash"># GSD2 支持 20+ 模型提供商
+# 推荐：Anthropic Claude（最常用，质量最高）
+
+# 设置 Anthropic API 密钥
+export ANTHROPIC_API_KEY=&quot;your-anthropic-api-key&quot;
+
+# 可选：设置其他提供商密钥（用于回退或多模型策略）
+export OPENAI_API_KEY=&quot;your-openai-api-key&quot;
+export GOOGLE_API_KEY=&quot;your-google-api-key&quot;
+
+# 持久化环境变量（添加到 shell 配置文件）
+echo 'export ANTHROPIC_API_KEY=&quot;your-key&quot;' &gt;&gt; ~/.zshrc
+source ~/.zshrc
+</code></pre>
+<p><strong>第四步：验证完整安装</strong></p>
+<pre><code class="language-bash"># 创建一个测试项目
+mkdir ~/gsd2-test &amp;&amp; cd ~/gsd2-test
+git init
+
+# 初始化 GSD2
+gsd init
+
+# 查看生成的配置
+ls -la .gsd/
+# 预期输出:
+# .gsd/
+# ├── config.yaml      # GSD2 配置文件
+# ├── STATE.md         # 全局状态文件
+# └── ...
+
+# 查看 GSD2 帮助
+gsd --help
+# 显示所有可用命令
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README 安装指南</p>
+</blockquote>
+<hr />
+<h2 id="_4">第一部分：入门篇</h2>
+<h3 id="11-step">1.1 第一次使用：Step 模式逐步执行</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 有两种执行模式：Step 模式（逐步执行，每步暂停等待审查）和 Auto 模式（全自动状态机）。对于初次使用者，建议从 Step 模式开始，逐步理解 GSD2 的工作流程。</p>
+<p>GSD2 的核心工作流程是：
+1. <strong>初始化</strong>：<code>gsd init</code> 创建项目配置和 <code>.gsd/</code> 目录
+2. <strong>规划</strong>：GSD2 分析你的项目描述，生成里程碑、切片和任务的分解
+3. <strong>执行</strong>：每个任务在全新的 200K token 上下文中执行
+4. <strong>验证</strong>：每个任务完成后进行验证
+5. <strong>合并</strong>：变更合并回主分支</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README 和 dev.to 入门指南
+
+# 创建项目目录
+mkdir ~/my-first-gsd-project &amp;&amp; cd ~/my-first-gsd-project
+git init
+
+# 初始化 GSD2
+gsd init
+# GSD2 会提示输入项目描述
+
+# 输入项目描述（示例）
+# &quot;Build a simple REST API with Express.js that has:
+#  - User registration and login with JWT authentication
+#  - CRUD operations for a 'todos' resource
+#  - SQLite database with proper migrations
+#  - Input validation and error handling
+#  - Basic unit tests for all endpoints&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># GSD2 Step 模式的典型执行过程（模拟输出）
+
+$ gsd init
+✓ Initialized GSD2 in /Users/you/my-first-gsd-project
+✓ Created .gsd/ directory
+✓ Generated config.yaml
+
+$ gsd start --mode step
+
+[Planning Phase]
+Analyzing project description...
+Generating project specification...
+
+Milestone 1: Foundation &amp; Database
+  Slice 1.1: Project Setup
+    Task 1.1.1: Initialize Express.js project with TypeScript
+    Task 1.1.2: Set up SQLite database and migration system
+  Slice 1.2: User Authentication
+    Task 1.2.1: Create User model and database schema
+    Task 1.2.2: Implement JWT authentication middleware
+    Task 1.2.3: Build registration and login endpoints
+
+Milestone 2: Todo CRUD &amp; Validation
+  Slice 2.1: Todo Resource
+    Task 2.1.1: Create Todo model and schema
+    Task 2.1.2: Implement CRUD endpoints with validation
+  Slice 2.2: Testing
+    Task 2.2.1: Write unit tests for auth endpoints
+    Task 2.2.2: Write unit tests for todo endpoints
+
+Execute Task 1.1.1? [Y/n] Y
+
+[Task 1.1.1: Initialize Express.js project]
+Creating fresh context (200K tokens)...
+Loading artifacts: project spec, roadmap excerpt...
+Executing...
+
+✓ Task completed
+Files created:
+  - package.json
+  - tsconfig.json
+  - src/index.ts
+  - src/app.ts
+
+Verify and continue to next task? [Y/n] Y
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GSD2 GitHub README 的工作流程描述和 dev.to 入门指南。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 修改项目描述，尝试生成不同复杂度的项目（如只有一个简单的 TODO API），观察 GSD2 如何调整任务分解。
+2. 在 Step 模式中，审查每个任务的输出后再继续，感受 GSD2 的逐步控制能力。</p>
+<hr />
+<h3 id="12">1.2 理解三级分解：里程碑、切片和任务</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 将项目分解为三个层级：里程碑（Milestone）→ 切片（Slice）→ 任务（Task）。这是 GSD2 最核心的组织结构。</p>
+<ul>
+<li><strong>里程碑</strong>：项目的重大阶段，可独立验证，运行在独立的 Git worktree 中</li>
+<li><strong>切片</strong>：里程碑内的功能分组，提供上下文边界</li>
+<li><strong>任务</strong>：最小可执行单元，每个任务适配一个 200K token 上下文窗口（铁律）</li>
+</ul>
+<p>理解这个结构对于有效使用 GSD2 至关重要，因为它决定了 GSD2 如何分配工作、管理上下文和组织代码变更。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README
+
+# 查看当前项目的分解结构
+cd ~/my-first-gsd-project
+cat .gsd/ROADMAP.md
+
+# 查看当前状态
+cat .gsd/STATE.md
+# 显示当前活跃的里程碑、正在执行的切片和任务状态
+
+# 查看特定里程碑的详情
+ls .gsd/milestones/
+# 每个里程碑目录包含该里程碑下的所有切片和任务文件
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># .gsd/ROADMAP.md 的典型内容（模拟输出）
+
+# Project Roadmap
+
+## Milestone 1: Foundation &amp; Database
+- Status: IN_PROGRESS
+- Branch: milestone/M001
+
+### Slice 1.1: Project Setup
+- Status: COMPLETED
+- Tasks:
+  - [DONE] Task 1.1.1: Initialize Express.js project
+  - [DONE] Task 1.1.2: Set up SQLite database
+
+### Slice 1.2: User Authentication
+- Status: IN_PROGRESS
+- Tasks:
+  - [DONE] Task 1.2.1: User model and schema
+  - [ACTIVE] Task 1.2.2: JWT authentication middleware
+  - [PENDING] Task 1.2.3: Registration and login endpoints
+
+## Milestone 2: Todo CRUD &amp; Validation
+- Status: PENDING
+...
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GSD2 的规格文件结构。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 每个里程碑运行在独立的 Git worktree 中，互不干扰
+- 任务是 GSD2 执行的最小单元，不可再分
+- 如果一个任务太大无法适配一个上下文窗口，GSD2 会在规划阶段自动将其进一步拆分</p>
+<p><strong>练习题：</strong>
+1. 手动查看 <code>.gsd/</code> 目录下的所有文件，理解 GSD2 如何持久化项目状态。
+2. 尝试创建一个更复杂的项目描述，观察 GSD2 如何调整里程碑和切片的划分。</p>
+<hr />
+<h2 id="_5">第二部分：进阶篇</h2>
+<h3 id="21-auto">2.1 使用 Auto 模式实现全自动开发</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Auto 模式是 GSD2 的核心能力——完整的全自动状态机。系统从规划到执行、验证、合并、重新规划，全部自主完成。你需要做的是写一个清晰的项目描述，然后让 GSD2 自主完成整个开发过程。</p>
+<p>Auto 模式的状态机流程：planning → ready → executing → verifying → merging → replanning，循环直到所有里程碑完成。系统内置卡住检测、超时监督和自适应重新规划，确保长时间运行的可靠性。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README 和 dev.to 入门指南
+
+# 创建一个新项目
+mkdir ~/auto-demo &amp;&amp; cd ~/auto-demo
+git init
+
+# 初始化 GSD2
+gsd init
+
+# 以 Auto 模式启动（全自动执行）
+gsd start --mode auto
+
+# GSD2 将自主完成以下步骤：
+# 1. 分析项目描述
+# 2. 生成里程碑/切片/任务分解
+# 3. 逐任务执行（每个任务全新上下文）
+# 4. 自动验证每个任务
+# 5. 合并到主分支
+# 6. 自适应重新规划
+# 7. 循环直到完成
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># Auto 模式的典型输出（模拟输出）
+
+$ gsd start --mode auto
+
+[GSD2 Auto Mode v2.71]
+Project: Express.js REST API
+
+[Phase: Planning]
+Analyzing project description... ✓
+Generating milestones... ✓
+  → Milestone 1: Foundation (3 slices, 7 tasks)
+  → Milestone 2: Features (2 slices, 5 tasks)
+Generating ROADMAP.md... ✓
+
+[Phase: Execution]
+Starting Milestone 1 in worktree milestone/M001...
+
+  Task 1.1.1: Initialize project [executing]
+  Context: 200K tokens, 12K artifacts loaded
+  ... ✓ completed (verified)
+
+  Task 1.1.2: Database setup [executing]
+  Context: 200K tokens, 15K artifacts loaded
+  ... ✓ completed (verified)
+
+  Task 1.2.1: User model [executing]
+  Context: 200K tokens, 18K artifacts loaded
+  ... ✓ completed (verified)
+
+  ...
+
+[Phase: Merging Milestone 1]
+Squash merging milestone/M001 → main... ✓
+Worktree cleaned up.
+
+[Phase: Replanning]
+Reviewing execution results... ✓
+Adjusting Milestone 2 plan... ✓
+
+[Phase: Execution]
+Starting Milestone 2 in worktree milestone/M002...
+  ...
+
+[Complete]
+All milestones completed.
+Total tasks: 12
+Total cost: $8.45
+Duration: 47 minutes
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GSD2 GitHub README 的 Auto 模式描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- Auto 模式启动后不需要人工干预，但建议在初次使用时关注前几个任务的输出质量
+- 如果发现某个任务输出质量不佳，可以 Ctrl+C 中断，然后用 Step 模式继续
+- 确保在启动 Auto 模式前配置好足够的 API 密钥余额
+- Auto 模式的 token 消耗约是直接使用 Claude Code 的 4 倍，注意控制成本</p>
+<p><strong>练习题：</strong>
+1. 用 Auto 模式运行一个简单项目（5-10 个文件），观察完整的自动执行过程。
+2. 在 Auto 模式运行过程中，手动检查 <code>.gsd/STATE.md</code> 的变化，理解状态机的推进。</p>
+<hr />
+<h3 id="22-token">2.2 配置每阶段模型选择和 Token 优化</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 最大的成本优化杠杆是为不同阶段选择不同的 AI 模型。研究阶段可以用较便宜的模型，执行阶段使用最强模型。配合 token 优化配置（budget/balanced/quality），可以精细控制成本和质量之间的平衡。</p>
+<p>这是 GSD2 区别于直接使用 Claude Code 的关键优势之一——不是所有任务都需要最贵的模型。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README
+
+# 编辑 GSD2 配置文件
+cat .gsd/config.yaml
+</code></pre>
+<pre><code class="language-yaml"># .gsd/config.yaml 的典型配置
+
+# 模型选择策略
+models:
+  # 规划阶段：使用中等能力模型
+  planning:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;gpt-4o&quot;
+
+  # 研究阶段：使用较便宜的模型
+  research:
+    primary: &quot;gpt-4o&quot;
+    fallback: &quot;claude-3.5-sonnet&quot;
+
+  # 执行阶段：使用最强模型
+  execution:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+
+  # 验证阶段：使用中等能力模型
+  verification:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;gpt-4o&quot;
+
+# Token 优化配置
+# budget:   40-60% 节省（跳过研究，最小验证）
+# balanced: 10-20% 节省（标准流程，部分压缩）
+# quality:  0% 节省（完整研究+验证）
+token_profile: &quot;balanced&quot;
+
+# 成本控制
+max_cost_per_milestone: 15.00  # 每个里程碑最大成本（美元）
+</code></pre>
+<pre><code class="language-bash"># 应用配置后启动
+gsd start --mode auto
+
+# 运行完成后查看成本报告
+gsd status --cost
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 成本报告（模拟输出）
+
+$ gsd status --cost
+
+Cost Report
+===========
+Milestone 1: $4.23
+  - Research:  $0.45 (gpt-4o)
+  - Planning:  $0.38 (claude-sonnet)
+  - Execution: $2.85 (claude-sonnet)
+  - Verification: $0.55 (claude-sonnet)
+
+Milestone 2: $3.78
+  - Research:  $0.32 (gpt-4o)
+  - Planning:  $0.28 (claude-sonnet)
+  - Execution: $2.65 (claude-sonnet)
+  - Verification: $0.53 (claude-sonnet)
+
+Total: $8.01
+Token usage: 1.2M input, 180K output
+Savings vs. quality profile: ~22% (balanced)
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GSD2 的成本追踪功能描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- budget 配置虽然节省最多，但跳过研究阶段可能导致执行代理对项目背景理解不足
+- 研究阶段使用较便宜的模型（如 gpt-4o）通常够用，因为研究不需要代码生成能力
+- 执行阶段建议始终使用最强模型，这是代码质量的关键保障
+- 设置 <code>max_cost_per_milestone</code> 可以防止单个里程碑的成本失控</p>
+<p><strong>练习题：</strong>
+1. 分别使用 budget 和 quality 配置运行同一项目，对比成本和代码质量差异。
+2. 尝试将研究阶段的模型换成更便宜的选项（如 claude-3.5-sonnet），观察对整体质量的影响。</p>
+<hr />
+<h3 id="23-worktree">2.3 理解崩溃恢复和 Worktree 隔离</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 的崩溃恢复能力是它区别于直接使用 Claude Code 的关键优势之一。当系统崩溃或中断后，GSD2 能从上一个检查点精确恢复继续执行，而不需要从头开始。</p>
+<p>这得益于 GSD2 的两个核心设计：
+1. <strong>文件持久化状态</strong>：所有状态存储在 <code>.gsd/STATE.md</code>，不依赖内存
+2. <strong>Git Worktree 隔离</strong>：每个里程碑在独立 worktree 中运行，失败可干净回滚</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README
+
+# 模拟崩溃恢复场景
+cd ~/auto-demo
+
+# 假设 Auto 模式在执行中崩溃（Ctrl+C 或网络中断）
+# 查看当前状态
+cat .gsd/STATE.md
+# 显示最后完成的状态
+
+# 重新启动 GSD2（它将自动恢复）
+gsd start --mode auto
+
+# GSD2 会：
+# 1. 读取 STATE.md 找到最后的安全检查点
+# 2. 进行会话取证分析不完整的工作
+# 3. 从断点继续执行
+
+# 查看所有里程碑的 worktree
+git worktree list
+# 显示所有活跃的 worktree
+# /path/to/project                  abc1234 [main]
+# /path/to/project/.gsd/worktrees/M001  def5678 [milestone/M001]
+
+# 手动回滚某个里程碑（如果需要）
+git worktree remove .gsd/worktrees/M001 --force
+git branch -D milestone/M001
+# 里程碑 M001 的所有变更被丢弃，主分支不受影响
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 崩溃恢复的典型输出（模拟输出）
+
+$ gsd start --mode auto
+
+[GSD2 Auto Mode v2.71]
+Detected previous session (crashed or interrupted)
+Performing session forensics...
+  Last completed task: Task 1.2.1
+  Incomplete task: Task 1.2.2 (partial changes detected)
+  Safe resume point: Task 1.2.2 (re-execute)
+
+Resuming from Task 1.2.2...
+Reverting partial changes in worktree milestone/M001...
+Starting fresh context for Task 1.2.2...
+
+  Task 1.2.2: JWT authentication middleware [executing]
+  Context: 200K tokens, 18K artifacts loaded
+  ... ✓ completed (verified)
+
+  Continuing from Task 1.2.3...
+  ...
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GSD2 的崩溃恢复机制描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 不要手动修改 <code>.gsd/STATE.md</code>，除非你完全理解其格式
+- 如果崩溃发生在 Git 操作中（如 merge），可能需要手动清理 worktree 状态
+- 无头模式下的自动重启使用指数退避：5s → 10s → 30s 上限
+- 提供商错误（如 API 限流）会自动等待后重试：速率限制 60s，服务器错误 30s</p>
+<p><strong>练习题：</strong>
+1. 在 Auto 模式执行过程中故意 Ctrl+C 中断，然后重新启动，验证恢复能力。
+2. 查看 <code>.gsd/</code> 目录下的文件结构，理解状态持久化的方式。</p>
+<hr />
+<h2 id="_6">第三部分：高级篇</h2>
+<h3 id="31-headless-cicd">3.1 Headless 模式和 CI/CD 集成</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 的 Headless 模式支持非交互式运行，返回 JSON 格式的状态、下一步操作和成本明细。这使得 GSD2 可以集成到 CI/CD 流水线中，实现自动化代码生成和验证。</p>
+<p>Headless 模式不启动交互式界面，而是通过命令行参数控制执行，输出结构化 JSON 供下游工具消费。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README docs/commands.md
+
+# Headless 模式执行单个任务
+gsd start --mode headless --task-next
+
+# 输出 JSON 格式的状态报告
+</code></pre>
+<pre><code class="language-json">{
+  &quot;status&quot;: &quot;task_completed&quot;,
+  &quot;task&quot;: {
+    &quot;id&quot;: &quot;1.2.2&quot;,
+    &quot;name&quot;: &quot;JWT authentication middleware&quot;,
+    &quot;milestone&quot;: &quot;M001&quot;,
+    &quot;slice&quot;: &quot;S1.2&quot;
+  },
+  &quot;next_action&quot;: {
+    &quot;type&quot;: &quot;execute_task&quot;,
+    &quot;task_id&quot;: &quot;1.2.3&quot;,
+    &quot;task_name&quot;: &quot;Registration and login endpoints&quot;
+  },
+  &quot;cost&quot;: {
+    &quot;input_tokens&quot;: 45000,
+    &quot;output_tokens&quot;: 8500,
+    &quot;estimated_cost_usd&quot;: 0.42
+  },
+  &quot;files_changed&quot;: [
+    &quot;src/middleware/auth.ts&quot;,
+    &quot;src/utils/jwt.ts&quot;
+  ],
+  &quot;verification&quot;: {
+    &quot;status&quot;: &quot;passed&quot;,
+    &quot;tests_run&quot;: 5,
+    &quot;tests_passed&quot;: 5
+  }
+}
+</code></pre>
+<pre><code class="language-bash"># CI/CD 集成示例（GitHub Actions）
+# 在 .github/workflows/gsd.yml 中配置
+</code></pre>
+<pre><code class="language-yaml"># .github/workflows/gsd.yml
+name: GSD2 Auto Development
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  develop:
+    if: contains(github.event.label.name, 'gsd-auto')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install GSD2
+        run: npm install -g gsd-pi@latest
+
+      - name: Run GSD2 Headless
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          gsd start --mode headless --max-cost 10.00
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: &quot;GSD2: Automated development&quot;
+          body: &quot;Auto-generated by GSD2&quot;
+</code></pre>
+<p><strong>注意事项：</strong>
+- Headless 模式下没有人工干预，确保项目描述足够清晰
+- 设置 <code>--max-cost</code> 参数防止成本失控
+- 建议在 CI 中先运行 Step 模式的第一个任务验证质量，再切换到 Headless</p>
+<hr />
+<h3 id="32-mcp-server">3.2 MCP Server 模式</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD2 可以作为 MCP（Model Context Protocol）服务器运行，暴露工具接口供外部 AI 客户端调用。这使得其他 AI 工具（如 Claude Code、Cursor 等）可以直接调用 GSD2 的能力。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README docs/commands.md
+
+# 启动 MCP Server 模式
+gsd --mode mcp
+
+# GSD2 将通过 MCP 协议暴露以下工具：
+# - gsd_init: 初始化项目
+# - gsd_plan: 执行规划
+# - gsd_execute: 执行任务
+# - gsd_verify: 验证任务
+# - gsd_status: 查询状态
+# - gsd_cost: 查询成本
+
+# 在 Claude Code 中使用 MCP 模式
+# 在 Claude Code 的 MCP 配置中添加 GSD2 作为 MCP 服务器
+</code></pre>
+<p><strong>注意事项：</strong>
+- MCP Server 模式适合需要将 GSD2 能力集成到其他工具链的场景
+- 对于大多数用户，直接使用 CLI 的 Step 或 Auto 模式更为简单</p>
+<hr />
+<h3 id="33">3.3 最佳实践与避坑指南</h3>
+<p><strong>最佳实践：</strong></p>
+<ol>
+<li>
+<p><strong>写清晰详细的项目描述</strong>：GSD2 的输出质量直接取决于输入的项目描述质量。描述应包含：技术栈、功能需求、非功能性需求（性能、安全）、项目结构偏好。模糊的描述会导致模糊的代码。</p>
+</li>
+<li>
+<p><strong>从 Step 模式开始</strong>：初次使用 GSD2 时，先用 Step 模式运行几个任务，确认输出质量满足预期后再切换到 Auto 模式。这避免了 Auto 模式下低质量输出持续累积。</p>
+</li>
+<li>
+<p><strong>使用 balanced 配置作为起点</strong>：budget 配置节省成本但可能牺牲质量，quality 配置成本较高。balanced 是大多数项目的最佳平衡点。</p>
+</li>
+<li>
+<p><strong>设置成本上限</strong>：始终设置 <code>max_cost_per_milestone</code>，防止单个里程碑的成本失控。特别是在 Auto 模式下，没有成本上限可能导致意外的高额账单。</p>
+</li>
+<li>
+<p><strong>利用 Git Worktree 隔离</strong>：不同里程碑在独立 worktree 中执行。如果某个里程碑方向错误，可以直接丢弃整个 worktree 而不影响主分支。这比在单分支上回滚更干净。</p>
+</li>
+</ol>
+<p><strong>常见陷阱（来自 dev.to 社区反馈）：</strong></p>
+<ul>
+<li><strong>Token 消耗是直接使用 Claude Code 的 4 倍</strong>：GSD2 的每任务全新上下文带来了质量优势，但重复加载上下文工件的成本不可忽视。对小型项目不划算。</li>
+<li><strong>Pro 计划可能不够</strong>：长时间 Auto 模式运行可能消耗大量 API 额度。建议使用按量计费的 API 而非订阅计划。</li>
+<li><strong>模糊的项目描述导致问题</strong>：如果项目描述过于模糊，GSD2 的规划可能偏离预期，导致后续所有任务都在错误方向上工作。</li>
+</ul>
+<hr />
+<h2 id="_7">第四部分：实战项目</h2>
+<h3 id="_8">项目需求</h3>
+<p>使用 GSD2 自动开发一个"个人博客系统"，综合运用以下知识点：
+1. <strong>Step 模式逐步执行</strong>（知识点 1.1）：从初始化到逐步执行
+2. <strong>三级分解理解</strong>（知识点 1.2）：理解 GSD2 的项目分解
+3. <strong>Auto 模式全自动开发</strong>（知识点 2.1）：全自动完成剩余开发
+4. <strong>模型选择和 Token 优化</strong>（知识点 2.2）：配置成本优化策略
+5. <strong>崩溃恢复</strong>（知识点 2.3）：验证恢复能力</p>
+<p>功能要求：
+- Next.js 14 前端（App Router + TypeScript）
+- Markdown 文件作为内容源（无数据库）
+- 文章列表页、文章详情页、关于页面
+- 响应式设计（Tailwind CSS）
+- SEO 优化（meta 标签、Open Graph）
+- RSS 订阅功能</p>
+<h3 id="_9">项目设计</h3>
+<pre><code>personal-blog/
+│
+├── .gsd/
+│   ├── config.yaml         # GSD2 配置
+│   ├── STATE.md            # 全局状态
+│   ├── PROJECT.md          # 项目规格
+│   ├── REQUIREMENTS.md     # 需求规格
+│   ├── ROADMAP.md          # 路线图
+│   └── milestones/         # 里程碑文件
+│
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx      # 根布局
+│   │   ├── page.tsx        # 首页（文章列表）
+│   │   ├── posts/
+│   │   │   └── [slug]/
+│   │   │       └── page.tsx # 文章详情
+│   │   ├── about/
+│   │   │   └── page.tsx    # 关于页面
+│   │   └── feed.xml/
+│   │       └── route.ts    # RSS 路由
+│   ├── components/
+│   │   ├── Header.tsx
+│   │   ├── Footer.tsx
+│   │   ├── PostCard.tsx
+│   │   └── SEO.tsx
+│   └── lib/
+│       ├── markdown.ts     # Markdown 解析
+│       └── rss.ts          # RSS 生成
+│
+├── content/
+│   └── posts/              # Markdown 文章
+│       ├── hello-world.md
+│       └── getting-started.md
+│
+└── public/                 # 静态资源
+</code></pre>
+<h3 id="_10">完整实施步骤</h3>
+<p><strong>第一步：初始化项目</strong></p>
+<pre><code class="language-bash">#!/bin/bash
+# 基于 GSD2 GitHub README
+
+# 创建项目
+mkdir ~/personal-blog &amp;&amp; cd ~/personal-blog
+git init
+
+# 安装 GSD2（如果尚未安装）
+npm install -g gsd-pi@latest
+
+# 初始化 GSD2
+gsd init
+</code></pre>
+<p><strong>第二步：编写项目描述</strong></p>
+<pre><code>Build a personal blog system with the following specifications:
+
+## Tech Stack
+- Next.js 14 (App Router, TypeScript)
+- Tailwind CSS for styling
+- Markdown files as content source (gray-matter + remark)
+- No database required
+
+## Features
+1. Home page: List of recent blog posts with title, date, excerpt, and reading time
+2. Post detail page: Full article with Markdown rendering, code syntax highlighting
+3. About page: Static content about the author
+4. RSS feed: XML feed at /feed.xml for RSS subscribers
+5. SEO: Meta tags, Open Graph tags, structured data for each post
+6. Responsive design: Mobile-first, works on all screen sizes
+
+## Content Structure
+- Blog posts stored as Markdown files in /content/posts/
+- Each post has frontmatter: title, date, excerpt, tags
+- Code blocks with syntax highlighting (using rehype-highlight)
+
+## Non-Functional Requirements
+- Static site generation (SSG) for all pages
+- Lighthouse score &gt; 90 for all categories
+- Zero runtime dependencies for content (all build-time)
+- Accessible (WCAG 2.1 AA compliance)
+</code></pre>
+<p><strong>第三步：配置模型选择和 Token 优化</strong></p>
+<pre><code class="language-yaml"># .gsd/config.yaml
+models:
+  research:
+    primary: &quot;gpt-4o&quot;
+    fallback: &quot;claude-3.5-sonnet&quot;
+  planning:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;gpt-4o&quot;
+  execution:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+  verification:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;gpt-4o&quot;
+
+token_profile: &quot;balanced&quot;
+max_cost_per_milestone: 10.00
+</code></pre>
+<p><strong>第四步：先用 Step 模式验证质量，再切 Auto 模式</strong></p>
+<pre><code class="language-bash"># 基于 dev.to 入门指南的推荐工作流
+
+# 第一步：用 Step 模式执行前两个任务，验证质量
+gsd start --mode step
+# 审查 Task 1.1.1 和 Task 1.1.2 的输出
+# 确认代码风格和架构方向正确
+
+# 第二步：质量满意后，切换到 Auto 模式
+gsd start --mode auto
+# GSD2 自动从 STATE.md 读取进度，继续执行
+
+# 第三步：运行中故意中断（Ctrl+C），验证崩溃恢复
+# 重新启动
+gsd start --mode auto
+# 观察是否正确恢复
+
+# 第四步：完成后验证
+cd ~/personal-blog
+npm run build
+# 预期: Build succeeded
+npm run dev
+# 在浏览器中检查所有页面
+</code></pre>
+<h3 id="_11">代码解析</h3>
+<p><strong>知识点运用说明：</strong></p>
+<ol>
+<li>
+<p><strong>Step 模式逐步执行</strong>（1.1 节）：先用 Step 模式执行前几个任务，审查代码风格和架构方向。这避免了 Auto 模式下低质量输出持续累积的风险。</p>
+</li>
+<li>
+<p><strong>三级分解理解</strong>（1.2 节）：博客系统被分解为两个里程碑——M1（基础框架 + 布局）和 M2（功能实现 + SEO）。每个里程碑在独立 worktree 中运行。</p>
+</li>
+<li>
+<p><strong>Auto 模式全自动开发</strong>（2.1 节）：质量验证通过后切换到 Auto 模式，让 GSD2 自主完成剩余任务。状态机自动管理规划→执行→验证→合并→重新规划的循环。</p>
+</li>
+<li>
+<p><strong>模型选择和 Token 优化</strong>（2.2 节）：研究阶段使用 gpt-4o（便宜），执行阶段使用 claude-sonnet（最强），balanced 配置在成本和质量间取得平衡。设置 $10/里程碑的成本上限。</p>
+</li>
+<li>
+<p><strong>崩溃恢复</strong>（2.3 节）：故意中断并重启，验证 GSD2 能从断点精确恢复。文件持久化状态和会话取证确保不丢失进度。</p>
+</li>
+</ol>
+<h3 id="_12">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加评论系统</strong>：在项目描述中增加评论功能（使用 GitHub Issues 作为后端），观察 GSD2 如何处理与外部 API 集成的新需求。</p>
+</li>
+<li>
+<p><strong>国际化支持</strong>：在 CLAUDE.md 中添加 i18n 约束（中英文双语支持），观察 GSD2 如何在后续任务中遵守这些约束。</p>
+</li>
+<li>
+<p><strong>部署到 Vercel</strong>：使用 GSD2 Headless 模式配合 GitHub Actions，实现 push 后自动部署。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_13">第五部分：常见问题与排查指南</h2>
+<h3 id="_14">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ANTHROPIC_API_KEY not set</code></td>
+<td>Anthropic API 密钥未配置</td>
+<td>在 ~/.zshrc 中设置 <code>export ANTHROPIC_API_KEY="..."</code>，然后 <code>source ~/.zshrc</code></td>
+</tr>
+<tr>
+<td><code>gsd: command not found</code></td>
+<td>GSD2 未正确安装或不在 PATH 中</td>
+<td>运行 <code>npm install -g gsd-pi@latest</code>，检查 npm 全局 bin 目录是否在 PATH 中</td>
+</tr>
+<tr>
+<td><code>Git worktree creation failed</code></td>
+<td>Git 版本过旧或仓库状态不干净</td>
+<td>更新 Git 到 2.x+；确保没有未提交的变更（<code>git stash</code> 或 <code>git commit</code>）</td>
+</tr>
+<tr>
+<td><code>Rate limit exceeded (429)</code></td>
+<td>API 调用频率超出限制</td>
+<td>GSD2 会自动等待 60s 后重试。如果持续发生，考虑降低并发或更换模型提供商</td>
+</tr>
+<tr>
+<td><code>Context window exceeded</code></td>
+<td>任务过大，超出 200K token 限制</td>
+<td>GSD2 应在规划阶段自动拆分。如果仍然发生，简化项目描述或将大里程碑拆分为更小的</td>
+</tr>
+<tr>
+<td><code>Milestone merge conflict</code></td>
+<td>主分支和 worktree 分支有冲突</td>
+<td>手动解决冲突后重新合并。或丢弃 worktree 重新开始该里程碑</td>
+</tr>
+<tr>
+<td><code>STATE.md corrupted</code></td>
+<td>状态文件被意外修改</td>
+<td>检查 <code>.gsd/STATE.md</code> 的格式。如果无法修复，可能需要重新 <code>gsd init</code>（会丢失进度）</td>
+</tr>
+<tr>
+<td><code>Budget exceeded</code></td>
+<td>里程碑成本超出设置的上限</td>
+<td>检查 <code>max_cost_per_milestone</code> 设置。考虑增大预算或切换到 budget token 配置</td>
+</tr>
+<tr>
+<td><code>Stuck in loop (A→B→A→B)</code></td>
+<td>卡住检测已触发但无法自动解决</td>
+<td>手动 Ctrl+C 中断，查看 <code>.gsd/</code> 中的任务状态。可能需要调整项目描述或手动完成该任务</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>基于 GSD2 GitHub README 和 dev.to 入门指南的常见问题</p>
+</blockquote>
+<h3 id="_15">调试技巧</h3>
+<ol>
+<li>
+<p><strong>利用 STATE.md 追踪进度</strong>：<code>.gsd/STATE.md</code> 记录了完整的执行状态。当 Auto 模式出现问题时，首先查看此文件了解系统当前处于状态机的哪个阶段。</p>
+</li>
+<li>
+<p><strong>检查 Worktree 中的代码</strong>：每个里程碑在独立 worktree 中执行。直接进入 <code>.gsd/worktrees/M001/</code> 查看生成的代码，可以在合并到主分支前发现问题。</p>
+</li>
+<li>
+<p><strong>成本报告分析</strong>：使用 <code>gsd status --cost</code> 查看详细的成本分解。如果某个阶段成本异常高，可能是任务过大或模型选择不当。针对性调整 token 配置或模型选择。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_16">第六部分：学习路线推荐</h2>
+<h3 id="_17">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README 快速入门</strong> — 安装、初始化、基本命令</li>
+<li>地址：https://github.com/gsd-build/gsd-2#readme</li>
+<li>
+<p>重点：Step 模式和 Auto 模式的使用方式、命令参考</p>
+</li>
+<li>
+<p><strong>docs/auto-mode.md</strong> — Auto 模式状态机的完整文档</p>
+</li>
+<li>地址：https://github.com/gsd-build/gsd-2/blob/main/docs/auto-mode.md</li>
+<li>
+<p>重点：状态机管道、崩溃恢复、超时监督、卡住检测</p>
+</li>
+<li>
+<p><strong>docs/commands.md</strong> — 完整命令参考</p>
+</li>
+<li>地址：https://github.com/gsd-build/gsd-2/blob/main/docs/commands.md</li>
+<li>
+<p>重点：Headless 模式、MCP Server 模式、状态管理命令</p>
+</li>
+<li>
+<p><strong>config.yaml 配置说明</strong> — 模型选择和 Token 优化</p>
+</li>
+<li>地址：https://github.com/gsd-build/gsd-2#configuration</li>
+<li>重点：每阶段模型选择、token 优化配置、成本控制</li>
+</ol>
+<h3 id="_18">推荐进阶资源</h3>
+<ul>
+<li><strong>dev.to - GSD2 A Beginner's Guide to Spec-Driven AI Coding</strong></li>
+<li>https://dev.to/nikolay_bailey/gsd2-a-beginners-guide-to-spec-driven-ai-coding-4h5k</li>
+<li>
+<p>完整的入门教程，包含工作流程、常见陷阱和与其他框架的对比</p>
+</li>
+<li>
+<p><strong>Medium - Superpowers, GSD, and gstack Framework Comparison</strong></p>
+</li>
+<li>
+<p>框架对比分析，帮助理解 GSD2 在 AI 编码工具生态中的定位</p>
+</li>
+<li>
+<p><strong>Menon Lab - Solving Context Rot</strong></p>
+</li>
+<li>深度技术分析，包含 SWE-AF 基准测试和多框架对比</li>
+</ul>
+<h3 id="_19">进阶方向建议</h3>
+<p>完成本教程后，建议按以下方向深入学习：</p>
+<ol>
+<li>
+<p><strong>GSD2 高级配置</strong>：深入学习每阶段模型选择的最优策略、Reactive Execution 的 DAG 调度、自定义扩展和子代理的使用。这能帮助你根据项目特点精细调优 GSD2 的行为。</p>
+</li>
+<li>
+<p><strong>CI/CD 集成</strong>：学习 Headless 模式和 MCP Server 模式的高级用法，将 GSD2 集成到团队的开发流程中。实现从需求到代码的全自动化。</p>
+</li>
+<li>
+<p><strong>与其他 AI 编码框架的对比实践</strong>：在同一个项目上分别使用 GSD2、BMAD 和 Superpowers，对比输出质量、成本和开发体验。这能帮助你为不同项目选择最合适的工具。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_20">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> GSD2 v2.71（npm 包 gsd-pi）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/gsd-build/gsd-2">GitHub 仓库 gsd-build/gsd-2</a> — 源码、README、架构文档、命令参考</li>
+<li><a href="https://api.github.com/repos/gsd-build/gsd-2">GitHub API - gsd-build/gsd-2</a> — 项目元数据</li>
+<li><a href="https://dev.to/nikolay_bailey/gsd2-a-beginners-guide-to-spec-driven-ai-coding-4h5k">dev.to - GSD2 A Beginner's Guide to Spec-Driven AI Coding</a> — 完整教程、常见陷阱</li>
+<li><a href="https://medium.com/">Medium - Superpowers, GSD, and gstack Comparison</a> — 框架对比</li>
+<li><a href="https://menon.pro/">Menon Lab - Solving Context Rot</a> — 技术深度分析</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

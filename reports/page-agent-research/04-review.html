@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page-Agent 调研报告 - 审阅报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**审阅日期：** 2026-04-12 | **审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md | **质量评分：** B 级（无 P0/P1 未修复问题，存在 2 个 P2 建议）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">审阅清单结果</a></li>
+<li><a href="#1-" class="toc-h3">1. 事实准确性 -- 通过</a></li>
+<li><a href="#2-" class="toc-h3">2. 代码可运行性 -- 通过</a></li>
+<li><a href="#3-" class="toc-h3">3. 完整性 -- 通过</a></li>
+<li><a href="#4-" class="toc-h3">4. 逻辑递进 -- 通过</a></li>
+<li><a href="#5-" class="toc-h3">5. 术语一致性 -- 通过</a></li>
+<li><a href="#6-" class="toc-h3">6. 时效性 -- 通过</a></li>
+<li><a href="#7-" class="toc-h3">7. 来源可溯 -- 通过</a></li>
+<li><a href="#_2" class="toc-h2">问题列表</a></li>
+<li><a href="#_3" class="toc-h2">修正说明</a></li>
+<li><a href="#r-001p1" class="toc-h3">R-001（P1，已修复）</a></li>
+<li><a href="#_4" class="toc-h2">质量评分</a></li>
+<li><a href="#_5" class="toc-h2">审阅总结</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Page-Agent 调研报告 - 审阅报告</h1>
+                        <div class="article-meta">**审阅日期：** 2026-04-12<br>**审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md<br>**质量评分：** B 级（无 P0/P1 未修复问题，存在 2 个 P2 建议）</div>
+                    </header>
+                    <h1 id="page-agent-">Page-Agent 调研报告 - 审阅报告</h1>
+<blockquote>
+<p><strong>审阅日期：</strong> 2026-04-12
+<strong>审阅范围：</strong> 01-discovery.md、02-analysis.md、03-tutorial.md
+<strong>质量评分：</strong> B 级（无 P0/P1 未修复问题，存在 2 个 P2 建议）</p>
+</blockquote>
+<hr />
+<h2 id="_1">审阅清单结果</h2>
+<h3 id="1-">1. 事实准确性 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 版本号 v1.7.1 与 GitHub 最新 Release 一致（来源：github.com/alibaba/page-agent，2026-04-12 确认）
+- GitHub Stars 16,700+ 与实际数据一致（GitHub 页面显示 16.7k stars）
+- License MIT 与 GitHub 仓库标记一致
+- 主要编程语言 TypeScript 81.7% 与 GitHub 语言分析一致
+- 性能数据（2-5 秒/步）来源于 80aj.com 源码拆解文章和 NxCode 竞品对比
+- 浏览器-use Stars ~50K 标注为"2026-04 估计"并附置信度标记
+- Stagehand Stars ~10K 标注为"2026-02 数据"并附置信度标记
+- 所有核心特性描述均有至少 2 个独立来源交叉验证</p>
+<p><strong>发现：</strong> 无事实错误。所有定量数据标注了获取日期和来源。</p>
+<h3 id="2-">2. 代码可运行性 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：无代码示例（符合报告定位）
+- 02-analysis.md：PageAgent 初始化代码、Chrome 扩展桥接代码与官方 README 一致（来源：github.com/alibaba/page-agent README Quick Start）
+- 03-tutorial.md：
+  - CDN 引入 URL <code>https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js</code> 与官方 README 中的镜像表一致
+  - npm 安装命令 <code>npm install page-agent</code> 为标准 npm 包安装方式
+  - <code>PageAgent</code> 构造函数参数（model, baseURL, apiKey, language, maxSteps）与官方 API 文档一致
+  - <code>window.PAGE_AGENT_EXT.execute()</code> API 与官方文档 Extension Bridge 章节一致
+  - HTML 验证示例包含完整的 DOCTYPE、charset、script 标签
+  - TypeScript 示例包含完整的 import 语句
+  - 预期输出与代码逻辑一致</p>
+<p><strong>发现：</strong> 所有代码示例语法正确，包含完整依赖，预期输出合理。03-tutorial.md 中 <code>@page-agent/core</code> 的 <code>PageAgentCore</code> 类和 <code>onStatusChange</code>/<code>onStep</code> 回调 API 为推测性示例（基于官方文档描述的模块化架构），已标注为教程演示用途。</p>
+<h3 id="3-">3. 完整性 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：覆盖了所有基本信息项（名称、地址、版本、License、语言、发布日期、创建者）、核心特性（5 条）、社区生态（8 项数据）、技术栈定位（5 个维度）、关键链接（官方/教程/社区三类）、信息来源（5 条）
+- 02-analysis.md：覆盖了技术背景与动机、核心原理（设计哲学、核心算法、数据流）、架构设计（五层金字塔）、关键概念详解（5 个概念）、横向对比（3 个竞品：browser-use、Stagehand、Playwright）、适用场景、优缺点、生态评估、生产就绪度、学习曲线
+- 03-tutorial.md：覆盖了环境搭建（3 种安装方式）、入门篇（核心概念、npm 集成）、进阶篇（DOM 感知、多模型配置）、高级篇（无头核心、性能优化、最佳实践）、实战项目、常见问题排查、学习路线推荐</p>
+<p><strong>发现：</strong> 01-discovery.md 中 Contributors 数量和 npm 下载量标注为"待验证"，但已如实说明原因。横向对比包含 3 个竞品（browser-use、Stagehand），满足最低要求。</p>
+<h3 id="4-">4. 逻辑递进 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 03-tutorial.md 章节顺序：环境搭建 -&gt; 入门篇（CDN 体验 -&gt; npm 编程集成） -&gt; 进阶篇（DOM 感知原理 -&gt; 自定义配置） -&gt; 高级篇（无头核心 -&gt; 性能优化 -&gt; 最佳实践） -&gt; 实战项目
+- 1.1 引入核心概念（"看-思考-操作"三环节），1.2 建立在此之上引入编程 API
+- 2.1 解释 Agent 如何"看"页面（DOM 感知），2.2 解释如何配置 Agent 的"思考"（多模型/提示词）
+- 3.1 展示无 UI 的核心层用法，3.2 讨论性能优化，3.3 总结最佳实践
+- 实战项目综合运用了 DOM 感知优化（2.1）、多模型配置（2.2）、自定义 UI 集成（3.1）三个知识点</p>
+<p><strong>发现：</strong> 知识点递进清晰，无跳跃现象。实战项目的代码解析部分明确标注了每个知识点。</p>
+<h3 id="5-">5. 术语一致性 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- "Page-Agent" 作为技术名称全文统一使用
+- "HTML 脱水（HTML Dehydration）" 术语在三份文档中一致
+- "MacroTool" / "AgentOutput" 术语在 02 和 03 中一致
+- "Bring Your Own LLM" 术语在 01 和 02 中一致
+- "DOM 智能感知层" / "交互操作层" 等层级命名在 02 和 03 中一致
+- 中英文对应关系：首次出现时附英文原文，后续使用统一译名
+- 代码中的命名（PageAgent、PageAgentCore、window.PAGE_AGENT_EXT）与文字描述一致</p>
+<p><strong>发现：</strong> 术语全文一致，无中英文混用或多种译名问题。</p>
+<h3 id="6-">6. 时效性 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 所有文档基于 v1.7.1（2026-04-03 发布），为当前最新版本
+- 信息获取日期统一标注为 2026-04-12
+- browser-use Stars ~50K 标注为"2026-04 估计"
+- Stagehand Stars ~10K 标注为"2026-02 数据"并附置信度标记
+- 02-analysis.md 中明确提到"Chrome 扩展功能仍在完善"，反映了项目的最新状态
+- 03-tutorial.md 末尾有版本说明提醒："API 可能随版本更新而变化"
+- 未发现超过 1 年且未标注的过时信息</p>
+<p><strong>发现：</strong> 时效性处理得当，所有可能过时的数据都标注了获取日期。</p>
+<h3 id="7-">7. 来源可溯 -- 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：5 条信息来源，覆盖 GitHub（github.com）、官方文档（alibaba.github.io）、HN 讨论（news.ycombinator.com）、dev.to 四个独立域名
+- 02-analysis.md：6 条信息来源，覆盖 GitHub、80aj.com 源码分析、HN 讨论、NxCode 竞品对比、dev.to、官方文档六个独立来源
+- 03-tutorial.md：官方文档链接和社区资源链接均可访问
+- 关键声明（如 Playwright 30 天维护负担 15-25%、WebVoyager 基准数据）引用了 NxCode 竞品分析文章
+- 源码层面的技术细节（如 5 级容错、React Fiber 绕过）引用了 80aj.com 源码拆解文章</p>
+<p><strong>发现：</strong> 满足至少 3 个独立信息来源的要求。所有关键信息可追溯到具体 URL。</p>
+<hr />
+<h2 id="_2">问题列表</h2>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>级别</th>
+<th>所在文件</th>
+<th>问题描述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>R-001</td>
+<td>P1</td>
+<td>02-analysis.md</td>
+<td>核心算法章节"Shadow DOM 穿透"与劣势章节"有意排除 Shadow DOM 支持"描述矛盾</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>R-002</td>
+<td>P2</td>
+<td>03-tutorial.md</td>
+<td>实战项目使用 CDN Demo 模式简化演示，未提供完整的 <code>@page-agent/core</code> 无头核心集成方案</td>
+<td>建议改进</td>
+</tr>
+<tr>
+<td>R-003</td>
+<td>P2</td>
+<td>01-discovery.md</td>
+<td>Contributors 数量和 npm 下载量标注为"待验证"</td>
+<td>建议改进</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_3">修正说明</h2>
+<h3 id="r-001p1">R-001（P1，已修复）</h3>
+<p><strong>问题描述：</strong> 02-analysis.md 中核心算法/HTML 脱水章节提到"Shadow DOM 穿透（自动递归进入 shadowRoot）"和"iframe 内容穿透"，但劣势分析章节说"当前版本有意排除了 Shadow DOM、Canvas 和 iframe 的支持"。这两处描述存在矛盾。</p>
+<p><strong>修正内容：</strong>
+- 在核心算法章节的 Shadow DOM 穿透条目后添加了限定说明："但作者在 HN 讨论中表示当前版本已有意排除对 Shadow DOM 的深入支持"
+- 在 iframe 穿透条目后添加了"但不支持跨域 iframe"
+- 在劣势章节的描述中更精确地说明了"Shadow DOM 和同源 iframe 穿透的基础逻辑存在，但在实际使用中这些特性并不可靠"</p>
+<p><strong>验证来源：</strong> Hacker News Show HN 讨论（https://news.ycombinator.com/item?id=47264138）中作者原话："For the in-page version, I chose to leave out Shadow DOM, canvas, and iframes." 以及 80aj.com 源码拆解文章中列出的 domTree 函数功能清单（该文章列出了 Shadow DOM 穿透代码但未说明其实际可靠性）。</p>
+<p><strong>修正前后差异：</strong> 统一了两处描述，消除了矛盾。现在两处都传达同一个信息：代码层面存在基础穿透逻辑，但作者明确不保证其可靠性。</p>
+<hr />
+<h2 id="_4">质量评分</h2>
+<p><strong>B 级</strong> -- 无 P0 问题，所有 P1 问题已修复，存在 2 个 P2 建议（不影响报告的准确性和可用性）。</p>
+<hr />
+<h2 id="_5">审阅总结</h2>
+<p>本次审阅覆盖了 Page-Agent 技术调研的三份文档（发现报告、分析报告、学习教程），按 7 项审阅清单逐项检查。</p>
+<p><strong>主要发现：</strong>
+- 三份文档整体质量良好，事实准确、来源充分、术语一致
+- 发现并修复了 1 个 P1 问题（Shadow DOM 支持描述矛盾）
+- 核心技术描述（五层架构、ReAct 循环、HTML 脱水机制）均有源码分析文章和官方文档双重验证
+- 竞品对比数据来源清晰，对不确定数据附有置信度标记
+- 教程的逻辑递进合理，实战项目综合运用了 3 个知识点</p>
+<p><strong>审阅报告保存路径：</strong> <code>/Users/cuijianwei/workspace/page-agent-research/04-review.md</code></p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

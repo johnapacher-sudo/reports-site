@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promptfoo - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">Promptfoo 是一个开源的 CLI 和库工具，用于评估和红队测试（Red Teaming）LLM 应用——支持自动化提示词测试、模型性能对比、RAG 评估和 AI 安全漏洞扫描，可对接 50+ 种 LLM 提供商（OpenAI、Anthropic、Azure、Bedrock、Ollama 等），通过声明式 YAML 配置实现本地运行、CI/CD 集成和团队协作。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">官方资源</a></li>
+<li><a href="#_8" class="toc-h3">教程资源</a></li>
+<li><a href="#_9" class="toc-h3">社区资源</a></li>
+<li><a href="#_10" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Promptfoo - 技术发现报告</h1>
+                        <div class="article-meta">Promptfoo 是一个开源的 CLI 和库工具，用于评估和红队测试（Red Teaming）LLM 应用——支持自动化提示词测试、模型性能对比、RAG 评估和 AI 安全漏洞扫描，可对接 50+ 种 LLM 提供商（OpenAI、Anthropic、Azure、Bedrock、Ollama 等），通过声明式 YAML 配置实现本地运行、CI/CD 集成和团队协作。</div>
+                    </header>
+                    <h1 id="promptfoo-">Promptfoo - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> Promptfoo</li>
+<li><strong>官方地址：</strong> https://www.promptfoo.dev</li>
+<li><strong>GitHub 仓库：</strong> https://github.com/promptfoo/promptfoo</li>
+<li><strong>当前版本：</strong> v0.121.5（2026-04-14 发布，npm 和 GitHub Releases 同步） <!-- reviewed: 修正 npm 版本号，原标注 v0.121.3 有误，npm registry 实际最新版本为 v0.121.5，与 GitHub Releases 一致 --></li>
+<li><strong>License：</strong> MIT</li>
+<li><strong>主要编程语言：</strong> TypeScript（100%）</li>
+<li><strong>首次发布日期：</strong> 2023-04-28（GitHub 仓库创建日期）</li>
+<li><strong>创建者/维护团队：</strong> 由 typpo（Ian Webster）和 mldangelo（Michael D'Angelo）创建并领衔维护。2026 年 3 月 Promptfoo 加入 OpenAI，但仍保持开源和 MIT 许可。核心贡献者包括 sklein12 等，共有 266 位贡献者参与（截至 2026-04-17，GitHub API 分页统计） <!-- reviewed: 修正贡献者数量为精确值 266（原 260+ 为估算，GitHub API contributors 分页显示 last page=266） --></li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>Promptfoo 是一个开源的 CLI 和库工具，用于评估和红队测试（Red Teaming）LLM 应用——支持自动化提示词测试、模型性能对比、RAG 评估和 AI 安全漏洞扫描，可对接 50+ 种 LLM 提供商（OpenAI、Anthropic、Azure、Bedrock、Ollama 等），通过声明式 YAML 配置实现本地运行、CI/CD 集成和团队协作。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>自动化 LLM 评估（Automated LLM Evaluation）</strong> - 通过声明式 YAML 配置文件定义测试用例，自动运行评估并生成矩阵式结果。支持并排比较不同模型（GPT、Claude、Gemini、Llama 等）在同一组提示词上的表现，内置缓存和并发加速测试执行。评估结果可通过 Web Viewer 可视化查看和分享。[来源：GitHub README、promptfoo.dev]</p>
+</li>
+<li>
+<p><strong>AI 红队测试与漏洞扫描（Red Teaming &amp; Vulnerability Scanning）</strong> - 提供自动化红队测试功能，检测 LLM 应用的安全漏洞（注入攻击、越狱、数据泄露、偏见等），生成详细的安全报告。支持 pentesting 和合规性审计，特别适用于金融和医疗等高合规行业。[来源：GitHub README、promptfoo.dev]</p>
+</li>
+<li>
+<p><strong>多提供商支持与模型无关（Multi-Provider &amp; Model Agnostic）</strong> - 对接 50+ 种 LLM 提供商（OpenAI、Anthropic、Azure OpenAI、AWS Bedrock、Google Vertex AI、Ollama、Hugging Face、本地模型等），支持任何 LLM API 或编程语言。用户可以轻松切换和比较不同提供商的模型。[来源：promptfoo.dev/docs/intro/、GitHub README]</p>
+</li>
+<li>
+<p><strong>CI/CD 集成与开发者体验（CI/CD Integration &amp; Developer Experience）</strong> - 提供 CLI 工具、Node.js 库和 Python 绑定三种使用方式，原生支持 GitHub Actions（Code Scanning），可在 CI/CD 流水线中自动化执行 LLM 评估。支持实时重载（Live Reload）和缓存机制，运行完全本地化（不将提示词发送到第三方）。[来源：GitHub README、npmjs.com]</p>
+</li>
+<li>
+<p><strong>灵活的评分与断言系统（Flexible Assert/Scoring System）</strong> - 内置多种自动评分方式（包含检查、正则匹配、LLM-as-judge、相似度比较等），支持自定义 JavaScript/Python 评分函数。可定义通过/失败阈值，在 CI 中自动拦截质量退化的代码变更。[来源：promptfoo.dev、GitHub README]</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> 20,209（截至 2026-04-17，promptfoo/promptfoo 仓库，通过 GitHub API 获取）</li>
+<li><strong>Forks：</strong> 1,749</li>
+<li><strong>Open Issues：</strong> 302</li>
+<li><strong>Contributors：</strong> 260+ 位贡献者，以 typpo（Ian Webster，2,821 次提交）和 mldangelo（Michael D'Angelo，2,229 次提交）为核心</li>
+<li><strong>最近更新日期：</strong> 2026-04-17（GitHub 最后推送日期），项目保持极高活跃度</li>
+<li><strong>社区讨论热度：</strong> 拥有活跃的 Discord 社区（11,000+ 成员），被 OpenAI 和 Anthropic 使用。每周 npm 下载量约 158,166 次，总下载量超过 160 万次。项目于 2026 年 3 月被 OpenAI 收购，成为 OpenAI 生态系统的一部分，但仍保持开源和 MIT 许可。</li>
+<li><strong>npm 下载量：</strong> 每周约 158,166 次下载（npmjs.com，2026-04-17 获取），总下载量 160 万+，npm 包名 <code>promptfoo</code></li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> LLM 评估 / AI 安全测试 / 提示词工程 / MLOps / AI 质量保证 / 红队测试（Red Teaming）/ CI/CD for AI</li>
+<li><strong>解决的核心问题：</strong> LLM 应用开发中的质量保证和安全测试难题。开发者在构建 LLM 应用时面临两个核心挑战：一是如何系统化地评估提示词和模型的输出质量（而非人工逐条审查），二是如何发现和防范 AI 安全漏洞（注入攻击、越狱、数据泄露等）。Promptfoo 通过声明式配置、自动化评估、多模型对比和红队测试，将 LLM 测试从手动试错转变为可自动化、可量化、可集成到 CI/CD 的工程流程。</li>
+<li><strong>替代/竞品技术：</strong> DeepEval（Python LLM 评估框架）、Braintrust（LLM 评估平台）、RAGAS（RAG 评估专用）、Langfuse（LLM 可观测性平台）、Optik（AI 安全测试）、TruLens（RAG 评估）、Athina AI（LLM 监控）、OpenAI Evals（官方评估框架）</li>
+<li><strong>依赖的上游技术：</strong> Node.js/npm（运行时和包管理）、TypeScript（开发语言）、各 LLM 提供商 API（OpenAI、Anthropic、Google 等）、YAML（配置文件格式）</li>
+<li><strong>下游使用者/集成方：</strong> AI 应用开发者、ML 工程师、DevOps 团队、安全工程师。被 OpenAI 和 Anthropic 内部使用。适用场景包括客户支持聊天机器人、内容生成管线、医疗/金融合规场景的 AI 测试。已集成到 GitHub Actions Marketplace（Code Scanning Action）。</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">官方资源</h3>
+<ul>
+<li><a href="https://www.promptfoo.dev/">Promptfoo 官网</a> — 项目介绍、功能说明、快速入门</li>
+<li><a href="https://www.promptfoo.dev/docs/">Promptfoo 文档</a> — 完整文档，涵盖评估、红队测试、CLI、API 等</li>
+<li><a href="https://github.com/promptfoo/promptfoo">Promptfoo GitHub 仓库</a> — 核心源代码（TypeScript）</li>
+<li><a href="https://www.npmjs.com/package/promptfoo">Promptfoo npm 包</a> — npm 安装包（当前版本 v0.121.5，每周 158K+ 下载）</li>
+<li><a href="https://pypi.org/project/promptfoo/">Promptfoo PyPI 包</a> — Python 绑定包</li>
+<li><a href="https://github.com/promptfoo/promptfoo/releases">更新日志</a> — 版本更新记录（最新 v0.121.5，2026-04-14）</li>
+<li><a href="https://www.promptfoo.dev/blog/promptfoo-joins-openai/">OpenAI 收购公告</a> — 2026 年 3 月 Promptfoo 加入 OpenAI</li>
+</ul>
+<h3 id="_8">教程资源</h3>
+<ul>
+<li><a href="https://www.promptfoo.dev/docs/getting-started/">Getting Started（评估）</a> — 官方快速入门指南</li>
+<li><a href="https://www.promptfoo.dev/docs/red-team/">Red Teaming Guide</a> — 红队测试完整指南</li>
+<li><a href="https://www.promptfoo.dev/docs/usage/">CLI 使用文档</a> — 命令行工具详细说明</li>
+<li><a href="https://www.promptfoo.dev/docs/usage/node-package/">Node.js 包文档</a> — 编程式使用方法</li>
+<li><a href="https://www.promptfoo.dev/docs/providers/">支持模型列表</a> — 50+ LLM 提供商配置指南</li>
+</ul>
+<h3 id="_9">社区资源</h3>
+<ul>
+<li><a href="https://discord.gg/promptfoo">Discord 社区</a> — 11,000+ 成员的活跃讨论社区</li>
+<li><a href="https://github.com/promptfoo/promptfoo/issues">GitHub Issues</a> — 问题反馈和功能建议（302 个 Open Issues）</li>
+<li><a href="https://github.com/promptfoo/promptfoo/discussions">GitHub Discussions</a> — 社区讨论</li>
+<li><a href="https://github.com/promptfoo/promptfoo/blob/main/CONTRIBUTING.md">贡献指南</a> — 参与贡献的指南</li>
+</ul>
+<h2 id="_10">信息来源</h2>
+<ul>
+<li><a href="https://api.github.com/repos/promptfoo/promptfoo">GitHub API - promptfoo/promptfoo</a>（Stars: 20,209, Forks: 1,749, Open Issues: 302, Created: 2023-04-28, Pushed: 2026-04-17, Language: TypeScript, License: MIT） — 获取日期：2026-04-17</li>
+<li><a href="https://github.com/promptfoo/promptfoo">GitHub README - promptfoo/promptfoo</a>（项目描述、快速入门、核心功能、OpenAI 收购公告） — 获取日期：2026-04-17</li>
+<li><a href="https://www.promptfoo.dev/">Promptfoo 官网</a>（产品定位、功能特性、文档链接） — 获取日期：2026-04-17</li>
+<li><a href="https://www.promptfoo.dev/docs/intro/">Promptfoo 文档 - Getting Started</a>（功能介绍、50+ 提供商、安装方式） — 获取日期：2026-04-17</li>
+<li><a href="https://www.npmjs.com/package/promptfoo">npm - promptfoo</a>（每周下载 158,166 次，版本 v0.121.5，MIT 许可，OpenAI 收购说明） — 获取日期：2026-04-17</li>
+<li><a href="https://github.com/promptfoo/promptfoo/releases">GitHub Releases - promptfoo/promptfoo</a>（最新版本 v0.121.5，2026-04-14 发布） — 获取日期：2026-04-17</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

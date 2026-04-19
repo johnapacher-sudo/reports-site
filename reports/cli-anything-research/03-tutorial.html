@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLI-Anything - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 3-5 小时 | **前置知识：** 命令行基础（终端操作）、Python 基础（pip 安装包、运行脚本）、Git 基本操作（clone）、至少了解一款桌面软件的基本使用（如 GIMP 或 Blender）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-cli-cli" class="toc-h3">1.1 第一个 CLI：安装和使用预生成的 CLI</a></li>
+<li><a href="#12-skillmdai-agent-cli" class="toc-h3">1.2 理解 SKILL.md：AI Agent 如何发现 CLI</a></li>
+<li><a href="#13-cli-7" class="toc-h3">1.3 为新软件生成 CLI：运行 7 阶段流水线</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-cli" class="toc-h3">2.1 自定义 CLI 生成：调整设计参数</a></li>
+<li><a href="#22-headless" class="toc-h3">2.2 深入理解 Headless 适配</a></li>
+<li><a href="#23-cli-hub-cli" class="toc-h3">2.3 CLI-Hub 生态：发布和共享 CLI</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 编写自定义软件适配器</a></li>
+<li><a href="#32-ai-agent" class="toc-h3">3.2 AI Agent 平台集成</a></li>
+<li><a href="#33" class="toc-h3">3.3 批量生成与自动化最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实施代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">进阶方向建议</a></li>
+<li><a href="#_21" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>CLI-Anything - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 3-5 小时<br>**前置知识：** 命令行基础（终端操作）、Python 基础（pip 安装包、运行脚本）、Git 基本操作（clone）、至少了解一款桌面软件的基本使用（如 GIMP 或 Blender）</div>
+                    </header>
+                    <h1 id="cli-anything-">CLI-Anything - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 3-5 小时
+<strong>前置知识：</strong> 命令行基础（终端操作）、Python 基础（pip 安装包、运行脚本）、Git 基本操作（clone）、至少了解一款桌面软件的基本使用（如 GIMP 或 Blender）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：Linux（推荐 Ubuntu 22.04+）/ macOS / Windows（WSL2 推荐）</li>
+<li>Python：3.10 及以上</li>
+<li>Git：2.30 及以上</li>
+<li>目标软件：至少安装一款 CLI-Anything 支持的桌面软件（推荐 Blender 或 LibreOffice，因它们支持 headless 模式）</li>
+<li>LLM API Key：OpenAI API Key 或 Anthropic API Key（用于驱动 7 阶段流水线）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>第一步：安装前置依赖</strong></p>
+<pre><code class="language-bash"># 检查 Python 版本（需要 3.10+）
+python3 --version
+
+# 如果未安装或版本过低
+# macOS:
+brew install python@3.10
+# Ubuntu/Debian:
+# sudo apt update &amp;&amp; sudo apt install python3.10 python3.10-venv python3-pip
+
+# 检查 Git 版本
+git --version
+</code></pre>
+<p><strong>第二步：安装 CLI-Anything</strong></p>
+<pre><code class="language-bash"># 方式一：从 GitHub 克隆并安装（推荐）
+git clone https://github.com/HKUDS/CLI-Anything.git
+cd CLI-Anything
+
+# 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+
+# 安装依赖
+pip install -r requirements.txt
+
+# 方式二：通过 pip 直接安装（如已发布到 PyPI）
+pip install cli-anything
+</code></pre>
+<p><strong>第三步：配置 LLM API</strong></p>
+<pre><code class="language-bash"># 设置 LLM API Key（以 OpenAI 为例）
+export OPENAI_API_KEY=&quot;sk-your-api-key-here&quot;
+
+# 或使用 Anthropic Claude
+export ANTHROPIC_API_KEY=&quot;sk-ant-your-api-key-here&quot;
+
+# 验证 API 配置
+python -c &quot;import os; print('API Key 已设置' if os.environ.get('OPENAI_API_KEY') else 'API Key 未设置')&quot;
+</code></pre>
+<blockquote>
+<p>基于官方 README（GitHub 仓库 HKUDS/CLI-Anything，版本 v0.2.0）</p>
+</blockquote>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 检查 CLI-Anything 是否安装成功
+python -m cli_anything --version
+# 预期输出: cli-anything v0.2.0
+
+# 检查可用命令
+python -m cli_anything --help
+# 预期输出: 显示可用的子命令（generate, search, install, update 等）
+
+# 检查目标软件是否可用（以 Blender 为例）
+blender --version
+# 预期输出: Blender 3.6.x 或更高版本信息
+# 如果未安装 Blender，可跳过此步，后续使用其他已安装的软件
+</code></pre>
+<pre><code># 典型验证输出
+
+$ python -m cli_anything --version
+cli-anything v0.2.0
+
+$ python -m cli_anything --help
+Usage: cli_anything [OPTIONS] COMMAND [ARGS]...
+
+  CLI-Anything: Making ALL Software Agent-Native
+
+Options:
+  --version  Show version and exit
+  --help     Show this message and exit
+
+Commands:
+  generate  为目标软件生成 CLI
+  search    搜索 CLI-Hub 中的可用 CLI
+  install   从 CLI-Hub 安装 CLI
+  update    更新已安装的 CLI
+  list      列出已安装的 CLI
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于官方 README 的预期输出。实际输出可能因版本和安装方式略有差异。</p>
+</blockquote>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-cli-cli">1.1 第一个 CLI：安装和使用预生成的 CLI</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CLI-Anything 提供两种使用方式：<strong>使用预生成的 CLI</strong>（从 CLI-Hub 安装）和<strong>自行生成 CLI</strong>（通过 7 阶段流水线）。对于初学者，建议从安装预生成的 CLI 开始——这就像使用 Homebrew 安装软件一样简单，无需了解生成过程的细节。</p>
+<p>CLI-Hub（clianything.cc）是 CLI-Anything 的包管理平台，类似于 npm 或 PyPI。所有经过 7 阶段流水线生成和测试的 CLI 都发布到 CLI-Hub，用户可以搜索、安装和更新。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 搜索 CLI-Hub 中的可用 CLI
+python -m cli_anything search &quot;blender&quot;
+
+# 2. 安装 Blender CLI
+python -m cli_anything install blender-cli
+
+# 3. 查看已安装的 CLI
+python -m cli_anything list
+
+# 4. 使用 Blender CLI 执行基本操作
+# 在 headless 模式下渲染场景
+blender-cli scene render --input my_scene.blend --output render.png --resolution 1920x1080
+
+# 5. 查看 CLI 帮助
+blender-cli --help
+blender-cli scene --help
+blender-cli scene render --help
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 搜索结果的典型输出
+
+$ python -m cli_anything search &quot;blender&quot;
+Searching CLI-Hub for &quot;blender&quot;...
+
+Found 1 result:
+  blender-cli v1.3.0
+  Description: CLI for Blender 3D creation suite
+  Supported version: Blender 3.6+
+  Tests: 85 passed
+  Platforms: Claude Code, Copilot CLI, Pi, OpenCode
+
+Install: python -m cli_anything install blender-cli
+
+# 安装结果的典型输出
+
+$ python -m cli_anything install blender-cli
+Installing blender-cli v1.3.0...
+Downloading from CLI-Hub...
+Verifying package integrity...
+Installing dependencies: click&gt;=8.0, bpy-compat...
+✓ blender-cli v1.3.0 installed successfully
+
+Available commands:
+  blender-cli scene render    - 渲染场景
+  blender-cli scene info      - 查看场景信息
+  blender-cli mesh create     - 创建网格
+  blender-cli mesh export     - 导出网格
+  blender-cli material apply  - 应用材质
+
+# 列出已安装 CLI 的典型输出
+
+$ python -m cli_anything list
+Installed CLI packages:
+  blender-cli  v1.3.0  ✓ up to date
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于 CLI-Hub 和官方 README 的预期输出。实际命令和输出可能因版本略有差异。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 搜索并安装一款你日常使用的桌面软件的 CLI（如 LibreOffice、GIMP、Inkscape 等）。
+2. 使用已安装的 CLI 执行一个基本操作，并通过 <code>--help</code> 查看所有可用命令。</p>
+<hr />
+<h3 id="12-skillmdai-agent-cli">1.2 理解 SKILL.md：AI Agent 如何发现 CLI</h3>
+<p><strong>概念讲解：</strong></p>
+<p>SKILL.md 是 CLI-Anything 的核心创新——一种面向 AI Agent 的机器可读能力描述文件。每个生成的 CLI 都附带一个 SKILL.md 文件，它告诉 AI Agent（如 Claude Code、Copilot CLI）这个 CLI 能做什么、有哪些命令、需要什么参数。</p>
+<p>理解 SKILL.md 对于理解 CLI-Anything 的"Agent-Native"理念至关重要：传统 CLI 是面向人类设计的，而 CLI-Anything 生成的 CLI 同时面向人类和 AI Agent 设计。SKILL.md 就是连接 CLI 和 AI Agent 的桥梁。</p>
+<p>当你安装一个 CLI 后，AI Agent 平台可以读取其 SKILL.md，自动理解 CLI 的能力并决定何时调用它。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 查看已安装 CLI 的 SKILL.md
+# SKILL.md 通常位于 CLI 安装目录中
+python -m cli_anything skill show blender-cli
+
+# 2. 典型的 SKILL.md 内容如下：
+</code></pre>
+<pre><code class="language-markdown"># SKILL.md - Blender CLI
+
+## 概述
+Blender CLI 提供 Blender 3D 创作套件的命令行接口，
+支持场景渲染、网格操作、材质管理和文件转换等功能。
+
+## 命令列表
+
+### 场景操作
+- `scene render` - 渲染场景为图像文件
+  - 参数: --input (路径), --output (路径), --resolution (宽x高), --engine (CYCLES/EEVEE)
+- `scene info` - 显示场景信息（对象数、材质数、帧范围）
+  - 参数: --input (路径)
+
+### 网格操作
+- `mesh create` - 创建基本几何体
+  - 参数: --type (cube/sphere/cylinder/plane), --location (x,y,z), --scale (x,y,z)
+- `mesh export` - 导出网格为其他格式
+  - 参数: --input (路径), --output (路径), --format (OBJ/FBX/STL/GLTF)
+
+### 材质操作
+- `material apply` - 应用材质到对象
+  - 参数: --object (名称), --material (材质名或路径), --type (principled/emission/glass)
+
+## 依赖
+- Blender 3.6+ (需安装并可在 PATH 中找到)
+- Python 3.10+
+- 点击 (Click) 8.0+
+
+## 使用示例
+# 渲染场景为 4K 图像
+blender-cli scene render --input scene.blend --output render.png --resolution 3840x2160
+
+# 创建立方体并导出为 OBJ
+blender-cli mesh create --type cube --location 0,0,0
+blender-cli mesh export --input scene.blend --output model.obj --format OBJ
+</code></pre>
+<pre><code class="language-bash"># 3. 在 AI Agent 平台中使用（以 Claude Code 为例）
+# Claude Code 读取 SKILL.md 后，可以自主决定何时调用 CLI
+
+# 用户对 Claude Code 说:
+# &quot;帮我把 scene.blend 渲染成 1920x1080 的图片&quot;
+
+# Claude Code 自主执行:
+# blender-cli scene render --input scene.blend --output render.png --resolution 1920x1080
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># SKILL.md 展示的典型输出
+
+$ python -m cli_anything skill show blender-cli
+=== SKILL.md for blender-cli ===
+
+Name: blender-cli
+Version: 1.3.0
+Description: CLI for Blender 3D creation suite
+Target Software: Blender 3.6+
+
+Commands: 8
+  - scene render    (渲染场景)
+  - scene info      (查看场景信息)
+  - mesh create     (创建网格)
+  - mesh export     (导出网格)
+  - mesh import     (导入网格)
+  - material apply  (应用材质)
+  - material list   (列出材质)
+  - file convert    (转换文件格式)
+
+Supported Agent Platforms: Claude Code, Copilot CLI, Pi, OpenCode, Codex, OpenClaw, Qodercli, Goose
+
+AI Agent Integration: SKILL.md is available for automatic discovery.
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于 SKILL.md 机制的预期输出。实际 SKILL.md 内容因软件而异。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 安装两个不同的 CLI（如 blender-cli 和 libreoffice-cli），比较它们的 SKILL.md 结构。
+2. 尝试在 AI Agent 平台（如 Claude Code）中通过自然语言指令调用已安装的 CLI。</p>
+<hr />
+<h3 id="13-cli-7">1.3 为新软件生成 CLI：运行 7 阶段流水线</h3>
+<p><strong>概念讲解：</strong></p>
+<p>除了使用 CLI-Hub 中的预生成 CLI，CLI-Anything 的核心能力是为新的目标软件自动生成 CLI。这通过 <strong>7 阶段 LLM 驱动流水线</strong> 实现：Analyze → Design → Implement → Plan Tests → Write Tests → Document → Publish。</p>
+<p>对于初学者，理解流水线的工作方式比记住每个阶段的细节更重要。关键是：你只需要指定目标软件，CLI-Anything 会自动完成从分析到发布的全部工作。每个阶段的产出物会保存在本地目录中，你可以查看和验证。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 查看支持的目标软件列表
+python -m cli_anything generate --list-targets
+
+# 2. 为已支持的目标软件生成 CLI（使用默认配置）
+# 以 LibreOffice 为例（支持 headless 模式）
+python -m cli_anything generate --target libreoffice --full-pipeline
+
+# 3. 查看生成进度
+# 流水线会依次执行 7 个阶段，每个阶段会输出进度信息
+
+# 4. 查看生成结果
+ls output/libreoffice-cli/
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 生成过程的典型输出
+
+$ python -m cli_anything generate --target libreoffice --full-pipeline
+
+[Phase 1/7: Analyze] 扫描 LibreOffice Python API (uno 模块)...
+  → 发现 156 个 API 函数
+  → 识别 12 个功能模块 (文档操作、电子表格、演示文稿、绘图、公式等)
+  ✓ 分析完成
+
+[Phase 2/7: Design] 设计 CLI 命令结构...
+  → 设计 15 个主命令
+  → 定义 87 个子命令和选项
+  → 命名风格: kebab-case (如 file convert)
+  ✓ 设计完成
+
+[Phase 3/7: Implement] 生成 CLI 源代码 (Click 框架)...
+  → 生成主入口文件: cli.py
+  → 生成模块文件: 12 个
+  → 总代码行数: ~2,400 行 Python
+  ✓ 实现完成
+
+[Phase 4/7: Plan Tests] 规划测试用例...
+  → 规划 72 个测试场景
+  → 覆盖基本功能、边界条件、错误处理
+  ✓ 测试规划完成
+
+[Phase 5/7: Write Tests] 编写测试代码 (pytest)...
+  → 编写 72 个测试用例
+  → 运行测试... 72/72 PASSED ✓
+  ✓ 测试完成
+
+[Phase 6/7: Document] 生成文档和 SKILL.md...
+  → README.md
+  → SKILL.md (AI Agent 能力描述)
+  → 各命令的帮助文本
+  ✓ 文档完成
+
+[Phase 7/7: Publish] 打包并准备发布...
+  → 生成包: libreoffice-cli-1.0.0.tar.gz
+  → 可发布到 CLI-Hub (需要确认)
+  ✓ 发布准备完成
+
+=== 生成结果 ===
+输出目录: output/libreoffice-cli/
+总耗时: 约 15-20 分钟
+CLI 命令数: 15 主命令, 87 子命令
+测试: 72/72 PASSED
+文件: cli.py, modules/*.py, tests/*.py, SKILL.md, README.md
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于 7 阶段流水线的预期输出。实际耗时和数据取决于目标软件的复杂度和 LLM 响应速度。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 选择一款你电脑上已安装的桌面软件，尝试为其运行 7 阶段流水线生成 CLI。
+2. 查看生成结果目录中的文件结构，理解每个阶段产出了什么文件。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-cli">2.1 自定义 CLI 生成：调整设计参数</h3>
+<p><strong>概念讲解：</strong></p>
+<p>默认情况下，CLI-Anything 使用预设的 LLM Prompt 和命名规范生成 CLI。但在实际使用中，你可能需要自定义生成行为——例如调整命令命名风格、控制生成的命令范围、或指定特定的参数格式。</p>
+<p>CLI-Anything 支持通过配置文件和命令行参数自定义生成行为。理解自定义选项对于生成高质量的、符合团队规范的 CLI 至关重要。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 查看可用的生成选项
+python -m cli_anything generate --help
+
+# 2. 仅运行特定阶段（跳过分析阶段，使用已有的分析结果）
+python -m cli_anything generate --target gimp --from-phase design
+
+# 3. 指定输出目录和命名风格
+python -m cli_anything generate --target gimp \
+  --output-dir ./my-clis/gimp \
+  --naming-style snake_case \
+  --max-commands 20
+
+# 4. 使用自定义配置文件
+# 创建配置文件 config.yaml
+</code></pre>
+<pre><code class="language-yaml"># config.yaml - CLI 生成配置示例
+# 基于官方 README（版本 v0.2.0）
+
+target:
+  name: &quot;gimp&quot;
+  api_module: &quot;gimp&quot;        # GIMP 的 Python API 模块名
+  version: &quot;2.10+&quot;          # 目标软件版本要求
+
+pipeline:
+  naming_style: &quot;kebab-case&quot;     # 命令命名风格
+  max_commands: 30               # 最大命令数量
+  max_options_per_command: 10    # 每个命令的最大选项数
+  include_deprecated: false      # 是否包含已弃用的 API
+
+design:
+  group_by_module: true          # 按模块分组子命令
+  add_aliases: true              # 为常用命令添加别名
+  default_values: true           # 为可选参数提供默认值
+
+testing:
+  framework: &quot;pytest&quot;
+  min_coverage: 80               # 最低测试覆盖率
+  include_integration: true      # 包含集成测试
+</code></pre>
+<pre><code class="language-bash"># 5. 使用配置文件运行生成
+python -m cli_anything generate --target gimp --config config.yaml
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 使用自定义配置生成的典型输出
+
+$ python -m cli_anything generate --target gimp --config config.yaml
+
+Loading config from config.yaml...
+[Phase 1/7: Analyze] 扫描 GIMP Python API...
+  → 发现 89 个 API 函数 (排除已弃用 API)
+  → 识别 8 个功能模块
+  ✓ 分析完成
+
+[Phase 2/7: Design] 设计 CLI 命令结构 (kebab-case, max 30 commands)...
+  → 设计 22 个主命令 (限制在 30 以内)
+  → 按模块分组: image, layer, filter, selection, color, path, brush, file
+  → 为 5 个常用命令添加别名
+  ✓ 设计完成
+
+... (后续阶段类似)
+
+=== 生成结果 ===
+输出目录: output/gimp-cli/
+命令数: 22 主命令 (按模块分组)
+命名风格: kebab-case
+别名: 5 个快捷命令
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于配置文件的预期输出。config.yaml 的实际可用选项以官方文档为准。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- <code>max_commands</code> 参数可以帮助控制 CLI 的复杂度。对于功能丰富的软件（如 GIMP），不限制命令数量可能导致生成的 CLI 过于庞大。
+- <code>naming_style</code> 支持 kebab-case（默认）、snake_case 和 camelCase。建议与团队现有的 CLI 风格保持一致。
+- 配置文件中的 <code>include_deprecated: false</code> 可以过滤掉目标软件已弃用的 API，保持生成的 CLI 更加精简。</p>
+<p><strong>练习题：</strong>
+1. 创建一个配置文件，为你选择的软件生成一个仅包含核心功能的精简版 CLI（限制最大命令数为 10）。
+2. 尝试使用不同的 <code>naming_style</code> 生成 CLI，比较命名风格的差异。</p>
+<hr />
+<h3 id="22-headless">2.2 深入理解 Headless 适配</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CLI-Anything 对目标软件的适配效果与软件是否支持 <strong>headless 模式（无头模式）</strong> 密切相关。Headless 模式是指软件无需图形界面即可运行和执行操作的能力。</p>
+<p>支持 headless 模式的软件（如 Blender、LibreOffice）可以获得最完整的 CLI 适配和端到端测试。不支持 headless 模式的纯 GUI 软件，CLI-Anything 只能基于其 Python API 生成有限功能的 CLI。</p>
+<p>理解 headless 适配的差异，有助于你选择最适合的目标软件和正确设置测试环境。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 检查目标软件的 headless 支持情况
+python -m cli_anything generate --target blender --check-headless
+
+# 2. Blender headless 模式测试
+# Blender 支持 --background 参数进入 headless 模式
+blender --background --python-expr &quot;import bpy; print('Blender headless OK')&quot;
+
+# 3. LibreOffice headless 模式测试
+# LibreOffice 支持 --headless 参数
+libreoffice --headless --convert-to pdf test.docx
+
+# 4. 为支持 headless 的软件生成 CLI（完整测试）
+python -m cli_anything generate --target blender --full-pipeline
+# 输出中会包含: &quot;Headless mode detected → full integration tests enabled&quot;
+
+# 5. 为不支持 headless 的软件生成 CLI（有限测试）
+python -m cli_anything generate --target obs-studio --full-pipeline
+# 输出中会包含: &quot;No headless mode → API-level tests only&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># Headless 检查的典型输出
+
+$ python -m cli_anything generate --target blender --check-headless
+Checking headless support for blender...
+
+blender --background --python-expr &quot;import bpy; print('OK')&quot;
+✓ Blender headless mode supported
+  Version: Blender 3.6.2
+  Python API: bpy (fully accessible)
+  Recommended: Full pipeline with integration tests
+
+$ blender --background --python-expr &quot;import bpy; print('Blender headless OK')&quot;
+Blender 3.6.2 (hash abc123)
+Read prefs: /home/user/.config/blender/3.6/config/userpref.blend
+Blender headless OK
+
+Blender quit
+
+# LibreOffice headless 测试的典型输出
+
+$ libreoffice --headless --convert-to pdf test.docx
+Convert /home/user/test.docx -&gt; /home/user/test.pdf using filter: writer_pdf_Export
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于实际 Blender 和 LibreOffice 命令行行为的预期输出。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 在服务器和 CI/CD 环境中运行 headless 软件时，可能需要安装额外的图形库（如 <code>libgl1-mesa-glx</code>、<code>libxrender1</code>）。即使软件在 headless 模式下运行，部分渲染操作仍依赖 GPU 加速库。
+- Docker 容器中使用 headless Blender 需要特殊的 Docker 镜像配置。推荐使用社区维护的 <code>linuxserver/blender</code> 或自行构建包含 <code>libgl</code> 的镜像。
+- 不支持 headless 模式的软件（如 OBS Studio），CLI-Anything 只能生成基于 API 的 CLI，无法执行端到端功能测试。测试覆盖率会相应降低。</p>
+<p><strong>练习题：</strong>
+1. 检查你电脑上安装的桌面软件中，哪些支持 headless 模式（尝试 <code>--background</code>、<code>--headless</code>、<code>--no-gui</code> 等参数）。
+2. 在 Docker 容器中运行 Blender headless 模式，执行一个简单的 Python 脚本。</p>
+<hr />
+<h3 id="23-cli-hub-cli">2.3 CLI-Hub 生态：发布和共享 CLI</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CLI-Hub（clianything.cc）不仅是安装 CLI 的来源，也是分享你生成的 CLI 的平台。当你为新的目标软件生成了高质量的 CLI 后，可以发布到 CLI-Hub，让其他用户直接安装使用。</p>
+<p>理解 CLI-Hub 的发布流程对于贡献社区和建立个人 CLI 工具集非常重要。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 在流水线的 Publish 阶段确认发布
+# 运行生成时添加 --publish 标志
+python -m cli_anything generate --target inkscape --full-pipeline --publish
+
+# 2. 发布前的质量检查
+python -m cli_anything publish --check output/inkscape-cli/
+# 检查项:
+# - 所有测试是否通过
+# - SKILL.md 是否完整
+# - README.md 是否包含安装说明
+# - 依赖声明是否正确
+
+# 3. 发布到 CLI-Hub
+python -m cli_anything publish output/inkscape-cli/ --confirm
+
+# 4. 搜索和安装社区贡献的 CLI
+python -m cli_anything search &quot;audio editor&quot;
+python -m cli_anything install audacity-cli
+
+# 5. 管理已安装的 CLI
+python -m cli_anything list
+python -m cli_anything update --all
+python -m cli_anything uninstall blender-cli
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 发布前检查的典型输出
+
+$ python -m cli_anything publish --check output/inkscape-cli/
+Checking package quality...
+
+✓ Tests: 58/58 passed (100%)
+✓ SKILL.md: Complete (all required fields present)
+✓ README.md: Complete (install instructions included)
+✓ Dependencies: Correctly declared (click&gt;=8.0, inkscape&gt;=1.2)
+✓ Naming: Consistent (kebab-case throughout)
+⚠️ Warning: No integration tests for GUI-only features
+
+Package quality: GOOD
+Ready to publish: yes
+
+# 发布的典型输出
+
+$ python -m cli_anything publish output/inkscape-cli/ --confirm
+Publishing inkscape-cli v1.0.0 to CLI-Hub...
+Uploading package...
+Verifying package on CLI-Hub...
+✓ inkscape-cli v1.0.0 published successfully!
+
+CLI-Hub URL: https://clianything.cc/packages/inkscape-cli
+Install command: python -m cli_anything install inkscape-cli
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于 CLI-Hub 发布机制的预期输出。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 发布前务必运行 <code>publish --check</code> 确保所有质量检查通过。特别是 SKILL.md 的完整性——它是 AI Agent 发现和理解 CLI 的关键。
+- CLI-Hub 可能有速率限制（Rate Limiting），防止滥用发布功能。批量发布多个 CLI 时注意控制频率。
+- 发布的 CLI 应标注目标软件的最低版本要求（如 <code>inkscape&gt;=1.2</code>），避免版本不兼容问题。</p>
+<p><strong>练习题：</strong>
+1. 为一款 CLI-Hub 中尚未收录的桌面软件生成 CLI，并通过 <code>publish --check</code> 验证质量。
+2. 探索 CLI-Hub 网站（clianything.cc），查看社区已贡献的 CLI 包列表。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 编写自定义软件适配器</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CLI-Anything 内置了对 29+ 款桌面软件的支持。但如果你需要为一款尚未支持的软件生成 CLI，就需要编写自定义软件适配器（Adapter）。适配器负责告诉 CLI-Anything 如何扫描和解析目标软件的 API。</p>
+<p>适配器的核心任务是：
+1. 扫描目标软件暴露的 API（Python 模块、D-Bus 接口、REST API 等）
+2. 将 API 函数映射为结构化的功能描述
+3. 标注参数类型、默认值和约束</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 基于官方 README 和适配器架构说明（版本 v0.2.0）
+# 文件: adapters/my_software_adapter.py
+# 为一款假设的矢量绘图软件 &quot;VectorDraw&quot; 编写适配器
+
+from cli_anything.adapters import BaseAdapter
+from cli_anything.models import APIFunction, APIParameter, APIModule
+
+class VectorDrawAdapter(BaseAdapter):
+    &quot;&quot;&quot;VectorDraw 矢量绘图软件适配器&quot;&quot;&quot;
+
+    name = &quot;vectordraw&quot;
+    version = &quot;1.0.0&quot;
+    supported_versions = [&quot;2.0+&quot;, &quot;3.0+&quot;]
+
+    def scan_api(self):
+        &quot;&quot;&quot;扫描 VectorDraw 的 Python API&quot;&quot;&quot;
+        try:
+            import vectordraw
+        except ImportError:
+            raise ImportError(
+                &quot;VectorDraw Python API 未安装。&quot;
+                &quot;请先安装 VectorDraw 并确保 vectordraw 模块可用。&quot;
+            )
+
+        modules = []
+
+        # 扫描绘图模块
+        draw_module = APIModule(
+            name=&quot;draw&quot;,
+            description=&quot;绘图操作（创建形状、路径、文本）&quot;
+        )
+        draw_module.add_function(APIFunction(
+            name=&quot;create_rectangle&quot;,
+            description=&quot;创建矩形&quot;,
+            parameters=[
+                APIParameter(&quot;x&quot;, float, default=0.0, description=&quot;左上角 X 坐标&quot;),
+                APIParameter(&quot;y&quot;, float, default=0.0, description=&quot;左上角 Y 坐标&quot;),
+                APIParameter(&quot;width&quot;, float, required=True, description=&quot;宽度&quot;),
+                APIParameter(&quot;height&quot;, float, required=True, description=&quot;高度&quot;),
+                APIParameter(&quot;fill_color&quot;, str, default=&quot;#000000&quot;, description=&quot;填充颜色 (HEX)&quot;),
+                APIParameter(&quot;stroke_width&quot;, float, default=1.0, description=&quot;描边宽度&quot;),
+            ],
+            return_type=&quot;str&quot;,
+            return_description=&quot;创建的形状 ID&quot;
+        ))
+        draw_module.add_function(APIFunction(
+            name=&quot;create_circle&quot;,
+            description=&quot;创建圆形&quot;,
+            parameters=[
+                APIParameter(&quot;cx&quot;, float, required=True, description=&quot;圆心 X 坐标&quot;),
+                APIParameter(&quot;cy&quot;, float, required=True, description=&quot;圆心 Y 坐标&quot;),
+                APIParameter(&quot;radius&quot;, float, required=True, description=&quot;半径&quot;),
+                APIParameter(&quot;fill_color&quot;, str, default=&quot;#000000&quot;, description=&quot;填充颜色 (HEX)&quot;),
+            ],
+            return_type=&quot;str&quot;,
+            return_description=&quot;创建的形状 ID&quot;
+        ))
+        modules.append(draw_module)
+
+        # 扫描文件操作模块
+        file_module = APIModule(
+            name=&quot;file&quot;,
+            description=&quot;文件操作（打开、保存、导出、转换格式）&quot;
+        )
+        file_module.add_function(APIFunction(
+            name=&quot;export_svg&quot;,
+            description=&quot;导出为 SVG 格式&quot;,
+            parameters=[
+                APIParameter(&quot;input_path&quot;, str, required=True, description=&quot;输入文件路径&quot;),
+                APIParameter(&quot;output_path&quot;, str, required=True, description=&quot;输出 SVG 路径&quot;),
+            ],
+            return_type=&quot;bool&quot;,
+            return_description=&quot;导出是否成功&quot;
+        ))
+        modules.append(file_module)
+
+        return modules
+
+    def check_headless(self):
+        &quot;&quot;&quot;检查 VectorDraw 是否支持 headless 模式&quot;&quot;&quot;
+        try:
+            import vectordraw
+            return hasattr(vectordraw, 'set_headless')
+        except ImportError:
+            return False
+</code></pre>
+<pre><code class="language-bash"># 注册适配器并生成 CLI
+python -m cli_anything generate --target vectordraw --adapter adapters/my_software_adapter.py
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 使用自定义适配器生成的典型输出
+
+$ python -m cli_anything generate --target vectordraw --adapter adapters/my_software_adapter.py
+Loading custom adapter: VectorDrawAdapter...
+
+[Phase 1/7: Analyze] 使用自定义适配器扫描 VectorDraw API...
+  → 发现 2 个功能模块 (draw, file)
+  → 识别 3 个 API 函数
+  → Headless 支持: 检测中...
+  ✓ 分析完成
+
+[Phase 2/7: Design] 设计 CLI 命令结构...
+  → draw create-rectangle, draw create-circle
+  → file export-svg
+  ✓ 设计完成
+
+[Phase 3/7: Implement] 生成 CLI 源代码...
+  → 生成 3 个命令
+  ✓ 实现完成
+
+... (后续阶段类似)
+
+=== 生成结果 ===
+适配器: VectorDrawAdapter v1.0.0
+命令数: 3
+Headless: 待确认
+输出目录: output/vectordraw-cli/
+</code></pre>
+<blockquote>
+<p>注：以上适配器代码为基于 CLI-Anything 适配器架构的示例。实际的 BaseAdapter 接口以官方文档为准。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 适配器的 <code>scan_api()</code> 方法应尽量使用目标软件的官方 Python 模块来扫描 API，而非手动列举函数。如果目标软件有自动生成 API 文档的能力，优先利用。
+- <code>check_headless()</code> 方法应实际尝试运行 headless 模式来验证，而非仅检查函数是否存在。某些软件声称支持 headless 但实际功能受限。
+- 编写适配器时，参数的 <code>description</code> 字段质量直接影响 LLM 生成 CLI 的质量。描述越精确，生成的命令行参数命名越直觉。</p>
+<hr />
+<h3 id="32-ai-agent">3.2 AI Agent 平台集成</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CLI-Anything 生成的 CLI 可以在 8+ 个 AI Agent 平台上运行。理解集成机制对于在不同平台间复用 CLI 至关重要。</p>
+<p>核心集成机制是 SKILL.md——AI Agent 平台读取 SKILL.md 来理解 CLI 的能力。不同平台的集成方式略有不同，但核心原理一致。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 查看支持的平台
+python -m cli_anything platforms
+
+# 2. 为特定平台生成集成配置
+# 以 Claude Code 为例
+python -m cli_anything integrate --platform claude-code --cli blender-cli
+
+# 3. 生成的集成配置位于项目的 CLAUDE.md 或 .claude/ 目录中
+# Claude Code 会自动读取这些配置
+
+# 4. 验证集成
+# 在 Claude Code 中输入自然语言指令:
+# &quot;帮我渲染 scene.blend 为 PNG 图片&quot;
+# Claude Code 自主查找 blender-cli 的 SKILL.md
+# 自主执行: blender-cli scene render --input scene.blend --output render.png
+</code></pre>
+<pre><code># Claude Code 集成验证的典型输出（模拟）
+
+[User] 帮我渲染 scene.blend 为 PNG 图片
+
+[Claude Code] 我找到了已安装的 blender-cli 工具。
+
+根据 SKILL.md，使用 scene render 命令:
+  blender-cli scene render --input scene.blend --output render.png
+
+执行中...
+✓ 渲染完成: render.png (1920x1080, 2.3MB)
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于 Claude Code + SKILL.md 集成机制的模拟结果。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 不同 AI Agent 平台对 SKILL.md 的解析能力不同。部分平台可能需要额外的配置文件（如 <code>.claude/</code> 目录下的配置）。
+- 在企业环境中使用时，注意 CLI 执行的权限控制。AI Agent 自主调用 CLI 时应有适当的权限边界。
+- 如果 CLI 需要交互式输入（如密码），AI Agent 平台可能无法自动处理。建议设计 CLI 时尽量避免交互式输入。</p>
+<hr />
+<h3 id="33">3.3 批量生成与自动化最佳实践</h3>
+<p><strong>概念讲解：</strong></p>
+<p>当你需要为多款软件批量生成 CLI 时，逐个运行流水线效率较低。CLI-Anything 支持批量生成和自动化脚本，并提供了若干最佳实践来优化生成流程。</p>
+<p><strong>优化策略 1：批量生成多款软件的 CLI</strong></p>
+<pre><code class="language-bash"># 基于官方 README（版本 v0.2.0）
+
+# 1. 创建批量配置文件
+</code></pre>
+<pre><code class="language-yaml"># batch-generate.yaml
+# 批量生成配置
+
+targets:
+  - name: blender
+    version: &quot;3.6+&quot;
+    options:
+      max_commands: 30
+
+  - name: gimp
+    version: &quot;2.10+&quot;
+    options:
+      max_commands: 25
+      include_deprecated: false
+
+  - name: libreoffice
+    version: &quot;7.0+&quot;
+    options:
+      max_commands: 20
+
+  - name: inkscape
+    version: &quot;1.2+&quot;
+    options:
+      max_commands: 15
+
+output_dir: &quot;./batch-output/&quot;
+parallel: 2          # 并行生成数量（受 LLM API 速率限制）
+stop_on_error: false # 单个目标失败不中断批量任务
+</code></pre>
+<pre><code class="language-bash"># 2. 执行批量生成
+python -m cli_anything batch-generate --config batch-generate.yaml
+
+# 3. 查看批量生成报告
+cat ./batch-output/generation-report.yaml
+</code></pre>
+<p><strong>优化策略 2：增量更新已有 CLI</strong></p>
+<pre><code class="language-bash"># 当目标软件发布新版本时，增量更新 CLI
+# 只重新生成有变化的命令，而非完整流水线
+python -m cli_anything generate --target blender --incremental --from-phase analyze
+
+# 对比新旧 CLI 的差异
+python -m cli_anything diff output/blender-cli-old/ output/blender-cli-new/
+</code></pre>
+<p><strong>优化策略 3：CI/CD 集成</strong></p>
+<pre><code class="language-yaml"># .github/workflows/generate-cli.yml
+# GitHub Actions 自动化 CLI 生成示例
+
+name: Generate CLI
+
+on:
+  schedule:
+    - cron: '0 2 * * 0'  # 每周日凌晨 2 点运行
+  workflow_dispatch:       # 手动触发
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install CLI-Anything
+        run: pip install -r requirements.txt
+
+      - name: Install target software (Blender)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y blender
+
+      - name: Generate CLI
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          python -m cli_anything generate --target blender --full-pipeline
+
+      - name: Run tests
+        run: |
+          cd output/blender-cli
+          pytest tests/ -v
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: blender-cli
+          path: output/blender-cli/
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 批量生成的典型输出
+
+$ python -m cli_anything batch-generate --config batch-generate.yaml
+
+Starting batch generation for 4 targets...
+Parallel workers: 2
+
+[1/4] blender    ████████████████████ 100%  (7/7 phases) ✓
+[2/4] gimp       ████████████████████ 100%  (7/7 phases) ✓
+[3/4] libreoffice ████████████████████ 100%  (7/7 phases) ✓
+[4/4] inkscape   ████████████████░░░░  80%  (Phase 6/7)... ✓
+
+=== Batch Report ===
+Total targets: 4
+Successful: 4
+Failed: 0
+Total commands generated: 90
+Total tests: 285/285 PASSED
+Output directory: ./batch-output/
+
+Report saved to: ./batch-output/generation-report.yaml
+</code></pre>
+<blockquote>
+<p>注：以上输出为基于批量生成机制的预期输出。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 批量生成时注意 LLM API 的速率限制。建议 <code>parallel</code> 参数设置为 2-3，避免触发 API 限制。
+- <code>stop_on_error: false</code> 可以确保单个目标失败不影响整体批量任务。生成完成后检查报告中的失败项。
+- CI/CD 集成时，确保目标软件的 headless 模式在 CI 环境中正常工作。可能需要安装额外的图形库。</p>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个"批量图像处理工具链"，综合运用以下知识点：
+1. <strong>安装和使用预生成的 CLI</strong>（知识点 1.1）：从 CLI-Hub 安装 GIMP CLI
+2. <strong>SKILL.md AI Agent 集成</strong>（知识点 1.2）：通过 Claude Code 自主调用 CLI
+3. <strong>7 阶段流水线生成</strong>（知识点 1.3）：为未支持的软件生成 CLI
+4. <strong>Headless 适配</strong>（知识点 2.2）：在服务器环境中运行图像处理
+5. <strong>自定义配置</strong>（知识点 2.1）：调整生成参数</p>
+<p>功能要求：
+- 批量调整图像尺寸（使用 GIMP CLI）
+- 批量应用滤镜效果（模糊、锐化、灰度）
+- 批量转换图像格式（PNG ↔ JPEG ↔ WebP）
+- 生成处理报告（成功/失败统计）</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>image-pipeline/
+│
+├── config/
+│   └── pipeline.yaml           # 处理流水线配置
+│
+├── input/                       # 待处理图像
+│   ├── photo1.jpg
+│   ├── photo2.png
+│   └── ...
+│
+├── output/                      # 处理后图像
+│   ├── resized/
+│   ├── filtered/
+│   └── converted/
+│
+├── scripts/
+│   └── batch_process.py         # 批量处理脚本
+│
+├── reports/
+│   └── report.yaml              # 处理报告
+│
+└── README.md
+</code></pre>
+<h3 id="_11">完整实施代码</h3>
+<p>以下是通过 CLI-Anything 的 GIMP CLI 和自定义脚本实现的批量图像处理工具链核心代码：</p>
+<pre><code class="language-python"># 基于官方 README（版本 v0.2.0）和 GIMP CLI 的预期命令结构
+# 文件: scripts/batch_process.py
+
+import subprocess
+import os
+import sys
+import yaml
+from datetime import datetime
+from pathlib import Path
+
+def run_gimp_cli(command_args):
+    &quot;&quot;&quot;执行 GIMP CLI 命令&quot;&quot;&quot;
+    cmd = [&quot;gimp-cli&quot;] + command_args
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        timeout=300  # 5 分钟超时
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f&quot;GIMP CLI 错误: {result.stderr}&quot;)
+    return result.stdout
+
+def resize_image(input_path, output_path, width, height):
+    &quot;&quot;&quot;调整图像尺寸&quot;&quot;&quot;
+    return run_gimp_cli([
+        &quot;image&quot;, &quot;resize&quot;,
+        &quot;--input&quot;, str(input_path),
+        &quot;--output&quot;, str(output_path),
+        &quot;--width&quot;, str(width),
+        &quot;--height&quot;, str(height),
+        &quot;--mode&quot;, &quot;fit&quot;  # 保持宽高比
+    ])
+
+def apply_filter(input_path, output_path, filter_type, **params):
+    &quot;&quot;&quot;应用滤镜效果&quot;&quot;&quot;
+    args = [
+        &quot;filter&quot;, &quot;apply&quot;,
+        &quot;--input&quot;, str(input_path),
+        &quot;--output&quot;, str(output_path),
+        &quot;--type&quot;, filter_type
+    ]
+    for key, value in params.items():
+        args.extend([f&quot;--{key}&quot;, str(value)])
+    return run_gimp_cli(args)
+
+def convert_format(input_path, output_path):
+    &quot;&quot;&quot;转换图像格式（根据输出文件扩展名自动判断）&quot;&quot;&quot;
+    return run_gimp_cli([
+        &quot;file&quot;, &quot;convert&quot;,
+        &quot;--input&quot;, str(input_path),
+        &quot;--output&quot;, str(output_path)
+    ])
+
+def batch_process(config_path):
+    &quot;&quot;&quot;批量处理图像&quot;&quot;&quot;
+    # 读取配置
+    with open(config_path) as f:
+        config = yaml.safe_load(f)
+
+    input_dir = Path(config[&quot;input_dir&quot;])
+    output_dir = Path(config[&quot;output_dir&quot;])
+
+    # 统计信息
+    stats = {
+        &quot;start_time&quot;: datetime.now().isoformat(),
+        &quot;total&quot;: 0,
+        &quot;success&quot;: 0,
+        &quot;failed&quot;: 0,
+        &quot;errors&quot;: []
+    }
+
+    # 获取所有图像文件
+    image_extensions = {&quot;.jpg&quot;, &quot;.jpeg&quot;, &quot;.png&quot;, &quot;.webp&quot;, &quot;.bmp&quot;, &quot;.tiff&quot;}
+    image_files = [
+        f for f in input_dir.iterdir()
+        if f.suffix.lower() in image_extensions
+    ]
+    stats[&quot;total&quot;] = len(image_files)
+
+    for image_file in image_files:
+        try:
+            # 步骤 1: 调整尺寸
+            resized_dir = output_dir / &quot;resized&quot;
+            resized_dir.mkdir(parents=True, exist_ok=True)
+            resized_path = resized_dir / image_file.name
+            resize_image(
+                image_file, resized_path,
+                config[&quot;resize&quot;][&quot;width&quot;],
+                config[&quot;resize&quot;][&quot;height&quot;]
+            )
+
+            # 步骤 2: 应用滤镜
+            if config.get(&quot;filter&quot;):
+                filtered_dir = output_dir / &quot;filtered&quot;
+                filtered_dir.mkdir(parents=True, exist_ok=True)
+                filtered_path = filtered_dir / image_file.name
+                apply_filter(
+                    resized_path, filtered_path,
+                    config[&quot;filter&quot;][&quot;type&quot;],
+                    **config[&quot;filter&quot;].get(&quot;params&quot;, {})
+                )
+
+            # 步骤 3: 格式转换
+            if config.get(&quot;convert&quot;):
+                converted_dir = output_dir / &quot;converted&quot;
+                converted_dir.mkdir(parents=True, exist_ok=True)
+                output_ext = config[&quot;convert&quot;][&quot;format&quot;]
+                converted_path = converted_dir / f&quot;{image_file.stem}.{output_ext}&quot;
+                convert_format(resized_path, converted_path)
+
+            stats[&quot;success&quot;] += 1
+            print(f&quot;✓ {image_file.name}&quot;)
+
+        except Exception as e:
+            stats[&quot;failed&quot;] += 1
+            stats[&quot;errors&quot;].append({
+                &quot;file&quot;: image_file.name,
+                &quot;error&quot;: str(e)
+            })
+            print(f&quot;✗ {image_file.name}: {e}&quot;)
+
+    # 生成报告
+    stats[&quot;end_time&quot;] = datetime.now().isoformat()
+    report_path = output_dir / &quot;report.yaml&quot;
+    with open(report_path, &quot;w&quot;) as f:
+        yaml.dump(stats, f, default_flow_style=False, allow_unicode=True)
+
+    print(f&quot;\n=== 处理完成 ===&quot;)
+    print(f&quot;总计: {stats['total']} | 成功: {stats['success']} | 失败: {stats['failed']}&quot;)
+    print(f&quot;报告: {report_path}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    config_path = sys.argv[1] if len(sys.argv) &gt; 1 else &quot;config/pipeline.yaml&quot;
+    batch_process(config_path)
+</code></pre>
+<pre><code class="language-yaml"># 文件: config/pipeline.yaml
+# 批量处理配置
+
+input_dir: &quot;./input&quot;
+output_dir: &quot;./output&quot;
+
+resize:
+  width: 1920
+  height: 1080
+
+filter:
+  type: &quot;blur&quot;
+  params:
+    radius: 2
+
+convert:
+  format: &quot;webp&quot;
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点运用说明：</strong></p>
+<ol>
+<li>
+<p><strong>安装和使用预生成的 CLI</strong>（1.1 节）：脚本通过 <code>subprocess.run()</code> 调用从 CLI-Hub 安装的 <code>gimp-cli</code>。这是使用预生成 CLI 的标准方式——GIMP CLI 已由 CLI-Anything 的 7 阶段流水线生成并测试。</p>
+</li>
+<li>
+<p><strong>SKILL.md AI Agent 集成</strong>（1.2 节）：如果你在 Claude Code 中运行此脚本，Claude Code 可以读取 <code>gimp-cli</code> 的 SKILL.md，理解其命令结构，并自主调用 CLI。例如，你只需说"帮我处理 input 目录下的所有图片"，Claude Code 即可自主编排 <code>gimp-cli</code> 命令。</p>
+</li>
+<li>
+<p><strong>7 阶段流水线生成</strong>（1.3 节）：<code>gimp-cli</code> 本身是通过 7 阶段流水线生成的——Analyze（扫描 GIMP Script-Fu API）→ Design（设计 image resize、filter apply 等命令）→ Implement（生成 Click 代码）→ Plan Tests → Write Tests → Document（生成 SKILL.md）→ Publish（发布到 CLI-Hub）。</p>
+</li>
+<li>
+<p><strong>Headless 适配</strong>（2.2 节）：GIMP 的 headless 支持有限，<code>gimp-cli</code> 通过 GIMP 的 Script-Fu 接口在后台执行操作。在服务器环境中，需要确保 GIMP 已安装并可无头运行。</p>
+</li>
+<li>
+<p><strong>自定义配置</strong>（2.1 节）：<code>pipeline.yaml</code> 配置文件定义了处理参数（尺寸、滤镜类型、输出格式）。这体现了 CLI-Anything 的设计理念——通过配置驱动行为。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加新的处理步骤</strong>：在流水线中添加水印功能。如果 GIMP CLI 不支持水印命令，尝试使用 CLI-Anything 为 ImageMagick 生成一个新的 CLI，并集成到处理流水线中。</p>
+</li>
+<li>
+<p><strong>Docker 化部署</strong>：创建一个 Docker 镜像，包含 GIMP、GIMP CLI 和批量处理脚本，实现完全容器化的图像处理服务。</p>
+</li>
+<li>
+<p><strong>AI Agent 自主编排</strong>：在 Claude Code 中，描述一个复杂的图像处理需求（如"把所有竖版照片裁剪为正方形后转为 WebP 格式"），观察 AI Agent 如何利用 SKILL.md 自主选择和调用 CLI 命令。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'cli_anything'</code></td>
+<td>未激活虚拟环境或未安装依赖</td>
+<td>激活虚拟环境：<code>source venv/bin/activate</code>，然后 <code>pip install -r requirements.txt</code></td>
+</tr>
+<tr>
+<td><code>ImportError: cannot import name 'bpy'</code></td>
+<td>Blender Python API 未安装</td>
+<td>安装 Blender 并确保 <code>bpy</code> 模块在 Python 路径中。或使用 <code>pip install bpy</code>（独立 bpy 包）</td>
+</tr>
+<tr>
+<td><code>openai.error.RateLimitError</code></td>
+<td>LLM API 调用频率超限</td>
+<td>降低批量生成的 <code>parallel</code> 参数。添加重试逻辑：<code>--retry-count 3 --retry-delay 60</code></td>
+</tr>
+<tr>
+<td><code>blender-cli: command not found</code></td>
+<td>CLI 未安装或不在 PATH 中</td>
+<td>使用 <code>python -m cli_anything install blender-cli</code> 安装。检查 PATH 是否包含 CLI 安装目录</td>
+</tr>
+<tr>
+<td><code>libGL.so.1: cannot open shared object file</code></td>
+<td>缺少图形库（headless 环境）</td>
+<td>安装图形库：<code>sudo apt install libgl1-mesa-glx libxrender1</code>（Ubuntu/Debian）</td>
+</tr>
+<tr>
+<td><code>Tests failed: 0/X passed</code></td>
+<td>目标软件版本不兼容</td>
+<td>检查目标软件版本是否符合适配器要求（如 <code>blender&gt;=3.6</code>）。尝试更新目标软件</td>
+</tr>
+<tr>
+<td><code>SKILL.md not found</code></td>
+<td>CLI 安装不完整</td>
+<td>重新安装 CLI：<code>python -m cli_anything install --force gimp-cli</code></td>
+</tr>
+<tr>
+<td><code>Generation timeout in Phase 3</code></td>
+<td>LLM API 响应超时</td>
+<td>增加超时时间：<code>--timeout 600</code>。或检查网络连接和 API Key 有效性</td>
+</tr>
+<tr>
+<td><code>No headless mode detected</code></td>
+<td>目标软件不支持 headless</td>
+<td>正常警告，不影响 CLI 生成。但测试将限于 API 级别，不包含端到端功能测试</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>基于 CLI-Anything 官方 README（版本 v0.2.0）和常见安装问题</p>
+</blockquote>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>逐阶段调试流水线</strong>：如果 7 阶段流水线在某个阶段失败，使用 <code>--from-phase</code> 参数从失败的阶段重新开始，而非从头运行。例如 <code>--from-phase implement</code> 跳过分析和设计阶段，直接从实现阶段继续。检查 <code>output/</code> 目录中各阶段的中间产出物，定位问题所在。</p>
+</li>
+<li>
+<p><strong>验证 LLM 生成质量</strong>：在 Phase 3（Implement）完成后，检查生成的 CLI 代码是否语法正确：<code>python -m py_compile output/target-cli/cli.py</code>。如果生成的代码有语法错误，可能是 LLM Prompt 配置不当或 API Key 问题导致的低质量输出。</p>
+</li>
+<li>
+<p><strong>测试 Headless 环境</strong>：在服务器或 CI 环境中运行前，先手动验证目标软件的 headless 模式：<code>blender --background --python-expr "import bpy; print('OK')"</code>。如果 headless 模式不可用，生成的 CLI 测试可能会失败。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README 快速入门</strong> — 安装、基本使用、7 阶段流水线概览</li>
+<li>地址：https://github.com/HKUDS/CLI-Anything#readme</li>
+<li>
+<p>重点：安装命令、generate/search/install 子命令、SKILL.md 概念</p>
+</li>
+<li>
+<p><strong>CLI-Hub 网站</strong> — 可用 CLI 包的搜索和浏览</p>
+</li>
+<li>地址：https://clianything.cc/</li>
+<li>
+<p>重点：已支持软件列表、安装命令、社区贡献的 CLI 包</p>
+</li>
+<li>
+<p><strong>SKILL.md 规范文档</strong> — AI Agent 能力描述文件的标准格式</p>
+</li>
+<li>
+<p>重点：SKILL.md 字段定义、平台集成方式、自定义 SKILL.md</p>
+</li>
+<li>
+<p><strong>适配器开发指南</strong> — 为新软件编写适配器的详细教程</p>
+</li>
+<li>重点：BaseAdapter 接口、scan_api() 实现、headless 检测</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong>Reliable Data Engineering - CLI-Anything 介绍文章</strong></li>
+<li>https://medium.com/@reliabledataengineering/cli-anything-making-all-software-agent-native-2026</li>
+<li>
+<p>深入介绍 CLI-Anything 解决的问题和技术方案</p>
+</li>
+<li>
+<p><strong>arXiv 论文 "Natural-Language Agent Harnesses"（2603.25723v1）</strong></p>
+</li>
+<li>https://arxiv.org/abs/2603.25723v1</li>
+<li>
+<p>CLI-Anything 相关的学术背景——自然语言 Agent 工具化的理论基础</p>
+</li>
+<li>
+<p><strong>arXiv 论文 "Building AI Coding Agents for the Terminal"（2603.05344v1）</strong></p>
+</li>
+<li>https://arxiv.org/abs/2603.05344v1</li>
+<li>终端 AI 编码 Agent 的设计原则，有助于理解 CLI-Anything 在 AI Agent 生态中的定位</li>
+</ul>
+<h3 id="_20">进阶方向建议</h3>
+<p>完成本教程后，建议按以下方向深入学习：</p>
+<ol>
+<li><strong>贡献新软件适配器</strong>：选择一款 CLI-Hub 中尚未收录的桌面软件，编写适配器并发布 CLI，为社区做出贡献</li>
+<li><strong>自定义 LLM Prompt 优化</strong>：深入研究各阶段的 LLM Prompt 模板，针对特定类型的软件优化生成质量</li>
+<li><strong>企业级部署</strong>：研究 CLI-Hub 的速率限制和组织管理功能，在企业环境中建立标准化的 CLI 工具集</li>
+</ol>
+<hr />
+<h2 id="_21">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> CLI-Anything v0.2.0（GitHub Release）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/HKUDS/CLI-Anything">GitHub 仓库 HKUDS/CLI-Anything</a></li>
+<li><a href="https://api.github.com/repos/HKUDS/CLI-Anything">GitHub API - HKUDS/CLI-Anything</a></li>
+<li><a href="https://clianything.net/">官方网站 clianything.net</a></li>
+<li><a href="https://clianything.cc/">CLI-Hub clianything.cc</a></li>
+<li><a href="https://medium.com/@reliabledataengineering/cli-anything-making-all-software-agent-native-2026">Reliable Data Engineering - CLI-Anything 介绍</a></li>
+<li><a href="https://arxiv.org/abs/2603.25723v1">arXiv 2603.25723v1 - Natural-Language Agent Harnesses</a></li>
+<li><a href="https://arxiv.org/abs/2603.05344v1">arXiv 2603.05344v1 - Building AI Coding Agents for the Terminal</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

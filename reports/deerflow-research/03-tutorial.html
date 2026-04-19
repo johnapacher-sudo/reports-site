@@ -1,0 +1,1733 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeerFlow - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 4-6 小时 | **前置知识：** Python 基础（理解虚拟环境、pip 安装）、Docker 基础（拉取镜像、运行容器）、命令行基本操作、了解 LLM API 的基本概念（API Key、模型选择）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-web" class="toc-h3">1.1 第一个任务：通过 Web 前端提交研究任务</a></li>
+<li><a href="#12-lead-agent" class="toc-h3">1.2 理解 Lead Agent 和子智能体：任务编排机制</a></li>
+<li><a href="#13" class="toc-h3">1.3 技能系统初探：理解渐进式加载</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 配置模型和多模型策略</a></li>
+<li><a href="#22" class="toc-h3">2.2 沙盒执行环境：安全运行用户代码</a></li>
+<li><a href="#23-im-agent" class="toc-h3">2.3 IM 渠道集成：从聊天应用驱动 Agent</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-custom-skills" class="toc-h3">3.1 开发自定义技能（Custom Skills）</a></li>
+<li><a href="#32-mcp" class="toc-h3">3.2 MCP 工具集成：连接外部系统</a></li>
+<li><a href="#33" class="toc-h3">3.3 长期记忆管理与优化</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实施代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">进阶方向建议</a></li>
+<li><a href="#_21" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>DeerFlow - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 4-6 小时<br>**前置知识：** Python 基础（理解虚拟环境、pip 安装）、Docker 基础（拉取镜像、运行容器）、命令行基本操作、了解 LLM API 的基本概念（API Key、模型选择）</div>
+                    </header>
+                    <h1 id="deerflow-">DeerFlow - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 4-6 小时
+<strong>前置知识：</strong> Python 基础（理解虚拟环境、pip 安装）、Docker 基础（拉取镜像、运行容器）、命令行基本操作、了解 LLM API 的基本概念（API Key、模型选择）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：Linux（推荐 Ubuntu 22.04+）/ macOS / Windows（WSL2 推荐）</li>
+<li>Python：3.12 及以上</li>
+<li>Node.js：22 及以上</li>
+<li>Docker：24.0 及以上（用于沙盒隔离模式）</li>
+<li>Git：2.30 及以上</li>
+<li>LLM API Key：至少一个 LLM 提供商的 API Key（推荐 DeepSeek 或 OpenAI）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>第一步：安装前置依赖</strong></p>
+<pre><code class="language-bash"># 检查 Python 版本（需要 3.12+）
+python3 --version
+
+# 如果未安装或版本过低
+# macOS:
+brew install python@3.12
+# Ubuntu/Debian:
+# sudo apt update &amp;&amp; sudo apt install python3.12 python3.12-venv python3-pip
+
+# 检查 Node.js 版本（需要 22+）
+node --version
+
+# 如果未安装或版本过低
+# macOS:
+brew install node@22
+# Ubuntu/Debian:
+# curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+# sudo apt install nodejs
+
+# 检查 Docker 版本
+docker --version
+</code></pre>
+<p><strong>第二步：克隆并安装 DeerFlow</strong></p>
+<pre><code class="language-bash"># 基于 DeerFlow 2.0 官方 README（GitHub 仓库 bytedance/deer-flow）
+
+# 克隆仓库
+git clone https://github.com/bytedance/deer-flow.git
+cd deer-flow
+
+# 方式一：Docker 一键部署（推荐生产环境）
+# 复制环境配置文件
+cp .env.example .env
+
+# 编辑 .env 文件，填入 API Key
+# 必填项:
+# LLM_API_KEY=your-api-key-here
+# LLM_MODEL=deepseek/deepseek-v3.2
+# LLM_BASE_URL=https://api.deepseek.com/v1
+# 可选:
+# SANDBOX_PROVIDER=aio  # 使用 Docker 沙盒
+
+# 使用 Docker Compose 启动
+docker compose up -d
+
+# 方式二：本地开发模式
+# 后端
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+
+# 前端
+cd ../frontend
+npm install
+
+# 启动后端（在 backend/ 目录）
+python -m deerflow.server
+
+# 启动前端（在 frontend/ 目录，新终端）
+npm run dev
+</code></pre>
+<p><strong>第三步：配置 LLM API</strong></p>
+<pre><code class="language-bash"># 编辑 .env 文件或 backend/config.yaml
+# 基于 DeerFlow 2.0 官方 README
+
+# 方式一：使用 DeepSeek（推荐，性价比高）
+LLM_API_KEY=sk-your-deepseek-key
+LLM_MODEL=deepseek/deepseek-v3.2
+LLM_BASE_URL=https://api.deepseek.com/v1
+
+# 方式二：使用 OpenAI
+LLM_API_KEY=sk-your-openai-key
+LLM_MODEL=gpt-4o
+LLM_BASE_URL=https://api.openai.com/v1
+
+# 方式三：使用 OpenRouter（接入多种模型）
+LLM_API_KEY=sk-or-your-openrouter-key
+LLM_MODEL=anthropic/claude-sonnet-4-6
+LLM_BASE_URL=https://openrouter.ai/api/v1
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 检查 Docker 容器是否运行（Docker 部署方式）
+docker compose ps
+# 预期输出:
+# NAME                STATUS          PORTS
+# deerflow-backend    Up 30 seconds   0.0.0.0:2024-&gt;2024/tcp
+# deerflow-gateway    Up 30 seconds   0.0.0.0:8001-&gt;8001/tcp
+# deerflow-frontend   Up 30 seconds   0.0.0.0:3000-&gt;3000/tcp
+# deerflow-nginx      Up 30 seconds   0.0.0.0:2026-&gt;2026/tcp
+
+# 检查后端 API 是否可用
+curl http://localhost:8001/health
+# 预期输出: {&quot;status&quot;: &quot;ok&quot;}
+
+# 打开 Web 前端
+# 浏览器访问 http://localhost:3000
+</code></pre>
+<pre><code># 典型验证输出
+
+$ docker compose ps
+NAME                IMAGE                  COMMAND                  SERVICE   STATUS          PORTS
+deerflow-backend    deerflow-backend       &quot;python -m deerflow.…&quot;   backend   Up 30 seconds   0.0.0.0:2024-&gt;2024/tcp
+deerflow-gateway    deerflow-gateway       &quot;python -m gateway.s…&quot;   gateway   Up 30 seconds   0.0.0.0:8001-&gt;8001/tcp
+deerflow-frontend   deerflow-frontend      &quot;npm run dev&quot;            frontend  Up 30 seconds   0.0.0.0:3000-&gt;3000/tcp
+deerflow-nginx      deerflow-nginx         &quot;nginx -g 'daemon of…&quot;   nginx     Up 30 seconds   0.0.0.0:2026-&gt;2026/tcp
+
+$ curl http://localhost:8001/health
+{&quot;status&quot;: &quot;ok&quot;, &quot;version&quot;: &quot;2.0.0&quot;}
+</code></pre>
+<blockquote>
+<p>基于 DeerFlow 2.0 官方 README 和 Docker Compose 配置（docker-compose.yml）</p>
+</blockquote>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-web">1.1 第一个任务：通过 Web 前端提交研究任务</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的最基本使用方式是通过 Web 前端提交任务。DeerFlow 的 Web 前端基于 Next.js 构建，提供了直观的对话界面，类似于 ChatGPT，但功能远超普通对话——DeerFlow 会自动将复杂任务分解为子任务、派生子智能体并行执行、在沙盒环境中运行代码。</p>
+<p>理解"任务提交 → 子智能体编排 → 结果聚合"的基本流程是使用 DeerFlow 的基础。DeerFlow 内置了"深度研究"技能（Skills），当你提交一个研究类问题时，它会自动加载该技能并按照结构化工作流执行。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 DeerFlow 2.0 官方 README
+
+# 1. 确保 DeerFlow 正在运行
+docker compose ps
+
+# 2. 打开浏览器访问 http://localhost:3000
+
+# 3. 在对话框中输入研究任务，例如:
+#    &quot;研究 2026 年最流行的 Python Web 框架，对比它们的性能、生态和学习曲线&quot;
+
+# 4. 观察 DeerFlow 的工作过程:
+# - Lead Agent 分析任务
+# - 自动加载&quot;深度研究&quot;技能
+# - 派生子智能体并行研究不同方面
+# - 实时显示每个子智能体的进度
+# - 综合所有结果生成最终报告
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># DeerFlow Web 前端的典型任务执行过程（模拟）
+
+[Lead Agent] 正在分析任务: &quot;研究 2026 年最流行的 Python Web 框架...&quot;
+[Lead Agent] 加载技能: 深度研究 (research)
+[Lead Agent] 任务分解为 3 个子任务:
+  1. 研究 FastAPI 的架构、性能和生态
+  2. 研究 Django 5.x 的新特性和性能
+  3. 研究 其他新兴框架（Litestar, Starlette 等）
+
+[Sub-Agent 1] 正在搜索 FastAPI 相关资料...
+[Sub-Agent 2] 正在搜索 Django 5.x 相关资料...
+[Sub-Agent 3] 正在搜索 Litestar, Starlette 等框架...
+
+[Sub-Agent 1] 完成: 收集了 12 篇技术文章和 3 个基准测试
+[Sub-Agent 2] 完成: 收集了 8 篇技术文章和 Django 官方文档
+[Sub-Agent 3] 完成: 收集了 6 篇技术文章和社区讨论
+
+[Lead Agent] 正在综合研究结果...
+
+=== 最终报告 ===
+# 2026 年 Python Web 框架对比
+
+## 1. FastAPI
+- 性能: 基准测试显示 FastAPI 在异步场景下性能最优
+- 生态: 丰富的中间件和插件生态
+...
+
+## 2. Django 5.x
+- 性能: 同步场景下的全栈框架首选
+- 生态: 最成熟的 Python Web 生态
+...
+
+## 3. 新兴框架
+- Litestar: 渐进式增长的现代框架
+...
+</code></pre>
+<blockquote>
+<p>以上输出为基于 DeerFlow 深度研究技能的预期执行过程。实际输出取决于 LLM 模型和搜索结果。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 提交一个你感兴趣的研究任务（如"对比 Docker 和 Kubernetes 的适用场景"），观察 DeerFlow 的任务分解和子智能体编排过程。
+2. 尝试在任务执行过程中查看子智能体的实时状态，理解并行执行的概念。</p>
+<hr />
+<h3 id="12-lead-agent">1.2 理解 Lead Agent 和子智能体：任务编排机制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的核心是 Lead Agent 和子智能体（Sub-Agent）的协作模式。理解这个模式对于有效使用 DeerFlow 至关重要。</p>
+<p><strong>Lead Agent</strong> 是任务的主控者，负责：
+- 分析用户请求，决定是否需要派生子智能体
+- 加载所需的技能（Skills）到上下文
+- 协调子智能体的并行执行
+- 综合所有子智能体的结果生成最终输出</p>
+<p><strong>子智能体（Sub-Agent）</strong> 是任务的执行者，每个子智能体：
+- 拥有独立的上下文（Context Isolation），不会看到其他子智能体的中间结果
+- 拥有独立的工具集和终止条件
+- 完成后向 Lead Agent 汇报结构化结果</p>
+<p>这种设计的核心优势是：子智能体的上下文隔离确保了信息不会混淆，并行执行提高了效率，结构化汇报使 Lead Agent 能够有效综合结果。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-yaml"># 基于 DeerFlow 2.0 架构（backend/docs/ARCHITECTURE.md）
+# config.yaml 中的 Agent 配置示例
+
+agent:
+  # Lead Agent 配置
+  lead:
+    model: &quot;deepseek/deepseek-v3.2&quot;
+    temperature: 0.3
+    max_sub_agents: 5        # 最大并行子智能体数
+    max_iterations: 20       # 最大迭代次数
+    timeout: 3600            # 任务超时（秒），1 小时
+
+  # 子智能体配置
+  sub_agent:
+    model: &quot;deepseek/deepseek-v3.2&quot;
+    temperature: 0.1         # 更低的温度，更精确的执行
+    max_iterations: 10       # 单个子智能体最大迭代次数
+    timeout: 600             # 子智能体超时（秒），10 分钟
+
+  # 上下文管理
+  context:
+    summarization: true      # 启用自动摘要
+    max_context_tokens: 8000 # 最大上下文 token 数
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># DeerFlow 日志中观察子智能体编排的典型输出
+
+2026-04-13 10:00:01 [Lead Agent] Task received: &quot;研究 AI Agent 框架对比&quot;
+2026-04-13 10:00:03 [Lead Agent] Loading skill: research
+2026-04-13 10:00:05 [Lead Agent] Spawning Sub-Agent 1: &quot;研究 LangGraph&quot;
+2026-04-13 10:00:05 [Lead Agent] Spawning Sub-Agent 2: &quot;研究 CrewAI&quot;
+2026-04-13 10:00:05 [Lead Agent] Spawning Sub-Agent 3: &quot;研究 AutoGen&quot;
+2026-04-13 10:00:05 [Lead Agent] 3 Sub-Agents running in parallel
+
+2026-04-13 10:03:12 [Sub-Agent 2] Completed: CrewAI research done
+2026-04-13 10:03:45 [Sub-Agent 1] Completed: LangGraph research done
+2026-04-13 10:04:01 [Sub-Agent 3] Completed: AutoGen research done
+
+2026-04-13 10:04:02 [Lead Agent] All Sub-Agents completed
+2026-04-13 10:04:15 [Lead Agent] Final report generated (2,450 words)
+</code></pre>
+<p><strong>练习题：</strong>
+1. 提交一个需要多个子智能体协作的任务，观察日志中的子智能体创建和完成时间，分析并行执行的效果。
+2. 尝试提交一个不需要子智能体的简单任务（如"解释什么是 REST API"），对比 DeerFlow 的处理方式有何不同。</p>
+<hr />
+<h3 id="13">1.3 技能系统初探：理解渐进式加载</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的技能（Skills）是其能力扩展的核心机制。每个技能是一个 SKILL.md 文件，包含工作流、最佳实践和参考资源。关键特点是<strong>渐进式加载</strong>——技能仅在任务需要时才加载到上下文中。</p>
+<p>这意味着 DeerFlow 可能拥有 20 个技能，但在处理一个"深度研究"任务时，只会加载"研究"相关的技能，保持上下文窗口精简。当你需要生成幻灯片时，才会加载"幻灯片创建"技能。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 DeerFlow 2.0 官方 README
+
+# 1. 查看内置技能列表
+ls skills/public/
+
+# 2. 查看某个技能的内容
+# 深度研究技能示例
+cat skills/public/research/SKILL.md
+</code></pre>
+<pre><code class="language-markdown">&lt;!-- skills/public/research/SKILL.md 内容示例 --&gt;
+---
+name: &quot;深度研究&quot;
+description: &quot;对给定主题进行多轮深度研究，生成结构化报告&quot;
+license: &quot;MIT&quot;
+allowed-tools: [&quot;web_search&quot;, &quot;web_fetch&quot;, &quot;read_file&quot;, &quot;write_file&quot;]
+---
+
+## 工作流
+
+1. **需求分析**: 理解研究目标，分解为可执行的子任务
+2. **信息收集**: 对每个子任务进行多源搜索和资料收集
+3. **交叉验证**: 使用至少 2 个独立来源验证关键信息
+4. **结构化输出**: 按照标准模板生成研究报告
+
+## 最佳实践
+
+- 优先搜索学术来源和官方文档
+- 记录每条信息的来源 URL
+- 使用多源交叉验证确保准确性
+
+## 参考资源
+
+- 学术搜索策略文档
+- 可靠信息源评级标准
+</code></pre>
+<pre><code class="language-bash"># 3. 创建自定义技能（简单示例）
+mkdir -p skills/custom/summarizer
+</code></pre>
+<pre><code class="language-markdown">&lt;!-- skills/custom/summarizer/SKILL.md --&gt;
+---
+name: &quot;文章摘要&quot;
+description: &quot;对给定文章或文档生成简洁的中文摘要&quot;
+license: &quot;MIT&quot;
+allowed-tools: [&quot;read_file&quot;, &quot;write_file&quot;]
+---
+
+## 工作流
+
+1. 使用 read_file 读取目标文档
+2. 识别文档的核心论点和关键数据
+3. 生成 300 字以内的中文摘要
+4. 保存摘要到 /mnt/user-data/outputs/ 目录
+
+## 最佳实践
+
+- 摘要应保留原文的关键数据和结论
+- 使用客观描述，避免主观评价
+- 标注原文来源和摘要生成时间
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 查看内置技能的典型输出
+
+$ ls skills/public/
+claude-to-deerflow  report  research  slides  video  web
+
+# 每个目录包含一个 SKILL.md 文件
+$ ls skills/public/research/
+SKILL.md  resources/
+
+# 创建自定义技能后
+$ ls skills/custom/
+summarizer/
+</code></pre>
+<blockquote>
+<p>基于 DeerFlow 2.0 技能系统架构。实际技能目录结构以官方仓库为准。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 查看内置的 <code>report</code> 和 <code>slides</code> 技能的 SKILL.md 内容，比较它们的工作流和 allowed-tools 有何不同。
+2. 创建一个简单的自定义技能（如"翻译"或"代码审查"），测试它是否被正确加载。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 配置模型和多模型策略</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的模型工厂（Model Factory）通过反射机制从 config.yaml 中解析模型配置。你可以为 Lead Agent 和子智能体配置不同的模型，根据任务特点平衡成本和质量。</p>
+<p>例如，Lead Agent 负责任务分解和结果综合，需要较强的推理能力，可以配置高端模型；子智能体负责具体的资料收集和执行，可以配置性价比更高的模型。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-yaml"># 基于 DeerFlow 2.0 配置（config.yaml）
+# 多模型配置示例
+
+models:
+  # Lead Agent 使用高端模型（更强的推理能力）
+  lead:
+    provider: &quot;openai&quot;
+    model: &quot;deepseek/deepseek-v3.2&quot;
+    api_key: &quot;${DEEPSEEK_API_KEY}&quot;
+    base_url: &quot;https://api.deepseek.com/v1&quot;
+    temperature: 0.3
+    max_tokens: 4096
+
+  # 子智能体使用轻量模型（更快响应，更低成本）
+  sub:
+    provider: &quot;openai&quot;
+    model: &quot;deepseek/deepseek-chat&quot;
+    api_key: &quot;${DEEPSEEK_API_KEY}&quot;
+    base_url: &quot;https://api.deepseek.com/v1&quot;
+    temperature: 0.1
+    max_tokens: 8192
+
+  # 可选: 通过 OpenRouter 接入 Claude（用于需要高质量推理的场景）
+  # premium:
+  #   provider: &quot;openai&quot;
+  #   model: &quot;anthropic/claude-sonnet-4-6&quot;
+  #   api_key: &quot;${OPENROUTER_API_KEY}&quot;
+  #   base_url: &quot;https://openrouter.ai/api/v1&quot;
+</code></pre>
+<pre><code class="language-bash"># 修改配置后重启服务
+docker compose restart backend
+
+# 或本地开发模式，直接重启后端进程
+# Ctrl+C 停止后端，然后重新启动
+python -m deerflow.server
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>provider</code> 字段对应 LangChain 的模型类前缀，DeerFlow 的 Model Factory 通过反射机制自动加载对应的类。大多数实现 OpenAI API 的提供商都可以使用 <code>provider: "openai"</code>。
+- <code>temperature</code> 参数影响输出的创造性。Lead Agent 建议使用 0.2-0.4（平衡创造性和准确性），子智能体建议使用 0.0-0.2（更精确的执行）。
+- 修改 config.yaml 后需要重启服务才能生效。</p>
+<p><strong>练习题：</strong>
+1. 配置 Lead Agent 和子智能体使用不同的模型，提交一个任务并观察两者使用的模型是否不同（查看日志）。
+2. 尝试通过 OpenRouter 配置一个不同的模型提供商，验证多模型支持。</p>
+<hr />
+<h3 id="22">2.2 沙盒执行环境：安全运行用户代码</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的沙盒系统（Sandbox）是 Agent 安全执行代码的核心机制。理解沙盒的工作方式对于在 DeerFlow 中运行代码、处理文件和管理任务输出至关重要。</p>
+<p>沙盒提供了两种模式：
+- <strong>LocalSandboxProvider</strong>：开发环境使用，命令在本地进程空间执行。简单快速，但隔离性较弱。
+- <strong>AioSandboxProvider</strong>：生产环境使用，命令在隔离的 Docker 容器中异步执行。提供完整的隔离和安全保障。</p>
+<p>Agent 通过 <code>bash</code> 工具在沙盒中执行命令，所有文件操作都在虚拟文件系统中进行。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-yaml"># 基于 DeerFlow 2.0 配置（config.yaml）
+# 沙盒配置示例
+
+sandbox:
+  # 开发环境使用本地沙盒
+  provider: &quot;local&quot;
+
+  # 生产环境使用 Docker 沙盒（取消注释以下配置）
+  # provider: &quot;aio&quot;
+  # docker:
+  #   image: &quot;deerflow-sandbox:latest&quot;
+  #   memory_limit: &quot;2g&quot;
+  #   cpu_limit: &quot;1.0&quot;
+  #   timeout: 300
+
+  # 虚拟路径映射（两种模式共享）
+  paths:
+    workspace: &quot;/mnt/user-data/workspace&quot;
+    uploads: &quot;/mnt/user-data/uploads&quot;
+    outputs: &quot;/mnt/user-data/outputs&quot;
+    skills: &quot;/mnt/skills&quot;
+</code></pre>
+<pre><code class="language-bash"># 基于 DeerFlow 2.0 架构
+
+# 在 DeerFlow 中，Agent 通过 bash 工具执行命令时:
+# Agent 发出工具调用: bash(&quot;python /mnt/user-data/workspace/analyze.py&quot;)
+#
+# 沙盒内部处理:
+# 1. 虚拟路径映射: /mnt/user-data/workspace → 实际物理路径
+# 2. 安全检查: 防止路径穿越（如 ../../etc/passwd）
+# 3. 命令执行: 在沙盒环境中运行
+# 4. 结果返回: 捕获 stdout 和 stderr
+
+# 切换到 Docker 沙盒模式
+# 编辑 config.yaml 或 .env:
+# SANDBOX_PROVIDER=aio
+docker compose restart backend
+</code></pre>
+<p><strong>注意事项：</strong>
+- 在 Docker 沙盒模式下，需要预先构建沙盒镜像（<code>deerflow-sandbox:latest</code>）。镜像应包含 Agent 可能需要的基础工具（Python、pip 常用包等）。
+- 沙盒的超时设置很重要。如果任务需要长时间运行（如模型训练），需要适当增加 <code>timeout</code> 值。
+- 文件上传后会自动存储到 <code>/mnt/user-data/uploads/</code> 虚拟路径。Agent 可以通过 <code>read_file</code> 或 <code>bash</code> 工具访问这些文件。</p>
+<p><strong>练习题：</strong>
+1. 提交一个需要执行 Python 代码的任务（如"用 Python 计算斐波那契数列的前 20 项并保存结果"），观察沙盒的执行过程。
+2. 尝试切换沙盒模式（local ↔ aio），对比两种模式的执行差异。</p>
+<hr />
+<h3 id="23-im-agent">2.3 IM 渠道集成：从聊天应用驱动 Agent</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 支持五大即时通讯平台的集成：Telegram、Slack、飞书/Lark、微信、企业微信。配置后，用户可以直接从聊天应用向 DeerFlow 提交任务，无需打开 Web 界面。</p>
+<p>每个 IM 渠道支持以下交互命令：
+- <code>/new</code> — 创建新任务
+- <code>/status</code> — 查看当前任务状态
+- <code>/models</code> — 查看和切换可用模型
+- <code>/memory</code> — 查看和管理长期记忆
+- <code>/help</code> — 显示帮助信息</p>
+<p>IM 集成的核心优势是将 AI Agent 嵌入到用户已有的工作流中，降低使用门槛。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-yaml"># 基于 DeerFlow 2.0 配置（config.yaml）
+# IM 渠道配置示例
+
+channels:
+  # Telegram 配置
+  telegram:
+    enabled: true
+    bot_token: &quot;${TELEGRAM_BOT_TOKEN}&quot;
+    # 获取 Bot Token: 在 Telegram 中找 @BotFather 创建 Bot
+
+  # Slack 配置
+  slack:
+    enabled: true
+    bot_token: &quot;${SLACK_BOT_TOKEN}&quot;
+    app_token: &quot;${SLACK_APP_TOKEN}&quot;
+    # 获取 Token: 在 Slack API 管理页面创建 App
+
+  # 飞书/Lark 配置
+  lark:
+    enabled: false
+    app_id: &quot;${LARK_APP_ID}&quot;
+    app_secret: &quot;${LARK_APP_SECRET}&quot;
+    # 获取凭证: 在飞书开放平台创建应用
+
+  # 微信配置（需要企业微信或个人微信的开发者权限）
+  wechat:
+    enabled: false
+    # 配置方式因微信版本而异
+</code></pre>
+<pre><code class="language-bash"># 配置 IM 渠道后，DeerFlow 会在启动时自动连接
+docker compose restart backend
+
+# 查看日志确认渠道已连接
+docker compose logs backend | grep -i channel
+
+# 预期输出:
+# [Channel] Telegram bot connected: @YourDeerFlowBot
+# [Channel] Slack bot connected to workspace
+</code></pre>
+<p><strong>注意事项：</strong>
+- IM 渠道配置后自动启动，<strong>无需公网 IP</strong>。DeerFlow 使用长轮询（Long Polling）或 WebSocket 连接到 IM 平台。
+- 不同 IM 平台对消息长度有限制。DeerFlow 会自动将长结果拆分为多条消息或提供文件下载链接。
+- Telegram 和 Slack 的配置最为简单，建议从这两个平台开始。</p>
+<p><strong>练习题：</strong>
+1. 配置 Telegram 或 Slack 渠道，从聊天应用中提交一个研究任务，对比与 Web 前端提交的体验差异。
+2. 尝试使用 <code>/memory</code> 命令查看和管理长期记忆，理解跨会话记忆的工作方式。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-custom-skills">3.1 开发自定义技能（Custom Skills）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>自定义技能是扩展 DeerFlow 能力的主要方式。每个技能是一个包含 SKILL.md 的目录，DeerFlow 会自动发现 <code>skills/custom/</code> 目录下的所有技能。</p>
+<p>一个高质量的技能需要包含：
+1. <strong>YAML Frontmatter</strong>：定义技能的元数据（名称、描述、允许的工具）
+2. <strong>工作流（Workflow）</strong>：清晰定义 Agent 应该遵循的步骤
+3. <strong>最佳实践（Best Practices）</strong>：帮助 Agent 避免常见错误
+4. <strong>参考资源（References）</strong>：提供相关的知识和模板</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-markdown">&lt;!-- skills/custom/data-analysis/SKILL.md --&gt;
+---
+name: &quot;数据分析&quot;
+description: &quot;对上传的数据文件进行统计分析，生成可视化报告&quot;
+license: &quot;MIT&quot;
+allowed-tools: [&quot;bash&quot;, &quot;read_file&quot;, &quot;write_file&quot;, &quot;view_image&quot;]
+---
+
+## 工作流
+
+### 步骤 1: 数据探索
+- 使用 `read_file` 读取上传的数据文件
+- 识别文件格式（CSV、JSON、Excel 等）
+- 检查数据的基本统计信息（行数、列数、缺失值）
+
+### 步骤 2: 数据清洗
+- 使用 `bash` 运行 Python 脚本进行数据清洗
+- 处理缺失值（删除或填充）
+- 处理异常值（标记或移除）
+
+### 步骤 3: 统计分析
+- 根据数据特征选择合适的分析方法
+- 生成描述性统计（均值、中位数、标准差）
+- 执行相关性分析或分组比较
+
+### 步骤 4: 可视化
+- 使用 matplotlib 或 seaborn 生成图表
+- 图表保存到 /mnt/user-data/outputs/ 目录
+- 使用 `view_image` 工具在对话中展示图表
+
+### 步骤 5: 生成报告
+- 将分析结果和图表整合为结构化报告
+- 报告保存为 Markdown 文件
+- 提供关键发现和建议
+
+## 最佳实践
+
+- 始终先检查数据质量再进行分析
+- 可视化图表应包含清晰的标题、轴标签和图例
+- 分析结果应标注统计显著性
+- 对于大数据集，先采样再分析以提高速度
+
+## 参考资源
+
+- Python pandas 数据分析常用操作清单
+- matplotlib 图表类型选择指南
+- 统计分析方法速查表
+</code></pre>
+<pre><code class="language-bash"># 创建技能目录和文件
+mkdir -p skills/custom/data-analysis
+# 将上述 SKILL.md 内容写入文件
+
+# 重启服务（某些版本需要重启才能发现新技能）
+docker compose restart backend
+
+# 测试自定义技能
+# 在 Web 前端或 IM 渠道中提交:
+# &quot;分析我上传的 sales_data.csv 文件，找出销售趋势和异常点&quot;
+# DeerFlow 会自动加载&quot;数据分析&quot;技能
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>allowed-tools</code> 字段非常重要，它限制了技能可以使用的工具范围。例如，"数据分析"技能不需要 <code>web_search</code> 工具，不应包含它。
+- 工作流描述越详细，Agent 执行得越好。模糊的工作流描述会导致 Agent 不确定下一步该做什么。
+- 技能的 <code>resources/</code> 子目录可以放置辅助文件（如模板、参考数据），Agent 可以通过 <code>read_file</code> 工具读取。</p>
+<hr />
+<h3 id="32-mcp">3.2 MCP 工具集成：连接外部系统</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Model Context Protocol（MCP）是 DeerFlow 连接外部工具的主要方式。通过 MCP，DeerFlow 可以集成第三方 API、内部系统、数据库等外部资源，无需修改核心代码。</p>
+<p>DeerFlow 的 MCP 客户端支持三种传输协议：
+- <strong>stdio</strong>：启动本地子进程作为 MCP 服务器，适合集成命令行工具
+- <strong>SSE（Server-Sent Events）</strong>：连接远程 SSE 端点，适合集成 Web 服务
+- <strong>HTTP</strong>：连接 HTTP API，适合集成 REST 服务</p>
+<p>配置文件 <code>extensions_config.json</code> 变更后，DeerFlow 会自动重载 MCP 工具，无需重启。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-json">// 基于 DeerFlow 2.0 配置（extensions_config.json）
+// MCP 工具集成配置示例
+
+{
+  &quot;mcpServers&quot;: {
+    &quot;database-query&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;python&quot;,
+      &quot;args&quot;: [&quot;-m&quot;, &quot;mcp_db_query&quot;],
+      &quot;env&quot;: {
+        &quot;DB_CONNECTION_STRING&quot;: &quot;${DATABASE_URL}&quot;
+      }
+    },
+    &quot;web-search&quot;: {
+      &quot;transport&quot;: &quot;stdio&quot;,
+      &quot;command&quot;: &quot;python&quot;,
+      &quot;args&quot;: [&quot;-m&quot;, &quot;mcp_web_search&quot;],
+      &quot;env&quot;: {
+        &quot;SEARCH_API_KEY&quot;: &quot;${SEARCH_API_KEY}&quot;
+      }
+    },
+    &quot;internal-api&quot;: {
+      &quot;transport&quot;: &quot;sse&quot;,
+      &quot;url&quot;: &quot;http://api.internal:8080/sse&quot;,
+      &quot;headers&quot;: {
+        &quot;Authorization&quot;: &quot;Bearer ${INTERNAL_API_TOKEN}&quot;
+      }
+    }
+  }
+}
+</code></pre>
+<pre><code class="language-bash"># 添加 MCP 配置后，DeerFlow 会自动检测变化并重载
+# 查看已加载的 MCP 工具
+docker compose logs backend | grep -i &quot;mcp&quot;
+
+# 预期输出:
+# [MCP] Loaded tools from: database-query
+# [MCP] Loaded tools from: web-search
+# [MCP] Loaded tools from: internal-api
+</code></pre>
+<p><strong>注意事项：</strong>
+- MCP 服务器进程独立于 DeerFlow 主进程运行。如果 MCP 服务器崩溃，不影响 DeerFlow 的其他功能。
+- stdio 模式的 MCP 服务器需要预先安装在 Docker 镜像或本地环境中。
+- SSE 和 HTTP 模式的 MCP 服务器需要确保网络可达性。</p>
+<hr />
+<h3 id="33">3.3 长期记忆管理与优化</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DeerFlow 的长期记忆（Long-Term Memory）使 Agent 能够跨会话积累用户偏好和知识。理解记忆的工作方式有助于优化 Agent 的个性化效果。</p>
+<p>记忆系统的工作流程：
+1. <strong>读取（同步）</strong>：Agent 处理请求前，ThreadData 中间件从记忆系统加载用户画像
+2. <strong>更新（异步）</strong>：任务完成后，新的偏好和知识被加入防抖队列，延迟写入
+3. <strong>管理</strong>：用户可通过 <code>/memory</code> 命令查看、删除特定记忆</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 DeerFlow 2.0 架构
+
+# 通过 IM 渠道管理记忆
+
+# 查看当前记忆
+/memory
+# 输出:
+# 记忆条目 (5):
+# 1. 用户偏好: 报告使用中文撰写
+# 2. 用户偏好: 代码使用 Python
+# 3. 知识: 用户从事数据科学工作
+# 4. 知识: 用户常用 matplotlib 进行可视化
+# 5. 偏好: 研究报告包含执行摘要
+
+# 删除特定记忆
+/memory delete 3
+# 输出: 已删除记忆条目 #3
+
+# 清除全部记忆
+/memory clear
+# 输出: 已清除全部记忆
+</code></pre>
+<p><strong>注意事项：</strong>
+- 记忆的防抖写入意味着更新可能有几秒延迟。频繁提交任务时，最新的记忆可能不会立即生效。
+- 记忆系统使用 TIAMAT 作为云后端。在本地部署时，确保 TIAMAT 服务可用或配置本地存储替代方案。
+- 过多的记忆条目可能影响 Agent 的上下文效率。建议定期清理不再需要的记忆。</p>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个"自动化研究助手"，综合运用以下知识点：
+1. <strong>Web 前端任务提交</strong>（知识点 1.1）：通过 Web 界面提交研究任务
+2. <strong>子智能体编排</strong>（知识点 1.2）：理解并行研究的工作方式
+3. <strong>自定义技能开发</strong>（知识点 3.1）：创建"技术调研"技能
+4. <strong>沙盒执行环境</strong>（知识点 2.2）：在沙盒中运行数据处理脚本
+5. <strong>模型配置</strong>（知识点 2.1）：为不同任务类型配置合适的模型</p>
+<p>功能要求：
+- 接受用户的技术调研需求（如"调研 LangGraph 的架构和生态"）
+- 自动分解为多个子任务并行研究
+- 收集官方文档、技术博客、社区评价等多源信息
+- 在沙盒中运行分析脚本处理收集的数据
+- 生成结构化的技术调研报告</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>tech-research-assistant/
+│
+├── skills/
+│   └── custom/
+│       └── tech-research/         # 自定义技能
+│           ├── SKILL.md           # 技能定义
+│           └── resources/
+│               └── report-template.md  # 报告模板
+│
+├── config/
+│   └── models.yaml               # 模型配置（覆盖默认配置）
+│
+├── scripts/
+│   └── analyze.py                # 分析脚本（在沙盒中运行）
+│
+└── outputs/                       # 输出目录
+    └── reports/                   # 生成的报告
+</code></pre>
+<h3 id="_11">完整实施代码</h3>
+<p><strong>第一步：创建技术调研技能</strong></p>
+<pre><code class="language-markdown">&lt;!-- skills/custom/tech-research/SKILL.md --&gt;
+---
+name: &quot;技术调研&quot;
+description: &quot;对给定技术进行系统化调研，生成包含架构、生态、竞品对比的结构化报告&quot;
+license: &quot;MIT&quot;
+allowed-tools: [&quot;web_search&quot;, &quot;web_fetch&quot;, &quot;bash&quot;, &quot;read_file&quot;, &quot;write_file&quot;]
+---
+
+## 工作流
+
+### 阶段 1: 信息收集（并行执行）
+1. 搜索该技术的官方文档和 GitHub 仓库
+2. 搜索技术博客和深度分析文章
+3. 搜索社区评价和讨论（Reddit、Hacker News）
+4. 搜索竞品和同类技术对比
+
+### 阶段 2: 数据分析
+1. 使用 `read_file` 读取报告模板
+2. 使用 `bash` 运行分析脚本整理收集的数据
+3. 生成统计数据（Stars、下载量、版本历史等）
+
+### 阶段 3: 报告生成
+1. 按照报告模板结构组织内容
+2. 生成技术概述、架构分析、竞品对比、适用场景等章节
+3. 保存报告到 /mnt/user-data/outputs/reports/ 目录
+
+## 最佳实践
+
+- 每条信息必须标注来源 URL
+- 竞品对比至少包含 3 个竞品
+- 架构分析需引用官方文档
+- 性能数据需标注测试环境和日期
+
+## 参考资源
+
+- 技术调研方法论
+- 架构分析框架
+</code></pre>
+<p><strong>第二步：创建报告模板</strong></p>
+<pre><code class="language-markdown">&lt;!-- skills/custom/tech-research/resources/report-template.md --&gt;
+# {{技术名称}} - 技术调研报告
+
+## 1. 基本信息
+- 技术名称:
+- 官方地址:
+- GitHub 仓库:
+- 当前版本:
+- License:
+- 主要语言:
+- 创建者/维护团队:
+
+## 2. 核心特性
+1. 特性名称 - 描述
+2. ...
+
+## 3. 技术架构
+### 3.1 整体架构
+（架构图或分层描述）
+
+### 3.2 核心模块
+- 模块1 - 职责
+- ...
+
+### 3.3 扩展机制
+（如何扩展）
+
+## 4. 竞品对比
+| 维度 | 本技术 | 竞品A | 竞品B |
+|------|--------|-------|-------|
+| ... | ... | ... | ... |
+
+## 5. 适用场景
+### 最佳场景
+1. ...
+
+### 不适用场景
+1. ...
+
+## 6. 总结与建议
+（综合评价和使用建议）
+
+## 信息来源
+- 来源1
+- 来源2
+</code></pre>
+<p><strong>第三步：创建数据分析脚本</strong></p>
+<pre><code class="language-python"># scripts/analyze.py
+# 在 DeerFlow 沙盒中运行的数据分析脚本
+# 基于 DeerFlow 2.0 沙盒虚拟文件系统
+
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+
+def analyze_research_data(input_path: str, output_path: str) -&gt; None:
+    &quot;&quot;&quot;分析收集的研究数据，生成统计摘要&quot;&quot;&quot;
+    # 读取收集的研究数据（JSON 格式）
+    input_file = Path(input_path)
+    if not input_file.exists():
+        print(f&quot;错误: 输入文件不存在: {input_path}&quot;)
+        sys.exit(1)
+
+    with open(input_file, &quot;r&quot;, encoding=&quot;utf-8&quot;) as f:
+        data = json.load(f)
+
+    # 统计分析
+    summary = {
+        &quot;analysis_time&quot;: datetime.now().isoformat(),
+        &quot;tech_name&quot;: data.get(&quot;tech_name&quot;, &quot;unknown&quot;),
+        &quot;sources_count&quot;: len(data.get(&quot;sources&quot;, [])),
+        &quot;features_count&quot;: len(data.get(&quot;features&quot;, [])),
+        &quot;competitors_count&quot;: len(data.get(&quot;competitors&quot;, [])),
+        &quot;github_stars&quot;: data.get(&quot;github_stars&quot;, &quot;N/A&quot;),
+        &quot;license&quot;: data.get(&quot;license&quot;, &quot;N/A&quot;),
+        &quot;source_categories&quot;: {},
+    }
+
+    # 按来源类型分类统计
+    for source in data.get(&quot;sources&quot;, []):
+        category = source.get(&quot;type&quot;, &quot;other&quot;)
+        summary[&quot;source_categories&quot;][category] = (
+            summary[&quot;source_categories&quot;].get(category, 0) + 1
+        )
+
+    # 保存分析结果
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(output_file, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
+
+    print(f&quot;分析完成:&quot;)
+    print(f&quot;  技术名称: {summary['tech_name']}&quot;)
+    print(f&quot;  信息来源: {summary['sources_count']} 条&quot;)
+    print(f&quot;  核心特性: {summary['features_count']} 个&quot;)
+    print(f&quot;  竞品数量: {summary['competitors_count']} 个&quot;)
+    print(f&quot;  GitHub Stars: {summary['github_stars']}&quot;)
+    print(f&quot;  来源分类: {summary['source_categories']}&quot;)
+    print(f&quot;  结果保存到: {output_path}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    input_path = sys.argv[1] if len(sys.argv) &gt; 1 else &quot;/mnt/user-data/uploads/research_data.json&quot;
+    output_path = sys.argv[2] if len(sys.argv) &gt; 2 else &quot;/mnt/user-data/outputs/analysis_summary.json&quot;
+    analyze_research_data(input_path, output_path)
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点运用说明：</strong></p>
+<ol>
+<li>
+<p><strong>Web 前端任务提交</strong>（1.1 节）：用户通过 DeerFlow 的 Web 前端提交技术调研任务，如"调研 LangGraph 的架构和生态"。DeerFlow 自动将任务路由到 Lead Agent 处理。</p>
+</li>
+<li>
+<p><strong>子智能体编排</strong>（1.2 节）：Lead Agent 将调研任务分解为多个子任务（信息收集、数据分析、报告生成），并行派生子智能体执行。每个子智能体独立收集不同来源的信息。</p>
+</li>
+<li>
+<p><strong>自定义技能开发</strong>（3.1 节）：<code>tech-research/SKILL.md</code> 定义了技术调研的完整工作流，包括信息收集策略、分析方法和报告模板。<code>allowed-tools</code> 限制了技能只能使用必要的工具。</p>
+</li>
+<li>
+<p><strong>沙盒执行环境</strong>（2.2 节）：<code>analyze.py</code> 脚本在 DeerFlow 的沙盒环境中运行，通过虚拟路径 <code>/mnt/user-data/uploads/</code> 和 <code>/mnt/user-data/outputs/</code> 读写文件。</p>
+</li>
+<li>
+<p><strong>模型配置</strong>（2.1 节）：可以通过覆盖配置为技术调研任务指定更适合的模型。例如，信息收集阶段使用快速模型，报告生成阶段使用高质量模型。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加自动化评分</strong>：在技能中添加自动化的技术评分逻辑，根据 Stars、活跃度、文档质量等维度生成量化评分。</p>
+</li>
+<li>
+<p><strong>集成 MCP 搜索工具</strong>：将专业的学术搜索 API（如 Semantic Scholar）通过 MCP 集成到技能中，提升信息收集质量。</p>
+</li>
+<li>
+<p><strong>定期自动调研</strong>：配置定期任务，自动对关注的技术栈进行调研并生成对比报告。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docker compose up</code> 失败，端口被占用</td>
+<td>2024/3000/8001/2026 端口已被其他服务使用</td>
+<td>修改 <code>docker-compose.yml</code> 中的端口映射，或停止占用端口的服务</td>
+</tr>
+<tr>
+<td><code>LLM_API_KEY not set</code></td>
+<td>未配置 LLM API Key</td>
+<td>编辑 <code>.env</code> 文件，填入有效的 API Key</td>
+</tr>
+<tr>
+<td><code>ModuleNotFoundError: No module named 'langgraph'</code></td>
+<td>后端依赖未安装</td>
+<td>在 backend/ 目录执行 <code>pip install -r requirements.txt</code></td>
+</tr>
+<tr>
+<td><code>Sandbox timeout</code></td>
+<td>沙盒执行超时</td>
+<td>增加 config.yaml 中的 <code>sandbox.timeout</code> 值</td>
+</tr>
+<tr>
+<td><code>Sub-Agent failed: context window exceeded</code></td>
+<td>子智能体上下文超出限制</td>
+<td>减少任务的子任务数量，或增加 <code>context.max_context_tokens</code></td>
+</tr>
+<tr>
+<td><code>MCP server connection failed</code></td>
+<td>MCP 服务器不可达</td>
+<td>检查 MCP 服务器的网络连通性和配置。查看日志 <code>docker compose logs backend</code></td>
+</tr>
+<tr>
+<td><code>Permission denied: /mnt/user-data/</code></td>
+<td>沙盒文件系统权限问题</td>
+<td>检查 Docker 卷挂载权限。执行 <code>chmod -R 777 ./data/</code>（开发环境）</td>
+</tr>
+<tr>
+<td><code>Docker sandbox image not found</code></td>
+<td>未构建沙盒 Docker 镜像</td>
+<td>执行 <code>docker build -t deerflow-sandbox -f Dockerfile.sandbox .</code></td>
+</tr>
+<tr>
+<td><code>Telegram bot not responding</code></td>
+<td>Telegram Bot Token 无效或网络问题</td>
+<td>验证 Bot Token 是否正确。检查网络是否能连接 Telegram API</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>基于 DeerFlow 2.0 官方 README 和常见部署问题</p>
+</blockquote>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>查看详细日志</strong>：使用 <code>docker compose logs -f backend</code> 实时查看后端日志。日志中包含 Lead Agent 的决策过程、子智能体的创建和执行、工具调用详情等关键信息。对于任务执行失败，重点关注 <code>[Lead Agent]</code> 和 <code>[Sub-Agent]</code> 标签的日志行。</p>
+</li>
+<li>
+<p><strong>检查沙盒状态</strong>：在 Docker 沙盒模式下，使用 <code>docker ps | grep sandbox</code> 查看沙盒容器是否正常运行。如果容器频繁重启，检查内存限制（<code>memory_limit</code>）是否足够。使用 <code>docker exec -it &lt;sandbox-id&gt; bash</code> 进入沙盒容器手动排查。</p>
+</li>
+<li>
+<p><strong>逐步调试技能</strong>：如果自定义技能不生效，首先检查 <code>skills/custom/</code> 目录结构是否正确（必须包含 <code>SKILL.md</code>）。然后在日志中搜索技能加载记录，确认 DeerFlow 是否发现了该技能。如果技能已加载但执行不符合预期，检查 SKILL.md 的工作流描述是否足够清晰。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README 快速入门</strong> — 安装、Docker 部署、配置基础</li>
+<li>地址：https://github.com/bytedance/deer-flow#readme</li>
+<li>
+<p>重点：Docker Compose 部署、环境变量配置、LLM 模型配置</p>
+</li>
+<li>
+<p><strong>ARCHITECTURE.md 架构文档</strong> — 系统架构、中间件链、沙盒系统详解</p>
+</li>
+<li>地址：https://github.com/bytedance/deer-flow/blob/main/backend/docs/ARCHITECTURE.md</li>
+<li>
+<p>重点：中间件链设计、虚拟文件系统、MCP 集成、安全机制</p>
+</li>
+<li>
+<p><strong>Skills 系统文档</strong> — 技能开发和管理</p>
+</li>
+<li>地址：skills/public/ 目录下的内置技能示例</li>
+<li>
+<p>重点：SKILL.md 格式、allowed-tools 配置、渐进式加载机制</p>
+</li>
+<li>
+<p><strong>Configuration Guide</strong> — 完整配置参考</p>
+</li>
+<li>地址：config.yaml 和 .env.example 文件</li>
+<li>重点：模型配置、沙盒配置、IM 渠道配置、MCP 工具配置</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong>dev.to - DeerFlow 2.0: The Deep Dive</strong></li>
+<li>https://dev.to/</li>
+<li>
+<p>社区深度分析文章，涵盖架构、沙盒、技能、记忆等核心机制</p>
+</li>
+<li>
+<p><strong>LangGraph 官方文档</strong></p>
+</li>
+<li>https://langchain-ai.github.io/langgraph/</li>
+<li>
+<p>DeerFlow 的核心编排引擎。理解 LangGraph 的 StateGraph、节点、边等概念有助于深入理解 DeerFlow 的编排机制</p>
+</li>
+<li>
+<p><strong>LangChain 官方文档</strong></p>
+</li>
+<li>https://python.langchain.com/</li>
+<li>DeerFlow 使用 LangChain 进行 LLM 交互。了解 LangChain 的模型抽象、工具调用、消息格式有助于自定义模型和工具</li>
+</ul>
+<h3 id="_20">进阶方向建议</h3>
+<p>完成本教程后，建议按以下方向深入学习：</p>
+<ol>
+<li><strong>深入 LangGraph</strong>：学习 StateGraph 的高级用法（条件分支、循环、并行节点），理解 DeerFlow 如何在 LangGraph 上构建中间件链</li>
+<li><strong>开发 MCP 工具</strong>：学习 MCP 协议规范，开发自定义的 MCP 工具服务器，连接内部系统</li>
+<li><strong>生产环境部署</strong>：研究 Kubernetes 部署方案、安全加固、监控和日志集成</li>
+</ol>
+<hr />
+<h2 id="_21">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> DeerFlow 2.0（2026-02-27 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/bytedance/deer-flow">GitHub 仓库 bytedance/deer-flow</a> — 源码、README、配置文件</li>
+<li><a href="https://api.github.com/repos/bytedance/deer-flow">GitHub API - bytedance/deer-flow</a> — Stars: 60,751, Forks: 7,767</li>
+<li><a href="https://deerflow.tech/">官方网站 deerflow.tech</a> — 项目介绍和演示</li>
+<li><a href="https://github.com/bytedance/deer-flow/blob/main/backend/docs/ARCHITECTURE.md">官方 ARCHITECTURE.md</a> — 完整系统架构</li>
+<li><a href="https://dev.to/">dev.to - DeerFlow 2.0: The Deep Dive</a> — 社区深度分析</li>
+<li><a href="https://langchain-ai.github.io/langgraph/">LangGraph 官方文档</a> — 编排引擎文档</li>
+<li><a href="https://python.langchain.com/">LangChain 官方文档</a> — LLM 交互文档</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

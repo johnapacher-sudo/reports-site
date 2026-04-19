@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIWebsiteClonerTemplate - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于官方 README v0.3.1</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#5" class="toc-h4">5 阶段克隆流水线</a></li>
+<li><a href="#_8" class="toc-h4">指令同步机制</a></li>
+<li><a href="#_9" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_10" class="toc-h2">架构设计</a></li>
+<li><a href="#_11" class="toc-h3">整体架构</a></li>
+<li><a href="#_12" class="toc-h3">核心模块</a></li>
+<li><a href="#_13" class="toc-h3">扩展机制</a></li>
+<li><a href="#_14" class="toc-h2">关键概念详解</a></li>
+<li><a href="#multi-phase-pipeline" class="toc-h3">多阶段流水线（Multi-Phase Pipeline）</a></li>
+<li><a href="#component-specs" class="toc-h3">组件规格文档（Component Specs）</a></li>
+<li><a href="#git-worktree-parallel-build-via-worktrees" class="toc-h3">Git Worktree 并行构建（Parallel Build via Worktrees）</a></li>
+<li><a href="#agentsmd-single-source-of-truth" class="toc-h3">AGENTS.md 指令源（Single Source of Truth）</a></li>
+<li><a href="#_15" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_16" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_17" class="toc-h3">最佳场景</a></li>
+<li><a href="#_18" class="toc-h3">不适用场景</a></li>
+<li><a href="#_19" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_20" class="toc-h3">优势</a></li>
+<li><a href="#_21" class="toc-h3">劣势</a></li>
+<li><a href="#_22" class="toc-h3">风险点</a></li>
+<li><a href="#_23" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_24" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_25" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_26" class="toc-h2">总结与建议</a></li>
+<li><a href="#_27" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AIWebsiteClonerTemplate - 深度分析报告</h1>
+                        <div class="article-meta">基于官方 README v0.3.1</div>
+                    </header>
+                    <h1 id="aiwebsiteclonertemplate-">AIWebsiteClonerTemplate - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025-2026 年，AI 辅助编程领域出现了爆发式增长。以 Claude Code、Cursor、GitHub Copilot 为代表的 AI 编码 Agent，已经能够自主理解代码仓库、执行多文件编辑和运行终端命令。与此同时，v0.dev（Vercel）、Bolt.new（StackBlitz）、Lovable 等 AI 前端构建平台让"用自然语言生成网页"成为可能。</p>
+<p>然而，这些工具存在一个共同局限：<strong>无法精确复现已有网站的设计</strong>。开发者看到心仪的网站时，仍然需要手动使用 DevTools 提取颜色值、分析布局结构、理解交互模式，再将这些信息翻译成代码。这一过程耗时且重复，尤其是在平台迁移（从 WordPress/Webflow 迁移到 Next.js）、源码丢失恢复、设计学习等场景下。</p>
+<h3 id="_3">创立动机</h3>
+<p>AIWebsiteClonerTemplate 由 JCodesMore 于 2026 年 3 月创建，核心动机是：</p>
+<ol>
+<li><strong>将网站克隆标准化为自动化流水线</strong>：与其让 AI Agent "随意"克隆网站，不如设计一套结构化的 5 阶段流水线（侦察 → 基础 → 组件规格 → 并行构建 → 组装质检），确保每一步都有明确的输入、输出和质量标准。</li>
+<li><strong>解耦 AI Agent 选择与克隆流程</strong>：模板本身不绑定特定 AI 平台，通过 <code>AGENTS.md</code> 作为统一的指令源，自动同步为 13+ 种 AI Agent 的配置格式（CLAUDE.md、GEMINI.md 等），让用户自由选择偏好的编码工具。</li>
+<li><strong>输出生产级代码而非原型</strong>：不同于 v0.dev 或 Bolt.new 生成原型级代码，AIWebsiteClonerTemplate 强制 TypeScript 严格模式、shadcn/ui 组件复用、响应式设计和无障碍访问标准，输出可直接用于生产的代码。</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-13</strong>：项目首次发布，提供基础的单页面克隆功能和 Claude Code 支持</li>
+<li><strong>2026-03-28</strong>：v0.1.0/v0.1.1，初始正式版本，增加项目卫生（Project Hygiene）配置</li>
+<li><strong>2026-03-28</strong>：v0.2.0，重大更新，引入多平台 AI Agent 支持（13+ 种 Agent），通过 <code>AGENTS.md</code> 统一指令源</li>
+<li><strong>2026-03-30</strong>：v0.3.0，支持多 URL 克隆和 CI 质量门禁（Quality Gates）</li>
+<li><strong>2026-03-30</strong>：v0.3.1（当前最新），修复 Windows CRLF 兼容性问题</li>
+<li><strong>2026-04-12</strong>：Stars 突破 10,646，一个月内成为 GitHub 上增长最快的 AI 编码工具之一</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>AIWebsiteClonerTemplate 的设计围绕三个核心理念：</p>
+<ol>
+<li>
+<p><strong>流水线优于一次性生成（Pipeline over One-Shot）</strong>：将网站克隆分解为 5 个结构化阶段，每阶段有明确的输入规格和输出产物。这比让 AI Agent 一次性"看着网站重新生成"更可靠，因为每个阶段的输出可以被验证和修正。</p>
+</li>
+<li>
+<p><strong>规格驱动（Spec-Driven）</strong>：核心创新在于"Component Specs"阶段——先为每个组件生成详细的规格文档（包含精确的 <code>getComputedStyle()</code> 值、交互状态、响应式断点等），再基于规格而非原始网站进行构建。这避免了 Agent 在构建时"猜测"样式值。</p>
+</li>
+<li>
+<p><strong>Agent 无关（Agent-Agnostic）</strong>：通过 <code>AGENTS.md</code> 作为唯一的指令源（Single Source of Truth），使用同步脚本（<code>sync-agent-rules.sh</code>、<code>sync-skills.mjs</code>）自动生成各平台配置，确保用户选择任何 AI Agent 都能获得一致的执行体验。</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>前端专注 vs 全栈覆盖</strong>：仅克隆前端，不生成后端 API 或数据库 Schema。换取更高质量的 UI 输出和更简单的流水线。[置信度：高]
+- <strong>Next.js 绑定 vs 多框架支持</strong>：输出仅支持 Next.js 16 + React 19 技术栈，不支持 Vue、Svelte 等。换取出更成熟的组件架构和类型安全。[置信度：高]
+- <strong>并行构建 vs 串行构建</strong>：使用 Git Worktree 实现多个 Agent 并行构建不同组件，速度更快但引入了合并复杂度。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="5">5 阶段克隆流水线</h4>
+<pre><code>用户执行 /clone-website &lt;target-url&gt;
+  │
+  ▼
+阶段 1: Reconnaissance（侦察）
+  ├─ 截取目标网站截图（多断点）
+  ├─ 提取设计令牌（Design Tokens）: 颜色、字体、间距
+  ├─ 交互扫描: 滚动、点击、悬停、响应式
+  └─ 输出: docs/research/ 下的分析文件和截图
+  │
+  ▼
+阶段 2: Foundation（基础）
+  ├─ 更新项目字体配置
+  ├─ 设置全局颜色变量（oklch 色彩空间）
+  ├─ 下载所有图片/视频/SVG 资源
+  └─ 输出: 更新的 globals.css、public/images/
+  │
+  ▼
+阶段 3: Component Specs（组件规格）
+  ├─ 为每个识别到的组件编写详细规格
+  ├─ 包含精确 CSS 计算值、状态、行为和内容
+  └─ 输出: docs/research/components/ 下的规格文档
+  │
+  ▼
+阶段 4: Parallel Build（并行构建）
+  ├─ 创建 Git Worktree 隔离
+  ├─ 每个 Agent 负责一个组件/区域
+  ├─ Agent 接收完整的组件规格（非原始网站）
+  └─ 输出: 各 Worktree 中的组件代码
+  │
+  ▼
+阶段 5: Assembly &amp; QA（组装质检）
+  ├─ 合并所有 Worktree
+  ├─ 连接页面路由和组件依赖
+  ├─ 运行视觉对比（Visual Diff）
+  └─ 输出: 完整的 Next.js 项目
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1</p>
+</blockquote>
+<h4 id="_8">指令同步机制</h4>
+<p>项目使用 <code>AGENTS.md</code> 作为唯一的指令源，通过脚本自动生成各平台配置：</p>
+<pre><code>AGENTS.md（唯一指令源）
+  │
+  ├─ bash scripts/sync-agent-rules.sh
+  │    ├─ → CLAUDE.md（Claude Code 配置）
+  │    ├─ → GEMINI.md（Gemini CLI 配置）
+  │    ├─ → .cursor/rules/（Cursor 配置）
+  │    ├─ → .windsurfrules（Windsurf 配置）
+  │    └─ → ...（其他 Agent 配置）
+  │
+  └─ node scripts/sync-skills.mjs
+       ├─ → .claude/skills/clone-website/SKILL.md
+       ├─ → .github/copilot-instructions.md
+       └─ → ...（其他平台技能文件）
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1</p>
+</blockquote>
+<h3 id="_9">数据流/执行流程</h3>
+<pre><code>目标网站 URL
+  │
+  ▼
+/clone-website 技能触发
+  │
+  ├─ 1. 截图 + 资源下载
+  │     → public/images/, public/videos/
+  │     → docs/design-references/
+  │
+  ├─ 2. 设计令牌提取
+  │     → src/app/globals.css（oklch 变量）
+  │     → src/components/icons.tsx（SVG 图标）
+  │
+  ├─ 3. 组件规格生成
+  │     → docs/research/components/*.md
+  │     每个规格包含:
+  │       - 精确 CSS 计算值（getComputedStyle）
+  │       - 交互状态（hover/focus/active）
+  │       - 响应式断点行为
+  │       - 内容文本和资源路径
+  │
+  ├─ 4. 并行 Agent 构建
+  │     → git worktree add（每个组件一个 worktree）
+  │     → Agent 读取规格 → 生成组件代码
+  │     → src/components/*.tsx
+  │
+  └─ 5. 组装 + 视觉对比
+        → 合并 worktree → 完整页面
+        → 视觉 diff 对比原始截图
+        → 输出最终 Next.js 项目
+</code></pre>
+<h2 id="_10">架构设计</h2>
+<h3 id="_11">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│          用户交互层（User Interface Layer）            │
+│   /clone-website &lt;url&gt; / AI Agent CLI / IDE 插件     │
+├─────────────────────────────────────────────────────┤
+│          指令层（Instruction Layer）                   │
+│   AGENTS.md（单一指令源）                              │
+│   sync-agent-rules.sh / sync-skills.mjs（同步脚本）   │
+├─────────────────────────────────────────────────────┤
+│          流水线层（Pipeline Layer）                    │
+│   Phase 1: Reconnaissance（侦察）                     │
+│   Phase 2: Foundation（基础）                         │
+│   Phase 3: Component Specs（组件规格）                │
+│   Phase 4: Parallel Build（并行构建）                 │
+│   Phase 5: Assembly &amp; QA（组装质检）                  │
+├─────────────────────────────────────────────────────┤
+│          代码生成层（Code Generation Layer）           │
+│   Next.js 16 App Router + React 19                   │
+│   shadcn/ui + Tailwind CSS v4 + Lucide React         │
+│   TypeScript Strict Mode                             │
+├─────────────────────────────────────────────────────┤
+│          基础层（Infrastructure Layer）                │
+│   Git Worktrees（并行构建隔离）                        │
+│   Docker Compose（可选容器化）                         │
+│   CI Quality Gates（lint + typecheck + build）        │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_12">核心模块</h3>
+<ul>
+<li><strong>AGENTS.md（统一指令源）</strong> - 项目唯一的 AI Agent 指令文件，定义了 5 阶段流水线的完整执行逻辑、质量标准和验收条件。所有平台特定的配置文件均由此文件自动生成。</li>
+<li><strong>sync-agent-rules.sh（Agent 规则同步脚本）</strong> - 将 AGENTS.md 转换为各 AI Agent 平台的配置格式（CLAUDE.md、GEMINI.md、.cursor/rules 等），确保跨平台一致性。</li>
+<li><strong>sync-skills.mjs（技能同步脚本）</strong> - 将 <code>.claude/skills/clone-website/SKILL.md</code> 转换为各平台的技能/命令格式，使 <code>/clone-website</code> 命令在不同 Agent 中均可使用。</li>
+<li><strong>Reconnaissance 模块</strong> - 负责目标网站的技术分析，包括截图捕获、设计令牌提取、交互模式发现和响应式断点识别。</li>
+<li><strong>Foundation 模块</strong> - 负责项目基础搭建，包括字体配置、颜色系统（oklch 色彩空间）、全局样式和资源下载。</li>
+<li><strong>Component Specs 模块</strong> - 核心差异化模块，为每个识别到的组件生成详细的 Markdown 规格文档，包含精确的 CSS 计算值和交互行为描述。</li>
+<li><strong>Parallel Build 模块</strong> - 通过 Git Worktree 隔离多个构建 Agent，每个 Agent 接收完整的组件规格并独立生成代码。</li>
+<li><strong>Assembly &amp; QA 模块</strong> - 合并所有 Worktree 的代码，连接页面路由，运行 lint/typecheck/build 质量门禁和视觉对比。</li>
+</ul>
+<h3 id="_13">扩展机制</h3>
+<ol>
+<li><strong>添加新 AI Agent 支持</strong>：编辑 <code>AGENTS.md</code>，在 <code>sync-agent-rules.sh</code> 中添加新平台的输出规则，运行同步脚本即可。</li>
+<li><strong>自定义质量标准</strong>：修改 <code>AGENTS.md</code> 中的验收条件和代码规范，同步到所有平台。</li>
+<li><strong>替换 UI 组件库</strong>：修改项目依赖和 <code>AGENTS.md</code> 中的组件使用规范，将 shadcn/ui 替换为其他组件库。</li>
+<li><strong>Docker 容器化</strong>：项目内置 Docker Compose 配置，支持一键容器化运行。</li>
+</ol>
+<h2 id="_14">关键概念详解</h2>
+<h3 id="multi-phase-pipeline">多阶段流水线（Multi-Phase Pipeline）</h3>
+<ul>
+<li><strong>定义：</strong> 将网站克隆这一复杂任务分解为 5 个顺序执行的阶段，每个阶段有明确的输入规格、输出产物和验收标准。</li>
+<li><strong>作用：</strong> 确保克隆过程的可控性和可验证性。每阶段的输出可以作为下一阶段的输入，也可以被人工审查和修正。避免 AI Agent 一次性生成大量不可控的代码。</li>
+<li><strong>使用场景：</strong> 克隆任何需要高度还原度的网站，特别是包含复杂布局、多个组件区域和响应式设计的页面。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 在 Claude Code 中执行单 URL 克隆
+/clone-website https://stripe.com
+
+# 克隆多个 URL（v0.3.0+）
+/clone-website https://stripe.com https://stripe.com/docs https://stripe.com/pricing
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1</p>
+</blockquote>
+<h3 id="component-specs">组件规格文档（Component Specs）</h3>
+<ul>
+<li><strong>定义：</strong> 在构建代码之前，为每个识别到的 UI 组件生成的详细 Markdown 规格文档，包含精确的 CSS 计算值、交互状态、多状态内容和响应式断点。</li>
+<li><strong>作用：</strong> 这是 AIWebsiteClonerTemplate 的核心创新。传统方式让 AI 直接"看网站写代码"，而本项目先让 AI 生成精确的规格，再基于规格构建。规格文档相当于"建筑蓝图"，而代码是"施工结果"。</li>
+<li><strong>使用场景：</strong> 需要高还原度的组件克隆、跨团队的设计交接、组件级的设计系统文档化。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-markdown"># docs/research/components/HeroSection.md（生成的规格示例）
+
+## 组件名称：HeroSection
+
+### 布局
+- 容器：max-width 1280px, 居中
+- 垂直间距：padding-top 96px, padding-bottom 80px
+- 内容对齐：text-align center
+
+### 排版
+- 标题：font-size 60px, font-weight 700, line-height 1.1, color #111827
+- 副标题：font-size 20px, font-weight 400, color #6b7280
+- 渐变文字：background linear-gradient(90deg, #2563eb, #7c3aed)
+
+### 交互状态
+- 主按钮 hover：background #1d4ed8, transition 150ms
+- 次按钮 hover：background #f9fafb, border-color #9ca3af
+
+### 响应式断点
+- md (768px)：标题 48px, 副标题 18px
+- sm (640px)：标题 36px, 垂直堆叠按钮
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1，规格格式为示意</p>
+</blockquote>
+<h3 id="git-worktree-parallel-build-via-worktrees">Git Worktree 并行构建（Parallel Build via Worktrees）</h3>
+<ul>
+<li><strong>定义：</strong> 利用 Git Worktree 机制为每个组件创建独立的工作目录，使多个 AI Agent 可以并行构建不同的组件而互不干扰。</li>
+<li><strong>作用：</strong> 大幅缩短构建时间。传统串行构建需要 Agent 逐个处理组件，而并行构建允许多个 Agent 同时工作。完成后在 Assembly 阶段合并。</li>
+<li><strong>使用场景：</strong> 包含多个独立组件的大型页面克隆，如包含 Hero、Features、Testimonials、Pricing、Footer 等多个区域的企业官网。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># Git Worktree 并行构建的工作流程（由 Agent 自动执行）
+# 1. 为每个组件创建 worktree
+git worktree add .worktrees/hero-component
+git worktree add .worktrees/features-component
+git worktree add .worktrees/pricing-component
+
+# 2. 每个 Agent 在独立 worktree 中构建
+# Agent 1 → .worktrees/hero-component/src/components/Hero.tsx
+# Agent 2 → .worktrees/features-component/src/components/Features.tsx
+# Agent 3 → .worktrees/pricing-component/src/components/Pricing.tsx
+
+# 3. Assembly 阶段合并所有 worktree
+git merge .worktrees/hero-component
+git merge .worktrees/features-component
+git merge .worktrees/pricing-component
+
+# 4. 清理 worktree
+git worktree remove .worktrees/hero-component
+git worktree remove .worktrees/features-component
+git worktree remove .worktrees/pricing-component
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1</p>
+</blockquote>
+<h3 id="agentsmd-single-source-of-truth">AGENTS.md 指令源（Single Source of Truth）</h3>
+<ul>
+<li><strong>定义：</strong> 项目中唯一的 AI Agent 指令文件，定义了完整的流水线执行逻辑。所有平台特定的配置文件（CLAUDE.md、GEMINI.md 等）均由此文件通过同步脚本自动生成。</li>
+<li><strong>作用：</strong> 解决多平台支持时的指令一致性问题。维护者只需编辑一个文件，即可同步更新 13+ 个平台的配置。新增平台支持也只需在同步脚本中添加输出规则。</li>
+<li><strong>使用场景：</strong> 需要支持多种 AI 编码 Agent 的工具开发者，需要确保跨平台执行一致性的场景。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 编辑指令源
+vim AGENTS.md
+
+# 同步到所有平台配置
+bash scripts/sync-agent-rules.sh
+
+# 同步技能文件
+node scripts/sync-skills.mjs
+
+# 验证生成的配置
+cat CLAUDE.md      # Claude Code 配置
+cat GEMINI.md      # Gemini CLI 配置
+cat .cursor/rules  # Cursor 配置
+</code></pre>
+<blockquote>
+<p>基于官方 README v0.3.1</p>
+</blockquote>
+<h2 id="_15">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>AIWebsiteClonerTemplate</th>
+<th>Bolt.new (StackBlitz)</th>
+<th>v0.dev (Vercel)</th>
+<th>手动使用 Claude Code 克隆</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>结构化 5 阶段流水线克隆网站</td>
+<td>浏览器内 AI 全栈开发环境</td>
+<td>AI 驱动的 React UI 生成</td>
+<td>无结构化流程，靠人工指令</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>10,646</td>
+<td>16,310（stackblitz/bolt.new）</td>
+<td>闭源（仅 SDK 开源）</td>
+<td>112,770（Claude Code 仓库）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT（bolt.diy 开源版）</td>
+<td>闭源 SaaS</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>底层平台</td>
+<td>多平台（13+ AI Agent）</td>
+<td>Web浏览器</td>
+<td>Web浏览器</td>
+<td>Claude Code CLI</td>
+</tr>
+<tr>
+<td>输出格式</td>
+<td>Next.js 16 + React 19</td>
+<td>多框架（React/Vue/Svelte 等）</td>
+<td>React + Tailwind CSS</td>
+<td>取决于用户指令</td>
+</tr>
+<tr>
+<td>网站克隆能力</td>
+<td>专精，5 阶段流水线</td>
+<td>有限，主要从自然语言生成</td>
+<td>无，从自然语言生成 UI</td>
+<td>有，但无结构化流程</td>
+</tr>
+<tr>
+<td>多 Agent 支持</td>
+<td>13+ AI Agent</td>
+<td>内置 AI（不可换）</td>
+<td>内置 AI（不可换）</td>
+<td>仅 Claude</td>
+</tr>
+<tr>
+<td>代码质量</td>
+<td>高（TypeScript 严格、shadcn/ui）</td>
+<td>中（原型级，需要手动优化）</td>
+<td>高（React + Tailwind 最佳实践）</td>
+<td>取决于用户指令</td>
+</tr>
+<tr>
+<td>易用性</td>
+<td>中（需 Node.js 24+、Git Worktree）</td>
+<td>高（浏览器即用）</td>
+<td>高（浏览器即用）</td>
+<td>低（需编写详细指令）</td>
+</tr>
+<tr>
+<td>并行构建</td>
+<td>支持（Git Worktree）</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>视觉对比</td>
+<td>支持（Visual Diff）</td>
+<td>不支持</td>
+<td>不支持</td>
+<td>不支持</td>
+</tr>
+<tr>
+<td>后端生成</td>
+<td>不支持</td>
+<td>支持（PostgreSQL/Supabase）</td>
+<td>不支持</td>
+<td>取决于用户指令</td>
+</tr>
+<tr>
+<td>定价</td>
+<td>免费开源</td>
+<td>$20/月起</td>
+<td>$20/月起（含免费版）</td>
+<td>API 按用量计费</td>
+</tr>
+<tr>
+<td>社区规模</td>
+<td>1 位主要贡献者，1,519 Forks</td>
+<td>StackBlitz 团队维护，14,602 Forks</td>
+<td>Vercel 官方维护</td>
+<td>Anthropic 官方维护</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>中（需理解流水线和 Git Worktree）</td>
+<td>低（浏览器操作）</td>
+<td>低（自然语言交互）</td>
+<td>中（需掌握 Claude Code）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>中（项目仅 1 个月，版本迭代快）</td>
+<td>高（成熟产品，企业使用）</td>
+<td>高（Vercel 生态支持）</td>
+<td>高（Anthropic 官方支持）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>网站克隆、平台迁移、前端学习</td>
+<td>快速原型、全栈应用开发</td>
+<td>React UI 组件生成、设计到代码</td>
+<td>通用 AI 编程辅助</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-12。Stars 和 Forks 数据来自 GitHub API 实时查询。v0.dev 为闭源 SaaS 产品，无独立 GitHub Stars 数据。Bolt.new 的 Stars 数据为 stackblitz/bolt.new 仓库（16,310），其开源版本 bolt.diy 为 19,242 Stars。</p>
+</blockquote>
+<h2 id="_16">适用场景分析</h2>
+<h3 id="_17">最佳场景</h3>
+<ol>
+<li>
+<p><strong>平台迁移（Platform Migration）</strong>：将现有网站从 WordPress、Webflow、Squarespace 等平台迁移到 Next.js 现代技术栈。AIWebsiteClonerTemplate 的结构化流水线确保设计还原度，输出的代码可直接用于生产环境。[置信度：高]</p>
+</li>
+<li>
+<p><strong>源码丢失恢复</strong>：网站在线运行但源码已丢失（开发者离职、仓库丢失、技术栈过时），需要用现代技术栈重新获得代码。模板可以自动分析并重建网站的前端实现。[置信度：高]</p>
+</li>
+<li>
+<p><strong>前端设计学习</strong>：通过分析生产网站的设计令牌、组件结构和响应式实现，以实际代码学习现代前端架构。克隆过程中生成的 Component Specs 文档本身就是极好的学习材料。[置信度：高]</p>
+</li>
+<li>
+<p><strong>UI 设计参考实现</strong>：设计师或开发者看到心仪的网站布局/交互，需要快速获得可运行的代码参考，用于后续定制开发。[置信度：中]</p>
+</li>
+<li>
+<p><strong>多 AI Agent 基准测试</strong>：用同一个网站克隆任务，对比不同 AI 编码 Agent（Claude Code、Cursor、Gemini CLI 等）的输出质量，作为 Agent 选型参考。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_18">不适用场景</h3>
+<ol>
+<li>
+<p><strong>需要后端功能的项目</strong>：AIWebsiteClonerTemplate 仅克隆前端 UI，不生成后端 API、数据库 Schema 或业务逻辑。需要全栈克隆的场景建议使用 Bolt.new 或手动编写后端。</p>
+</li>
+<li>
+<p><strong>像素级精确还原</strong>：模板追求"结构准确"而非"像素完美"。对于需要 100% 还原的设计稿实现，建议使用 Figma 到代码工具（如 Figma Dev Mode）。</p>
+</li>
+<li>
+<p><strong>复杂的动态交互</strong>：涉及复杂 JavaScript 交互（如实时数据更新、WebSocket 通信、Canvas/WebGL 渲染）的网站，克隆效果有限。</p>
+</li>
+<li>
+<p><strong>需要闭源/在线使用的场景</strong>：模板是开源的本地工具，需要本地安装 Node.js 和 AI Agent。不提供 Web 界面或在线服务，不适用于不熟悉命令行的用户。</p>
+</li>
+</ol>
+<h2 id="_19">优缺点深度分析</h2>
+<h3 id="_20">优势</h3>
+<ol>
+<li>
+<p><strong>结构化流水线是核心差异化优势</strong> - 5 阶段流水线（特别是 Component Specs 阶段）确保了克隆过程的高可控性和高还原度。与让 AI Agent 一次性"看网站写代码"相比，基于精确规格的构建方式显著提高了输出质量和一致性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>13+ AI Agent 支持覆盖面广</strong> - 通过 AGENTS.md 统一指令源 + 同步脚本的架构，支持几乎所有主流 AI 编码 Agent。用户无需更换工作流，在已有的 Agent 环境中即可使用。这是同类工具中覆盖面最广的。[置信度：高]</p>
+</li>
+<li>
+<p><strong>社区增长速度惊人</strong> - 项目创建不到 1 个月即获得 10,646 Stars 和 1,519 Forks，反映出开发者对结构化网站克隆工具的强烈需求。活跃的更新频率（几乎每天）表明维护者投入度高。[置信度：高]</p>
+</li>
+<li>
+<p><strong>现代技术栈输出质量高</strong> - Next.js 16 + React 19 + TypeScript 严格模式 + shadcn/ui + Tailwind CSS v4 的组合，代表 2026 年前端开发的最佳实践。输出代码不是原型，而是可用于生产的组件化实现。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_21">劣势</h3>
+<ol>
+<li>
+<p><strong>项目非常年轻</strong> - 创建于 2026-03-13，仅约 1 个月历史。最高版本 0.3.1，处于快速迭代期，API 和流程可能频繁变更。生产环境使用需要承担稳定性风险。[置信度：高]</p>
+</li>
+<li>
+<p><strong>仅支持前端克隆</strong> - 不生成后端 API、数据库 Schema 或业务逻辑。对于需要完整全栈克隆的项目，需要额外搭配后端开发工具。相比之下，Bolt.new 支持全栈生成。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Next.js 技术栈绑定</strong> - 输出仅支持 Next.js 16 + React 19，不支持 Vue、Svelte、Angular 等其他前端框架。对于使用其他技术栈的团队，需要额外的代码转换工作。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Node.js 24+ 要求较高</strong> - 项目要求 Node.js 24 或更高版本，而 2026 年 4 月 Node.js 24 仍较新，许多开发者环境可能运行的是 Node.js 20/22 LTS。[置信度：高] <!-- reviewed: 官方 README 明确标注 Node.js 24+ 为系统要求，置信度从中提升为高 --></p>
+</li>
+</ol>
+<h3 id="_22">风险点</h3>
+<ol>
+<li>
+<p><strong>AI Agent 能力依赖</strong> - 克隆质量高度依赖所选 AI Agent 的视觉理解和代码生成能力。使用较弱的 Agent（如非推荐的 Opus 4.6）可能导致克隆质量显著下降。[置信度：高]</p>
+</li>
+<li>
+<p><strong>法律和道德风险</strong> - 网站克隆工具可能被用于不当目的（钓鱼网站、商标侵权等）。虽然项目 README 明确声明"不应用于欺骗或违法用途"，但无法有效阻止滥用。[置信度：高]</p>
+</li>
+<li>
+<p><strong>目标网站反爬虫</strong> - 部分网站使用反爬虫机制（Cloudflare、reCAPTCHA、动态内容加载），可能影响 Reconnaissance 阶段的数据采集。[置信度：中]</p>
+</li>
+</ol>
+<h2 id="_23">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 较少。项目本身是单一模板，不提供插件系统。扩展通过修改 AGENTS.md 和同步脚本实现。Docker Compose 配置是唯一的内置扩展。[置信度：高]</li>
+<li><strong>第三方库支持：</strong> 中等。依赖的第三方库均为成熟的前端生态组件：shadcn/ui、Tailwind CSS v4、Lucide React、Radix UI。但这些库本身是标准依赖，非项目特有。[置信度：高]</li>
+<li><strong>企业采用案例：</strong> 未发现公开的企业采用案例。项目仅 1 个月历史，主要面向个人开发者。Discord 社区存在（GitHub Badge 显示 Discord 频道）。[置信度：中]</li>
+<li><strong>文档质量：</strong> 高。README 文档非常详尽，包含快速开始、技术栈说明、流水线详解、项目结构、命令列表、多平台更新指南和使用场景/不适用场景说明。CLAUDE.md/AGENTS.md 中的 Agent 指令本身就是高质量的技术文档。[置信度：高]</li>
+</ul>
+<h2 id="_24">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 中等偏低。项目处于 0.x 版本，API 可能随时变更。但更新频率高（3 天内发布 5 个版本），Bug 修复响应快。Docker Compose 配置有助于稳定部署。[置信度：中]</li>
+<li><strong>性能表现：</strong> 取决于 AI Agent 速度。流水线中最耗时的阶段是 Parallel Build，速度与组件数量和 Agent 能力成正比。Git Worktree 并行机制可有效缩短构建时间。项目本身是静态模板，无运行时性能问题。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 基础。CI Quality Gates（lint + typecheck + build）提供构建时质量检查。Visual Diff 提供克隆结果的视觉对比。无运行时监控或日志系统。[置信度：高]</li>
+<li><strong>故障恢复：</strong> 基础。Git Worktree 隔离确保单个组件构建失败不影响其他组件。失败后可重新执行特定阶段。但无自动重试或降级策略。[置信度：中]</li>
+<li><strong>安全合规：</strong> 需关注。工具本身无安全漏洞，但使用场景（网站克隆）涉及版权和知识产权风险。项目在 README 中明确声明了使用限制，但缺乏技术层面的防护措施。[置信度：中]</li>
+</ul>
+<h2 id="_25">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>命令行基础（git clone、npm install）</li>
+<li>AI 编码 Agent 基本使用（至少一种：Claude Code、Cursor 等）</li>
+<li>Next.js 和 React 基础概念（理解输出代码）</li>
+<li>
+<p>Git Worktree 概念（理解并行构建机制）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 15-30 分钟。克隆仓库 + 安装依赖 + 执行 <code>/clone-website &lt;url&gt;</code> 即可完成第一次克隆。无需编写代码。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 3-5 天。需要深入理解 5 阶段流水线的执行逻辑、AGENTS.md 的指令格式和同步机制、如何自定义质量标准、如何为新 AI Agent 添加平台支持。</p>
+</li>
+</ul>
+<h2 id="_26">总结与建议</h2>
+<p>AIWebsiteClonerTemplate 是一个定位精准的 AI 网站克隆工具，通过结构化的 5 阶段流水线和 Component Specs 机制，将"克隆网站"从 AI Agent 的"一次性猜测"转变为"基于规格的精确构建"。13+ AI Agent 支持和 AGENTS.md 统一指令源的架构设计体现了良好的工程实践。</p>
+<p><strong>推荐使用：</strong> 需要将现有网站迁移到 Next.js 技术栈的前端开发者、希望通过分析生产网站学习现代前端架构的学习者、需要在多个 AI Agent 间进行克隆质量对比的评估者。</p>
+<p><strong>谨慎使用：</strong> 需要后端功能的全栈项目、要求像素级精确还原的设计实现、对稳定性有高要求的生产环境（项目仍处于 0.x 阶段）。</p>
+<p><strong>综合评分：</strong> 7.0/10。设计理念先进，社区增长迅速，技术栈现代。主要短板在于项目过于年轻（仅 1 个月）、仅支持前端克隆、Next.js 技术栈绑定。</p>
+<h2 id="_27">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> AIWebsiteClonerTemplate v0.3.1（2026-03-30 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-12</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/JCodesMore/ai-website-cloner-template">GitHub 仓库 JCodesMore/ai-website-cloner-template</a></li>
+<li><a href="https://api.github.com/repos/JCodesMore/ai-website-cloner-template">GitHub API - JCodesMore/ai-website-cloner-template</a></li>
+<li><a href="https://api.github.com/repos/JCodesMore/ai-website-cloner-template/releases">GitHub API - Releases</a></li>
+<li><a href="https://api.github.com/repos/stackblitz/bolt.new">GitHub API - stackblitz/bolt.new</a>（Stars: 16,310）</li>
+<li><a href="https://api.github.com/repos/stackblitz-labs/bolt.diy">GitHub API - stackblitz-labs/bolt.diy</a>（Stars: 19,242）</li>
+<li><a href="https://uibakery.io/blog/bolt-vs-lovable-vs-v0">Bolt vs Lovable vs V0 对比 - UI Bakery</a></li>
+<li><a href="https://dev.to/vadim7j7/i-built-a-website-cloner-with-ai-agents-and-its-kinda-scary-good-gb9">I Built a Website Cloner with AI Agents - dev.to</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

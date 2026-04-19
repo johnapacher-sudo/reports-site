@@ -1,0 +1,1836 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD (Get Shit Done) - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 6-8 小时 | **前置知识：** 基本的命令行操作、Git 基础（clone、commit、branch）、Node.js 环境安装（Node >= 22）、至少一种 AI 编码工具的使用经验（推荐 Claude Code）<!-- reviewed: 修正 Node.js 版本要求，v1.34.2 起最低要求为 Node 22（来源：GitHub Releases v1.34.2 changelog） --> | **教程基于版本：** GSD v1.35.0（稳定版）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h3">推荐配置：权限设置</a></li>
+<li><a href="#_6" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-context-rot" class="toc-h3">1.1 理解上下文腐化（Context Rot）</a></li>
+<li><a href="#12-context-engineering" class="toc-h3">1.2 上下文工程（Context Engineering）</a></li>
+<li><a href="#13-meta-prompting" class="toc-h3">1.3 元提示（Meta-Prompting）</a></li>
+<li><a href="#14-milestone-slice-task" class="toc-h3">1.4 工作层次结构：Milestone -&gt; Slice -&gt; Task</a></li>
+<li><a href="#15-gsd-discuss-plan-execute-verify" class="toc-h3">1.5 GSD 核心工作流：Discuss -&gt; Plan -&gt; Execute -&gt; Verify</a></li>
+<li><a href="#_7" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-wave-execution" class="toc-h3">2.1 波浪执行（Wave Execution）</a></li>
+<li><a href="#22-git-atomic-git-commits" class="toc-h3">2.2 原子 Git 提交（Atomic Git Commits）</a></li>
+<li><a href="#23" class="toc-h3">2.3 模型配置与成本控制</a></li>
+<li><a href="#24" class="toc-h3">2.4 项目状态管理与会话恢复</a></li>
+<li><a href="#_8" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-brownfield" class="toc-h3">3.1 已有代码库的棕地项目（Brownfield）工作流</a></li>
+<li><a href="#32-quick" class="toc-h3">3.2 Quick 模式与自治模式</a></li>
+<li><a href="#33" class="toc-h3">3.3 性能优化与最佳实践</a></li>
+<li><a href="#_9" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_10" class="toc-h3">项目需求</a></li>
+<li><a href="#_11" class="toc-h3">项目设计</a></li>
+<li><a href="#_12" class="toc-h3">完整实现步骤</a></li>
+<li><a href="#_13" class="toc-h3">代码解析</a></li>
+<li><a href="#_14" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_15" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_16" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_17" class="toc-h3">调试技巧</a></li>
+<li><a href="#_18" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_19" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_20" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_21" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD (Get Shit Done) - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 6-8 小时<br>**前置知识：** 基本的命令行操作、Git 基础（clone、commit、branch）、Node.js 环境安装（Node >= 22）、至少一种 AI 编码工具的使用经验（推荐 Claude Code）<!-- reviewed: 修正 Node.js 版本要求，v1.34.2 起最低要求为 Node 22（来源：GitHub Releases v1.34.2 changelog） --><br>**教程基于版本：** GSD v1.35.0（稳定版）</div>
+                    </header>
+                    <h1 id="gsd-get-shit-done-">GSD (Get Shit Done) - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 6-8 小时
+<strong>前置知识：</strong> 基本的命令行操作、Git 基础（clone、commit、branch）、Node.js 环境安装（Node &gt;= 22）、至少一种 AI 编码工具的使用经验（推荐 Claude Code）<!-- reviewed: 修正 Node.js 版本要求，v1.34.2 起最低要求为 Node 22（来源：GitHub Releases v1.34.2 changelog） -->
+<strong>教程基于版本：</strong> GSD v1.35.0（稳定版）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Linux 或 Windows（WSL 推荐）</li>
+<li><strong>运行时/依赖版本：</strong></li>
+<li>Node.js &gt;= 22.0.0（推荐 Active LTS 版本）<!-- reviewed: 修正 Node.js 版本要求，v1.34.2 起最低要求为 Node 22（来源：GitHub Releases v1.34.2 changelog） --></li>
+<li>npm &gt;= 8.0.0（随 Node.js 自动安装）</li>
+<li>Git &gt;= 2.30</li>
+<li>Claude Code CLI（或其他支持的 AI 编码运行时：OpenCode、Gemini CLI、Codex、Copilot、Cursor 等）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p>GSD v1 的安装只需要一行命令：</p>
+<pre><code class="language-bash"># 在终端中运行以下命令
+npx get-shit-done-cc@latest
+</code></pre>
+<p>安装程序会依次询问两个问题：</p>
+<ol>
+<li><strong>运行时选择</strong> -- 选择你使用的 AI 编码工具（如 Claude Code、OpenCode、Gemini CLI 等）</li>
+<li><strong>安装位置</strong> -- Global（所有项目生效，推荐新手）或 Local（仅当前项目）</li>
+</ol>
+<p>对于新手，推荐选择 <strong>Claude Code + Global</strong>。</p>
+<p>如果你使用 GSD v2（独立 TypeScript 应用），安装命令为：</p>
+<pre><code class="language-bash"># GSD v2 安装（需要 Node &gt;= 22.0.0）
+npm install -g gsd-pi
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<p>安装完成后，打开 Claude Code 并运行以下命令验证：</p>
+<pre><code class="language-bash"># 在 Claude Code 中输入
+/gsd:help
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Commands:
+  /gsd:new-project      - Initialize a new project with full planning
+  /gsd:discuss-phase N  - Capture implementation decisions
+  /gsd:plan-phase N     - Research + plan + verify
+  /gsd:execute-phase N  - Execute plans in parallel waves
+  /gsd:verify-work N    - Manual user acceptance testing
+  /gsd:quick            - Ad-hoc task with GSD guarantees
+  /gsd:progress         - Where am I? What's next?
+  /gsd:help             - Show all commands
+  ...（更多命令列表）
+</code></pre>
+<p>如果看到帮助菜单，说明安装成功。</p>
+<h3 id="_5">推荐配置：权限设置</h3>
+<p>GSD 会生成多个子代理并行执行命令，如果每次都要求手动批准会严重影响效率。推荐进行以下权限配置：</p>
+<p><strong>方式一：跳过权限检查（适合个人开发环境）</strong></p>
+<pre><code class="language-bash"># 启动 Claude Code 时添加跳过权限标志
+claude --dangerously-skip-permissions
+</code></pre>
+<p><strong>方式二：细粒度权限配置（更安全）</strong></p>
+<pre><code class="language-bash"># 编辑项目根目录下的 .claude/settings.json
+# 如果文件不存在，手动创建目录和文件
+mkdir -p .claude
+</code></pre>
+<pre><code class="language-json">{
+  &quot;permissions&quot;: {
+    &quot;allow&quot;: [
+      &quot;Bash(date:*)&quot;,
+      &quot;Bash(echo:*)&quot;,
+      &quot;Bash(cat:*)&quot;,
+      &quot;Bash(ls:*)&quot;,
+      &quot;Bash(mkdir:*)&quot;,
+      &quot;Bash(git add:*)&quot;,
+      &quot;Bash(git commit:*)&quot;,
+      &quot;Bash(git status:*)&quot;,
+      &quot;Bash(git log:*)&quot;,
+      &quot;Bash(git diff:*)&quot;
+    ]
+  }
+}
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<p>保存后，GSD 的子代理在执行上述命令时将不再请求权限确认。</p>
+<p><strong>练习题：</strong>
+1. 运行 <code>npx get-shit-done-cc@latest</code>，选择你的运行时和安装位置，完成安装。
+2. 在 Claude Code 中运行 <code>/gsd:help</code>，确认你看到了完整的命令列表。
+3. 配置 <code>.claude/settings.json</code> 中的权限，使 GSD 子代理可以自动执行 git 操作。</p>
+<hr />
+<h2 id="_6">第一部分：入门篇</h2>
+<h3 id="11-context-rot">1.1 理解上下文腐化（Context Rot）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>上下文腐化（Context Rot）是 GSD 要解决的核心问题。在使用 Claude Code 等 AI 编码工具时，AI 模型有一个固定的上下文窗口（Claude 为 200K token）。随着你在对话中累积代码、问题和回复，上下文窗口逐渐被填满。当利用率超过一定阈值时，模型输出的质量开始显著下降。</p>
+<p>上下文利用率与输出质量的关系如下：</p>
+<table>
+<thead>
+<tr>
+<th>上下文利用率</th>
+<th>输出质量表现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0-30%</td>
+<td>峰值质量，工作细致</td>
+</tr>
+<tr>
+<td>30-50%</td>
+<td>良好但开始赶工</td>
+</tr>
+<tr>
+<td>50-70%</td>
+<td>偷工减料，遗漏需求</td>
+</tr>
+<tr>
+<td>70%+</td>
+<td>幻觉频发，遗忘上下文</td>
+</tr>
+</tbody>
+</table>
+<p>这就是为什么你的 AI 助手在会话开始时写出高质量代码，但几个小时后却开始犯低级错误。问题不在模型能力，而在于上下文窗口的"拥挤"导致模型无法准确检索和使用早期信息。</p>
+<p><strong>GSD 的解决方案：</strong> 为每个任务创建全新的、干净的上下文窗口，确保每次执行都在 0-30% 的最佳区间内运行。</p>
+<p><strong>练习题：</strong>
+1. 回忆你使用 AI 编码工具时，是否遇到过"开始很好，后来变差"的情况？尝试描述当时的症状。
+2. 思考：如果你的项目有 100 个文件，直接在一个 Claude Code 会话中完成所有开发，上下文窗口大约会在什么时候饱和？</p>
+<hr />
+<h3 id="12-context-engineering">1.2 上下文工程（Context Engineering）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>上下文工程（Context Engineering）是 GSD 的核心创新。它的核心思想是：主动管理 AI 代理上下文窗口中加载的内容、时机和方式。具体做法是将项目的所有关键状态外部化到一组结构化的 Markdown 文件中，这样每个新的 AI 会话都可以立即获取完整的项目上下文，无需在上下文窗口中累积历史对话。</p>
+<p>GSD 创建的核心上下文文件包括：</p>
+<ul>
+<li><strong>PROJECT.md</strong> -- 项目愿景，始终被加载到每个会话中</li>
+<li><strong>REQUIREMENTS.md</strong> -- 范围内的 v1/v2 需求，带阶段可追溯性</li>
+<li><strong>ROADMAP.md</strong> -- 目标和完成进度</li>
+<li><strong>STATE.md</strong> -- 跨会话记忆：决策、阻塞项、当前位置</li>
+<li><strong>CONTEXT.md</strong> -- 每个阶段的实现偏好和讨论结果</li>
+</ul>
+<p>这些文件构成了项目的"外部大脑"。无论你开了多少个会话、换了多少个上下文窗口，AI 都可以通过读取这些文件立即恢复对项目的完整理解。</p>
+<p><strong>代码示例（查看 GSD 创建的上下文文件）：</strong></p>
+<pre><code class="language-bash"># 进入你的 GSD 项目目录
+cd my-project
+
+# 查看 GSD 创建的规划目录结构
+ls -la .planning/
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>total 32
+drwxr-xr-x  10 user  staff   320 Apr 12 10:00 .
+drwxr-xr-x   8 user  staff   256 Apr 12 10:00 ..
+-rw-r--r--   1 user  staff  1204 Apr 12 10:00 PROJECT.md
+-rw-r--r--   1 user  staff   890  Apr 12 10:00 REQUIREMENTS.md
+-rw-r--r--   1 user  staff   670  Apr 12 10:00 ROADMAP.md
+-rw-r--r--   1 user  staff   430  Apr 12 10:00 STATE.md
+-rw-r--r--   1 user  staff   210  Apr 12 10:00 config.json
+drwxr-xr-x   4 user  staff   128  Apr 12 10:00 research/
+drwxr-xr-x   3 user  staff    96  Apr 12 10:00 phases/
+drwxr-xr-x   2 user  staff    64  Apr 12 10:00 todos/
+</code></pre>
+<pre><code class="language-bash"># 查看 PROJECT.md 的内容示例
+cat .planning/PROJECT.md
+</code></pre>
+<p><strong>预期输出（示例内容）：</strong></p>
+<pre><code class="language-markdown"># Project: Task Manager App
+
+## Vision
+A lightweight task management application with user authentication,
+task CRUD operations, and a responsive web interface.
+
+## Tech Stack
+- Frontend: Next.js 14 + TypeScript + Tailwind CSS
+- Backend: Next.js API Routes
+- Database: SQLite via Prisma
+- Auth: JWT with jose library
+
+## Target Users
+Solo developers who want a simple, self-hosted task tracker.
+
+## Core Constraints
+- Must work offline-first
+- No external auth providers (self-contained)
+- Mobile-responsive design
+</code></pre>
+<p><strong>练习题：</strong>
+1. 手动创建一个 <code>.planning/</code> 目录，并编写一个简单的 <code>PROJECT.md</code> 文件，描述你自己的一个项目。
+2. 思考：<code>STATE.md</code> 为什么需要记录"决策"和"阻塞项"？这些信息如何帮助新的 AI 会话恢复上下文？</p>
+<hr />
+<h3 id="13-meta-prompting">1.3 元提示（Meta-Prompting）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>元提示（Meta-Prompting）是 GSD 的第二个核心概念。普通的提示告诉 AI"做什么"（如"写一个登录接口"），而元提示告诉 AI"如何组织和执行工作"。GSD 使用 XML 格式的任务计划来实现元提示，每个任务计划都包含精确的指令、约束条件和内置的验证步骤。</p>
+<p>一个 XML 任务计划包含以下要素：</p>
+<ul>
+<li><strong>name</strong> -- 任务名称，清晰描述目标</li>
+<li><strong>files</strong> -- 需要创建或修改的文件列表</li>
+<li><strong>action</strong> -- 具体执行步骤和约束条件</li>
+<li><strong>verify</strong> -- 机械可验证的完成标准</li>
+<li><strong>done</strong> -- 人类可读的完成条件描述</li>
+</ul>
+<p><strong>代码示例（XML 任务计划格式，基于官方文档 v1.35.0）：</strong></p>
+<pre><code class="language-xml">&lt;task type=&quot;auto&quot;&gt;
+  &lt;name&gt;Create login endpoint&lt;/name&gt;
+  &lt;files&gt;src/app/api/auth/login/route.ts&lt;/files&gt;
+  &lt;action&gt;
+    Use jose for JWT (not jsonwebtoken - CommonJS issues).
+    Validate credentials against users table.
+    Return httpOnly cookie on success.
+    Hash passwords with bcrypt (cost factor 12).
+  &lt;/action&gt;
+  &lt;verify&gt;curl -X POST localhost:3000/api/auth/login returns 200 + Set-Cookie&lt;/verify&gt;
+  &lt;done&gt;Valid credentials return cookie, invalid return 401&lt;/done&gt;
+&lt;/task&gt;
+</code></pre>
+<p><strong>执行结果（当 AI 代理执行此任务后）：</strong></p>
+<pre><code class="language-bash"># 验证任务是否成功完成
+curl -X POST http://localhost:3000/api/auth/login \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;email&quot;:&quot;test@example.com&quot;,&quot;password&quot;:&quot;secret123&quot;}'
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>HTTP/1.1 200 OK
+Set-Cookie: token=eyJhbGciOiJIUzI1NiIs...; HttpOnly; Path=/; Max-Age=86400
+Content-Type: application/json
+
+{&quot;success&quot;:true,&quot;user&quot;:{&quot;email&quot;:&quot;test@example.com&quot;}}
+</code></pre>
+<p><strong>练习题：</strong>
+1. 为"创建用户注册接口"编写一个 XML 任务计划，包含 name、files、action、verify 和 done 五个要素。
+2. 思考：为什么 <code>&lt;action&gt;</code> 中要明确指出"使用 jose 而非 jsonwebtoken"？这种精确的约束有什么好处？</p>
+<hr />
+<h3 id="14-milestone-slice-task">1.4 工作层次结构：Milestone -&gt; Slice -&gt; Task</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD 使用三层工作层次结构来组织项目：</p>
+<pre><code>Milestone（里程碑） -&gt; 可交付版本（4-10 个 Slice）
+  Slice（切片）     -&gt; 一个可演示的垂直功能（1-7 个 Task）
+    Task（任务）    -&gt; 一个上下文窗口大小的工作单元
+</code></pre>
+<ul>
+<li><strong>Milestone（里程碑）：</strong> 对应一个可交付的版本（如 v1.0）。包含 4-10 个阶段（Phase/Slice），代表一个完整的功能集合。</li>
+<li><strong>Phase/Slice（阶段/切片）：</strong> 一个可演示的垂直功能（如"用户认证"）。包含 1-7 个任务，每个阶段产出独立的 XML 任务计划。</li>
+<li><strong>Task（任务）：</strong> 最小的工作单元，必须能在一个 200K token 的上下文窗口内完成。GSD 的铁律是：<strong>一个任务必须能放入一个上下文窗口。如果不能，就是两个任务。</strong></li>
+</ul>
+<p>在 v1 中，Slice 被称为 Phase（阶段）。在 v2 中，术语统一为 Slice（切片），但概念相同。</p>
+<p><strong>代码示例（查看 ROADMAP.md 的结构）：</strong></p>
+<pre><code class="language-bash">cat .planning/ROADMAP.md
+</code></pre>
+<p><strong>预期输出（示例内容）：</strong></p>
+<pre><code class="language-markdown"># Roadmap: Task Manager App v1.0
+
+## Phase 01: User Authentication
+- Status: complete
+- Goal: Email/password signup, login, logout with JWT
+- Depends on: None
+
+## Phase 02: Task CRUD
+- Status: in-progress
+- Goal: Create, read, update, delete tasks with status tracking
+- Depends on: Phase 01
+
+## Phase 03: Task Categories &amp; Filtering
+- Status: pending
+- Goal: Categorize tasks, filter by status/category/date
+- Depends on: Phase 02
+
+## Phase 04: Responsive UI Polish
+- Status: pending
+- Goal: Mobile-responsive layout, empty states, loading indicators
+- Depends on: Phase 03
+</code></pre>
+<p><strong>练习题：</strong>
+1. 为一个"博客系统"项目设计一个简单的 3 阶段 ROADMAP，标注每个阶段的依赖关系。
+2. 思考：为什么 GSD 建议一个任务不能超过一个上下文窗口的容量？如果一个任务太大会出现什么问题？</p>
+<hr />
+<h3 id="15-gsd-discuss-plan-execute-verify">1.5 GSD 核心工作流：Discuss -&gt; Plan -&gt; Execute -&gt; Verify</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GSD v1 的核心工作流是一个 6 步循环：</p>
+<pre><code>New Project -&gt; Discuss Phase -&gt; Plan Phase -&gt; Execute Phase -&gt; Verify Work -&gt; Ship
+</code></pre>
+<p>这五个步骤对应了软件开发的五个关键环节：</p>
+<ol>
+<li><strong>Discuss（讨论）</strong> -- 捕获你对实现方式的具体偏好（如使用哪个库、什么架构模式）</li>
+<li><strong>Plan（规划）</strong> -- 研究技术方案，生成 XML 任务计划并验证</li>
+<li><strong>Execute（执行）</strong> -- 在独立的上下文窗口中并行执行任务</li>
+<li><strong>Verify（验证）</strong> -- 自动和手动验证执行结果是否符合预期</li>
+<li><strong>Ship（交付）</strong> -- 创建 PR、打标签、归档</li>
+</ol>
+<p>每完成一个阶段，回到 Discuss 步骤开始下一个阶段，直到所有阶段完成。</p>
+<p><strong>代码示例（完整的一个阶段工作流）：</strong></p>
+<pre><code class="language-bash"># 步骤 1: 初始化项目（仅第一次需要）
+/gsd:new-project
+
+# 步骤 2: 讨论第 1 阶段的实现偏好
+/gsd:discuss-phase 1
+
+# 步骤 3: 规划第 1 阶段（自动研究 + 生成计划 + 验证）
+/gsd:plan-phase 1
+
+# 步骤 4: 执行第 1 阶段（并行波浪式执行）
+/gsd:execute-phase 1
+
+# 步骤 5: 验证第 1 阶段的工作成果
+/gsd:verify-work 1
+
+# 步骤 6: 交付（创建 PR，可选）
+/gsd:ship 1
+</code></pre>
+<p><strong>预期输出（执行 /gsd:execute-phase 1 后的终端输出示例）：</strong></p>
+<pre><code>GSD Execute Phase 1: User Authentication
+==========================================
+Analyzing plan dependencies...
+Found 3 plans with 2 dependency levels.
+
+Wave 1 (parallel):
+  - Plan 01-01: Create user model and database schema
+  - Plan 01-02: Setup JWT authentication utilities
+
+Wave 2 (depends on Wave 1):
+  - Plan 01-03: Create login and registration endpoints
+
+Executing Wave 1...
+  [Executor A] Fresh 200K context window created
+  [Executor A] Plan 01-01: Processing...
+  [Executor B] Fresh 200K context window created
+  [Executor B] Plan 01-02: Processing...
+  [Executor A] Plan 01-01: Complete. Committed as abc123f
+  [Executor B] Plan 01-02: Complete. Committed as def456g
+
+Executing Wave 2...
+  [Executor C] Fresh 200K context window created
+  [Executor C] Plan 01-03: Processing...
+  [Executor C] Plan 01-03: Complete. Committed as hij789k
+
+Phase 1 execution complete. 3 atomic commits created.
+Run /gsd:verify-work 1 to validate results.
+</code></pre>
+<p><strong>练习题：</strong>
+1. 按照核心工作流，为一个小型项目（如待办事项应用）编写每个步骤你预期会做什么。不需要实际执行，只需要描述每个步骤的输入和输出。
+2. 思考：为什么 Discuss 阶段在 Plan 之前？跳过 Discuss 直接 Plan 会有什么风险？</p>
+<hr />
+<h2 id="_7">第二部分：进阶篇</h2>
+<h3 id="21-wave-execution">2.1 波浪执行（Wave Execution）</h3>
+<p><strong>详细讲解：</strong></p>
+<p>波浪执行（Wave Execution）是 GSD 在执行阶段的核心优化策略。当一个阶段包含多个任务计划时，GSD 会分析任务之间的依赖关系，将它们分组为多个"波浪"（Wave）：</p>
+<ul>
+<li><strong>同一波浪内的任务</strong>相互独立，可以并行执行</li>
+<li><strong>不同波浪之间</strong>存在依赖关系，必须按顺序串行执行</li>
+<li>每个任务在一个全新的 200K token 上下文窗口中执行</li>
+</ul>
+<p>这种策略最大化了并行度以提升效率，同时保证了依赖关系的正确性。垂直切片（如"用户功能端到端"）比水平分层（如"所有模型"，然后"所有 API"）的并行化效果更好。</p>
+<p><strong>代码示例（波浪执行的实际过程）：</strong></p>
+<pre><code class="language-bash"># 假设你的阶段有 5 个任务计划，依赖关系如下：
+# Plan 01 和 Plan 02 相互独立
+# Plan 03 依赖 Plan 01
+# Plan 04 依赖 Plan 02
+# Plan 05 依赖 Plan 03 和 Plan 04
+#
+# 执行命令
+/gsd:execute-phase 3
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Execute Phase 3: Orders &amp; Checkout
+=======================================
+Analyzing 5 plans with dependency graph...
+
+WAVE 1 (parallel):
+  Plan 03-01: User Model    [no dependencies]
+  Plan 03-02: Product Model [no dependencies]
+
+WAVE 2 (parallel, depends on Wave 1):
+  Plan 03-03: Orders API    [depends on 03-01]
+  Plan 03-04: Cart API      [depends on 03-02]
+
+WAVE 3 (depends on Wave 2):
+  Plan 03-05: Checkout UI   [depends on 03-03, 03-04]
+
+--- Executing Wave 1 ---
+  [Sub-agent A] 200K context -&gt; Plan 03-01 -&gt; commit a1b2c3f
+  [Sub-agent B] 200K context -&gt; Plan 03-02 -&gt; commit d4e5f6g
+
+--- Executing Wave 2 ---
+  [Sub-agent C] 200K context -&gt; Plan 03-03 -&gt; commit g7h8i9j
+  [Sub-agent D] 200K context -&gt; Plan 03-04 -&gt; commit k0l1m2n
+
+--- Executing Wave 3 ---
+  [Sub-agent E] 200K context -&gt; Plan 03-05 -&gt; commit o3p4q5r
+
+Phase 3 complete. 5 atomic commits in 3 waves.
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>任务粒度是关键</strong>：如果一个任务太大，无法在一个上下文窗口内完成，执行会失败或产出不完整的代码。确保每个 XML 任务计划的 action 部分足够聚焦。
+- <strong>并行执行的构建冲突</strong>：如果多个子代理同时触发构建工具（如 pre-commit hooks），可能出现锁争用。GSD v1.26+ 自动处理此问题——并行代理使用 <code>--no-verify</code> 提交，编排器在每个波浪结束后统一运行 hooks。如果使用旧版本，需要手动配置。
+- <strong>依赖声明必须准确</strong>：如果依赖关系声明错误（遗漏或多余），会导致执行顺序不当或并行度降低。在 Plan 阶段仔细审查依赖声明。</p>
+<p><strong>练习题：</strong>
+1. 假设你有一个电商项目，包含以下任务：商品模型、用户模型、购物车 API、订单 API、结账 UI。请画出这些任务的依赖关系图，并标注哪些可以在同一波浪中并行执行。
+2. 思考：为什么垂直切片（按功能）比水平分层（按技术层）的并行化效果更好？</p>
+<hr />
+<h3 id="22-git-atomic-git-commits">2.2 原子 Git 提交（Atomic Git Commits）</h3>
+<p><strong>详细讲解：</strong></p>
+<p>原子 Git 提交（Atomic Git Commits）是 GSD 的另一个核心实践。每个任务完成后，GSD 立即生成一个独立的、精确描述变更内容的 Git 提交。这意味着：</p>
+<ul>
+<li>每个提交只包含一个任务的变更</li>
+<li>提交消息精确描述了变更内容</li>
+<li>支持 <code>git bisect</code> 精确定位故障任务</li>
+<li>每个任务可以独立回滚</li>
+<li>为 AI 在未来会话中提供清晰的项目历史</li>
+</ul>
+<p>GSD 使用结构化的提交消息格式：<code>&lt;type&gt;(&lt;phase&gt;): &lt;description&gt;</code></p>
+<p><strong>代码示例（查看 GSD 生成的 Git 历史）：</strong></p>
+<pre><code class="language-bash"># 查看 GSD 执行后的 Git 提交历史
+git log --oneline --graph
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>* o3p4q5r feat(03-05): implement checkout page with payment integration
+* k0l1m2n feat(03-04): create cart API with add/remove/clear endpoints
+* g7h8i9j feat(03-03): add orders API with status tracking
+* d4e5f6g feat(03-02): create product model with Prisma schema
+* a1b2c3f feat(03-01): add user model with authentication fields
+* z9y8x7w docs(03): complete phase 3 planning and research
+* ...
+</code></pre>
+<p><strong>代码示例（回滚特定任务的提交）：</strong></p>
+<pre><code class="language-bash"># 如果发现 Plan 03-03 有问题，可以精确回滚该任务
+git revert g7h8i9j
+
+# 或者使用 GSD 的安全回滚命令
+/gsd:undo --plan 03-03
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Revert &quot;feat(03-03): add orders API with status tracking&quot;
+
+This reverts commit g7h8i9j, undoing the orders API implementation.
+The revert is safe and only affects files changed in that commit.
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>不要手动修改 GSD 的提交</strong>：GSD 的状态管理依赖提交历史的完整性。如果手动 amend 或 rebase GSD 的提交，可能导致状态不一致。
+- <strong>提交消息是上下文的一部分</strong>：GSD 在后续会话中会读取提交历史来恢复上下文。模糊或不准确的提交消息会降低恢复质量。
+- <strong>不要合并提交</strong>：保持每个任务的提交独立。如果需要合并，在 milestone 完成时使用 <code>squash merge</code>。</p>
+<p><strong>练习题：</strong>
+1. 在你的项目中运行 <code>git log --oneline</code>，检查 GSD 生成的提交消息是否遵循了结构化格式。
+2. 思考：原子提交如何帮助 <code>git bisect</code> 定位引入 bug 的具体任务？</p>
+<hr />
+<h3 id="23">2.3 模型配置与成本控制</h3>
+<p><strong>详细讲解：</strong></p>
+<p>GSD 支持为不同类型的代理配置不同的 Claude 模型，以平衡质量和成本。GSD 预定义了四种模型配置文件（Model Profile）：</p>
+<table>
+<thead>
+<tr>
+<th>配置文件</th>
+<th>规划代理</th>
+<th>执行代理</th>
+<th>验证代理</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>quality</code></td>
+<td>Opus</td>
+<td>Opus</td>
+<td>Sonnet</td>
+<td>关键路径，高价值任务</td>
+</tr>
+<tr>
+<td><code>balanced</code>（默认）</td>
+<td>Opus</td>
+<td>Sonnet</td>
+<td>Sonnet</td>
+<td>日常开发</td>
+</tr>
+<tr>
+<td><code>budget</code></td>
+<td>Sonnet</td>
+<td>Sonnet</td>
+<td>Haiku</td>
+<td>高量工作，非关键阶段</td>
+</tr>
+<tr>
+<td><code>inherit</code></td>
+<td>继承会话模型</td>
+<td>继承会话模型</td>
+<td>继承会话模型</td>
+<td>非 Anthropic 提供商</td>
+</tr>
+</tbody>
+</table>
+<p>每个代理的角色说明：</p>
+<ul>
+<li><strong>gsd-planner</strong> -- 规划代理，决定架构和任务拆分，使用最强模型</li>
+<li><strong>gsd-executor</strong> -- 执行代理，编写代码，使用中等模型</li>
+<li><strong>gsd-phase-researcher</strong> -- 研究代理，调查技术方案，使用轻量模型</li>
+<li><strong>gsd-verifier</strong> -- 验证代理，检查执行结果，使用中等模型</li>
+<li><strong>gsd-plan-checker</strong> -- 计划检查代理，验证计划的完整性</li>
+</ul>
+<p><strong>代码示例（切换模型配置）：</strong></p>
+<pre><code class="language-bash"># 查看当前配置
+/gsd:settings
+</code></pre>
+<p><strong>预期输出（部分）：</strong></p>
+<pre><code>Current Settings:
+  mode: interactive
+  granularity: standard
+  model_profile: balanced
+
+Agent Model Assignments:
+  gsd-planner:            opus
+  gsd-roadmapper:         sonnet
+  gsd-executor:           sonnet
+  gsd-phase-researcher:   sonnet
+  gsd-verifier:           sonnet
+  gsd-plan-checker:       sonnet
+</code></pre>
+<pre><code class="language-bash"># 切换到 budget 模式以降低成本
+/gsd:set-profile budget
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Model profile updated to: budget
+  gsd-planner:            sonnet
+  gsd-roadmapper:         sonnet
+  gsd-executor:           sonnet
+  gsd-phase-researcher:   haiku
+  gsd-verifier:           haiku
+  gsd-plan-checker:       haiku
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>Token 消耗较高</strong>：GSD 的多代理编排意味着每个任务都需要独立的上下文窗口。多位用户报告了 4:1 的开销比——每写 1 个 token 的代码，需要 4 个 token 用于编排。推荐使用 Max 计划（$100-200/月）以获得充足的配额。
+- <strong>budget 模式可能降低质量</strong>：使用 Haiku 模型进行研究和验证可能在复杂项目中遗漏细节。对于关键路径上的阶段，建议临时切换回 balanced 或 quality 模式。
+- <strong>非 Anthropic 提供商使用 inherit 模式</strong>：如果你通过 OpenRouter、本地模型等方式使用 Claude Code，设置为 <code>inherit</code> 模式可以避免意外的 API 成本。</p>
+<p><strong>练习题：</strong>
+1. 使用 <code>/gsd:settings</code> 查看你当前的模型配置，然后尝试切换到 <code>budget</code> 模式，观察各代理模型的变化。
+2. 思考：在什么情况下你应该临时切换到 <code>quality</code> 模式？给出一个具体的场景。</p>
+<hr />
+<h3 id="24">2.4 项目状态管理与会话恢复</h3>
+<p><strong>详细讲解：</strong></p>
+<p>GSD 的一个关键能力是跨会话的状态持久化。当你关闭 Claude Code 会话后重新打开，GSD 可以通过读取磁盘上的状态文件恢复项目上下文。这依赖于 <code>.planning/</code> 目录中的几个关键文件：</p>
+<ul>
+<li><strong>STATE.md</strong> -- 记录当前位置、决策、阻塞项</li>
+<li><strong>HANDOFF.json</strong> -- 结构化的会话交接数据（由 <code>/gsd:pause-work</code> 生成）</li>
+<li><strong>ROADMAP.md</strong> -- 各阶段的完成状态</li>
+</ul>
+<p>GSD 提供了多个命令来管理项目状态：</p>
+<table>
+<thead>
+<tr>
+<th>命令</th>
+<th>功能</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/gsd:progress</code></td>
+<td>查看当前位置和下一步</td>
+<td>"我现在在哪？"</td>
+</tr>
+<tr>
+<td><code>/gsd:pause-work</code></td>
+<td>保存结构化交接信息</td>
+<td>中途停止工作</td>
+</tr>
+<tr>
+<td><code>/gsd:resume-work</code></td>
+<td>从上次中断处恢复</td>
+<td>新会话开始时</td>
+</tr>
+<tr>
+<td><code>/gsd:session-report</code></td>
+<td>生成会话总结报告</td>
+<td>会话结束时</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码示例（会话恢复流程）：</strong></p>
+<pre><code class="language-bash"># 场景：你昨天在 Phase 2 的规划阶段停止了工作
+# 今天打开新的 Claude Code 会话
+
+# 步骤 1: 查看当前进度
+/gsd:progress
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Project: Task Manager App v1.0
+Milestone: v1.0 (4 phases)
+
+Phase 01: User Authentication    [COMPLETE] ✓
+Phase 02: Task CRUD              [IN PROGRESS]
+  - Discuss: DONE
+  - Plan: DONE (3 plans created)
+  - Execute: IN PROGRESS (Wave 1 of 2 complete)
+  - Verify: PENDING
+Phase 03: Task Categories        [PENDING]
+Phase 04: Responsive UI          [PENDING]
+
+Next step: /gsd:execute-phase 2 (continue Wave 2)
+</code></pre>
+<pre><code class="language-bash"># 步骤 2: 恢复完整上下文
+/gsd:resume-work
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Resuming work from last session...
+Reading STATE.md... OK
+Reading HANDOFF.json... OK
+Reading ROADMAP.md... OK
+
+Session restored:
+  - Last activity: Phase 02 execution (Wave 1 complete)
+  - Completed plans: 02-01 (task model), 02-02 (CRUD API)
+  - Remaining plans: 02-03 (task status tracking)
+  - Decisions made: Using Prisma for ORM, REST API pattern
+  - Blockers: None
+
+Ready to continue. Run /gsd:execute-phase 2 to resume.
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>在阶段之间清理上下文</strong>：在完成一个阶段后，使用 <code>/clear</code> 命令清空 Claude Code 的上下文窗口。GSD 的设计基于干净上下文，在主会话中累积过多内容会降低质量。
+- <strong>不要手动编辑 STATE.md</strong>：STATE.md 由 GSD 自动维护。手动编辑可能导致状态不一致。如果 STATE.md 出了问题，使用 <code>node gsd-tools.cjs state sync</code> 重建。
+- <strong>每次结束会话时使用 pause-work</strong>：养成在结束工作前运行 <code>/gsd:pause-work</code> 的习惯。这会生成 HANDOFF.json 文件，使下次恢复更加精确。</p>
+<p><strong>练习题：</strong>
+1. 模拟一个会话恢复场景：运行 <code>/gsd:pause-work</code>，然后关闭并重新打开 Claude Code，再运行 <code>/gsd:resume-work</code>，检查恢复的上下文是否完整。
+2. 思考：为什么 GSD 要将状态持久化到磁盘文件而不是依赖上下文窗口中的历史对话？</p>
+<hr />
+<h2 id="_8">第三部分：高级篇</h2>
+<h3 id="31-brownfield">3.1 已有代码库的棕地项目（Brownfield）工作流</h3>
+<p><strong>详细讲解：</strong></p>
+<p>GSD 不仅适用于全新项目（绿地项目），也支持在已有代码库上工作（棕地项目）。对于棕地项目，GSD 提供了 <code>/gsd:map-codebase</code> 命令，通过 4 个并行代理分析现有代码库：</p>
+<ul>
+<li><strong>Stack Mapper</strong> -- 识别技术栈，生成 <code>codebase/STACK.md</code></li>
+<li><strong>Arch Mapper</strong> -- 分析架构模式，生成 <code>codebase/ARCHITECTURE.md</code></li>
+<li><strong>Convention Mapper</strong> -- 提取编码约定，生成 <code>codebase/CONVENTIONS.md</code></li>
+<li><strong>Concern Mapper</strong> -- 标记关注点，生成 <code>codebase/CONCERNS.md</code></li>
+</ul>
+<p>映射完成后，再运行 <code>/gsd:new-project</code>，GSD 会基于已有代码的上下文来提问，重点关注你要"添加什么"而非"构建什么"。</p>
+<p><strong>代码示例（棕地项目启动流程）：</strong></p>
+<pre><code class="language-bash"># 步骤 1: 映射现有代码库
+/gsd:map-codebase
+
+# 步骤 2: 初始化 GSD（问题会聚焦于你要添加的内容）
+/gsd:new-project
+
+# 步骤 3: 正常的工作流程
+/gsd:discuss-phase 1
+/gsd:plan-phase 1
+/gsd:execute-phase 1
+</code></pre>
+<p><strong>预期输出（/gsd:map-codebase 执行后）：</strong></p>
+<pre><code>GSD Codebase Mapping
+=====================
+Spawning 4 parallel analysis agents...
+
+[Stack Mapper]   Detected: Next.js 14, TypeScript, Prisma, Tailwind CSS
+[Arch Mapper]    Pattern: App Router, Server Components, API Routes
+[Convention Map] Found: ESLint config, Prettier, path aliases (@/)
+[Concern Map]    Flagged: No error boundary, missing test coverage
+
+Generated files:
+  .planning/codebase/STACK.md        (tech stack inventory)
+  .planning/codebase/ARCHITECTURE.md  (architectural patterns)
+  .planning/codebase/CONVENTIONS.md   (coding standards)
+  .planning/codebase/CONCERNS.md      (risk areas)
+
+Run /gsd:new-project to initialize GSD on this codebase.
+</code></pre>
+<hr />
+<h3 id="32-quick">3.2 Quick 模式与自治模式</h3>
+<p><strong>详细讲解：</strong></p>
+<p>并非所有任务都需要完整的工作流。GSD 提供了两种轻量模式：</p>
+<p><strong>Quick 模式（<code>/gsd:quick</code>）：</strong> 适用于小型任务（bug 修复、配置更改、小型重构），保留 GSD 的核心保证（原子提交、状态追踪）但跳过研究和规划的开销。</p>
+<p><strong>自治模式（<code>/gsd:autonomous</code>）：</strong> 自动运行剩余的所有阶段，实现"走开，回来看到完成的项目"。适合已经完成初始规划、只需执行剩余阶段的场景。</p>
+<p><strong>代码示例（Quick 模式）：</strong></p>
+<pre><code class="language-bash"># 快速修复一个 bug
+/gsd:quick
+# 然后输入描述
+&gt; &quot;Fix the login button not responding on mobile Safari&quot;
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Quick Mode
+===============
+Task: Fix the login button not responding on mobile Safari
+
+Analyzing codebase for related files...
+Found: src/components/LoginButton.tsx, src/hooks/useAuth.ts
+
+Spawning executor agent (fresh 200K context)...
+  - Reading relevant files...
+  - Diagnosing issue: touch event not handled on Safari
+  - Applying fix: adding touchstart event listener
+
+Committed as: x7y8z9w fix: add touchstart handler for Safari compatibility
+
+Done. Run /gsd:verify-work to validate.
+</code></pre>
+<p>Quick 模式支持可选标志：</p>
+<ul>
+<li><code>--discuss</code> -- 先收集你的偏好</li>
+<li><code>--research</code> -- 执行前调查方案</li>
+<li><code>--full</code> -- 添加计划检查和执行后验证</li>
+</ul>
+<p>标志可组合使用：</p>
+<pre><code class="language-bash">/gsd:quick --discuss --research --full
+&gt; &quot;Add dark mode toggle to settings page&quot;
+</code></pre>
+<p><strong>代码示例（自治模式）：</strong></p>
+<pre><code class="language-bash"># 从第 2 阶段开始自动运行到第 4 阶段
+/gsd:autonomous --from 2 --to 4
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Autonomous Mode
+====================
+Running phases 2 through 4 autonomously...
+
+[Phase 02] Discussing... Planning... Executing... Verifying... ✓
+[Phase 03] Discussing... Planning... Executing... Verifying... ✓
+[Phase 04] Discussing... Planning... Executing... Verifying... ✓
+
+All 3 phases completed autonomously.
+  Total commits: 12
+  Total tokens: ~890K
+  Estimated cost: $4.20
+
+Run /gsd:audit-milestone to verify everything.
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>自治模式的风险</strong>：自治模式跳过人工交互，如果初始规划有误，错误会累积到后续阶段。建议在手动完成前 1-2 个阶段、确认规划质量后再使用自治模式。
+- <strong>Quick 模式不适合大型任务</strong>：如果一个任务需要修改 5 个以上文件或涉及架构决策，应该使用完整工作流。
+- <strong>使用 <code>/gsd:next</code> 替代自治模式</strong>：如果你不确定下一步该做什么，<code>/gsd:next</code> 会自动检测当前状态并建议下一步操作。</p>
+<hr />
+<h3 id="33">3.3 性能优化与最佳实践</h3>
+<p><strong>详细讲解：</strong></p>
+<p>在使用 GSD 时，以下优化策略可以帮助你获得最佳体验：</p>
+<p><strong>优化策略 1：在阶段之间清理上下文窗口</strong></p>
+<pre><code class="language-bash"># 完成一个阶段后，清理上下文
+/gsd:execute-phase 1
+/clear                    # 清空 Claude Code 上下文窗口
+/gsd:discuss-phase 2     # 在干净的上下文中继续
+</code></pre>
+<p>说明：GSD 的设计基于干净上下文。主会话中累积过多内容会触发上下文腐化，与不使用 GSD 一样。每个阶段之间使用 <code>/clear</code> 是保持质量的关键。</p>
+<p><strong>优化策略 2：使用细粒度阶段提升并行度</strong></p>
+<pre><code class="language-bash"># 粗粒度（3 个阶段，并行度低）
+# Phase 1: All models + All APIs
+# Phase 2: All UI
+# Phase 3: Testing
+
+# 细粒度（6 个阶段，并行度高）
+# Phase 1: User model + Auth API
+# Phase 2: Task model + CRUD API
+# Phase 3: User UI (login/register)
+# Phase 4: Task UI (list/create/edit)
+# Phase 5: Filtering &amp; Search
+# Phase 6: Polish &amp; Testing
+
+# 在 /gsd:new-project 时选择细粒度
+# 或在 /gsd:settings 中设置
+</code></pre>
+<p>说明：将大阶段拆分为小的垂直切片可以增加波浪执行的并行度，减少总执行时间。GSD 的 <code>granularity</code> 设置控制自动切片的粗细程度。</p>
+<p><strong>优化策略 3：根据项目阶段调整模型配置</strong></p>
+<pre><code class="language-bash"># 原型阶段：快速迭代，降低成本
+/gsd:set-profile budget
+
+# 核心功能开发：平衡质量和成本
+/gsd:set-profile balanced
+
+# 生产发布前的关键阶段：最大化质量
+/gsd:set-profile quality
+</code></pre>
+<p><strong>最佳实践总结：</strong></p>
+<ol>
+<li><strong>项目开始前准备详细描述</strong>：在运行 <code>/gsd:new-project</code> 之前，准备好项目的目标、目标用户、核心功能、技术约束和偏好。描述越详细，GSD 需要的后续追问越少。</li>
+<li><strong>不要跳过 Discuss 阶段</strong>：Discuss 阶段花费 5-10 分钟，但可以节省后续数小时的来回修改。</li>
+<li><strong>棕地项目先 map-codebase</strong>：在已有代码库上使用 GSD 时，先运行 <code>/gsd:map-codebase</code>，避免 AI 与现有代码模式冲突。</li>
+<li><strong>使用 <code>/gsd:next</code> 而非猜测</strong>：不确定下一步时，运行 <code>/gsd:next</code>，它会自动检测状态并建议正确的下一步。</li>
+<li><strong>定期运行 <code>/gsd:progress</code></strong>：在长时间工作后，检查进度确保没有偏离计划。</li>
+<li><strong>捕获灵感而非中断当前工作</strong>：使用 <code>/gsd:add-todo</code> 记录突发的想法，而不是中断当前阶段去处理它。</li>
+</ol>
+<hr />
+<h2 id="_9">第四部分：实战项目</h2>
+<h3 id="_10">项目需求</h3>
+<p>构建一个"个人书签管理器"Web 应用，包含以下功能：</p>
+<ul>
+<li>用户注册和登录（邮箱/密码）</li>
+<li>添加、编辑、删除书签（URL、标题、标签）</li>
+<li>按标签和日期筛选书签</li>
+<li>搜索书签（标题和 URL）</li>
+<li>响应式 Web 界面（支持桌面和移动端）</li>
+</ul>
+<h3 id="_11">项目设计</h3>
+<p><strong>技术栈：</strong>
+- 前端：Next.js 14 + TypeScript + Tailwind CSS + shadcn/ui
+- 后端：Next.js API Routes
+- 数据库：SQLite via Prisma ORM
+- 认证：JWT（使用 jose 库）</p>
+<p><strong>架构：</strong>
+- App Router 模式（Next.js 14）
+- Server Components 用于数据展示
+- API Routes 用于 CRUD 操作
+- JWT httpOnly Cookie 用于认证</p>
+<p><strong>GSD 阶段划分：</strong>
+- Phase 01: 项目初始化 + 用户认证
+- Phase 02: 书签 CRUD + 数据库模型
+- Phase 03: 搜索和筛选功能
+- Phase 04: UI 优化和响应式设计</p>
+<h3 id="_12">完整实现步骤</h3>
+<p>以下是使用 GSD 从零构建此项目的完整流程，涵盖上下文工程、元提示、波浪执行和原子 Git 提交四个核心知识点。</p>
+<p><strong>步骤 1：项目初始化</strong></p>
+<pre><code class="language-bash"># 创建 Next.js 项目
+npx create-next-app@latest bookmark-manager \
+  --typescript --tailwind --eslint --app --src-dir
+
+# 进入项目目录
+cd bookmark-manager
+
+# 启动 Claude Code（跳过权限以支持子代理）
+claude --dangerously-skip-permissions
+
+# 在 Claude Code 中初始化 GSD
+/gsd:new-project
+</code></pre>
+<p><strong>预期输出（/gsd:new-project 交互过程）：</strong></p>
+<pre><code>GSD New Project
+================
+I'll help you set up your project. Let me ask a few questions.
+
+Q: What are you building?
+A: A personal bookmark manager web app. Users can save, organize,
+   search and filter bookmarks by tags and date.
+
+Q: Who are the target users?
+A: Individual users who want a self-hosted bookmark manager.
+
+Q: What's your tech stack?
+A: Next.js 14, TypeScript, Tailwind CSS, shadcn/ui, Prisma, SQLite, JWT
+
+Q: What's in scope for v1?
+A: User auth, bookmark CRUD, tag-based filtering, search, responsive UI
+
+Q: What's out of scope for v1?
+A: Social features, browser extension, import/export, API for third-party
+
+[Research Phase] Spawning 4 parallel research agents...
+  - Stack researcher: Investigating Next.js 14 + Prisma best practices
+  - Features researcher: Analyzing bookmark manager feature patterns
+  - Architecture researcher: Designing auth + CRUD architecture
+  - Pitfalls researcher: Identifying common Next.js/Prisma issues
+
+[Requirements Phase] Scoped 12 requirements across 4 phases.
+[Roadmap Phase] Created 4-phase roadmap.
+
+Files created:
+  .planning/PROJECT.md
+  .planning/REQUIREMENTS.md
+  .planning/ROADMAP.md
+  .planning/STATE.md
+  .planning/config.json
+  .planning/research/
+
+Review the roadmap and approve to continue.
+</code></pre>
+<p><strong>步骤 2：讨论第一阶段的实现偏好</strong></p>
+<pre><code class="language-bash">/gsd:discuss-phase 1
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Discuss Phase 1: User Authentication
+=========================================
+
+I've identified these gray areas for Phase 1:
+
+Q: Password hashing - bcrypt vs argon2?
+A: bcrypt with cost factor 12
+
+Q: Session management - JWT in httpOnly cookie vs session storage?
+A: httpOnly cookie with 24-hour expiry
+
+Q: Registration flow - email confirmation required?
+A: No, simple signup for v1
+
+Q: Password validation rules?
+A: Minimum 8 characters, at least one number
+
+Preferences saved to .planning/phases/01-user-auth/CONTEXT.md
+</code></pre>
+<p><strong>步骤 3：规划第一阶段</strong></p>
+<pre><code class="language-bash">/gsd:plan-phase 1
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Plan Phase 1: User Authentication
+======================================
+
+[Research] Investigating auth patterns for Next.js 14 + Prisma...
+
+Generating plans...
+
+Plan 01-01: User Model and Database Schema
+  Files: prisma/schema.prisma, prisma/seed.ts
+  Verify: npx prisma generate succeeds
+
+Plan 01-02: Authentication Utilities
+  Files: src/lib/auth.ts, src/lib/db.ts
+  Verify: JWT sign/verify functions work correctly
+
+Plan 01-03: Registration and Login Endpoints
+  Files: src/app/api/auth/register/route.ts,
+         src/app/api/auth/login/route.ts,
+         src/app/api/auth/logout/route.ts
+  Verify: curl registration returns 201,
+          curl login returns 200 + Set-Cookie
+
+[Plan Checker] All 3 plans verified against requirements. ✓
+
+Plans saved to .planning/phases/01-user-auth/
+</code></pre>
+<p><strong>步骤 4：执行第一阶段（波浪执行）</strong></p>
+<pre><code class="language-bash">/gsd:execute-phase 1
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>GSD Execute Phase 1: User Authentication
+=========================================
+Analyzing dependencies among 3 plans...
+
+WAVE 1 (parallel):
+  Plan 01-01: User Model and Database Schema
+  Plan 01-02: Authentication Utilities
+
+WAVE 2 (depends on Wave 1):
+  Plan 01-03: Registration and Login Endpoints
+
+--- Wave 1 ---
+  [Sub-agent A] Fresh 200K context -&gt; Plan 01-01
+  [Sub-agent B] Fresh 200K context -&gt; Plan 01-02
+
+  Plan 01-01: ✓ Complete (commit abc123f)
+  Plan 01-02: ✓ Complete (commit def456g)
+
+--- Wave 2 ---
+  [Sub-agent C] Fresh 200K context -&gt; Plan 01-03
+
+  Plan 01-03: ✓ Complete (commit hij789k)
+
+Phase 1 executed. 3 commits created.
+Run /gsd:verify-work 1 to validate.
+</code></pre>
+<p><strong>步骤 5：验证并继续</strong></p>
+<pre><code class="language-bash"># 验证第一阶段
+/gsd:verify-work 1
+
+# 清理上下文
+/clear
+
+# 继续后续阶段
+/gsd:discuss-phase 2
+/gsd:plan-phase 2
+/gsd:execute-phase 2
+/gsd:verify-work 2
+/clear
+
+/gsd:discuss-phase 3
+/gsd:plan-phase 3
+/gsd:execute-phase 3
+/gsd:verify-work 3
+/clear
+
+/gsd:discuss-phase 4
+/gsd:plan-phase 4
+/gsd:execute-phase 4
+/gsd:verify-work 4
+
+# 完成里程碑
+/gsd:audit-milestone
+/gsd:complete-milestone
+</code></pre>
+<h3 id="_13">代码解析</h3>
+<p>以上实战项目综合运用了以下知识点：</p>
+<ol>
+<li>
+<p><strong>上下文工程（Context Engineering）</strong>：在 <code>/gsd:new-project</code> 中，GSD 创建了 PROJECT.md、REQUIREMENTS.md、ROADMAP.md 和 STATE.md 等文件。每次执行 <code>/clear</code> 后，GSD 的子代理通过读取这些文件获取完整的项目上下文，无需依赖历史对话。这确保了从 Phase 01 到 Phase 04 的每个阶段都在干净、完整的上下文中执行。</p>
+</li>
+<li>
+<p><strong>元提示（Meta-Prompting）</strong>：在 <code>/gsd:plan-phase</code> 中，GSD 生成了 XML 格式的任务计划。每个计划包含精确的文件路径、约束条件（如"使用 jose 而非 jsonwebtoken"）和可验证的完成标准（如"curl login returns 200 + Set-Cookie"）。这些结构化的元提示确保 AI 代理不会猜测或做出假设。</p>
+</li>
+<li>
+<p><strong>波浪执行（Wave Execution）</strong>：在 <code>/gsd:execute-phase 1</code> 中，GSD 分析了 3 个计划的依赖关系，将无依赖的 Plan 01-01 和 Plan 01-02 放入 Wave 1 并行执行，将依赖前两者的 Plan 01-03 放入 Wave 2。这最大化了执行效率。</p>
+</li>
+<li>
+<p><strong>原子 Git 提交（Atomic Git Commits）</strong>：每个计划完成后生成独立的提交（abc123f、def456g、hij789k），每个提交只包含一个任务的变更。如果 Plan 01-03 的认证端点有问题，可以通过 <code>git revert hij789k</code> 精确回滚，不影响其他任务。</p>
+</li>
+</ol>
+<h3 id="_14">扩展挑战</h3>
+<ol>
+<li><strong>添加浏览器扩展集成</strong>：在完成 Web 应用后，规划一个新的 Milestone（v1.1），包含浏览器扩展功能。使用 <code>/gsd:new-milestone</code> 开始规划，并设计 Chrome Extension 的上下文文件和任务计划。</li>
+<li><strong>实现导入/导出功能</strong>：使用 <code>/gsd:quick --research</code> 快速调研书签导入/导出的技术方案（如 Chrome Bookmarks HTML 格式解析），然后实现完整功能。</li>
+<li><strong>添加 API Key 认证</strong>：为第三方集成添加 API Key 认证机制。使用 <code>/gsd:insert-phase 3</code> 在搜索功能和 UI 优化之间插入新阶段，设计 API Key 的生成、验证和权限控制。</li>
+</ol>
+<hr />
+<h2 id="_15">第五部分：常见问题与排查指南</h2>
+<h3 id="_16">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Project already initialized"</td>
+<td><code>.planning/PROJECT.md</code> 已存在，重复运行 <code>/gsd:new-project</code></td>
+<td>如果想重新开始，删除 <code>.planning/</code> 目录后重试；如果想在已有项目上继续，使用 <code>/gsd:progress</code> 查看状态</td>
+</tr>
+<tr>
+<td>npx 安装失败（网络错误）</td>
+<td>npm 服务中断或网络限制</td>
+<td>参照 <code>docs/manual-update.md</code> 进行手动安装</td>
+</tr>
+<tr>
+<td>子代理报告失败但 Git 有新提交</td>
+<td>Claude Code 的分类 bug，实际执行成功但报告失败</td>
+<td>检查 <code>git log</code> 确认提交是否真实存在，如果存在可忽略错误</td>
+</tr>
+<tr>
+<td>并行执行时 pre-commit hook 失败</td>
+<td>多个子代理同时触发构建工具导致锁争用</td>
+<td>升级到 GSD v1.26+（自动处理），或在 <code>CLAUDE.md</code> 中添加 "All subagent commits MUST use <code>--no-verify</code>"</td>
+</tr>
+<tr>
+<td>STATE.md 显示不正确</td>
+<td>磁盘状态与实际文件系统不同步</td>
+<td>运行 <code>node gsd-tools.cjs state validate</code> 检查，然后 <code>node gsd-tools.cjs state sync</code> 修复</td>
+</tr>
+<tr>
+<td>Windows 安装崩溃（EPERM）</td>
+<td>Windows 保护目录（如 Chromium 配置目录）权限问题</td>
+<td>升级到 v1.24+，或临时重命名问题目录</td>
+</tr>
+<tr>
+<td>执行产出不完整的代码（stub）</td>
+<td>任务计划太大，超出单个上下文窗口容量</td>
+<td>重新规划，将大任务拆分为 2-3 个更小的任务</td>
+</tr>
+<tr>
+<td>计划与预期不符</td>
+<td>跳过了 Discuss 阶段，AI 做出了错误假设</td>
+<td>运行 <code>/gsd:discuss-phase N</code> 补充偏好，然后重新 <code>/gsd:plan-phase N</code></td>
+</tr>
+<tr>
+<td>Token 消耗过高</td>
+<td>多代理编排产生额外开销</td>
+<td>切换到 <code>budget</code> 模式（<code>/gsd:set-profile budget</code>），关闭不必要的代理（<code>/gsd:settings</code>）</td>
+</tr>
+<tr>
+<td>GSD 更新覆盖本地修改</td>
+<td>更新后自定义内容丢失</td>
+<td>运行 <code>/gsd:reapply-patches</code> 恢复本地修改</td>
+</tr>
+<tr>
+<td>子代理尝试编辑未读文件导致无限循环</td>
+<td>部分运行时（Cline、Augment）的兼容性问题</td>
+<td>在 <code>CLAUDE.md</code> 中添加 "Always read a file before editing it" 规则</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_17">调试技巧</h3>
+<ol>
+<li>
+<p><strong>使用 <code>/gsd:forensics</code> 诊断工作流故障</strong>：当工作流以不明确的方式失败时（如计划引用不存在的文件、执行产出意外结果、状态似乎损坏），运行 <code>/gsd:forensics</code> 生成诊断报告。它会检查 Git 历史异常、规划文件完整性和状态一致性，输出到 <code>.planning/forensics/</code> 目录。</p>
+</li>
+<li>
+<p><strong>使用 <code>/gsd:debug</code> 进行系统性调试</strong>：当项目出现 bug 时，使用 <code>/gsd:debug "描述问题"</code> 启动结构化调试会话。GSD 会创建持久化的调试状态（<code>.planning/debug/</code>），跨会话追踪问题。添加 <code>--diagnose</code> 标志可以仅分析不修复。</p>
+</li>
+<li>
+<p><strong>检查上下文利用率</strong>：如果输出质量下降，首先检查当前会话的上下文利用率。GSD 的 hooks 默认启用上下文警告（<code>hooks.context_warnings: true</code>），当利用率超过阈值时会提醒你。解决方法是使用 <code>/clear</code> 清空上下文，然后通过 <code>/gsd:resume-work</code> 恢复。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_18">第六部分：学习路线推荐</h2>
+<h3 id="_19">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>README 快速入门</strong> -- 重点：安装命令、核心工作流的 6 个步骤。这是最快上手的方式。</li>
+<li>
+<p>来源：<a href="https://github.com/gsd-build/get-shit-done">GitHub README</a></p>
+</li>
+<li>
+<p><strong>USER-GUIDE.md 命令参考</strong> -- 重点：完整的命令列表、配置参考、故障排除。当你需要查找特定命令的用法时回来查阅。</p>
+</li>
+<li>
+<p>来源：<a href="https://github.com/gsd-build/get-shit-done/blob/main/docs/USER-GUIDE.md">docs/USER-GUIDE.md</a></p>
+</li>
+<li>
+<p><strong>CHANGELOG.md</strong> -- 重点：了解每个版本的新增功能和修复。特别是在遇到问题时，检查是否为已知问题。</p>
+</li>
+<li>
+<p>来源：<a href="https://github.com/gsd-build/get-shit-done/blob/main/CHANGELOG.md">CHANGELOG.md</a></p>
+</li>
+<li>
+<p><strong>CONTRIBUTING.md</strong> -- 重点：如果你打算为 GSD 贡献代码或自定义扩展，了解贡献指南和代码规范。</p>
+</li>
+<li>
+<p>来源：<a href="https://github.com/gsd-build/get-shit-done/blob/main/CONTRIBUTING.md">CONTRIBUTING.md</a></p>
+</li>
+<li>
+<p><strong>GSD v2 文档（如适用）</strong> -- 重点：v2 的架构文档、ADR（架构决策记录）、开发者文档。适用于需要深度定制或理解内部机制的高级用户。</p>
+</li>
+<li>来源：<a href="https://github.com/gsd-build/gsd-2">gsd-build/gsd-2 docs/</a></li>
+</ol>
+<h3 id="_20">推荐进阶资源</h3>
+<ul>
+<li>
+<p><strong><a href="https://ccforeveryone.com/gsd">GSD 交互式教程 - ccforeveryone.com</a></strong> -- 一个交互式的在线课程，通过实际操作教授 GSD 框架的核心概念。适合喜欢动手实践的学习者。</p>
+</li>
+<li>
+<p><strong><a href="https://www.youtube.com/watch?v=5L3dm7KBCmY">"I Created GSD For Claude Code. This Is How I Use It." - YouTube</a></strong> -- GSD 创建者 Lex Christopherson 的深度演示视频，展示了他本人如何使用 GSD 框架。提供了第一手的使用哲学和实践技巧。</p>
+</li>
+<li>
+<p><strong><a href="https://thenewstack.io/beating-the-rot-and-getting-stuff-done/">Beating context rot in Claude Code with GSD - The New Stack</a></strong> -- 技术媒体对 GSD 如何解决上下文腐化问题的深度分析文章，包含技术原理讲解和实际案例分析。</p>
+</li>
+<li>
+<p><strong><a href="https://discord.gg/gsd">GSD Discord 社区</a></strong> -- 活跃的社区讨论，可以通过 <code>/gsd:join-discord</code> 命令加入。社区中有大量经验分享、工作流技巧和问题解答。</p>
+</li>
+<li>
+<p><strong><a href="https://gsd.build">GSD 官方网站 - gsd.build</a></strong> -- 官方网站包含最新的功能介绍、案例研究和版本更新信息。</p>
+</li>
+</ul>
+<hr />
+<h2 id="_21">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> GSD v1.35.0（稳定版），参考了 v2（gsd-pi，截至 v2.71.0）的部分信息<!-- reviewed: 更新 v2 版本号 --></li>
+<li><strong>信息获取日期：</strong> 2026-04-12</li>
+<li><strong>代码示例来源：</strong> XML 任务计划格式和命令示例基于官方文档 v1.35.0（<a href="https://github.com/gsd-build/get-shit-done/blob/main/docs/USER-GUIDE.md">USER-GUIDE.md</a>）；初学者指南参考了 <a href="https://dev.to/alikazmidev/the-complete-beginners-guide-to-gsd-get-shit-done-framework-for-claude-code-24h0">dev.to 文章</a></li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/gsd-build/get-shit-done">GitHub - gsd-build/get-shit-done (v1)</a></li>
+<li><a href="https://github.com/gsd-build/get-shit-done/blob/main/docs/USER-GUIDE.md">USER-GUIDE.md</a></li>
+<li><a href="https://www.npmjs.com/package/get-shit-done-cc">npm - get-shit-done-cc</a></li>
+<li><a href="https://dev.to/alikazmidev/the-complete-beginners-guide-to-gsd-get-shit-done-framework-for-claude-code-24h0">dev.to - The Complete Beginner's Guide to GSD</a></li>
+<li><a href="https://agentnativedev.medium.com/get-sh-t-done-meta-prompting-and-spec-driven-development-for-claude-code-and-codex-d1cde082e103">Medium - GET SH*T DONE: Meta-prompting and Spec-driven Development</a></li>
+<li><a href="https://ccforeveryone.com/gsd">GSD 交互式教程 - ccforeveryone.com</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

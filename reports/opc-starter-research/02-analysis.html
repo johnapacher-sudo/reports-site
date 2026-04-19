@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPC-Starter - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#dataservice" class="toc-h4">DataService 数据同步机制</a></li>
+<li><a href="#agent-studio" class="toc-h4">Agent Studio 工作流程</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#dataservice_1" class="toc-h3">DataService（数据服务）</a></li>
+<li><a href="#agent-studioai" class="toc-h3">Agent Studio（AI 代理工作室）</a></li>
+<li><a href="#bmad" class="toc-h3">BMAD 方法论</a></li>
+<li><a href="#msw-mock" class="toc-h3">MSW Mock 模式</a></li>
+<li><a href="#organization" class="toc-h3">组织管理（Organization）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OPC-Starter - 深度分析报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="opc-starter-">OPC-Starter - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025-2026 年间，AI 编码工具（Cursor、GitHub Copilot、Qoder、Windsurf 等）的快速普及正在重塑软件开发流程。独立开发者（Solopreneur）和初创团队越来越依赖 AI 编码助手来加速产品开发。然而，传统的 React 脚手架（如 Create React App、Vite React Starter）并未针对 AI 工具优化——缺乏结构化的文档规范、AI 可理解的代码组织和内置的 AI Agent 交互协议。</p>
+<p>与此同时，一人公司（One-Person Company）和独立开发者（Indie Hacker）生态蓬勃发展。据 Business Insider 报道，阿里巴巴正积极布局 AI 编码生态，推出 AI Coding Pro 计划和通义千问（Qwen）Code 模型，OPC-Starter 正是这一战略的组成部分。</p>
+<h3 id="_3">创立动机</h3>
+<p>OPC-Starter 的创立动机来自三个核心痛点的交汇：</p>
+<ol>
+<li><strong>AI 编码工具与项目结构脱节</strong>：现有脚手架缺乏 AI 可理解的文档规范和代码组织方式。AI 工具需要额外的上下文（如 AGENTS.md、结构化目录）才能高效工作。</li>
+<li><strong>独立开发者全栈启动成本高</strong>：认证系统、数据库、实时同步、组织管理等基础设施需要大量时间搭建，分散了产品核心逻辑的开发精力。</li>
+<li><strong>AI Agent 与前端交互缺乏标准</strong>：2026 年 A2UI（Agent to UI）协议正在成为 AI Agent 生态的核心标准之一，但目前缺少开箱即用的实现参考。</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-01-21</strong>：GitHub 仓库创建，项目公开发布</li>
+<li><strong>2026-01~02</strong>：v1.0.0 基础 Boilerplate 发布，包含核心认证、组织管理和基础 UI</li>
+<li><strong>2026-02~03</strong>：v1.1.0 发布，新增主题系统（深色/浅色模式）、Agent Studio（A2UI v0.8）和 DataService 数据同步层</li>
+<li><strong>2026-03-07</strong>：架构文档（Architecture.md v1.1.0）更新</li>
+<li><strong>2026-03-23</strong>：最后一次代码推送（GitHub pushed_at）</li>
+<li><strong>2026-04-15</strong>：GitHub 仓库元数据最后更新</li>
+</ul>
+<p>Roadmap 待完成：
+- v1.2.0：多 LLM Provider 支持（OpenAI、Claude、Gemini）
+- v1.3.0：国际化（i18n）</p>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>OPC-Starter 的设计围绕四大核心理念：</p>
+<ol>
+<li>
+<p><strong>AI-First（AI 优先）</strong>：项目结构、文档规范和代码组织都优先考虑 AI 编码工具的可理解性。AGENTS.md 作为 AI 的"使用说明书"，Cursor Rules 按文件类型自动触发规范检查，BMAD 方法论提供结构化的 AI 辅助开发流程。</p>
+</li>
+<li>
+<p><strong>本地优先与离线可用（Local-first &amp; Offline-capable）</strong>：采用 IndexedDB 本地缓存 + Supabase Realtime 实时同步的双层数据架构。读取 100% 本地化，写入采用乐观更新（Optimistic Update），网络恢复后自动同步。</p>
+</li>
+<li>
+<p><strong>模块化与可扩展（Modular &amp; Extensible）</strong>：清晰的目录结构和职责划分，每个功能模块（认证、组织、Agent、数据同步）独立封装。添加新页面、新数据实体或新 Agent Tool 都有明确的扩展指南。</p>
+</li>
+<li>
+<p><strong>开箱即用（Batteries Included）</strong>：预配置完整的认证系统、组织管理、数据同步、Mock 模式和 AI Agent 交互，开发者无需额外配置即可启动开发。</p>
+</li>
+</ol>
+<h3 id="_7">核心机制</h3>
+<h4 id="dataservice">DataService 数据同步机制</h4>
+<p>DataService 是 OPC-Starter 的数据访问核心，采用"Cache + Realtime"架构：</p>
+<ol>
+<li><strong>读取流程</strong>：UI → Zustand Store → DataService → IndexedDB（100% 本地读取）</li>
+<li><strong>写入流程</strong>：UI → Zustand Store → DataService → IndexedDB（乐观更新）→ Supabase（异步同步）</li>
+<li><strong>同步流程</strong>：Supabase Realtime → DataService → IndexedDB → Zustand Store → UI</li>
+</ol>
+<p>关键子模块：
+- <strong>CacheManager</strong>：管理 IndexedDB 缓存，支持 profiles 和 organizations 表
+- <strong>SyncManager/SyncOrchestrator</strong>：管理数据同步流程
+- <strong>OfflineQueueManager</strong>：离线队列，网络不可用时暂存操作
+- <strong>ConflictResolver</strong>：冲突解决策略
+- <strong>RealtimeManager</strong>：Supabase Realtime 订阅管理
+- <strong>NetworkManager</strong>：网络状态检测</p>
+<h4 id="agent-studio">Agent Studio 工作流程</h4>
+<p>Agent Studio 基于 A2UI（Agent to UI）协议实现 AI Agent 与前端界面的动态交互：</p>
+<pre><code>用户 ←→ AgentWindow（悬浮对话框）
+           ↓
+      useAgentChat Hook
+           ↓
+      SSE Client ←→ ai-assistant（Edge Function）
+           ↓                    ↓
+      Tool Executor         Qwen-Plus（百炼 API）
+           ↓
+      A2UI Renderer（动态 UI）
+</code></pre>
+<ol>
+<li>用户在 AgentWindow 中输入自然语言指令</li>
+<li>SSE（Server-Sent Events）客户端将请求发送到 Supabase Edge Function</li>
+<li>Edge Function 调用百炼 API（OpenAI 兼容格式）获取 AI 响应</li>
+<li>AI 响应中包含 A2UI 指令，描述需要渲染的 UI 组件</li>
+<li>前端 A2UI Renderer 解析指令，从组件注册表（Registry）中查找对应组件并渲染</li>
+<li>Tool Executor 执行 AI 返回的工具调用（导航、上下文获取等）</li>
+</ol>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                    前端 (React 19)                        │
+│  UI 组件 → Zustand Store → DataService → IndexedDB       │
+└─────────────────────────────────────────────────────────┘
+                               ↓ ↑
+┌─────────────────────────────────────────────────────────┐
+│                 Supabase (BaaS 平台)                      │
+│      Auth + PostgreSQL + Storage + Edge Functions        │
+│                       + Realtime                         │
+└─────────────────────────────────────────────────────────┘
+                               ↓ ↑
+┌─────────────────────────────────────────────────────────┐
+│               百炼 AI API (OpenAI 兼容)                   │
+│                    Qwen-Plus Agent                        │
+└─────────────────────────────────────────────────────────┘
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>OPC-Starter 采用三层架构：</p>
+<ul>
+<li><strong>表现层（Presentation Layer）</strong>：React 19 组件 + Zustand 状态管理，负责 UI 渲染和用户交互</li>
+<li><strong>数据层（Data Layer）</strong>：DataService 统一数据访问入口，管理 IndexedDB 本地缓存和 Supabase 远程同步</li>
+<li><strong>AI 层（AI Layer）</strong>：Agent Studio + A2UI 协议，通过 Supabase Edge Functions 连接百炼 AI API</li>
+</ul>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li><strong>认证系统（Auth）</strong> - Supabase Auth 集成，JWT Token 管理，会话持久化，路由守卫（ProtectedRoute）</li>
+<li><strong>组织管理（Organization）</strong> - 多层级组织结构，角色权限管理（admin/manager/member），Supabase RLS 策略保护</li>
+<li><strong>Agent Studio</strong> - A2UI 动态 UI 协议，SSE 流式通信，工具注册与执行，悬浮对话框交互</li>
+<li><strong>数据同步层（DataService）</strong> - IndexedDB 本地缓存，Supabase Realtime 同步，离线队列，冲突解决，网络状态管理</li>
+<li><strong>UI 组件库</strong> - 基于 Radix UI + shadcn/ui 风格的基础组件，布局组件（Header/Sidebar/MainLayout），业务组件</li>
+<li><strong>状态管理（Zustand）</strong> - useAuthStore（认证）、useProfileStore（用户信息）、useAgentStore（Agent 对话）、useUIStore（UI 状态）</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>OPC-Starter 提供三类扩展路径：</p>
+<ol>
+<li><strong>添加新页面</strong>：在 <code>src/pages/</code> 创建组件 → 在 <code>src/config/routes.tsx</code> 注册路由 → 在 <code>MainLayout</code> 添加导航</li>
+<li><strong>添加新数据实体</strong>：在 <code>src/types/</code> 定义类型 → 在 <code>src/services/data/adapters/</code> 创建适配器 → 在 <code>src/stores/</code> 创建 Store → 更新 <code>setup.sql</code></li>
+<li><strong>添加新 Agent Tool</strong>：后端在 <code>ai-assistant/tools.ts</code> 添加定义 → 前端在 <code>src/lib/agent/tools/</code> 创建工具 → 在 Registry 注册</li>
+</ol>
+<p>此外，Cursor Rules 按文件类型自动触发规范检查（TypeScript 严格类型、Tailwind v4 语法、Agent Studio 开发规范等），确保扩展代码符合项目规范。</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="dataservice_1">DataService（数据服务）</h3>
+<ul>
+<li><strong>定义：</strong> DataService 是 OPC-Starter 的统一数据访问入口，封装了 IndexedDB 本地缓存和 Supabase 远程 API 的交互逻辑，向上层（Zustand Store）提供一致的数据读写接口。</li>
+<li><strong>作用：</strong> 实现本地优先的数据访问策略，使应用在离线状态下仍可正常使用，网络恢复后自动同步。所有数据操作必须通过 DataService，禁止直接操作 IndexedDB 或 Supabase。</li>
+<li><strong>使用场景：</strong> 用户资料的读写、组织架构的查询与修改、团队成员管理等所有涉及持久化数据的场景。</li>
+<li><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</li>
+</ul>
+<pre><code class="language-typescript">// app/src/services/data/DataService.ts
+// DataService 是统一数据访问入口，所有数据操作都通过它进行
+
+// 数据流：UI → Zustand Store → DataService → IndexedDB (本地) + Supabase (远程)
+
+// 读取流程：100% 本地读取，从 IndexedDB 缓存获取数据
+// 写入流程：乐观更新 → 先写 IndexedDB → 异步同步到 Supabase
+
+// 适配器模式：每种数据实体有对应的 Adapter
+// 例如 personAdapter 处理用户数据的序列化和反序列化
+
+// 同步机制：Supabase Realtime 监听数据变更 → 自动更新 IndexedDB → 通知 Zustand Store
+</code></pre>
+<h3 id="agent-studioai">Agent Studio（AI 代理工作室）</h3>
+<ul>
+<li><strong>定义：</strong> Agent Studio 是 OPC-Starter 内置的 AI Agent 交互系统，基于 A2UI（Agent to UI）协议实现自然语言驱动的动态 UI 生成和工具调用。</li>
+<li><strong>作用：</strong> 让用户通过自然语言与 AI Agent 交互，Agent 可以调用工具（导航、上下文获取等）并动态生成 UI 组件（卡片、表单、图表等），实现"对话式操作界面"。</li>
+<li><strong>使用场景：</strong> 智能助手对话、数据查询与可视化、自动化任务执行、表单自动填写。</li>
+<li><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</li>
+</ul>
+<pre><code class="language-typescript">// app/src/components/agent/a2ui/registry.ts
+// A2UI 组件注册表 - 注册可用于动态渲染的组件
+
+// Agent Studio 架构流程：
+// 用户输入 → AgentWindow → useAgentChat Hook → SSE Client
+// → ai-assistant Edge Function → 百炼 API (Qwen-Plus)
+// → 返回 A2UI 指令 → A2UIRenderer 渲染动态组件
+
+// 工具注册示例（src/lib/agent/tools/registry.ts）
+// 后端在 ai-assistant/tools.ts 中定义工具（OpenAI Function Calling 格式）
+// 前端在 src/lib/agent/tools/ 中实现工具执行逻辑
+// 包括导航工具（navigation）和上下文工具（context）两类
+</code></pre>
+<h3 id="bmad">BMAD 方法论</h3>
+<ul>
+<li><strong>定义：</strong> BMAD（Build, Measure, Analyze, Deploy）是 OPC-Starter 集成的结构化 AI 辅助开发方法论，通过 <code>_bmad/</code> 目录提供 PRD 模板、架构设计文档和任务拆分规范。</li>
+<li><strong>作用：</strong> 为 AI 编码工具提供结构化的开发流程指导，使 AI 能够按照"构建→度量→分析→部署"的循环进行系统化开发，而非随机生成代码。</li>
+<li><strong>使用场景：</strong> 使用 Cursor 或 Qoder 进行功能开发时，AI 工具参考 BMAD 配置文件理解项目规范和开发流程。</li>
+</ul>
+<h3 id="msw-mock">MSW Mock 模式</h3>
+<ul>
+<li><strong>定义：</strong> OPC-Starter 内置 Mock Service Worker（MSW）模式，在不依赖真实 Supabase 后端的情况下运行完整前端应用。</li>
+<li><strong>作用：</strong> 加速前后端分离开发，支持在无后端环境下进行 UI 开发、测试和演示。测试账号统一来自 <code>cypress/fixtures/users.json</code>。</li>
+<li><strong>使用场景：</strong> 快速原型开发、AI 编码工具的快速复现和回归测试、CI/CD 环境中的自动化测试。</li>
+<li><strong>代码示例：</strong> 基于官方 README</li>
+</ul>
+<pre><code class="language-bash"># 启动 MSW Mock 模式（推荐方式）
+# 无需配置 Supabase，开箱即用
+VITE_ENABLE_MSW=true npm run dev:test
+
+# 测试账号
+# 邮箱: test@example.com
+# 密码: 888888
+
+# 切换到真实 Supabase 模式
+cp app/env.local.example app/.env.local
+# 编辑 .env.local 配置 Supabase URL 和 Key
+npm run dev
+</code></pre>
+<h3 id="organization">组织管理（Organization）</h3>
+<ul>
+<li><strong>定义：</strong> OPC-Starter 内置的多层级组织架构管理系统，支持组织树、团队、成员和角色权限控制。</li>
+<li><strong>作用：</strong> 为 SaaS 应用提供开箱即用的多租户组织管理能力，通过 Supabase RLS（Row Level Security）策略实现数据隔离。</li>
+<li><strong>使用场景：</strong> 企业级应用的部门管理、项目团队协作、SaaS 产品的多租户隔离。</li>
+<li><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</li>
+</ul>
+<pre><code class="language-sql">-- app/supabase/setup.sql
+-- 组织架构核心表结构
+
+-- 用户信息表
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  full_name TEXT,
+  avatar_url TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 组织架构表（支持多层级树形结构）
+CREATE TABLE organizations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  display_name TEXT NOT NULL,
+  parent_id UUID REFERENCES organizations(id),  -- 父组织，支持多级嵌套
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 组织成员关系表
+CREATE TABLE organization_memberships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id),
+  organization_id UUID REFERENCES organizations(id),
+  role TEXT CHECK (role IN ('admin', 'manager', 'member')),  -- 三级角色
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(user_id, organization_id)  -- 每个用户在每个组织中唯一
+);
+
+-- RLS 策略：使用 SECURITY DEFINER 函数避免递归
+CREATE FUNCTION get_user_accessible_organizations(user_uuid UUID)
+RETURNS TABLE(organization_id UUID)
+SECURITY DEFINER;
+</code></pre>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OPC-Starter</th>
+<th>Create T3 App (T3 Stack)</th>
+<th>ShipFast</th>
+<th>Vite React Starter</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>AI-First 一人公司脚手架</td>
+<td>端到端类型安全全栈框架</td>
+<td>快速发布 SaaS 的付费脚手架</td>
+<td>轻量级最小化 React 脚手架</td>
+</tr>
+<tr>
+<td>框架基础</td>
+<td>React 19 + Vite 7（SPA）</td>
+<td>Next.js（SSR/SSG）</td>
+<td>Next.js（SSR）</td>
+<td>React + Vite（SPA）</td>
+</tr>
+<tr>
+<td>语言</td>
+<td>TypeScript 5.9</td>
+<td>TypeScript</td>
+<td>TypeScript</td>
+<td>TypeScript（可选）</td>
+</tr>
+<tr>
+<td>后端/BaaS</td>
+<td>Supabase（Auth + DB + Realtime + Edge Functions）</td>
+<td>tRPC + Prisma + NextAuth</td>
+<td>MongoDB/Supabase 可选</td>
+<td>无（用户自选）</td>
+</tr>
+<tr>
+<td>状态管理</td>
+<td>Zustand 5.0</td>
+<td>React Query / tRPC 内置</td>
+<td>React 状态</td>
+<td>无（用户自选）</td>
+</tr>
+<tr>
+<td>样式方案</td>
+<td>Tailwind CSS 4.1 + Radix UI</td>
+<td>Tailwind CSS</td>
+<td>Tailwind CSS</td>
+<td>无（用户自选）</td>
+</tr>
+<tr>
+<td>AI Agent 支持</td>
+<td>Agent Studio（A2UI 协议）+ 百炼 API</td>
+<td>无内置</td>
+<td>无内置</td>
+<td>无内置</td>
+</tr>
+<tr>
+<td>Mock 开发模式</td>
+<td>MSW 内置（无需后端）</td>
+<td>无内置</td>
+<td>无内置</td>
+<td>无内置</td>
+</tr>
+<tr>
+<td>认证系统</td>
+<td>Supabase Auth（邮箱 + OAuth）</td>
+<td>NextAuth.js</td>
+<td>内置多方案</td>
+<td>无内置</td>
+</tr>
+<tr>
+<td>License</td>
+<td>AGPL-3.0（开源）</td>
+<td>MIT（开源）</td>
+<td>商业付费（$199-$299）</td>
+<td>MIT（开源）</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>78（2026-04-13）</td>
+<td>~25,000（2026 估算）[置信度：中]</td>
+<td>不适用（闭源）</td>
+<td>不适用（Vite 内置模板）</td>
+</tr>
+<tr>
+<td>价格</td>
+<td>免费</td>
+<td>免费</td>
+<td>$199-$299</td>
+<td>免费</td>
+</tr>
+<tr>
+<td>社区活跃度</td>
+<td>低（项目较新，2026-01 创建）</td>
+<td>高（成熟社区，大量模板）</td>
+<td>中（付费用户社区）</td>
+<td>高（React 官方推荐）</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>中（需了解 React + Supabase + AI Agent 概念）</td>
+<td>中高（需了解 Next.js + tRPC + Prisma）</td>
+<td>低中（文档完善，但 Next.js 有学习成本）</td>
+<td>低（最简单的 React 起步方式）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>早期阶段（未发布正式版本）</td>
+<td>成熟（已被大量生产项目验证）</td>
+<td>成熟（6,000+ 项目使用）[置信度：中]</td>
+<td>成熟（Vite 官方维护）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>AI 编码工具用户、独立开发者、需要 AI Agent 交互的项目</td>
+<td>类型安全全栈应用、团队协作项目</td>
+<td>快速发布 SaaS、独立开发者商业化项目</td>
+<td>学习 React、轻量 SPA、快速原型</td>
+</tr>
+</tbody>
+</table>
+<p>数据来源：GitHub API（2026-04-13）、GitHub README、StarterPick 对比文章、Reddit 社区讨论 <!-- reviewed: 添加第3个竞品Vite React Starter --></p>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>独立开发者使用 AI 编码工具启动新项目</strong> - OPC-Starter 专为 Cursor/Qoder 优化，AGENTS.md 和 BMAD 方法论让 AI 工具能高效理解和修改代码，MSW Mock 模式允许在无后端环境下快速开发。</p>
+</li>
+<li>
+<p><strong>需要 AI Agent 交互功能的 SaaS 应用</strong> - Agent Studio 提供完整的 A2UI 协议实现，支持自然语言驱动的动态 UI 生成，适合需要智能助手或自动化操作的应用。</p>
+</li>
+<li>
+<p><strong>需要离线功能的 Supabase 应用</strong> - DataService 的 IndexedDB + Realtime 同步架构天然支持离线优先场景，如移动端 Web 应用、网络不稳定环境下的工具应用。</p>
+</li>
+<li>
+<p><strong>需要多租户组织管理的企业应用原型</strong> - 内置的组织管理模块（多层级组织、角色权限、RLS 策略）可快速搭建企业级应用原型。</p>
+</li>
+<li>
+<p><strong>学习现代 React 全栈架构和 AI Agent 开发</strong> - 代码结构清晰、文档完善、有完整的 AGENTS.md 和 Architecture.md，适合作为学习现代全栈开发的参考项目。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>需要 SEO 的公开网站</strong> - OPC-Starter 基于 Vite 构建 SPA（单页应用），不支持服务端渲染（SSR）。如需 SEO，应选择 Next.js 方案（如 T3 Stack、ShipFast）。</p>
+</li>
+<li>
+<p><strong>大规模团队协作项目</strong> - AGPL-3.0 许可证要求修改后的代码必须开源，可能不适合商业闭源项目。且项目尚处于早期阶段，稳定性和生态成熟度不足。</p>
+</li>
+<li>
+<p><strong>非 React/Supabase 技术栈的项目</strong> - OPC-Starter 深度绑定 React + Supabase 生态，如果团队使用 Vue/Angular 或 Firebase/AWS 等不同技术栈，迁移成本过高。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>AI 编码工具深度优化</strong> - AGENTS.md 提供完整的 AI 开发规范，Cursor Rules 按文件类型自动触发，BMAD 方法论结构化开发流程，AI 迭代地图清晰指导从哪里开始修改。这是目前市场上首个专门针对 AI 编码工具优化的开源 React 脚手架。</p>
+</li>
+<li>
+<p><strong>本地优先的数据架构</strong> - DataService 的 IndexedDB + Realtime 同步方案使应用天然支持离线使用，100% 本地读取保证了极致的响应速度，乐观更新策略提供了流畅的用户体验。</p>
+</li>
+<li>
+<p><strong>A2UI 协议的前瞻性实现</strong> - Agent Studio 基于 2026 年新兴的 A2UI（Agent to UI）协议，提供了 AI Agent 与前端界面交互的开箱即用方案。在 AI Agent 协议栈（A2A → MCP → AG-UI → A2UI）中，OPC-Starter 实现了最上层的前端渲染协议。</p>
+</li>
+<li>
+<p><strong>MSW Mock 模式降低开发门槛</strong> - 无需配置 Supabase 即可启动完整应用，内置测试账号，适合 AI 编码工具的快速复现和回归测试，大幅降低了新开发者的上手成本。</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>项目成熟度低</strong> - 截至 2026-04-13，GitHub 仅 78 Stars，0 个 Open Issues，未发布正式版本（无 GitHub Release）。项目创建于 2026-01-21，仅约 3 个月历史，不建议用于生产环境。</p>
+</li>
+<li>
+<p><strong>AGPL-3.0 许可证限制</strong> - AGPL-3.0 是强 Copyleft 许可证，要求任何修改后的版本必须以相同许可证开源，且通过网络提供服务也必须公开源代码。这限制了商业闭源项目的使用场景。</p>
+</li>
+<li>
+<p><strong>深度绑定阿里云生态</strong> - Agent LLM 默认使用百炼 API（Qwen-Plus），环境变量中需要 DashScope API Key。虽然 Roadmap 计划支持多 LLM Provider（OpenAI、Claude、Gemini），但目前仅支持阿里云的通义千问模型。</p>
+</li>
+<li>
+<p><strong>仅支持 SPA 架构</strong> - 基于 Vite 构建的纯客户端渲染（CSR）架构，不支持服务端渲染（SSR）和静态站点生成（SSG），不适合需要 SEO 的公开网站场景。</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>阿里巴巴开源项目维护不确定性</strong> - 虽然由阿里巴巴开源，但项目的长期维护承诺不明确。阿里巴巴历史上有多项开源项目被归档或停止维护的先例。最后代码推送为 2026-03-23（距获取日期约 3 周），活跃度需持续观察。<strong>影响：</strong> 项目可能随时停止更新。<strong>缓解措施：</strong> Fork 项目并保持独立维护。</p>
+</li>
+<li>
+<p><strong>A2UI 协议尚未标准化</strong> - A2UI 协议目前为 v0.8 版本，仍在快速迭代中，API 可能发生不兼容变更。[置信度：中] <strong>影响：</strong> 基于 A2UI 的代码可能需要频繁重构。<strong>缓解措施：</strong> 关注协议版本更新，封装 A2UI 渲染层以隔离变更影响。</p>
+</li>
+<li>
+<p><strong>测试覆盖率较低</strong> - 质量门禁设定的覆盖率为行覆盖率 25%、分支覆盖率 18%，远低于一般生产项目的 80%+ 标准。<strong>影响：</strong> 代码可靠性不足，重构风险高。<strong>缓解措施：</strong> 在使用前补充核心模块的单元测试。</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 无插件系统。OPC-Starter 是脚手架项目而非框架，扩展通过直接修改代码实现。A2UI 组件注册表和 Agent Tool 注册表提供了有限的扩展点。</li>
+<li><strong>第三方库支持：</strong> 深度依赖 Supabase 生态（Auth、Realtime、Edge Functions、PostgreSQL）、Zustand、MSW、Radix UI 和 Zod。这些均为成熟的开源库。</li>
+<li><strong>企业采用案例：</strong> 截至 2026-04，未发现公开的企业采用案例。项目主要面向独立开发者。</li>
+<li><strong>文档质量：</strong> 优秀。README 完整涵盖快速入门、项目结构、技术栈和常见问题；AGENTS.md 提供详细的 AI 编码规范；Architecture.md 系统描述了架构设计和数据流。文档组织清晰，是项目的一大亮点。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 早期阶段。未发布正式版本（无 GitHub Release），无生产环境使用案例。代码最后推送日期为 2026-03-23，距获取日期约 3 周。</li>
+<li><strong>性能表现：</strong> 本地优先架构在数据读取方面具有天然优势（100% IndexedDB 缓存），但缺少公开的性能基准测试数据。Supabase Realtime 的实时同步在高并发场景下的表现需进一步验证。</li>
+<li><strong>监控/可观测性：</strong> 无内置监控方案。依赖 Supabase Dashboard 提供的数据库监控和日志功能。前端缺少 APM（Application Performance Monitoring）集成。</li>
+<li><strong>故障恢复：</strong> DataService 内置离线队列（OfflineQueueManager）和冲突解决（ConflictResolver）机制，网络中断时操作暂存于队列，恢复后自动同步。但缺少数据备份和灾难恢复方案。</li>
+<li><strong>安全合规：</strong> 使用 Supabase RLS（Row Level Security）策略实现数据隔离，认证基于 JWT Token。AGPL-3.0 许可证对商业使用有限制。未发现公开的安全漏洞披露。</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>必须掌握：React（Hooks、函数组件）、TypeScript（类型系统、泛型）、HTML/CSS</li>
+<li>建议了解：Supabase（Auth、Realtime、Edge Functions）、Zustand（状态管理）、Tailwind CSS</li>
+<li>
+<p>可选：AI Agent 概念、A2UI 协议、MSW（Mock Service Worker）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 1-2 天。MSW Mock 模式允许零配置启动，README 提供清晰的快速入门指南。有 React + TypeScript 基础的开发者可在半天内理解项目结构并开始开发。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 1-2 周。深入理解 DataService 同步机制、Agent Studio 的 A2UI 协议实现、Supabase Edge Functions 的 Agent Loop 等高级特性需要更多时间。完整掌握整个架构的设计决策和扩展方式预计需要 1-2 周的实践。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>OPC-Starter 是一个定位独特的前端脚手架项目，它抓住了 AI 编码工具普及和一人公司生态发展的交汇点，提供了目前市场上首个 AI-First 的 React 脚手架。其核心优势在于 AGENTS.md/BMAD 方法论对 AI 编码工具的深度优化、DataService 的本地优先数据架构，以及 Agent Studio 对 A2UI 协议的前瞻性实现。</p>
+<p>综合评分：<strong>5.5/10</strong></p>
+<p>评分理由：
+- 优势项（+）：AI 编码工具优化（独特卖点）、本地优先架构（技术亮点）、文档质量（优秀）
+- 扣分项（-）：项目成熟度低（未发正式版）、AGPL-3.0 限制（商业场景受限）、生态不成熟（78 Stars）、阿里云绑定（灵活性不足）、仅支持 SPA（场景受限）</p>
+<p><strong>使用建议：</strong>
+- 适合作为学习和实验项目，了解 AI 编码工具优化和 A2UI 协议的最佳实践
+- 适合独立开发者使用 Cursor/Qoder 快速启动原型项目
+- 不建议直接用于生产环境，需等待项目成熟（正式版本发布、社区验证）
+- 如需用于商业闭源项目，需评估 AGPL-3.0 许可证的合规风险</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> v1.1.0（基于 Architecture.md 标注的版本号，无 GitHub Release）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://api.github.com/repos/alibaba/opc-starter">GitHub API - alibaba/opc-starter</a> — 仓库元数据（Stars、Forks、License 等）</li>
+<li><a href="https://github.com/alibaba/opc-starter/blob/main/README.md">GitHub README - alibaba/opc-starter</a> — 快速入门、技术栈、项目结构、AI Coding 支持</li>
+<li><a href="https://github.com/alibaba/opc-starter/blob/main/AGENTS.md">AGENTS.md - alibaba/opc-starter</a> — AI 编码规范、技术栈详情、Cursor Cloud 指南</li>
+<li><a href="https://github.com/alibaba/opc-starter/blob/main/docs/Architecture.md">docs/Architecture.md - alibaba/opc-starter</a> — 系统架构、核心模块、数据流、数据库 Schema、扩展指南</li>
+<li>[Web 搜索 "T3 Stack vs ShipFast vs Vite React starter comparison"] — 竞品对比信息</li>
+<li>[Web 搜索 "ShipFast Next.js boilerplate solopreneur"] — ShipFast 定位和特性</li>
+<li>[Web 搜索 "OPC-Starter alibaba BMAD Agent Studio A2UI"] — A2UI 协议上下文和阿里巴巴 AI 生态</li>
+<li><a href="https://medium.com/@akshaychame2/the-complete-guide-to-generative-ui-frameworks-in-2026-fde71c4fa8cc">The Complete Guide to Generative UI Frameworks in 2026 (Medium)</a> — A2UI 协议在 2026 AI Agent 生态中的定位</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

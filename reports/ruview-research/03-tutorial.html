@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RuView - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 10-12 小时（含硬件搭建） | **前置知识：** WiFi 基础知识、命令行操作、Rust 或 Python 基础、需要 ESP32-S3 硬件</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-wifi-csi" class="toc-h3">1.1 理解 WiFi CSI 基础</a></li>
+<li><a href="#12-esp32" class="toc-h3">1.2 ESP32 硬件搭建</a></li>
+<li><a href="#13" class="toc-h3">1.3 基本人体检测</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 人体姿态估计</a></li>
+<li><a href="#22" class="toc-h3">2.2 生命体征监测</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 多节点网络优化</a></li>
+<li><a href="#32" class="toc-h3">3.2 性能优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">完整实现步骤</a></li>
+<li><a href="#_11" class="toc-h3">代码解析</a></li>
+<li><a href="#_12" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_13" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_14" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_15" class="toc-h3">调试技巧</a></li>
+<li><a href="#_16" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_17" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_18" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>RuView - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 10-12 小时（含硬件搭建）<br>**前置知识：** WiFi 基础知识、命令行操作、Rust 或 Python 基础、需要 ESP32-S3 硬件</div>
+                    </header>
+                    <h1 id="ruview-">RuView - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 10-12 小时（含硬件搭建）
+<strong>前置知识：</strong> WiFi 基础知识、命令行操作、Rust 或 Python 基础、需要 ESP32-S3 硬件</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS、Linux 或 Windows</li>
+<li>硬件：至少 2 个 ESP32-S3 开发板（推荐 4-6 个，~$8-9/个）</li>
+<li>运行时/依赖版本：Rust &gt;= 1.75、ESP-IDF（ESP32 开发框架）、Python &gt;= 3.9（可选，v1 版本）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># Step 1: 克隆仓库
+git clone https://github.com/ruvnet/RuView.git
+cd RuView
+
+# Step 2: 安装 Rust（如未安装）
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Step 3: 安装 ESP-IDF 工具链（ESP32 开发需要）
+# 参考 https://docs.espressif.com/projects/esp-idf/en/latest/esp32s3/get-started/
+git clone --recursive https://github.com/espressif/esp-idf.git
+cd esp-idf &amp;&amp; ./install.sh esp32s3 &amp;&amp; . ./export.sh
+
+# Step 4: 构建 RuView
+# 详细构建指南参见 docs/build-guide.md
+cargo build --release
+
+# Step 5: 刷写 ESP32 固件
+# 使用 ESP-IDF 工具刷写 CSI 采集固件到 ESP32-S3
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 检查 Rust 版本
+rustc --version
+
+# 运行测试（1,031+ 测试用例）
+cargo test
+
+# 启动 RuView 感知系统
+cargo run --release
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>Running 1031 tests...
+test result: ok. 1031 passed; 0 failed
+
+RuView v0.7.0 initialized
+Waiting for ESP32 CSI data...
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-wifi-csi">1.1 理解 WiFi CSI 基础</h3>
+<p><strong>概念讲解：</strong></p>
+<p>CSI（Channel State Information，信道状态信息）是 WiFi 信号在 OFDM 子载波级别的幅度和相位信息。每个 WiFi 数据帧都携带 CSI 数据，反映了信号从发射端到接收端的传播特性。</p>
+<p>当人体在 WiFi 信号覆盖范围内移动时，身体会对 WiFi 信号产生反射、散射和衍射，导致 CSI 发生可测量的变化。RuView 利用这些变化推断人体的位置和姿态。</p>
+<p><strong>核心概念：</strong>
+- <strong>子载波（Subcarrier）</strong>：WiFi 信号由多个子载波组成，每个子载波携带独立的 CSI 数据
+- <strong>幅度（Amplitude）</strong>：信号强度，人体移动会改变幅度
+- <strong>相位（Phase）</strong>：信号延迟，人体移动会改变相位
+- <strong>CSI 矩阵</strong>：N 个子载波 × M 个天线的复数矩阵</p>
+<p><strong>练习题：</strong>
+1. 阅读 IEEE 802.11n/ac 标准中关于 CSI 的基本描述，理解 OFDM 子载波概念。
+2. 使用 ESP32 抓取一段 CSI 数据，观察静态环境（无人）和动态环境（有人走动）的 CSI 变化差异。</p>
+<hr />
+<h3 id="12-esp32">1.2 ESP32 硬件搭建</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.1 中我们理解了 CSI 的理论。现在学习如何用 ESP32-S3 采集实际的 CSI 数据。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># ESP32-S3 固件刷写步骤
+# Step 1: 连接 ESP32-S3 到电脑（USB-C）
+# Step 2: 确认串口设备
+ls /dev/tty.usbmodem*  # macOS
+# 或 ls /dev/ttyACM*   # Linux
+
+# Step 3: 刷写 RuView ESP32 固件
+esptool.py --chip esp32s3 --port /dev/tty.usbmodem1101 \
+  --baud 460800 write_flash -z 0x0 ruview-esp32-v0.6.1.bin
+
+# Step 4: 验证固件运行
+screen /dev/tty.usbmodem1101 115200
+# 应看到 CSI 数据输出
+</code></pre>
+<p><strong>注意事项：</strong>
+- ESP32-S3 必须支持 CSI 采集功能（不是所有 ESP32 型号都支持）。
+- 建议使用官方推荐的开发板型号，参见 GitHub README。
+- 多节点部署时，确保节点之间有足够的间距（建议 &gt; 1 米）。</p>
+<p><strong>练习题：</strong>
+1. 搭建一个 2 节点的基本系统（1 个发射器 + 1 个接收器），验证 CSI 数据采集。
+2. 在不同距离（1m、3m、5m）测试 CSI 信号质量，观察信号衰减模式。</p>
+<hr />
+<h3 id="13">1.3 基本人体检测</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.2 中我们搭建了硬件并采集了 CSI 数据。现在学习如何使用 RuView 进行基本的人体存在检测。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动 RuView 存在检测模式
+cargo run --release -- --mode presence
+
+# 输出示例
+# [2026-04-17 10:00:01] Presence detected: Zone A (confidence: 0.92)
+# [2026-04-17 10:00:02] Presence detected: Zone A (confidence: 0.89)
+# [2026-04-17 10:00:05] No presence detected
+</code></pre>
+<p><strong>练习题：</strong>
+1. 在传感器前方 1 米处坐下和站立，观察检测结果差异。
+2. 测试穿墙检测能力——在传感器和人体之间放置一面墙或大型家具。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 人体姿态估计</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.3 中我们实现了基本的存在检测。现在进阶到 DensePose 人体姿态估计——推断 17 个人体关键点的 3D 坐标。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动 DensePose 模式
+cargo run --release -- --mode densepose
+
+# 启动 3D 可视化（Three.js 浏览器界面）
+cargo run --release -- --mode densepose --visualize
+
+# 浏览器打开 http://localhost:8080 查看 3D 人体骨架
+</code></pre>
+<p><strong>注意事项：</strong>
+- DensePose 模式需要至少 3 个 ESP32 节点才能获得较好的精度。
+- 初始部署需要校准步骤（站在指定位置进行姿态标定）。
+- 精度受环境影响较大，金属家具和电器可能干扰信号。</p>
+<p><strong>练习题：</strong>
+1. 执行基本动作（举手、弯腰、转身），观察 3D 可视化中的骨架跟踪效果。
+2. 测试不同节点数量（2 vs 4）对姿态估计精度的影响。</p>
+<hr />
+<h3 id="22">2.2 生命体征监测</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 2.1 中我们实现了姿态估计。RuView 还可以利用 CSI 信号的微小变化检测呼吸频率和心率。原理是人体呼吸和心跳会导致胸腔微小起伏，这些起伏会在 CSI 信号中留下可检测的周期性变化。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动生命体征监测模式
+cargo run --release -- --mode vitals
+
+# 输出示例
+# [2026-04-17 10:05:01] Breathing: 16 BPM | Heart rate: 72 BPM | Confidence: 0.85
+# [2026-04-17 10:05:02] Breathing: 15 BPM | Heart rate: 71 BPM | Confidence: 0.83
+</code></pre>
+<p><strong>注意事项：</strong>
+- 生命体征监测需要被检测者保持相对静止。
+- 心率检测精度（40-120 BPM 范围）有限，不适合医疗诊断。
+- WiFi 干扰（微波炉、蓝牙设备）可能影响检测准确性。</p>
+<p><strong>练习题：</strong>
+1. 分别在静坐和运动后测试呼吸频率检测，对比准确性。
+2. 测试不同距离（1m、3m）对生命体征检测精度的影响。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 多节点网络优化</h3>
+<ul>
+<li><strong>节点布局</strong>：4-6 节点 360° 覆盖需要合理布局，避免信号盲区。</li>
+<li><strong>校准策略</strong>：每次部署到新环境需要校准，自学习系统可缩短校准时间。</li>
+<li><strong>信号处理调优</strong>：根据环境噪声水平调整滤波参数。</li>
+</ul>
+<h3 id="32">3.2 性能优化</h3>
+<ul>
+<li><strong>Rust 编译优化</strong>：使用 <code>--release</code> 编译获得最佳性能。</li>
+<li><strong>WASM 边缘计算</strong>：65 个 WASM 模块可将部分计算卸载到 ESP32 上执行。</li>
+<li><strong>并发处理</strong>：多节点数据可并行处理，充分利用多核 CPU。</li>
+</ul>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li><strong>从 2 节点开始</strong>：先用最简配置验证硬件工作正常，再逐步增加节点。</li>
+<li><strong>环境校准很重要</strong>：每个新环境都需要校准，不要跳过这个步骤。</li>
+<li><strong>避免 WiFi 干扰</strong>：确保 RuView 使用的 WiFi 信道不被其他设备干扰。</li>
+<li><strong>定期检查硬件</strong>：ESP32 天线连接松动会影响 CSI 数据质量。</li>
+<li><strong>版本锁定</strong>：RuView 版本迭代快，建议锁定特定版本使用。</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个<strong>老人跌倒检测系统</strong>，包含：
+- 4 个 ESP32-S3 节点覆盖客厅 360°
+- 实时人体姿态估计
+- 跌倒检测告警（姿态突变 + 长时间静止）
+- 呼吸频率监测（确认意识状态）</p>
+<p>本项目综合运用：硬件搭建（1.2）、人体检测（1.3）、姿态估计（2.1）、生命体征监测（2.2）共 4 个知识点。</p>
+<h3 id="_10">完整实现步骤</h3>
+<pre><code class="language-bash"># Step 1: 部署 4 个 ESP32 节点
+# 节点 1: 房间角落 A（发射器 + 接收器）
+# 节点 2: 房间角落 B
+# 节点 3: 房间角落 C
+# 节点 4: 房间角落 D
+
+# Step 2: 校准
+cargo run --release -- --mode calibrate --nodes 4
+
+# Step 3: 启动跌倒检测系统
+cargo run --release -- --mode fall-detection --nodes 4 --alert webhooks
+
+# Step 4: 配置告警通知
+# 在配置文件中设置 Webhook URL 或邮件通知
+</code></pre>
+<h3 id="_11">代码解析</h3>
+<ul>
+<li><strong>知识点 1（硬件搭建 1.2）</strong>：4 个 ESP32-S3 节点提供 360° 覆盖，确保无信号盲区。</li>
+<li><strong>知识点 2（人体检测 1.3）</strong>：实时检测人员是否存在，只在有人时启动后续分析。</li>
+<li><strong>知识点 3（姿态估计 2.1）</strong>：通过 DensePose 跟踪人体姿态，检测突然的高度变化（跌倒特征）。</li>
+<li><strong>知识点 4（生命体征 2.2）</strong>：跌倒后监测呼吸频率，判断人员意识状态。</li>
+</ul>
+<h3 id="_12">扩展挑战</h3>
+<ol>
+<li>添加机器学习模型，区分"跌倒"和"坐下/躺下"动作。</li>
+<li>集成到智能家居系统（Home Assistant），实现自动化告警。</li>
+<li>添加数据记录功能，长期分析老人的活动模式。</li>
+</ol>
+<hr />
+<h2 id="_13">第五部分：常见问题与排查指南</h2>
+<h3 id="_14">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>No CSI data received</code></td>
+<td>ESP32 未正确连接或固件未刷写</td>
+<td>检查 USB 连接、重新刷写固件</td>
+</tr>
+<tr>
+<td><code>ESP32 timeout</code></td>
+<td>串口通信超时</td>
+<td>检查波特率设置、更换 USB 线缆</td>
+</tr>
+<tr>
+<td><code>Low signal quality</code></td>
+<td>ESP32 天线位置不佳</td>
+<td>调整天线方向、减少遮挡</td>
+</tr>
+<tr>
+<td><code>Calibration failed</code></td>
+<td>环境变化太大</td>
+<td>重新校准、检查节点布局</td>
+</tr>
+<tr>
+<td><code>Build failed</code></td>
+<td>Rust/ESP-IDF 版本不兼容</td>
+<td>参照 docs/build-guide.md 安装指定版本</td>
+</tr>
+<tr>
+<td><code>WASM module error</code></td>
+<td>WASM 运行时问题</td>
+<td>检查 wasm-runtime 配置</td>
+</tr>
+<tr>
+<td><code>Heart rate unreliable</code></td>
+<td>被检测者在移动</td>
+<td>让被检测者保持静止</td>
+</tr>
+<tr>
+<td><code>False fall detection</code></td>
+<td>正常活动被误判为跌倒</td>
+<td>调整跌倒检测阈值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_15">调试技巧</h3>
+<ol>
+<li><strong>查看原始 CSI 数据</strong>：使用 <code>--debug</code> 标志查看原始 CSI 数据，确认数据采集正常。</li>
+<li><strong>3D 可视化排查</strong>：使用 <code>--visualize</code> 启动 Three.js 可视化，直观观察感知效果。</li>
+<li><strong>逐步增加节点</strong>：从 2 节点开始测试，确认每个节点工作正常后再增加。</li>
+</ol>
+<hr />
+<h2 id="_16">第六部分：学习路线推荐</h2>
+<h3 id="_17">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README</strong> — 快速了解项目和硬件要求（https://github.com/ruvnet/RuView）</li>
+<li><strong>docs/build-guide.md</strong> — 详细的构建和部署指南</li>
+<li><strong>GitHub Discussions</strong> — 社区讨论、校准技巧、常见问题</li>
+<li><strong>ESP-IDF 文档</strong> — ESP32-S3 开发基础</li>
+<li><strong>WiFi CSI 学术论文</strong> — 深入理解 CSI 物理原理（推荐：MIT RF-Pose 论文）</li>
+</ol>
+<h3 id="_18">推荐进阶资源</h3>
+<ul>
+<li><a href="https://people.csail.mit.edu/mrub/rfpose/">MIT RF-Pose 论文</a> — WiFi 感知学术基础</li>
+<li><a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF 官方文档</a> — ESP32 开发权威指南</li>
+<li><a href="https://github.com/ruvnet/RuView/discussions">RuView GitHub Discussions</a> — 社区经验分享和问题排查</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

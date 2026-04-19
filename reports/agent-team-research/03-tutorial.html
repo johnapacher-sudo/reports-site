@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-Agent-Team - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 3-4 小时 | **前置知识：** 命令行基础（中级）、Claude Code 基本使用、npm/Node.js 基础</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-agent-roles" class="toc-h3">1.1 理解智能体角色（Agent Roles）</a></li>
+<li><a href="#12-command-mapping" class="toc-h3">1.2 理解快捷命令映射（Command Mapping）</a></li>
+<li><a href="#13-cli" class="toc-h3">1.3 使用 CLI 工具调用智能体</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-thread-manager" class="toc-h3">2.1 Thread Manager 线程管理</a></li>
+<li><a href="#22" class="toc-h3">2.2 语义搜索历史消息</a></li>
+<li><a href="#23-skills" class="toc-h3">2.3 使用实用技能（Skills）</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 自定义智能体配置</a></li>
+<li><a href="#32-thread-manager" class="toc-h3">3.2 Thread Manager 数据管理</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI-Agent-Team - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 3-4 小时<br>**前置知识：** 命令行基础（中级）、Claude Code 基本使用、npm/Node.js 基础</div>
+                    </header>
+                    <h1 id="ai-agent-team-">AI-Agent-Team - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 3-4 小时
+<strong>前置知识：</strong> 命令行基础（中级）、Claude Code 基本使用、npm/Node.js 基础</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS 12+、Ubuntu 20.04+、Windows 10+（需 PowerShell 5.0+）</li>
+<li>Node.js 版本：18.0 或更高</li>
+<li>Claude Code：已安装并配置（<code>claude --version</code> 可正常运行）</li>
+<li>磁盘空间：至少 50MB（含内置向量模型）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 1. 确认 Node.js 和 Claude Code 已安装
+node --version
+claude --version
+
+# 2. 全局安装 AI-Agent-Team
+npm install -g ai-agent-team
+
+# 3. 初始化配置（全局模式，推荐）
+ai-agent-team init
+
+# 4. 启用 Thread Manager MCP Server（将路径替换为你的实际项目路径）
+claude mcp add thread-manager node &quot;$HOME/.claude/skills/thread-manager/dist/index.js&quot;
+</code></pre>
+<p><strong>注意事项：</strong>
+- 步骤 3 的 <code>ai-agent-team init</code> 必须执行，否则智能体配置文件不会被创建。
+- 步骤 4 的路径需要根据实际安装位置调整。如果使用项目本地初始化，路径为 <code>./.claude/skills/thread-manager/dist/index.js</code>。
+- macOS/Linux 用户也可以使用 Shell 脚本安装：<code>curl -fsSL https://raw.githubusercontent.com/peterfei/ai-agent-team/main/install.sh | bash</code></p>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 重启 Claude Code
+claude
+
+# 在 Claude Code 中测试智能体命令
+/pm &quot;测试连接&quot;
+
+# 测试 Thread Manager
+/threads
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /pm &quot;测试连接&quot; 应返回 PM 角色的响应
+# /threads 应返回线程列表（初次安装为空列表）
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-agent-roles">1.1 理解智能体角色（Agent Roles）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>AI-Agent-Team 提供了 6 个预配置的智能体角色，每个角色对应真实软件团队中的一个职位。这些角色通过 <code>.claude/agents/</code> 目录下的 Markdown 文件定义，包含角色描述、职责范围和行为规范。</p>
+<p>6 个角色及其对应命令：</p>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>快捷命令</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>产品经理（Product Manager）</td>
+<td><code>/pm</code></td>
+<td>需求分析、产品规划、用户研究</td>
+</tr>
+<tr>
+<td>前端开发（Frontend Developer）</td>
+<td><code>/fe</code></td>
+<td>UI 实现、组件开发、用户体验</td>
+</tr>
+<tr>
+<td>后端开发（Backend Developer）</td>
+<td><code>/be</code></td>
+<td>API 设计、数据库优化、服务端逻辑</td>
+</tr>
+<tr>
+<td>测试工程师（QA Engineer）</td>
+<td><code>/qa</code></td>
+<td>测试设计、自动化测试、质量保证</td>
+</tr>
+<tr>
+<td>DevOps 工程师</td>
+<td><code>/ops</code></td>
+<td>部署运维、CI/CD、基础设施</td>
+</tr>
+<tr>
+<td>技术负责人（Tech Lead）</td>
+<td><code>/tl</code></td>
+<td>架构设计、技术决策、团队协调</td>
+</tr>
+</tbody>
+</table>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 在 Claude Code 中调用产品经理智能体
+/pm &quot;分析一个在线书店系统的核心功能需求&quot;
+
+# 调用前端开发智能体
+/fe &quot;设计在线书店的首页布局，包括搜索栏、分类导航和推荐列表&quot;
+
+# 调用后端开发智能体
+/be &quot;设计在线书店的图书搜索 API，支持按书名、作者、分类搜索&quot;
+
+# 调用测试工程师智能体
+/qa &quot;设计图书搜索 API 的测试用例，包括正常搜索、空结果、特殊字符等场景&quot;
+
+# 调用 DevOps 智能体
+/ops &quot;设计在线书店的 Docker 部署方案，包括前端、后端和数据库容器&quot;
+
+# 调用技术负责人智能体
+/tl &quot;评审在线书店的微服务架构设计，评估技术选型合理性&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 每个命令会以对应角色的视角和专业术语回答
+# 例如 /pm 会输出产品需求文档格式的内容
+# 例如 /qa 会输出测试用例表格
+</code></pre>
+<p><strong>练习题：</strong>
+1. 使用 <code>/pm</code> 分析一个你正在开发的项目需求，观察输出格式与直接使用 Claude Code 的区别。
+2. 分别用 <code>/fe</code> 和 <code>/be</code> 对同一功能进行前端和后端设计，对比两个角色的视角差异。</p>
+<hr />
+<h3 id="12-command-mapping">1.2 理解快捷命令映射（Command Mapping）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>快捷命令（如 <code>/pm</code>、<code>/fe</code>）是通过 <code>.claude/commands/</code> 目录下的 Markdown 文件实现的。每个命令文件内部引用对应的智能体配置文件，将用户的简短命令转换为完整的智能体调用。</p>
+<p>了解这个映射机制很重要，因为它是自定义和扩展的基础。</p>
+<p><strong>代码示例：</strong></p>
+<p>查看命令映射文件的内容：</p>
+<pre><code class="language-bash"># 查看 PM 命令映射文件
+cat ~/.claude/commands/pm.md
+
+# 查看 FE 命令映射文件
+cat ~/.claude/commands/fe.md
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># pm.md 文件内容示例（简化）：
+# 加载 product_manager 智能体配置
+# 将用户输入作为任务传递给 PM 角色
+
+# fe.md 文件内容示例（简化）：
+# 加载 frontend_dev 智能体配置
+# 将用户输入作为任务传递给前端开发角色
+</code></pre>
+<p><strong>练习题：</strong>
+1. 查看 6 个命令映射文件的内容，理解命令到智能体的映射关系。
+2. 尝试直接使用 Claude Code 的智能体调用方式（而非快捷命令）调用 PM 角色。</p>
+<hr />
+<h3 id="13-cli">1.3 使用 CLI 工具调用智能体</h3>
+<p><strong>概念讲解：</strong></p>
+<p>除了在 Claude Code 交互界面中使用快捷命令外，AI-Agent-Team 还提供了独立的 CLI 工具，可以直接从命令行调用智能体。这种方式适合集成到 Shell 脚本或自动化工作流中。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 使用 CLI 工具调用 PM（macOS/Linux）
+~/.claude/agents/cli.sh pm &quot;分析电商平台的核心功能&quot;
+
+# 使用中文名称调用
+~/.claude/agents/cli.sh 产品经理 &quot;分析电商平台的核心功能&quot;
+
+# 使用 CLI 工具调用后端开发
+~/.claude/agents/cli.sh backend &quot;设计用户注册 API&quot;
+
+# 使用中文名称调用
+~/.claude/agents/cli.sh 后端 &quot;设计用户注册 API&quot;
+
+# Windows 用户使用 PowerShell
+# .\.claude\agents\cli.ps1 pm &quot;分析电商平台的核心功能&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># CLI 工具会显示彩色输出界面
+# 包含智能体名称、任务描述和下一步建议
+# 实际 AI 响应会在 Claude Code 中生成
+</code></pre>
+<p><strong>注意事项：</strong>
+- CLI 工具仅提供命令行界面包装，实际的 AI 处理仍由 Claude Code 完成。
+- CLI 支持中英文智能体名称映射（如 <code>pm</code> 和 <code>产品经理</code> 都指向 PM 角色）。</p>
+<p><strong>练习题：</strong>
+1. 使用 CLI 工具分别调用 3 个不同的智能体角色，观察输出格式。
+2. 尝试在 Shell 脚本中串联调用多个智能体（如先 PM 分析需求，再 BE 设计 API）。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-thread-manager">2.1 Thread Manager 线程管理</h3>
+<p><strong>详细讲解：</strong></p>
+<p>Thread Manager 是 AI-Agent-Team 的核心差异化组件。它通过 MCP Server 为 Claude Code 提供了持久化的对话记忆和多任务线程管理能力。</p>
+<p>核心功能：
+- <strong>线程创建</strong>：通过 <code>/pm-start</code>、<code>/fe-start</code> 等命令创建角色专属线程
+- <strong>线程切换</strong>：通过 <code>/thread switch</code> 在不同任务之间切换，自动恢复上下文
+- <strong>线程查看</strong>：通过 <code>/threads</code> 查看所有活跃线程的状态
+- <strong>语义搜索</strong>：通过自然语言查询历史消息，基于本地向量嵌入</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 创建产品经理任务线程（自动初始化 PM 角色）
+/pm-start &quot;设计用户认证系统&quot;
+
+# 创建后端开发线程（同时进行多个任务）
+/be-start &quot;实现 JWT 认证 API&quot;
+
+# 创建前端开发线程
+/fe-start &quot;设计登录页面组件&quot;
+
+# 查看所有活跃线程
+/threads
+
+# 切换到后端开发线程（完整恢复上下文）
+/thread switch &lt;thread-id&gt;
+
+# 查看当前线程详情
+/thread info
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /pm-start 输出：
+# ✅ 线程已创建：pm-user-auth-20251212
+# 📋 角色：产品经理
+# 📝 任务：设计用户认证系统
+# 💾 对话将自动保存
+
+# /threads 输出：
+# 📋 活跃线程列表：
+# 1. pm-user-auth (产品经理) - 15 条消息
+# 2. be-jwt-api (后端开发) - 8 条消息
+# 3. fe-login-page (前端开发) - 3 条消息
+
+# /thread switch 输出：
+# ✅ 已切换到线程：be-jwt-api
+# 📋 已恢复 8 条历史消息
+# 📁 已恢复 3 个文件变更记录
+</code></pre>
+<p><strong>注意事项：</strong>
+- Thread Manager 必须通过 <code>claude mcp add thread-manager</code> 命令注册后才能使用。如果 <code>/threads</code> 命令不可用，说明 MCP Server 未正确配置。
+- 线程数据存储在本地 SQLite 数据库中，路径通常为 <code>.claude/skills/thread-manager/data/</code>。
+- 切换线程时会重置上下文窗口，只加载当前线程的历史消息，避免 Token 浪费。</p>
+<p><strong>练习题：</strong>
+1. 创建 3 个不同角色的任务线程，然后在它们之间切换，验证上下文恢复是否正确。
+2. 关闭 Claude Code 并重新打开，检查之前的线程是否仍然存在。</p>
+<hr />
+<h3 id="22">2.2 语义搜索历史消息</h3>
+<p><strong>详细讲解：</strong></p>
+<p>Thread Manager v2.0.1 引入了基于向量嵌入的语义搜索能力。所有对话消息在存储时会自动通过 Xenova/all-MiniLM-L6-v2 模型生成向量表示，后续可通过自然语言查询进行语义匹配检索。</p>
+<p>与关键词搜索的区别：语义搜索理解意图。例如搜索"之前讨论的登录方案"可以匹配到包含"身份验证机制设计"的消息。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 在当前线程中搜索历史消息
+&quot;帮我找一下之前讨论的数据库设计方案&quot;
+
+# 跨线程搜索所有历史记录
+&quot;搜索所有关于 API 认证token 的讨论&quot;
+
+# 搜索特定时间段的消息
+&quot;查找上周关于部署策略的讨论&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 语义搜索会返回最相关的历史消息片段
+# 🔍 搜索结果（来自线程 be-jwt-api）：
+# [2025-12-10] 后端开发：JWT token 结构设计...
+# - 使用 RS256 算法签名
+# - token 有效期 24 小时
+# - refresh token 有效期 7 天
+</code></pre>
+<p><strong>注意事项：</strong>
+- 语义搜索使用本地模型（Xenova/all-MiniLM-L6-v2），无需联网，但模型主要针对英文优化。中文查询的检索精度可能低于英文。
+- 首次使用时模型需要初始化，可能有短暂的延迟。
+- 向量嵌入的维度为 384 维（all-MiniLM-L6-v2 的输出维度），适合中小规模数据。</p>
+<p><strong>练习题：</strong>
+1. 在一个线程中讨论某个技术话题，然后在新线程中通过语义搜索找回之前的讨论。
+2. 分别用中文和英文查询同一内容，对比检索结果的相关性。</p>
+<hr />
+<h3 id="23-skills">2.3 使用实用技能（Skills）</h3>
+<p><strong>详细讲解：</strong></p>
+<p>AI-Agent-Team 提供了 4 个实用技能，扩展 Claude Code 的日常使用场景。这些技能存放在 <code>.claude/skills/</code> 目录下，每个技能包含 <code>SKILL.md</code> 描述文件和配套脚本。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># === DrawNote - 可视化笔记 ===
+# 生成彩色手写笔记风格的信息图
+&quot;请用彩色手写笔记风格生成 'React Hooks 生命周期' 的信息图&quot;
+
+# 生成科技风格的技术架构图
+&quot;请用科技创新风格创建 '微服务架构设计模式' 的流程图&quot;
+
+# === TidyMyDesktop - 桌面整理 ===
+# 整理桌面（dry-run 模式先预览）
+&quot;帮我预览整理桌面的计划，不实际执行&quot;
+
+# 实际整理桌面
+&quot;帮我整理桌面，按文件类型分类&quot;
+
+# 整理指定目录
+&quot;帮我整理下载文件夹&quot;
+
+# === Changelog Generator - 变更日志 ===
+# 生成 HTML 格式的变更日志
+changelog-generate generate --all --format html
+
+# 生成 Markdown 格式
+changelog-generate generate --all --format markdown
+
+# 创建 GitHub Release
+changelog-generate release --github-release
+
+# === SoftCopyright - 软著材料 ===
+# 生成软件著作权申请材料
+&quot;帮我生成这个项目的软件著作权申请材料&quot;
+
+# 指定项目路径
+&quot;帮我生成 /path/to/project 的软著材料&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># DrawNote 输出：
+# 📝 已生成信息图：drawnote_20251212_143000.html
+# 📸 已生成截图：drawnote_20251212_143000.png
+
+# TidyMyDesktop 输出：
+# 📊 整理报告：
+# - 应用程序：15 个 → 分类到 Applications/
+# - 文档：8 个 → 分类到 Documents/
+# - 图片：12 个 → 分类到 Images/
+# - 其他：5 个 → 保持原位
+
+# Changelog Generator 输出：
+# 📝 已生成变更日志：CHANGELOG.html
+# 包含 23 个 commit，4 个版本
+
+# SoftCopyright 输出：
+# 📄 已生成：软件说明书.html
+# 📄 已生成：源代码文档.html
+# 📊 源码统计：45 个文件，3200 行代码
+</code></pre>
+<p><strong>注意事项：</strong>
+- DrawNote 依赖 Playwright 进行截图，首次使用需要安装浏览器引擎（<code>npx playwright install chromium</code>）。
+- TidyMyDesktop 的 dry-run 模式只预览不执行，建议始终先 dry-run 确认后再实际执行。
+- Changelog Generator 需要在 Git 仓库中运行，且需要至少一个 commit。
+- SoftCopyright 生成的 HTML 文件需要通过浏览器打印为 PDF，页眉页脚会自动添加。</p>
+<p><strong>练习题：</strong>
+1. 使用 DrawNote 为你当前正在学习的技术主题生成一张信息图。
+2. 使用 TidyMyDesktop 的 dry-run 模式分析你的下载文件夹，查看分类计划。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 自定义智能体配置</h3>
+<p><strong>详细讲解：</strong></p>
+<p>AI-Agent-Team 的 6 个预定义角色是通用模板。在实际项目中，你可能需要创建自定义角色，例如数据科学家、安全工程师或 UI 设计师。自定义方法很简单：复制现有的智能体配置文件并修改。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 1. 复制一个现有智能体配置作为模板
+cp ~/.claude/agents/backend_dev.md ~/.claude/agents/data_scientist.md
+
+# 2. 编辑新智能体配置文件
+# 使用你喜欢的编辑器打开 data_scientist.md
+</code></pre>
+<p>编辑 <code>~/.claude/agents/data_scientist.md</code>：</p>
+<pre><code class="language-markdown"># 数据科学家（Data Scientist）
+
+## 角色描述
+你是一位资深数据科学家，专注于数据分析、机器学习模型开发和数据可视化。
+
+## 核心职责
+- 数据清洗和特征工程
+- 机器学习模型选择和训练
+- 数据可视化分析
+- 实验设计和 A/B 测试
+
+## 技术栈
+- Python: pandas, scikit-learn, PyTorch
+- 数据可视化: matplotlib, seaborn, plotly
+- SQL 数据查询
+- Jupyter Notebook
+
+## 输出格式
+- 分析报告使用 Markdown 格式
+- 代码示例使用 Python
+- 模型评估包含精确率、召回率、F1 等指标
+</code></pre>
+<p>创建对应的快捷命令 <code>~/.claude/commands/ds.md</code>：</p>
+<pre><code class="language-markdown">请以数据科学家的身份处理以下任务。
+使用数据科学领域的专业知识和方法论。
+</code></pre>
+<pre><code class="language-bash"># 3. 验证新智能体
+claude
+# 在 Claude Code 中使用：
+/ds &quot;分析这个销售数据的趋势和季节性模式&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 自定义数据科学家智能体会以数据科学的专业视角回答
+# 包含数据清洗建议、模型选择方案和可视化图表描述
+</code></pre>
+<p><strong>注意事项：</strong>
+- 自定义智能体的 Markdown 文件命名会影响命令名称。例如 <code>data_scientist.md</code> 对应的命令取决于 commands 目录下的映射文件。
+- 配置文件的内容会被 Claude Code 作为 System Prompt 加载，应避免包含敏感信息。
+- 如果使用项目本地初始化（<code>./.claude/</code>），自定义配置只对当前项目生效。</p>
+<h3 id="32-thread-manager">3.2 Thread Manager 数据管理</h3>
+<p><strong>详细讲解：</strong></p>
+<p>Thread Manager 的数据存储在本地 SQLite 数据库中。了解数据结构有助于备份、迁移和排查问题。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看 Thread Manager 数据目录
+ls ~/.claude/skills/thread-manager/data/
+
+# 备份 Thread Manager 数据库
+cp ~/.claude/skills/thread-manager/data/threads.db ~/threads_backup_$(date +%Y%m%d).db
+
+# 查看数据库中的线程数量
+sqlite3 ~/.claude/skills/thread-manager/data/threads.db &quot;SELECT COUNT(*) FROM threads;&quot;
+
+# 查看所有线程的概要信息
+sqlite3 ~/.claude/skills/thread-manager/data/threads.db \
+  &quot;SELECT id, agent_name, title, created_at FROM threads ORDER BY created_at DESC;&quot;
+
+# 迁移旧数据（如果从旧版本升级）
+cd ~/.claude/skills/thread-manager
+npm run migrate
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 数据目录内容：
+# threads.db    - 主数据库文件
+# embeddings/   - 向量嵌入缓存目录
+
+# 线程数量：
+# 12
+
+# 线程概要：
+# abc123|pm|用户认证系统|2025-12-10T10:00:00
+# def456|be|JWT API 开发|2025-12-10T14:30:00
+# ghi789|fe|登录页面|2025-12-11T09:00:00
+</code></pre>
+<p><strong>注意事项：</strong>
+- SQLite 数据库文件不支持多进程并发写入。如果同时运行多个 Claude Code 实例访问同一个数据库，可能出现锁冲突。
+- 数据库文件会随着使用不断增长，建议定期备份和清理不再需要的旧线程。
+- 向量嵌入数据占用了大部分存储空间，清理旧线程会同时释放嵌入数据。</p>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li><strong>任务描述要具体</strong>：为智能体提供清晰、具体的任务描述，包含技术栈、约束条件和期望输出格式。</li>
+<li><strong>善用线程管理</strong>：为每个独立任务创建单独的线程，避免在单个线程中混合多个不相关的任务。</li>
+<li><strong>先 dry-run 再执行</strong>：对于 TidyMyDesktop 等会修改文件系统的技能，始终先使用 dry-run 模式预览。</li>
+<li><strong>定期备份数据</strong>：Thread Manager 的 SQLite 数据库包含所有对话历史，建议纳入常规备份。</li>
+<li><strong>按需自定义角色</strong>：预定义角色是通用模板，根据项目实际需求调整智能体的 System Prompt 可以显著提升输出质量。</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>使用 AI-Agent-Team 构建一个完整的<strong>博客系统开发工作流</strong>，涵盖从需求分析到部署的全流程。该项目需要：</p>
+<ol>
+<li>PM 角色分析博客系统核心需求</li>
+<li>Tech Lead 设计技术架构</li>
+<li>后端开发实现 RESTful API</li>
+<li>前端开发实现博客界面</li>
+<li>QA 工程师设计测试方案</li>
+<li>DevOps 工程师规划部署方案</li>
+</ol>
+<p>同时使用 Thread Manager 管理跨角色的任务线程，使用 DrawNote 生成系统架构可视化。</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>用户需求
+  │
+  ├─ /pm-start → 产品经理分析需求 → 输出需求文档
+  │
+  ├─ /tl → 技术负责人评审架构 → 输出技术方案
+  │
+  ├─ /be-start → 后端开发实现 API → 输出代码
+  │
+  ├─ /fe-start → 前端开发实现界面 → 输出代码
+  │
+  ├─ /qa-start → 测试工程师测试 → 输出测试报告
+  │
+  └─ /ops → DevOps 部署 → 输出部署方案
+</code></pre>
+<p><strong>运用的知识点：</strong>
+- 智能体角色调用（1.1 节）
+- Thread Manager 线程管理（2.1 节）
+- 实用技能 DrawNote（2.3 节）</p>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-bash"># ==========================================
+# 第一步：创建 PM 线程进行需求分析
+# ==========================================
+
+# 在 Claude Code 中执行
+/pm-start &quot;设计一个个人博客系统，需要支持文章发布、Markdown 编辑、标签分类、评论功能和 RSS 订阅&quot;
+
+# PM 输出需求文档后，保存到线程
+
+# ==========================================
+# 第二步：Tech Lead 设计技术架构
+# ==========================================
+
+/tl &quot;基于 PM 的需求分析，设计博客系统的技术架构。技术栈：React + Node.js + PostgreSQL。评估是否需要引入缓存层和搜索服务&quot;
+
+# ==========================================
+# 第三步：创建后端开发线程
+# ==========================================
+
+/be-start &quot;基于技术架构，实现博客系统的核心 RESTful API。包括：
+1. 用户认证（JWT）
+2. 文章 CRUD（支持 Markdown）
+3. 标签管理
+4. 评论系统
+5. RSS 订阅生成
+使用 Express.js + PostgreSQL，包含数据库迁移脚本&quot;
+
+# ==========================================
+# 第四步：创建前端开发线程
+# ==========================================
+
+/fe-start &quot;基于后端 API 设计，实现博客前端界面。包括：
+1. 文章列表页（分页、标签筛选）
+2. 文章详情页（Markdown 渲染）
+3. 文章编辑器（实时预览）
+4. 评论组件
+5. 响应式设计
+使用 React + Tailwind CSS&quot;
+
+# ==========================================
+# 第五步：创建 QA 线程
+# ==========================================
+
+/qa-start &quot;设计博客系统的完整测试方案。包括：
+1. API 接口测试（Postman/Newman）
+2. 前端组件测试（React Testing Library）
+3. 端到端测试（Cypress）
+4. 性能测试（Lighthouse）
+5. 安全测试（OWASP Top 10 检查清单）&quot;
+
+# ==========================================
+# 第六步：查看所有线程进度
+# ==========================================
+
+/threads
+
+# ==========================================
+# 第七步：DevOps 部署方案
+# ==========================================
+
+/ops &quot;设计博客系统的生产部署方案。包括：
+1. Docker Compose 编排（前端、后端、数据库、Redis）
+2. Nginx 反向代理配置
+3. SSL 证书自动续期
+4. CI/CD 流水线（GitHub Actions）
+5. 监控和日志（Prometheus + Grafana）&quot;
+
+# ==========================================
+# 第八步：使用 DrawNote 生成系统架构图
+# ==========================================
+
+&quot;请用科技创新风格生成博客系统的微服务架构信息图，包含前端、后端 API、数据库、缓存、反向代理和 CI/CD 流水线&quot;
+
+# ==========================================
+# 第九步：切换线程回顾各角色产出
+# ==========================================
+
+# 切换到 PM 线程回顾需求
+/thread switch &lt;pm-thread-id&gt;
+
+# 切换到后端线程检查 API 实现
+/thread switch &lt;be-thread-id&gt;
+
+# 切换到 QA 线程查看测试报告
+/thread switch &lt;qa-thread-id&gt;
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<ol>
+<li>
+<p><strong>智能体角色调用（1.1 节知识点）</strong>：项目使用了全部 6 个智能体角色（PM、TL、BE、FE、QA、Ops），每个角色在其专业领域内提供深度分析和代码输出。<code>/pm-start</code>、<code>/be-start</code>、<code>/fe-start</code>、<code>/qa-start</code> 命令同时创建线程和初始化角色。</p>
+</li>
+<li>
+<p><strong>Thread Manager 线程管理（2.1 节知识点）</strong>：通过 <code>/threads</code> 查看所有任务线程的进度，通过 <code>/thread switch</code> 在不同线程之间切换，每次切换都完整恢复该线程的上下文。这解决了多任务并行开发时的上下文管理问题。</p>
+</li>
+<li>
+<p><strong>实用技能 DrawNote（2.3 节知识点）</strong>：使用 DrawNote 技能生成系统架构的可视化信息图，帮助团队成员快速理解系统设计。输出的 HTML 和 PNG 文件可直接用于文档和演示。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加自定义角色</strong>：创建一个"技术文档工程师"角色（Technical Writer），专门负责根据各角色的产出编写统一的 API 文档和用户手册。</li>
+<li><strong>数据迁移自动化</strong>：编写 Shell 脚本，将 Thread Manager 中的各角色产出自动提取为独立的 Markdown 文件，按目录结构组织。</li>
+<li><strong>多项目线程管理</strong>：在 Thread Manager 中同时管理两个不同项目的线程，验证线程隔离和上下文恢复的可靠性。</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/pm</code> 命令不可用</td>
+<td>未执行 <code>ai-agent-team init</code></td>
+<td>运行 <code>ai-agent-team init</code> 重新初始化配置</td>
+</tr>
+<tr>
+<td><code>/threads</code> 命令不可用</td>
+<td>Thread Manager MCP Server 未注册</td>
+<td>执行 <code>claude mcp add thread-manager node "&lt;path&gt;/dist/index.js"</code> 并重启 Claude Code</td>
+</tr>
+<tr>
+<td><code>npm install -g ai-agent-team</code> 失败</td>
+<td>Node.js 版本过低或权限不足</td>
+<td>升级 Node.js 至 18+；macOS/Linux 使用 <code>sudo</code> 或配置 npm 全局路径</td>
+</tr>
+<tr>
+<td>Thread Manager 语义搜索结果不准确</td>
+<td>中文查询精度低于英文</td>
+<td>尝试用英文关键词搜索，或在搜索时提供更具体的描述</td>
+</tr>
+<tr>
+<td>DrawNote 截图生成失败</td>
+<td>Playwright 浏览器未安装</td>
+<td>运行 <code>npx playwright install chromium</code></td>
+</tr>
+<tr>
+<td>智能体输出不符合预期</td>
+<td>任务描述不够具体</td>
+<td>在任务描述中明确指定技术栈、约束条件和期望输出格式</td>
+</tr>
+<tr>
+<td><code>ai-agent-team init</code> 报权限错误</td>
+<td><code>.claude/</code> 目录权限问题</td>
+<td>检查 <code>~/.claude/</code> 目录权限：<code>ls -la ~/.claude/</code>，必要时 <code>chmod 755 ~/.claude/</code></td>
+</tr>
+<tr>
+<td>MCP Server 启动超时</td>
+<td>路径配置错误或 Node.js 进程异常</td>
+<td>检查路径是否正确：<code>ls &lt;path&gt;/dist/index.js</code>；检查 Node.js 进程是否被防火墙拦截</td>
+</tr>
+<tr>
+<td>安装包体积过大（16-25MB）</td>
+<td>内置了 Xenova 向量模型</td>
+<td>这是正常现象，模型文件确保离线可用。如不需要 Thread Manager 可手动删除模型文件</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>检查配置文件是否正确安装</strong>：运行 <code>ls ~/.claude/agents/</code> 确认 6 个智能体配置文件存在。如果文件缺失，重新运行 <code>ai-agent-team init</code>。</p>
+</li>
+<li>
+<p><strong>验证 MCP Server 运行状态</strong>：在 Claude Code 中执行 <code>/threads</code> 命令。如果返回线程列表（即使是空的），说明 MCP Server 正常运行。如果报错，检查 <code>claude mcp list</code> 确认 thread-manager 已注册。</p>
+</li>
+<li>
+<p><strong>分层排查智能体问题</strong>：先用 <code>claude -p "测试连接"</code> 验证 Claude Code 本身正常工作，再用 <code>/pm "测试"</code> 验证智能体配置加载正确，最后测试 Thread Manager 等高级功能。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team#readme">GitHub README</a></strong> - 安装指南和功能概览（重点：3 步安装流程和验证方法）</li>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team#-项目结构">项目结构说明</a></strong> - 理解 <code>.claude/</code> 目录结构（重点：agents、commands、skills 三个目录的作用）</li>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team#-thread-manager---ai-团队的记忆系统--new-in-v200">Thread Manager 使用指南</a></strong> - 线程管理和语义搜索（重点：线程创建、切换和搜索命令）</li>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team#-工作流程示例">工作流程示例</a></strong> - 完整开发流程演示（重点：角色协作模式）</li>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team#-最佳实践">最佳实践</a></strong> - 使用技巧和注意事项（重点：任务描述规范和迭代式开发）</li>
+<li><strong><a href="https://github.com/peterfei/ai-agent-team/blob/main/CHANGELOG.md">CHANGELOG.md</a></strong> - 版本更新记录</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://code.claude.com/docs/en/custom-agents">Claude Code 官方文档 - Custom Agents</a></strong> - 深入理解 <code>.claude/agents/</code> 配置格式和高级用法</li>
+<li><strong><a href="https://code.claude.com/docs/en/plugins">Claude Code 官方文档 - Plugins</a></strong> - 学习如何构建自己的 Claude Code 插件，理解 Skills 和 MCP Server 的完整机制</li>
+<li><strong><a href="https://github.com/VoltAgent/awesome-claude-code-subagents">Awesome Claude Code Subagents</a></strong> - 社区贡献的 100+ Claude Code 自定义智能体集合，可从中获取灵感和配置模板</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

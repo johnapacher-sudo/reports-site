@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supermemory - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 4-6 小时 | **前置知识：** LLM 基础概念、API 集成经验、TypeScript 或 Python 基础</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-ai" class="toc-h3">1.1 理解 AI 记忆的基本概念</a></li>
+<li><a href="#12" class="toc-h3">1.2 基本记忆存储与检索</a></li>
+<li><a href="#13" class="toc-h3">1.3 自动记忆提取</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-rag-memory" class="toc-h3">2.1 混合搜索（RAG + Memory）</a></li>
+<li><a href="#22" class="toc-h3">2.2 连接器集成</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 自定义记忆处理</a></li>
+<li><a href="#32" class="toc-h3">3.2 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_11" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_12" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_13" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_14" class="toc-h3">调试技巧</a></li>
+<li><a href="#_15" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_16" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_17" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Supermemory - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 4-6 小时<br>**前置知识：** LLM 基础概念、API 集成经验、TypeScript 或 Python 基础</div>
+                    </header>
+                    <h1 id="supermemory-">Supermemory - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 4-6 小时
+<strong>前置知识：</strong> LLM 基础概念、API 集成经验、TypeScript 或 Python 基础</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS、Linux 或 Windows</li>
+<li>运行时/依赖版本：Node.js &gt;= 18 或 Python &gt;= 3.9</li>
+<li>API Key：Supermemory API Key（从 supermemory.ai 获取）或自托管实例</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 方式一：通过 npm 安装 SDK
+npm install supermemory
+
+# 方式二：通过 pip 安装 Python SDK
+pip install supermemory
+
+# 方式三：自托管（Docker）
+git clone https://github.com/supermemoryai/supermemory.git
+cd supermemory
+docker compose up -d
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 设置 API Key
+export SUPERMEMORY_API_KEY=your-api-key
+
+# 运行基本测试
+# TypeScript
+npx ts-node -e &quot;
+import { Supermemory } from 'supermemory';
+const sm = new Supermemory();
+console.log('Supermemory initialized:', sm !== null);
+&quot;
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-ai">1.1 理解 AI 记忆的基本概念</h3>
+<p><strong>概念讲解：</strong></p>
+<p>LLM 是无状态的——每次新对话都是全新的。Supermemory 通过三个核心能力解决这个问题：</p>
+<ol>
+<li><strong>记忆提取（Extract）</strong>：从对话中自动识别值得记住的信息</li>
+<li><strong>记忆存储（Store）</strong>：将信息向量化并持久化存储</li>
+<li><strong>记忆检索（Recall）</strong>：在后续对话中智能检索相关记忆</li>
+</ol>
+<pre><code>对话 1: &quot;我喜欢 TypeScript，在 A 公司工作&quot;
+    → 提取: [偏好: TypeScript] [事实: 在 A 公司工作]
+    → 存储: 向量化嵌入 + 元数据
+
+对话 2: &quot;推荐一个适合我的编程项目&quot;
+    → 检索: [用户喜欢 TypeScript]
+    → 上下文注入: &quot;用户偏好 TypeScript...&quot;
+    → LLM 回答: &quot;考虑到你喜欢 TypeScript...&quot;
+</code></pre>
+<p><strong>练习题：</strong>
+1. 列举 3 个你希望 AI 记住但当前 LLM 无法记住的信息类型。
+2. 思考"记忆矛盾"的场景：如果用户先说"我在 A 公司"，后说"我跳槽到 B 公司"，系统应该如何处理？</p>
+<hr />
+<h3 id="12">1.2 基本记忆存储与检索</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.1 中我们理解了 AI 记忆的概念。现在学习如何使用 Supermemory API 存储和检索记忆。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">// TypeScript 基本使用示例
+import { Supermemory } from 'supermemory';
+
+const sm = new Supermemory({ apiKey: process.env.SUPERMEMORY_API_KEY });
+
+// 存储记忆
+await sm.memories.create({
+  content: &quot;用户喜欢 TypeScript，在 A 公司担任前端工程师&quot;,
+  metadata: {
+    userId: &quot;user-123&quot;,
+    source: &quot;chat&quot;,
+    timestamp: new Date().toISOString()
+  }
+});
+
+// 检索相关记忆
+const results = await sm.memories.search({
+  query: &quot;这个用户喜欢什么编程语言？&quot;,
+  userId: &quot;user-123&quot;,
+  limit: 5
+});
+
+console.log(&quot;相关记忆:&quot;, results);
+</code></pre>
+<pre><code class="language-python"># Python 基本使用示例
+from supermemory import Supermemory
+
+sm = Supermemory(api_key=&quot;your-api-key&quot;)
+
+# 存储记忆
+sm.memories.create(
+    content=&quot;用户喜欢 TypeScript，在 A 公司担任前端工程师&quot;,
+    metadata={
+        &quot;userId&quot;: &quot;user-123&quot;,
+        &quot;source&quot;: &quot;chat&quot;,
+    }
+)
+
+# 检索相关记忆
+results = sm.memories.search(
+    query=&quot;这个用户喜欢什么编程语言？&quot;,
+    userId=&quot;user-123&quot;,
+    limit=5
+)
+
+print(&quot;相关记忆:&quot;, results)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>相关记忆: [
+  {
+    content: &quot;用户喜欢 TypeScript，在 A 公司担任前端工程师&quot;,
+    score: 0.95,
+    metadata: { userId: &quot;user-123&quot;, source: &quot;chat&quot; }
+  }
+]
+</code></pre>
+<p><strong>练习题：</strong>
+1. 存储 5 条不同的用户信息（偏好、事实、指令），然后通过不同查询检索。
+2. 测试模糊查询：存储"我喜欢猫"，查询"宠物推荐"，观察检索效果。</p>
+<hr />
+<h3 id="13">1.3 自动记忆提取</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.2 中我们手动存储记忆。Supermemory 的核心优势是<strong>自动</strong>从对话中提取记忆，无需手动操作。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">// 自动从对话中提取记忆
+const conversation = [
+  { role: &quot;user&quot;, content: &quot;我最近在用 React 开发一个电商网站&quot; },
+  { role: &quot;assistant&quot;, content: &quot;好的，React 是一个很好的选择...&quot; },
+  { role: &quot;user&quot;, content: &quot;对了，我叫张三，在淘宝工作&quot; },
+  { role: &quot;assistant&quot;, content: &quot;你好张三...&quot; }
+];
+
+// Supermemory 自动提取记忆
+await sm.extract({
+  messages: conversation,
+  userId: &quot;user-123&quot;
+});
+// 自动提取: [使用 React] [电商网站项目] [名字: 张三] [工作: 淘宝]
+
+// 后续对话中自动检索相关记忆
+const context = await sm.memories.search({
+  query: &quot;帮我选择一个状态管理方案&quot;,
+  userId: &quot;user-123&quot;
+});
+// 自动返回: [用户使用 React 开发电商网站]
+</code></pre>
+<p><strong>练习题：</strong>
+1. 创建一段包含 3 个可提取事实的对话，验证自动提取效果。
+2. 测试矛盾处理：先说"我在 A 公司"，后说"我跳槽到 B 公司"，检查记忆更新。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-rag-memory">2.1 混合搜索（RAG + Memory）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.3 中我们实现了基本的记忆提取。Supermemory 的混合搜索允许同时检索外部知识库（RAG）和个人记忆（Memory），在单个查询中获取两方面的信息。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">// 添加外部知识到 RAG 知识库
+await sm.documents.create({
+  content: &quot;React 18 引入了 Concurrent Features，包括 useTransition 和 useDeferredValue...&quot;,
+  metadata: { source: &quot;react-docs&quot;, type: &quot;documentation&quot; }
+});
+
+// 混合搜索：同时检索知识库和用户记忆
+const results = await sm.search({
+  query: &quot;帮我优化 React 电商网站的性能&quot;,
+  userId: &quot;user-123&quot;,
+  hybrid: true  // 同时搜索 RAG + Memory
+});
+
+// 结果包含：
+// 1. RAG: React 18 并发特性文档
+// 2. Memory: 用户在开发电商网站，使用 React
+</code></pre>
+<p><strong>注意事项：</strong>
+- 混合搜索会增加响应时间和成本（需要两次检索 + 合并排序）。
+- 对于只需要文档检索的场景，使用纯 RAG 搜索即可。</p>
+<p><strong>练习题：</strong>
+1. 添加 3 篇技术文档到 RAG 知识库，测试混合搜索效果。
+2. 对比纯 RAG 搜索和混合搜索的结果差异。</p>
+<hr />
+<h3 id="22">2.2 连接器集成</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Supermemory 支持从多种外部数据源自动同步知识，包括 Google Drive、Gmail、Notion、GitHub 等。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">// 配置 Notion 连接器
+await sm.connectors.create({
+  type: &quot;notion&quot;,
+  config: {
+    apiKey: process.env.NOTION_API_KEY,
+    databases: [&quot;工作笔记&quot;, &quot;项目文档&quot;]
+  },
+  userId: &quot;user-123&quot;
+});
+
+// 配置 GitHub 连接器（同步代码仓库）
+await sm.connectors.create({
+  type: &quot;github&quot;,
+  config: {
+    token: process.env.GITHUB_TOKEN,
+    repositories: [&quot;my-org/my-project&quot;]
+  },
+  userId: &quot;user-123&quot;
+});
+
+// 连接器会自动定期同步内容到 Supermemory
+// 后续查询会自动包含连接器同步的知识
+</code></pre>
+<p><strong>练习题：</strong>
+1. 配置一个连接器（如 GitHub），验证知识同步效果。
+2. 测试从连接器同步的内容是否能被正确检索。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 自定义记忆处理</h3>
+<pre><code class="language-typescript">// 自定义记忆提取规则
+await sm.memories.create({
+  content: &quot;用户的代码审查偏好：使用函数式编程风格，避免 class 组件&quot;,
+  metadata: {
+    userId: &quot;user-123&quot;,
+    type: &quot;instruction&quot;,
+    priority: &quot;high&quot;,
+    expiresAt: null  // 永不过期
+  }
+});
+
+// 设置记忆过期时间（临时偏好）
+await sm.memories.create({
+  content: &quot;用户暂时使用 Python 进行数据分析项目&quot;,
+  metadata: {
+    userId: &quot;user-123&quot;,
+    type: &quot;temporary_preference&quot;,
+    expiresAt: &quot;2026-07-01T00:00:00Z&quot;  // 3 个月后过期
+  }
+});
+</code></pre>
+<h3 id="32">3.2 最佳实践</h3>
+<ol>
+<li><strong>合理分类记忆类型</strong>：区分事实（长期）、偏好（中期）、指令（短期），设置不同的过期策略。</li>
+<li><strong>定期清理过时记忆</strong>：利用知识更新机制自动遗忘过时信息。</li>
+<li><strong>注意隐私合规</strong>：敏感信息（PII）存储需符合 GDPR 等法规要求。</li>
+<li><strong>控制检索数量</strong>：设置合理的 <code>limit</code> 参数，避免注入过多上下文导致 LLM 困惑。</li>
+<li><strong>监控记忆质量</strong>：定期审查自动提取的记忆准确性。</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个<strong>个性化编程助手</strong>，能够：
+- 记住用户的编程偏好和技术栈
+- 从用户 GitHub 仓库学习代码风格
+- 提供个性化的代码建议</p>
+<p>本项目综合运用：记忆存储（1.2）、自动提取（1.3）、混合搜索（2.1）、连接器（2.2）共 4 个知识点。</p>
+<h3 id="_10">完整实现代码</h3>
+<pre><code class="language-typescript">import { Supermemory } from 'supermemory';
+
+const sm = new Supermemory({ apiKey: process.env.SUPERMEMORY_API_KEY });
+const USER_ID = &quot;developer-123&quot;;
+
+// Step 1: 存储初始用户画像（知识点 1: 记忆存储）
+await sm.memories.create({
+  content: &quot;资深前端工程师，精通 TypeScript/React/Next.js，偏好函数式编程&quot;,
+  metadata: { userId: USER_ID, type: &quot;profile&quot; }
+});
+
+// Step 2: 配置 GitHub 连接器（知识点 4: 连接器）
+await sm.connectors.create({
+  type: &quot;github&quot;,
+  config: { token: process.env.GITHUB_TOKEN, repositories: [&quot;my-org/frontend&quot;] },
+  userId: USER_ID
+});
+
+// Step 3: 模拟对话（知识点 2: 自动提取）
+const chat = [
+  { role: &quot;user&quot;, content: &quot;我最近在用 Tailwind CSS，觉得很好用&quot; },
+  { role: &quot;assistant&quot;, content: &quot;Tailwind CSS 确实很灵活...&quot; },
+  { role: &quot;user&quot;, content: &quot;我不喜欢用 CSS-in-JS，太复杂了&quot; },
+];
+await sm.extract({ messages: chat, userId: USER_ID });
+
+// Step 4: 个性化查询（知识点 3: 混合搜索）
+const results = await sm.search({
+  query: &quot;帮我设计一个按钮组件&quot;,
+  userId: USER_ID,
+  hybrid: true
+});
+// 自动结合: React + TypeScript + Tailwind CSS 偏好 + GitHub 代码风格
+</code></pre>
+<h3 id="_11">扩展挑战</h3>
+<ol>
+<li>添加 Slack 连接器，从工作聊天中提取项目上下文。</li>
+<li>实现记忆质量评分，自动标记低置信度的记忆供人工审核。</li>
+</ol>
+<hr />
+<h2 id="_12">第五部分：常见问题与排查指南</h2>
+<h3 id="_13">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>API key invalid</code></td>
+<td>API Key 未设置或无效</td>
+<td>检查 SUPERMEMORY_API_KEY 环境变量</td>
+</tr>
+<tr>
+<td><code>Memory not found</code></td>
+<td>检索的记忆不存在</td>
+<td>检查 userId 是否一致，先存储再检索</td>
+</tr>
+<tr>
+<td><code>Rate limit exceeded</code></td>
+<td>API 调用频率过高</td>
+<td>降低调用频率，使用批量接口</td>
+</tr>
+<tr>
+<td><code>Connector sync failed</code></td>
+<td>连接器认证失败</td>
+<td>检查连接器的 API Token 是否有效</td>
+</tr>
+<tr>
+<td><code>Search timeout</code></td>
+<td>查询过于复杂</td>
+<td>简化查询，减少 limit 值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_14">调试技巧</h3>
+<ol>
+<li><strong>使用日志模式</strong>：启用调试日志查看记忆提取和检索的详细过程。</li>
+<li><strong>检查存储内容</strong>：定期列出用户的所有记忆，确认自动提取的准确性。</li>
+<li><strong>对比有无记忆的回答</strong>：同一个问题，对比有/无 Supermemory 上下文时 LLM 的回答差异。</li>
+</ol>
+<hr />
+<h2 id="_15">第六部分：学习路线推荐</h2>
+<h3 id="_16">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README</strong> — 快速入门和 API 概览</li>
+<li><strong>API 文档</strong> — 完整的 API 参考（supermemory.ai）</li>
+<li><strong>连接器文档</strong> — 外部数据源集成</li>
+<li><strong>Skills 仓库</strong> — 高级功能扩展</li>
+<li><strong>OpenCode 插件</strong> — IDE 集成</li>
+</ol>
+<h3 id="_17">推荐进阶资源</h3>
+<ul>
+<li><a href="https://github.com/supermemoryai">Supermemory GitHub 组织</a> — 23 个仓库，完整的开发者生态</li>
+<li><a href="https://docs.mem0.ai/">Mem0 文档</a> — 竞品对比学习</li>
+<li><a href="https://arxiv.org/abs/2402.18390">LongMemEval 论文</a> — AI 记忆评估方法论</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godogen - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GitHub README 和 Hacker News 讨论中作者 htdt 的详细解释</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#skill-three-skill-architecture" class="toc-h4">三 Skill 架构（Three-Skill Architecture）</a></li>
+<li><a href="#multi-model-asset-pipeline" class="toc-h4">多模型资产生成管线（Multi-Model Asset Pipeline）</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#skill-three-skill-architecture_1" class="toc-h3">三 Skill 架构（Three-Skill Architecture）</a></li>
+<li><a href="#qa-visual-qa-closed-loop" class="toc-h3">视觉 QA 闭环（Visual QA Closed Loop）</a></li>
+<li><a href="#multi-model-asset-generation" class="toc-h3">多模型资产生成（Multi-Model Asset Generation）</a></li>
+<li><a href="#risk-first-decomposition" class="toc-h3">风险优先分解（Risk-first Decomposition）</a></li>
+<li><a href="#c-net-9" class="toc-h3">C# / .NET 9 代码生成</a></li>
+<li><a href="#850-godot-api" class="toc-h3">850+ Godot 类 API 文档懒加载</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Godogen - 深度分析报告</h1>
+                        <div class="article-meta">基于 GitHub README 和 Hacker News 讨论中作者 htdt 的详细解释</div>
+                    </header>
+                    <h1 id="godogen-">Godogen - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2024-2026 年间，AI 辅助编程能力突飞猛进，GitHub Copilot、Cursor、Claude Code 等工具已能生成高质量的代码片段。然而，AI 在游戏开发领域的应用仍面临一个核心鸿沟：<strong>传统 AI 辅助工具只能生成代码片段，无法产出完整的可玩游戏项目。</strong></p>
+<p>游戏开发与一般软件开发有本质区别。一个完整的游戏不仅需要代码，还需要美术资产（精灵图、纹理、3D 模型、动画）、场景组织（场景树、节点层级）、物理配置、音效整合等多个维度的协同工作。即使 AI 能够生成完美的游戏逻辑代码，如果没有对应的美术资产和正确的场景结构，游戏仍然无法运行。</p>
+<p>行业面临的具体痛点包括：</p>
+<ol>
+<li>
+<p><strong>代码与资产割裂</strong>：AI 编码工具能写代码，但无法生成游戏所需的美术资源。开发者仍需手动使用图像编辑器、3D 建模工具和动画软件完成美术工作，这是一个完全独立的工作流。</p>
+</li>
+<li>
+<p><strong>Godot 引擎的 AI 友好性</strong>：Godot 引擎使用文本格式（<code>.tscn</code> 场景文件、<code>.tres</code> 资源文件），这使 AI 工具能够直接操控场景结构——相比之下，Unreal Engine 大量依赖二进制文件，Unity 的封闭性使 AI 缺乏可靠的文档支持。Hacker News 社区评论指出："Unreal engine is too heavy on binary files that coding tools can't parse, and Unity is closed source which leaves the bot with no reliable documentation."（Unreal 引擎的二进制文件过重，编码工具无法解析；Unity 闭源，机器人无法获得可靠文档。）[置信度：高]</p>
+</li>
+<li>
+<p><strong>LLM 对 Godot API 的训练数据不足</strong>：通用大语言模型对 Godot 引擎 API 的掌握远不如 Unity 或 Unreal。Godot 的 GDScript 虽然语法简洁，但其 Variant 类型系统和动态特性导致 LLM 经常生成无法运行的代码。</p>
+</li>
+<li>
+<p><strong>缺乏视觉验证</strong>：传统 AI 编码工具生成代码后，开发者需要手动编译、运行、检查视觉效果。如果出现 z-fighting（深度冲突）、缺失纹理、破坏的物理等视觉问题，AI 无法自行发现和修复。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>Godogen 由独立开发者 htdt（@alex_erm）创建，核心动机是：</p>
+<ol>
+<li>
+<p><strong>构建端到端的游戏生成管线</strong>：不满足于生成代码片段，而是要从文本描述出发，自动生成包含代码、美术资产、场景组织和视觉验证的完整 Godot 4 项目。htdt 在 Hacker News 讨论中表示项目经过"1+ year of iteration"（超过一年的迭代）。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多模型协作的资产生成</strong>：认识到没有单一的 AI 模型能胜任所有资产生成任务——Gemini 擅长创建精确的参考图和角色，xAI Grok 在纹理和简单物体上表现好，Tripo3D 能将图片转换为 3D 模型。通过编排多个专业模型，最大化每分钱的视觉质量。[置信度：高]</p>
+</li>
+<li>
+<p><strong>视觉 QA 闭环</strong>：从过往迭代中认识到，仅凭代码生成无法保证游戏质量。通过从运行中的游戏截取实际截图，使用 Gemini Flash 和 Claude vision 进行分析，形成"生成→验证→修复"的闭环，自动捕捉视觉问题。[置信度：高]</p>
+</li>
+<li>
+<p><strong>单上下文全局视图</strong>：在早期版本中使用多任务分治（task DAG）架构，但发现拆分为独立任务后，主代理失去了对全局的视图，导致各模块之间不一致。因此转向单 1M token 上下文窗口的架构，让编排器保持完整的全局理解。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-02-06</strong>：GitHub 仓库创建</li>
+<li><strong>2026-03-09</strong>：初始版本发布——双 Skill 架构（godogen 编排器 + godot-task 执行器，分叉运行），使用 GDScript，集成 Gemini 图像生成和 Tripo3D</li>
+<li><strong>2026-03-10</strong>：Reddit r/aigamedev 发布，社区开始关注</li>
+<li><strong>2026-03-17</strong>：Gigazine 日文科技媒体专题报道</li>
+<li><strong>2026-03-25</strong>：新增 xAI Grok 视频生成用于动画精灵（带循环检测），BiRefNet 抠图，macOS 支持</li>
+<li><strong>2026-04-03</strong>：架构重大变更——迁移到三 Skill 单上下文架构，将 godot-task 执行器合并入主编排器，新增 godot-api（API 查找）和 visual-qa（视觉 QA）作为分叉支持 Skill</li>
+<li><strong>2026-04-06</strong>：C# 迁移——所有代码生成从 GDScript 切换到 C# / .NET 9，使用 <code>dotnet build</code> 替代逐文件验证</li>
+<li><strong>2026-04-11</strong>：GitHub 最后推送日期（截至 2026-04-13），项目活跃</li>
+<li><strong>2026-04-13</strong>：GitHub Stars 2,762，Forks 260，Open Issues 4</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>Godogen 的设计围绕五个核心理念：</p>
+<ol>
+<li>
+<p><strong>视觉 QA 闭环（Visual QA Closed Loop）</strong>：Godogen 最核心的创新不仅是生成游戏，而是验证生成的游戏。"生成→截图→分析→修复"的闭环使 AI 能够自主发现和修复视觉问题——z-fighting、缺失纹理、破坏的物理、精灵重叠等。这与传统 AI 编码工具的"生成即结束"形成鲜明对比。[置信度：高]</p>
+</li>
+<li>
+<p><strong>单上下文全局视图（Single-Context Global View）</strong>：在单个 1M token 上下文窗口中运行完整的规划、构建和调试流程，而非将任务拆分为多个独立的上下文。这使编排器始终保持对整个项目的全局理解，避免模块间不一致。采用风险优先分解（Risk-first Decomposition）替代传统的任务 DAG。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多模型专业分工（Multi-Model Specialization）</strong>：没有试图用一个模型做所有事情，而是为每种资产生成任务选择最合适的 AI 模型。Gemini 负责精确的参考图和角色创建，xAI Grok 处理纹理和简单物体，Tripo3D 将图片转换为 3D 模型，Grok 视频生成动画精灵。预算感知策略确保最大化每分钱的视觉影响。[置信度：高]</p>
+</li>
+<li>
+<p><strong>编译器优先（Compiler-First）</strong>：选择 C# / .NET 9 而非 GDScript 作为代码生成语言。核心理由是 C# 编译器能在运行前捕获类型错误，而 GDScript 的 Variant 类型推断错误只能在运行时被发现。使用 <code>dotnet build</code> 替代逐文件的 <code>--check-only</code> 验证，编译器成为第一道质量关卡。[置信度：高]</p>
+</li>
+<li>
+<p><strong>场景脚本生成（Scene Script Generation）</strong>：避免直接手写 <code>.tscn</code> 文件（Godot 的文本序列化格式），而是通过 headless 脚本在内存中构建节点图，然后序列化为 <code>.tscn</code> 文件。这避免了直接编辑 Godot 序列化格式的脆弱性。[置信度：高]</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>单上下文 vs 多任务</strong>：选择单 1M token 上下文，获得了全局视图，但受限于上下文窗口大小。对于极其复杂的游戏，1M token 可能不够。早期版本使用任务 DAG（多个独立任务），但发现缺乏全局视图导致模块间不一致。[置信度：高]
+- <strong>C# vs GDScript</strong>：选择 C# 获得了编译时类型检查，但牺牲了与 Godot 引擎更紧密的集成和更丰富的社区示例。Hacker News 社区中多位开发者支持这一决策，认为"LLMs are really good at C#"。[置信度：高]
+- <strong>多模型 vs 单模型</strong>：选择多模型协作获得了更高质量的资产，但增加了 API 依赖和成本管理的复杂性。用户需要配置 GOOGLE_API_KEY、XAI_API_KEY、TRIPO3D_API_KEY 三个 API 密钥。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="skill-three-skill-architecture">三 Skill 架构（Three-Skill Architecture）</h4>
+<pre><code>用户游戏描述（文本）
+  │
+  ├─ godogen（编排器 Skill）
+  │     → 单个 1M token 上下文窗口
+  │     → 执行完整管线：规划 → 构建 → 调试
+  │     → 使用风险优先分解（Risk-first Decomposition）
+  │     → 推荐使用 Claude Opus 4.6
+  │     │
+  │     ├─ [分叉] godot-api Skill
+  │     │     → 处理 Godot 类 API 查找
+  │     │     → 850+ Godot 类的懒加载 API 文档
+  │     │     → 两层加载：~128 常用类始终可见（单行摘要）
+  │     │       → 完整文档按需加载
+  │     │     → 使用 Claude Sonnet（成本优化）
+  │     │
+  │     └─ [分叉] visual-qa Skill
+  │           → 从运行中的游戏截取截图
+  │           → 使用 Gemini Flash 分析视觉问题
+  │           → 使用 Claude vision 进行视觉分析
+  │           → 包含&quot;问题模式&quot;用于自由形式视觉调试
+  │           → 捕捉：z-fighting、缺失纹理、破坏的物理
+  │           → 使用 Claude Sonnet（成本优化）
+  │
+  └─ 完整的 Godot 4 项目输出
+        → .tscn 场景文件（通过 headless 脚本生成）
+        → C# 脚本（.NET 9）
+        → 美术资产（图片、3D 模型、精灵动画）
+        → 项目配置文件
+</code></pre>
+<blockquote>
+<p>基于 GitHub README 和 Hacker News 讨论中作者 htdt 的详细解释</p>
+</blockquote>
+<p><strong>关键设计决策：</strong> godot-api 和 visual-qa 作为分叉（forked）Skill 运行在独立的上下文中，避免它们的大量输出（API 文档、截图分析）污染主编排器的 1M token 上下文窗口。编排器只接收这些 Skill 处理后的精炼结果。</p>
+<h4 id="multi-model-asset-pipeline">多模型资产生成管线（Multi-Model Asset Pipeline）</h4>
+<pre><code>游戏描述
+  │
+  ├─ 规划阶段
+  │     → 编排器分析游戏需求
+  │     → 列出所需的美术资产清单
+  │     → 为每个资产选择最佳生成模型
+  │
+  ├─ 2D 资产生成
+  │     ├─ 参考图/角色 → Gemini（精确、细节丰富）
+  │     ├─ 纹理/简单物体 → xAI Grok（高效、低成本）
+  │     └─ 动画精灵 → Grok 视频生成 + 循环检测 + BiRefNet 抠图
+  │
+  ├─ 3D 资产生成
+  │     ├─ 先用 Gemini/Grok 生成参考图
+  │     └─ Tripo3D 将图片转换为 3D 模型（仅 3D 游戏需要）
+  │
+  ├─ 预算控制
+  │     → 图像：5-15 美分/张（取决于分辨率）
+  │     → 3D 模型：30-60 美分/个（Tripo3D 中等质量含参考图）
+  │     → 视觉 QA（Gemini Flash）：几乎免费
+  │     → 典型游戏：10-20 张图 + 数个 3D 模型 = 资产成本 &lt; $3
+  │
+  └─ 资产集成
+        → 图片保存为 Godot 支持的格式
+        → 3D 模型导入 Godot 的资源系统
+        → 精灵动画配置 .tres 资源文件
+</code></pre>
+<blockquote>
+<p>基于 GitHub README 和 Hacker News 讨论中作者提供的详细成本数据</p>
+</blockquote>
+<p><strong>成本参考（来自作者 htdt 在 Hacker News 的披露）：</strong>
+- 典型单板滑雪游戏的总成本约 $5-8（包含 LLM + 资产生成）
+- LLM 成本约 $1-3（按 API 费率计算）
+- 资产成本约 $2-3
+- Grok Imagine 2 美分/图的价格在迁移路线图中</p>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>用户输入游戏描述（文本）
+  │
+  ├─ 1. 项目初始化
+  │     → publish.sh 创建项目目录结构
+  │     → 安装 .claude/skills/ 下的三个 Skill
+  │     → 生成 CLAUDE.md 项目配置
+  │     → 配置 API 密钥（GOOGLE_API_KEY, XAI_API_KEY, TRIPO3D_API_KEY）
+  │
+  ├─ 2. 规划阶段（编排器，风险优先分解）
+  │     → 分析游戏描述，识别核心玩法
+  │     → 列出所需资产清单和代码架构
+  │     → 按风险优先排序：先实现最不确定的部分
+  │     → 制定资源分配策略（预算感知）
+  │
+  ├─ 3. 构建阶段（编排器驱动）
+  │     ├─ 代码生成
+  │     │     → 生成 C# / .NET 9 脚本
+  │     │     → 通过 headless 脚本生成 .tscn 场景文件
+  │     │     → dotnet build 验证编译
+  │     │
+  │     ├─ 资产生成（并行调用外部 API）
+  │     │     → Gemini: 参考图、角色图
+  │     │     → Grok: 纹理、简单物体
+  │     │     → Tripo3D: 3D 模型转换
+  │     │     → Grok 视频: 动画精灵帧
+  │     │
+  │     └─ API 查询（分叉 godot-api Skill）
+  │           → 查询 850+ Godot 类的 API 文档
+  │           → 两层加载策略：常用类摘要 → 完整文档
+  │           → 语言规范和&quot;怪异数据库&quot;（引擎行为备忘）
+  │
+  ├─ 4. 验证阶段（视觉 QA 闭环）
+  │     ├─ 运行游戏（headless 或窗口模式）
+  │     ├─ 截取运行时截图
+  │     ├─ 分叉 visual-qa Skill 分析
+  │     │     → Gemini Flash: 空间问题检测（z-fighting 等）
+  │     │     → Claude vision: 综合视觉分析
+  │     │     → &quot;问题模式&quot;: 自由形式视觉调试
+  │     ├─ 识别视觉问题
+  │     └─ 反馈给编排器 → 修复 → 重新验证
+  │
+  ├─ 5. 迭代优化（在同一个 1M token 上下文中）
+  │     → 编排器保持全局视图
+  │     → 基于视觉 QA 反馈修改代码和资产
+  │     → 重新验证直到通过
+  │
+  └─ 6. 输出完整 Godot 4 项目
+        → 可直接在 Godot 编辑器中打开
+        → 包含正确的场景树、可读脚本和合理架构
+</code></pre>
+<blockquote>
+<p>基于 GitHub README 和 Gigazine 报道</p>
+</blockquote>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   用户交互层（User Interaction Layer）          │
+│   文本游戏描述 → Claude Code CLI / OpenCode                   │
+├─────────────────────────────────────────────────────────────┤
+│                   编排器层（Orchestrator Layer）                │
+│   godogen Skill（单 1M token 上下文）                         │
+│   ├─ 规划器（Risk-first Decomposition）                       │
+│   ├─ 构建调度器（资产 + 代码 + 场景协调）                     │
+│   └─ 验证调度器（视觉 QA 触发和反馈循环）                     │
+├─────────────────────────────────────────────────────────────┤
+│                   支持技能层（Support Skills Layer）            │
+│   ┌──────────────────┐   ┌──────────────────┐              │
+│   │ godot-api Skill  │   │ visual-qa Skill   │              │
+│   │ （分叉上下文）    │   │ （分叉上下文）     │              │
+│   │ ├─ API 文档加载   │   │ ├─ 截图捕获        │              │
+│   │ ├─ 两层缓存       │   │ ├─ Gemini Flash    │              │
+│   │ └─ 怪异数据库     │   │ ├─ Claude vision   │              │
+│   └──────────────────┘   │ └─ 问题模式        │              │
+│                           └──────────────────┘              │
+├─────────────────────────────────────────────────────────────┤
+│                   代码生成层（Code Generation Layer）           │
+│   C# / .NET 9 代码生成                                       │
+│   ├─ dotnet build 编译验证                                   │
+│   ├─ Headless 场景脚本（.tscn 序列化）                        │
+│   └─ 项目配置生成                                             │
+├─────────────────────────────────────────────────────────────┤
+│                   资产生成层（Asset Generation Layer）          │
+│   ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐             │
+│   │ Gemini │ │ Grok   │ │Tripo3D │ │Grok    │             │
+│   │ 参考图  │ │ 纹理   │ │ 3D模型 │ │ 视频   │             │
+│   └────────┘ └────────┘ └────────┘ └────────┘             │
+│   预算控制器（Budget-Aware Resource Allocation）              │
+├─────────────────────────────────────────────────────────────┤
+│                   存储层（Storage Layer）                      │
+│   Godot 4 项目文件系统                                        │
+│   ├─ scenes/ (.tscn 场景文件)                                │
+│   ├─ scripts/ (.cs C# 脚本)                                 │
+│   ├─ assets/ (图片、3D 模型、精灵动画)                        │
+│   ├─ .claude/skills/ (Skill 定义)                            │
+│   └─ CLAUDE.md (项目配置)                                    │
+├─────────────────────────────────────────────────────────────┤
+│                   运行时层（Runtime Layer）                    │
+│   Claude Code / OpenCode（AI 编码代理）                      │
+│   Godot 4 引擎（游戏运行和截图）                              │
+│   .NET 9 SDK（C# 编译）                                      │
+│   Python 3（Skill 脚本、资产生成调度）                        │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p>基于 GitHub README、Gigazine 报道和 Hacker News 讨论中作者的架构说明</p>
+</blockquote>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>编排器 Skill（godogen）</strong> - 运行在单 1M token 上下文窗口中的主控 Skill。负责完整的规划、构建和调试流程。使用风险优先分解策略确定实现顺序。推荐使用 Claude Opus 4.6（Sonnet 4.6 可用但需要更多引导）。是整个管线的"大脑"。</p>
+</li>
+<li>
+<p><strong>API 查找 Skill（godot-api）</strong> - 分叉运行在独立上下文中的支持 Skill。管理 850+ Godot 类的 API 参考文档，采用两层懒加载策略：约 128 个常用类始终以单行摘要形式可见，完整文档按需加载。还包含手写的语言规范和"怪异数据库"（记录引擎的非直觉行为）。使用 Claude Sonnet 以优化成本。</p>
+</li>
+<li>
+<p><strong>视觉 QA Skill（visual-qa）</strong> - 分叉运行在独立上下文中的支持 Skill。从运行中的游戏截取实际截图，使用 Gemini Flash（空间问题检测能力强）和 Claude vision 进行综合视觉分析。包含"问题模式"用于自由形式的视觉调试，能捕捉 z-fighting、缺失纹理、破坏的物理等视觉问题。使用 Claude Sonnet。</p>
+</li>
+<li>
+<p><strong>资产生成管线（Asset Pipeline）</strong> - 多模型协作的美术资产生成系统。Gemini 负责精确的参考图和角色，xAI Grok 处理纹理和简单物体，Tripo3D 将图片转换为 3D 模型，Grok 视频生成动画精灵帧（带循环检测和 BiRefNet 抠图）。内置预算控制器，最大化每分钱的视觉影响。</p>
+</li>
+<li>
+<p><strong>场景生成器（Scene Generator）</strong> - 通过 headless 脚本在内存中构建 Godot 节点图，然后序列化为 <code>.tscn</code> 文件。避免直接手写 Godot 序列化格式的脆弱性。生成正确的场景树结构，包括节点层级、组件配置和信号连接。</p>
+</li>
+<li>
+<p><strong>代码生成器（Code Generator）</strong> - 生成 C# / .NET 9 代码，使用 <code>dotnet build</code> 进行编译验证。C# 的静态类型系统使编译器能在运行前捕获类型错误，比 GDScript 的 Variant 类型推断更安全。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>Godogen 的扩展方式较为有限，主要体现在以下方面：</p>
+<ol>
+<li>
+<p><strong>游戏描述自定义</strong>：用户通过修改文本描述来控制生成结果。描述越详细，生成质量越高。这是一种"声明式"的扩展方式——不是扩展工具本身，而是扩展输入。</p>
+</li>
+<li>
+<p><strong>API 密钥配置</strong>：支持选择性启用资产生成模型。不配置 Tripo3D 密钥则不生成 3D 模型（仅限 2D 游戏），不配置 Grok 密钥则使用 Gemini 替代所有图像生成。</p>
+</li>
+<li>
+<p><strong>CLAUDE.md 定制</strong>：项目根目录的 <code>CLAUDE.md</code> 文件可以包含额外的指令和约束，影响生成行为。</p>
+</li>
+<li>
+<p><strong>Skill 修改</strong>：由于是 MIT 开源项目，用户可以直接修改 <code>.claude/skills/</code> 目录下的 Skill 定义文件，定制生成行为。</p>
+</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="skill-three-skill-architecture_1">三 Skill 架构（Three-Skill Architecture）</h3>
+<ul>
+<li><strong>定义：</strong> Godogen 的核心运行架构，由一个主编排器 Skill（godogen）和两个分叉支持 Skill（godot-api、visual-qa）组成。编排器在单个 1M token 上下文窗口中运行完整管线，支持 Skill 在独立上下文中处理特定任务。</li>
+<li><strong>作用：</strong> 解决了"全局视图 vs 上下文污染"的矛盾。编排器需要保持对整个项目的全局理解（单上下文），但 API 文档查询和视觉分析会产生大量中间输出，如果不隔离会快速消耗上下文窗口。通过分叉 Skill 处理这些任务，编排器只接收精炼后的结果。</li>
+<li><strong>使用场景：</strong> 从文本描述自动生成完整的 Godot 4 游戏项目。</li>
+<li><strong>架构说明：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 Godogen GitHub README 的架构描述
+# 三 Skill 架构的运行模式
+
+# Skill 1: godogen（编排器） - 主上下文，1M token
+#   角色：规划、构建、调试的全流程控制
+#   模型：推荐 Claude Opus 4.6
+#   策略：风险优先分解（Risk-first Decomposition）
+#
+#   主编排器不做 API 查找和截图分析，
+#   这些任务分叉给支持 Skill 处理
+
+# Skill 2: godot-api - 分叉上下文
+#   角色：Godot API 文档查询
+#   模型：Claude Sonnet（成本优化）
+#   两层加载策略：
+#     Layer 1: ~128 常用类始终可见（单行摘要）
+#     Layer 2: 完整文档按需加载（850+ 类）
+#   附加：手写语言规范 + &quot;怪异数据库&quot;
+
+# Skill 3: visual-qa - 分叉上下文
+#   角色：视觉质量保证
+#   模型：Claude Sonnet + Gemini Flash
+#   功能：
+#     - 从运行中的游戏截取截图
+#     - Gemini Flash 空间问题检测
+#     - Claude vision 综合分析
+#     - &quot;问题模式&quot;自由形式调试
+#   检测：z-fighting、缺失纹理、破坏的物理
+</code></pre>
+<blockquote>
+<p>基于 Godogen GitHub README 和 Hacker News 讨论中 htdt 的架构解释</p>
+</blockquote>
+<h3 id="qa-visual-qa-closed-loop">视觉 QA 闭环（Visual QA Closed Loop）</h3>
+<ul>
+<li><strong>定义：</strong> 从运行中的游戏截取实际截图，使用多模型视觉分析（Gemini Flash + Claude vision）检测问题，自动反馈给编排器修复，形成"生成→验证→修复"的自动化质量保证循环。</li>
+<li><strong>作用：</strong> 解决 AI 游戏生成中"代码正确但视觉效果错误"的问题。许多视觉问题（如 z-fighting 深度冲突、精灵重叠、缺失纹理、错误的物理行为）只能在视觉层面被发现，代码编译通过不代表游戏看起来正确。</li>
+<li><strong>使用场景：</strong> 自动验证生成的游戏质量；自由形式的视觉调试（通过"问题模式"）；捕捉物理引擎配置错误导致的视觉异常。</li>
+<li><strong>工作流程：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 Godogen GitHub README
+# 视觉 QA 闭环的执行流程
+
+# Step 1: 运行游戏并截图
+#   → 启动 Godot 4（headless 或窗口模式）
+#   → 在关键帧截取屏幕截图
+
+# Step 2: 多模型视觉分析
+#   → Gemini Flash: 擅长空间问题检测
+#     - 检测 z-fighting（两个面在同一深度闪烁）
+#     - 检测物体重叠和穿模
+#     - 检测缺失的纹理（显示为灰色/默认材质）
+#   → Claude vision: 综合视觉分析
+#     - 评估整体视觉质量
+#     - 检查 UI 元素布局是否正确
+#     - 验证动画是否流畅
+
+# Step 3: 问题反馈和修复
+#   → 将发现的问题报告给编排器
+#   → 编排器修改代码/场景/资产
+#   → 重新运行游戏并验证
+
+# Step 4: &quot;问题模式&quot;（自由形式视觉调试）
+#   → 用户可以通过 visual-qa Skill 自由提问
+#   → 例如：&quot;角色是否正确地站在地面上？&quot;
+#   → 例如：&quot;背景是否有明显的拼接痕迹？&quot;
+</code></pre>
+<blockquote>
+<p>基于 Godogen GitHub README</p>
+</blockquote>
+<h3 id="multi-model-asset-generation">多模型资产生成（Multi-Model Asset Generation）</h3>
+<ul>
+<li><strong>定义：</strong> 集成多个专业 AI 模型进行游戏美术资产生成，每个模型负责其最擅长的资产类型，通过预算控制器优化资源分配。</li>
+<li><strong>作用：</strong> 没有单一 AI 模型能胜任所有类型的资产生成。通过为每种任务选择最佳模型，在成本约束下获得最高的视觉质量。</li>
+<li><strong>使用场景：</strong> 2D 游戏的精灵图、背景图、UI 元素生成；3D 游戏的角色模型、环境物体、纹理生成；动画精灵的帧序列生成。</li>
+<li><strong>模型分工：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 Godogen GitHub README 和 Hacker News 讨论中的成本数据
+# 多模型资产生成管线
+
+# 模型分工和成本：
+ASSET_MODELS = {
+    &quot;gemini&quot;: {
+        &quot;role&quot;: &quot;参考图和角色创建&quot;,
+        &quot;strength&quot;: &quot;精确、细节丰富、适合复杂场景&quot;,
+        &quot;cost_per_image&quot;: &quot;$0.07 - $0.15&quot;,  # 取决于分辨率
+        &quot;use_cases&quot;: [&quot;角色立绘&quot;, &quot;场景概念图&quot;, &quot;UI 背景图&quot;],
+    },
+    &quot;grok&quot;: {
+        &quot;role&quot;: &quot;纹理和简单物体&quot;,
+        &quot;strength&quot;: &quot;高效、低成本、适合重复性纹理&quot;,
+        &quot;cost_per_image&quot;: &quot;$0.02&quot;,  # Grok Imagine
+        &quot;use_cases&quot;: [&quot;地面纹理&quot;, &quot;墙壁贴图&quot;, &quot;简单道具&quot;],
+    },
+    &quot;grok_video&quot;: {
+        &quot;role&quot;: &quot;动画精灵帧生成&quot;,
+        &quot;strength&quot;: &quot;从视频提取帧序列 + 循环检测&quot;,
+        &quot;process&quot;: &quot;生成视频 → 拆帧 → BiRefNet 抠图 → 循环检测 → 精灵表&quot;,
+        &quot;use_cases&quot;: [&quot;角色行走动画&quot;, &quot;攻击动画&quot;, &quot;待机动画&quot;],
+    },
+    &quot;tripo3d&quot;: {
+        &quot;role&quot;: &quot;3D 模型生成&quot;,
+        &quot;strength&quot;: &quot;从参考图生成可用的 3D 模型&quot;,
+        &quot;cost_per_model&quot;: &quot;$0.30 - $0.60&quot;,  # 中等质量含参考图
+        &quot;use_cases&quot;: [&quot;3D 角色&quot;, &quot;环境物体&quot;, &quot;道具&quot;],
+    },
+}
+
+# 典型游戏的资产生本：
+# 10-20 张图片 + 数个 3D 模型 = &lt; $3 资产成本
+# LLM API 调用 = $1-3
+# 单板滑雪游戏总成本 ≈ $5-8
+</code></pre>
+<blockquote>
+<p>基于 Godogen GitHub README 和 Hacker News 讨论中 htdt 披露的成本数据</p>
+</blockquote>
+<h3 id="risk-first-decomposition">风险优先分解（Risk-first Decomposition）</h3>
+<ul>
+<li><strong>定义：</strong> 替代传统任务 DAG（有向无环图）的分解策略，按照实现风险从高到低排序任务，优先处理最不确定的部分。</li>
+<li><strong>作用：</strong> 在有限的 1M token 上下文窗口中，如果先实现了低风险的简单部分（如 UI 布局），可能消耗大量上下文后再发现高风险部分（如核心玩法机制）无法实现。风险优先确保最关键的部分最先得到验证。</li>
+<li><strong>使用场景：</strong> 编排器在规划阶段决定实现顺序。</li>
+<li><strong>策略说明：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 Godogen GitHub README 的描述
+# 风险优先分解策略
+
+# 传统方法（任务 DAG）：
+#   任务 A → 任务 B → 任务 C → 任务 D
+#   可能花了大量上下文后才发现核心机制不可行
+
+# 风险优先方法：
+#   1. 识别所有需要的组件
+#   2. 评估每个组件的实现风险
+#   3. 按风险从高到低排序
+#   4. 优先实现风险最高的组件
+
+# 示例：生成一个平台跳跃游戏
+#   高风险：物理引擎配置、角色控制器的手感
+#   中风险：敌人 AI、碰撞检测
+#   低风险：UI 布局、音效整合、粒子效果
+#   → 先实现角色控制器，确保核心玩法可行
+</code></pre>
+<blockquote>
+<p>基于 Godogen GitHub README</p>
+</blockquote>
+<h3 id="c-net-9">C# / .NET 9 代码生成</h3>
+<ul>
+<li><strong>定义：</strong> 所有生成的游戏代码使用 C# 语言和 .NET 9 运行时，而非 Godot 原生的 GDScript。使用 <code>dotnet build</code> 作为编译验证手段。</li>
+<li><strong>作用：</strong> C# 的静态类型系统使编译器能在代码运行前捕获类型错误，而 GDScript 的 Variant 类型推断错误只能在运行时被发现。对于 AI 生成的代码，编译器是一道重要的自动质量关卡。</li>
+<li><strong>使用场景：</strong> 所有游戏逻辑代码生成；编译时类型检查；项目构建验证。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-csharp">// 基于 Godogen 生成的 C# 代码风格
+// Godot 4 + C# / .NET 9 的典型游戏脚本
+
+using Godot;
+
+public partial class Player : CharacterBody2D
+{
+    [Export]
+    public float Speed { get; set; } = 300.0f;
+
+    [Export]
+    public float JumpVelocity { get; set; } = -400.0f;
+
+    private float _gravity = ProjectSettings
+        .GetSetting(&quot;physics/2d/default_gravity&quot;).AsSingle();
+
+    public override void _PhysicsProcess(double delta)
+    {
+        Vector2 velocity = Velocity;
+
+        // 重力
+        if (!IsOnFloor())
+        {
+            velocity.Y += _gravity * (float)delta;
+        }
+
+        // 跳跃
+        if (Input.IsActionJustPressed(&quot;jump&quot;) &amp;&amp; IsOnFloor())
+        {
+            velocity.Y = JumpVelocity;
+        }
+
+        // 水平移动
+        Vector2 direction = Input.GetVector(&quot;left&quot;, &quot;right&quot;, &quot;up&quot;, &quot;down&quot;);
+        velocity.X = direction.X * Speed;
+
+        Velocity = velocity;
+        MoveAndSlide();
+    }
+}
+</code></pre>
+<blockquote>
+<p>基于 Godot 4 C# API 和 Godogen GitHub README（C# 迁移说明）</p>
+</blockquote>
+<h3 id="850-godot-api">850+ Godot 类 API 文档懒加载</h3>
+<ul>
+<li><strong>定义：</strong> 内置超过 850 个 Godot 类的 API 参考文档，采用两层懒加载策略按需提供，弥补大语言模型对 Godot API 训练数据的不足。</li>
+<li><strong>作用：</strong> 通用 LLM 对 Godot API 的掌握远不如 Unity 或 Unreal。通过在 Skill 中内置准确的 API 文档，确保生成的代码使用正确的 API 调用和参数。</li>
+<li><strong>使用场景：</strong> 编排器需要查询 Godot 类的方法、属性、信号；visual-qa Skill 需要理解场景节点的正确配置方式。</li>
+<li><strong>加载策略：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 Godogen GitHub README 和 Hacker News 讨论
+# API 文档懒加载策略
+
+# 两层加载：
+# Layer 1: 约 128 个常用类始终可见（作为单行摘要）
+#   例如：Node, Node2D, Sprite2D, CharacterBody2D,
+#         Area2D, CollisionShape2D, AnimatedSprite2D, ...
+#   → 不消耗太多上下文，但提供了快速参考
+
+# Layer 2: 完整 API 文档按需加载
+#   → 当编排器需要使用某个类时，通过 godot-api Skill 查询
+#   → 完整文档包含：方法签名、属性类型、信号定义、示例代码
+#   → 850+ Godot 类覆盖
+
+# 附加资源：
+# - 手写语言规范（C# 在 Godot 中的使用约定）
+# - &quot;怪异数据库&quot;（记录引擎的非直觉行为和已知问题）
+#   例如：某些属性在 _Ready() 中尚未初始化
+#   例如：信号连接的时序问题
+</code></pre>
+<blockquote>
+<p>基于 Godogen GitHub README 和 Hacker News 讨论中 htdt 的解释</p>
+</blockquote>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Godogen</th>
+<th>GDAI MCP</th>
+<th>Coding-Solo/godot-mcp</th>
+<th>Godot-Claude-Skills</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>自主管线：从文本描述自动生成完整 Godot 4 游戏项目</td>
+<td>MCP 服务器：实时控制 Godot 编辑器，AI 助手直接操作场景</td>
+<td>MCP 服务器：开源的 Godot 引擎接口</td>
+<td>开发助手：Claude Code Skill，侧重测试和 CI/CD</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>2,762（2026-04-13）</td>
+<td>N/A（商业产品）</td>
+<td>~3,000（2026-03）</td>
+<td>已归档（迁移到 Randroid's Dojo marketplace）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>商业（$19 一次性购买）</td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>Python（Skill）、C#（生成代码）</td>
+<td>TypeScript/JavaScript、GDScript</td>
+<td>TypeScript/JavaScript、GDScript</td>
+<td>GDScript</td>
+</tr>
+<tr>
+<td>范式</td>
+<td>自主管线（批量生成）</td>
+<td>实时编辑器控制（交互式）</td>
+<td>实时编辑器控制（交互式）</td>
+<td>开发助手 + 测试框架</td>
+</tr>
+<tr>
+<td>代码语言</td>
+<td>C# / .NET 9</td>
+<td>GDScript</td>
+<td>GDScript</td>
+<td>GDScript</td>
+</tr>
+<tr>
+<td>视觉 QA</td>
+<td>是（Gemini Flash + Claude vision 截图分析闭环）</td>
+<td>是（编辑器和游戏截图）</td>
+<td>否（仅调试输出）</td>
+<td>是（PlayGodot E2E 测试）</td>
+</tr>
+<tr>
+<td>资产生成</td>
+<td>是（Gemini + Grok + Tripo3D 多模型）</td>
+<td>否</td>
+<td>否</td>
+<td>否</td>
+</tr>
+<tr>
+<td>MCP 协议</td>
+<td>否（使用 Claude Code Skills）</td>
+<td>是</td>
+<td>是</td>
+<td>否（使用 Claude Code Skills）</td>
+</tr>
+<tr>
+<td>3D 支持</td>
+<td>是（Tripo3D）</td>
+<td>有限</td>
+<td>基础</td>
+<td>否</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>~$5-8/游戏（API 成本）</td>
+<td>$19 + API 成本</td>
+<td>免费 + API 成本</td>
+<td>免费 + API 成本</td>
+</tr>
+<tr>
+<td>输出物</td>
+<td>完整 Godot 4 项目（可独立运行）</td>
+<td>编辑器实时操作（无独立项目输出）</td>
+<td>编辑器实时操作</td>
+<td>完整 Godot 项目 + 测试</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>中-高（需配置多个 API 密钥，理解 Skill 架构）</td>
+<td>低（安装插件即可使用）</td>
+<td>低-中（需配置 MCP）</td>
+<td>中（需要自定义 Godot fork）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>中（个人项目，活跃开发中）</td>
+<td>中（商业产品，持续更新）</td>
+<td>中（开源社区维护）</td>
+<td>低（已归档）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。Godogen Stars 来自 GitHub API 实时查询。Coding-Solo/godot-mcp Stars 来自 GitHub 搜索。GDAI MCP 为商业产品，无公开 GitHub 仓库。Godot-Claude-Skills 已归档。[置信度：Godogen 高，GDAI MCP 中，Coding-Solo/godot-mcp 中，Godot-Claude-Skills 高]</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>快速游戏原型生成</strong>：Godogen 最适合从文本描述快速生成可玩的游戏原型。对于游戏设计师、独立开发者或想快速验证游戏创意的团队，Godogen 能在数小时内（成本 $5-8）生成一个包含美术资产的完整 Godot 4 项目。这比传统流程（编程 + 美术 + 场景搭建）快一个数量级。[置信度：高]</p>
+</li>
+<li>
+<p><strong>游戏开发学习辅助</strong>：对于 Godot 新手，Godogen 生成的项目包含正确的场景树结构、合理的 C# 代码架构和完整的美术资产，可以作为学习参考。开发者可以逆向工程生成的代码来理解 Godot 的最佳实践。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>小型 2D/简单 3D 游戏生成</strong>：从 demo 游戏来看，Godogen 在 2D 平台跳跃、无尽跑酷、简单体育游戏等类型上表现较好。复杂的 3D 游戏、大型 RPG 或需要精细物理模拟的游戏可能超出当前能力。[置信度：中]</p>
+</li>
+<li>
+<p><strong>AI 游戏生成技术研究和实验</strong>：Godogen 的三 Skill 架构、视觉 QA 闭环和多模型资产生成管线是 AI 游戏生成领域的创新实践。对于研究 AI 辅助创意工具的学者和开发者，Godogen 提供了一个可研究的开源实现。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>商业级游戏开发</strong>：Godogen 生成的游戏目前仍处于"demo 级别"——Hacker News 社区评价为"lifeless"（缺乏活力）、"meme-tier quality"（梗图级质量）。有经验的 Godot 开发者指出，polish 生成的代码可能比从头开始写更费时间。不适合直接用于商业发布。</p>
+</li>
+<li>
+<p><strong>复杂的 3D 游戏或大型项目</strong>：受 1M token 上下文窗口限制，极其复杂的游戏（大量关卡、复杂 AI、丰富剧情）无法在单次生成中完成。3D 游戏的资产生成质量也受限于 Tripo3D 的能力。</p>
+</li>
+<li>
+<p><strong>需要精细物理模拟的游戏</strong>：物理引擎的精确调参（如赛车游戏的手感、格斗游戏的碰撞判定）需要大量迭代和微调，当前 AI 生成能力难以达到。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>视觉 QA 闭环是核心创新</strong> - Godogen 是目前唯一将视觉验证深度集成到游戏生成管线的开源工具。"生成→截图→分析→修复"的闭环使 AI 能够自主发现和修复视觉问题，而不需要人类开发者手动检查。Gemini Flash 的空间问题检测能力和 Claude vision 的综合分析互补，覆盖了从像素级到场景级的视觉问题。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多模型协作的资产生成</strong> - 通过为每种资产生成任务选择最合适的 AI 模型（Gemini 参考图、Grok 纹理、Tripo3D 模型），Godogen 在极低成本下（典型游戏 $5-8）生成了包含美术资产的完整项目。这解决了传统 AI 编码工具"只能写代码，不能画画"的根本限制。[置信度：高]</p>
+</li>
+<li>
+<p><strong>单上下文全局视图</strong> - 在单个 1M token 上下文窗口中运行完整管线，使编排器始终保持对整个项目的全局理解。风险优先分解策略确保最关键的组件最先被验证。这比将任务拆分为多个独立上下文更可靠。[置信度：高]</p>
+</li>
+<li>
+<p><strong>C# 编译器作为质量关卡</strong> - 从 GDScript 迁移到 C# / .NET 9 是一个经过深思熟虑的决策。C# 的静态类型系统使编译器能在代码运行前捕获大量错误，<code>dotnet build</code> 成为自动化质量保证的一部分。社区反馈也证实了 LLM 对 C# 的掌握优于 GDScript。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>生成质量仍为 demo 级别</strong> - 社区反馈一致指出，Godogen 生成的游戏缺乏"灵魂"——物理感觉差、视觉单调、缺乏真正的游戏性。有经验的 Godot 开发者认为，polish 生成的代码比从头开始写更费时间。Godogen 的 Roadmap 中也计划发布"完整游戏 demo"来证明能力上限，说明当前 demo 还不代表最终潜力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>复杂的 API 密钥配置</strong> - 需要配置 GOOGLE_API_KEY、XAI_API_KEY、TRIPO3D_API_KEY 三个外部 API 密钥，加上 Claude Code 本身的配置。门槛较高，每个 API 都有独立的计费和使用限制。一个 API 不可用会影响整个管线。[置信度：高]</p>
+</li>
+<li>
+<p><strong>1M token 上下文窗口的限制</strong> - 虽然单上下文提供了全局视图，但 1M token 对于复杂游戏可能不够。Godot API 文档已经需要两层懒加载来节省上下文空间。随着项目规模增长，上下文压力会越来越大。[置信度：中]</p>
+</li>
+<li>
+<p><strong>个人维护者风险</strong> - 项目核心维护者为 htdt 一人（@alex_erm）。2,762 Stars 的项目仅由个人维护，巴士因子（bus factor）为 1。如果维护者停止更新，项目将面临可持续性风险。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>Godot 社区对 AI 生成内容的抵触</strong> - Godot 社区存在明显的 AI 疲劳。Reddit r/godot 已经因为大量重复的"can AI make Godot games"帖子而实施内容管控。Godot 引擎联合创始人 Remi Verschelde 对大量 AI 生成的"低质量 PR"表示不满。这种社区氛围可能影响 Godogen 的长期接受度。[置信度：高]</p>
+</li>
+<li>
+<p><strong>外部 API 依赖的不确定性</strong> - Godogen 深度依赖 Gemini、xAI Grok、Tripo3D 三个外部 API。任何一个 API 的价格调整、服务中断或策略变更都会直接影响 Godogen 的可用性和成本。作者在 Roadmap 中提到将 Grok Imagine（2 美分/图）作为迁移目标，暗示成本优化仍在进行中。[置信度：中]</p>
+</li>
+<li>
+<p><strong>AI 游戏生成质量的天花板</strong> - 当前 LLM 和图像生成模型的能力决定了生成质量的上线。即使架构设计优秀，如果底层模型无法生成高质量的游戏逻辑和美术资产，Godogen 的输出质量也会受限。这是一个系统性的风险，不是工具本身能解决的。[置信度：中]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>插件/扩展数量：</strong> Godogen 本身不采用插件架构，而是作为三个 Claude Code Skills 提供固定功能。扩展方式主要是修改 Skill 文件或调整游戏描述输入。生态扩展主要在模型选择层面（通过 API 密钥配置选择启用的资产生成模型）。[置信度：高]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> 核心依赖 Claude Code（运行环境）、Godot 4（游戏引擎）、Gemini/Grok/Tripo3D（资产生成）、.NET 9（C# 运行时）。这些上游依赖本身成熟稳定。Godot 的文本格式（.tscn/.tres）天然适合 AI 操控。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> 无公开的企业采用案例。Godogen 的定位更偏向个人开发者和实验性使用，而非企业级工具。Roadmap 中提到探索 Bevy Engine，暗示作者也在探索 Godot 之外的可能性。[置信度：低]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> 中。GitHub README 提供了完整的架构说明、Changelog 和安装指南。Hacker News 讨论中作者详细回答了技术问题。但缺乏独立的教程、API 参考或开发者指南。Gigazine 报道和中文社区 Gist 提供了一些补充信息。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 低-中。项目无语义化版本号，处于快速迭代中（Changelog 显示从 2026-03-09 到 2026-04-06 不到一个月内经历了两次重大架构变更）。从双 Skill 到三 Skill，从 GDScript 到 C#，API 和架构可能继续调整。仅 4 个 Open Issues 表明问题不多，但项目年龄短（约 2 个月）。[置信度：中]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> 生成一个完整游戏的耗时主要取决于 LLM 推理速度和外部 API 调用延迟。典型游戏（10-20 张图 + 数个 3D 模型）的资产生成需要数十次 API 调用。总耗时可能为数分钟到数十分钟。Godot 4 的文本格式场景文件解析速度快，不构成瓶颈。[置信度：中]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> 有限。Claude Code 的 Skill 执行有基本的日志输出。资产生成有成本追踪（Hacker News 讨论中作者详细说明了每项成本）。但缺乏专门的监控仪表板或性能指标系统。[置信度：低]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> 依赖 Claude Code 的内置重试和上下文管理机制。视觉 QA 闭环本身是一种故障恢复——生成后自动验证并修复。但如果整个管线在某个步骤完全失败（如 API 密钥错误、网络中断），需要人工干预后重新启动。[置信度：中]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> Godogen 生成的是本地 Godot 4 项目文件，不涉及服务端部署。但需要将 API 密钥配置在本地环境中，且资产生成需要向外部 API 发送请求（包括游戏描述和生成的资产描述）。对于涉及机密游戏设计的情况，需要考虑 API 调用的数据安全。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>Claude Code 基本使用（安装、配置、运行 Skill）</li>
+<li>命令行操作（执行 publish.sh、配置环境变量）</li>
+<li>Godot 4 基础概念（场景树、节点、信号）——用于理解和修改生成结果</li>
+<li>外部 API 注册和密钥管理（Google AI Studio、xAI、Tripo3D）</li>
+<li>
+<p>C# 基础（用于理解和修改生成的代码）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 1-2 小时。安装 Claude Code，配置 API 密钥，执行 publish.sh 创建项目，输入游戏描述启动生成。基本操作相对简单，但 API 密钥配置是主要门槛。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 3-5 天。需要理解三 Skill 架构的设计原理、多模型资产生成管线的配置、视觉 QA 闭环的调试方式、风险优先分解策略的影响。对于想要定制 Skill 行为或优化生成质量的用户，还需要深入阅读 Skill 源码。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>Godogen 在"AI 自主游戏生成"这一新兴领域建立了一个技术上引人注目的参考实现。它的核心创新在于：</p>
+<ol>
+<li>
+<p><strong>视觉 QA 闭环</strong>：不仅是生成代码，还通过运行时截图和多模型视觉分析自动验证和修复生成结果，这是区别于所有竞品的核心能力。</p>
+</li>
+<li>
+<p><strong>多模型资产生成</strong>：通过编排 Gemini、Grok、Tripo3D 等专业模型，以极低成本（$5-8/游戏）生成包含美术资产的完整项目。</p>
+</li>
+<li>
+<p><strong>单上下文全局视图 + 风险优先分解</strong>：在 1M token 上下文中保持全局理解，以风险优先策略安排实现顺序，比传统的任务 DAG 更可靠。</p>
+</li>
+</ol>
+<p>然而，Godogen 的生成质量目前仍处于 demo 级别，距离商业可用的游戏还有显著差距。Godot 社区对 AI 生成内容的抵触也是需要面对的挑战。</p>
+<p><strong>推荐使用：</strong> 想要快速验证游戏创意的原型开发者；对 AI 游戏生成技术感兴趣的研究者和实验者；想要学习 Godot 4 + C# 开发模式的初学者（通过逆向工程生成的项目）。</p>
+<p><strong>谨慎使用：</strong> 商业级游戏开发——生成质量不足以直接用于商业发布；复杂的 3D 游戏或大型项目——受上下文窗口和资产生成质量限制；对外部 API 依赖敏感的环境——需要 Gemini、Grok、Tripo3D 三个 API 密钥。</p>
+<p><strong>综合评分：</strong> 6.5/10。在"AI 自主游戏生成"细分领域是最完整的开源实现，三 Skill 架构和视觉 QA 闭环是真正的技术创新。扣分主要来自生成质量仍为 demo 级别、复杂的 API 密钥配置门槛、快速迭代中缺乏稳定 API、以及个人维护者的可持续性风险。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> Godogen 最新版（Changelog 最新条目 2026-04-06，C# migration）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/htdt/godogen">GitHub 仓库 htdt/godogen</a> — 源码、README、Changelog、架构说明</li>
+<li><a href="https://api.github.com/repos/htdt/godogen">GitHub API - htdt/godogen</a>（Stars: 2,762, Forks: 260, Open Issues: 4）</li>
+<li><a href="https://news.ycombinator.com/item?id=47400868">Hacker News Show HN 讨论</a> — 作者详细技术问答、成本数据、社区反馈</li>
+<li><a href="https://gigazine.net/gsc_news/en/20260317-godogen/">Gigazine - Godogen 报道</a> — 技术架构报道</li>
+<li><a href="https://gist.github.com/xbfool/af1cacc74b7e58364aa244770bf85752">GitHub Gist - Godot + Claude Code 完全指南</a> — 中文社区完整指南</li>
+<li><a href="https://gdaimcp.com/">GDAI MCP 官网</a> — 竞品数据</li>
+<li><a href="https://github.com/Coding-Solo/godot-mcp">GitHub - Coding-Solo/godot-mcp</a> — 竞品数据（~3,000 Stars）</li>
+<li><a href="https://github.com/Randroids-Dojo/Godot-Claude-Skills">GitHub - Randroids-Dojo/Godot-Claude-Skills</a> — 竞品数据</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

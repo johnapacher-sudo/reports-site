@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD (Get Shit Done) - 调研报告质量审阅报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">审阅清单结果</a></li>
+<li><a href="#1" class="toc-h3">1. 事实准确性</a></li>
+<li><a href="#2" class="toc-h3">2. 代码可运行性</a></li>
+<li><a href="#3" class="toc-h3">3. 内容完整性</a></li>
+<li><a href="#4" class="toc-h3">4. 逻辑递进</a></li>
+<li><a href="#5" class="toc-h3">5. 术语一致性</a></li>
+<li><a href="#6" class="toc-h3">6. 时效性</a></li>
+<li><a href="#7" class="toc-h3">7. 来源可溯</a></li>
+<li><a href="#_2" class="toc-h2">问题列表</a></li>
+<li><a href="#_3" class="toc-h2">修正说明</a></li>
+<li><a href="#1github-stars-p0" class="toc-h3">修正 #1：GitHub Stars 数量（P0）</a></li>
+<li><a href="#2speckit-stars-p0" class="toc-h3">修正 #2：SpecKit Stars 数量（P0）</a></li>
+<li><a href="#3g-stack-stars-p0" class="toc-h3">修正 #3：G Stack Stars 数量（P0）</a></li>
+<li><a href="#4-6gsd-v2-p0" class="toc-h3">修正 #4 &amp; #6：GSD v2 版本号（P0）</a></li>
+<li><a href="#502-analysismd-github-starsp0" class="toc-h3">修正 #5：02-analysis.md GitHub Stars（P0）</a></li>
+<li><a href="#7p1" class="toc-h3">修正 #7：市场份额数据来源（P1）</a></li>
+<li><a href="#_4" class="toc-h2">质量评分</a></li>
+<li><a href="#c" class="toc-h3">评分：C 级</a></li>
+<li><a href="#_5" class="toc-h2">审阅总结</a></li>
+<li><a href="#_6" class="toc-h3">主要发现</a></li>
+<li><a href="#_7" class="toc-h3">已执行修正</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD (Get Shit Done) - 调研报告质量审阅报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="gsd-get-shit-done-">GSD (Get Shit Done) - 调研报告质量审阅报告</h1>
+<ul>
+<li><strong>审阅日期：</strong> 2026-04-12</li>
+<li><strong>审阅范围：</strong> 01-discovery.md、02-analysis.md、03-tutorial.md（全部三份文档）</li>
+<li><strong>审阅依据：</strong> review-checklist.md 七项审阅清单</li>
+</ul>
+<hr />
+<h2 id="_1">审阅清单结果</h2>
+<h3 id="1">1. 事实准确性</h3>
+<p><strong>结论：不通过 -&gt; 修复后通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1</td>
+<td>版本号一致性</td>
+<td><strong>发现 P0 问题</strong>：02-analysis.md 和 03-tutorial.md 中引用 GSD v2 版本为 "v2.68"，但 GitHub Releases 页面显示最新版本为 v2.71.0（截至 2026-04-12）。已修正。</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>GitHub Stars 数据</td>
+<td><strong>发现 P0 问题</strong>：01-discovery.md 和 02-analysis.md 中声称 v1 仓库有 "50,600+" Stars，但 Star History 和 Augment Code 数据显示约为 49,200。已修正。</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>SpecKit Stars 数据</td>
+<td><strong>发现 P0 问题</strong>：01-discovery.md 中声称 SpecKit 有 "86k GitHub Stars"，经核实 GitHub Stars Leaderboard 显示约 70K-84K 不等。已修正为范围值并标注来源。</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>G Stack Stars 数据</td>
+<td><strong>发现 P0 问题</strong>：01-discovery.md 中声称 G Stack 有 "67k Stars"，OSS Insight 文章确认约为 50K（16 天内达到 50K）。已修正。</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td>市场份额数据</td>
+<td><strong>发现 P1 问题</strong>：02-analysis.md 中引用 "ByteIota 分析" 报告 Claude Code 46% 市场份额，经 WebSearch 无法找到 ByteIota 来源。多个其他来源报告 Claude Code 市场份额约 54%。已修正为多来源报告数据并标注置信度。</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td>技术声明支撑</td>
+<td>技术特性描述（上下文隔离、多代理编排、原子提交等）与官方 GitHub README、CHANGELOG 和用户指南一致，有来源支撑。</td>
+</tr>
+<tr>
+<td>1.7</td>
+<td>npm 版本一致性</td>
+<td>npm 上 <code>get-shit-done-cc</code> 最新版本为 1.34.2，GitHub Releases 最新为 v1.35.0。报告中同时标注了两者的差异，此为正常现象（GitHub Release 版本与 npm 发布版本可能不完全同步）。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 通过 WebSearch 搜索 GitHub 仓库、npm 页面、Star History、OSS Insight 等多个独立来源交叉验证。</p>
+<hr />
+<h3 id="2">2. 代码可运行性</h3>
+<p><strong>结论：通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1</td>
+<td>代码示例语法</td>
+<td>03-tutorial.md 中的 bash 命令（<code>npx get-shit-done-cc@latest</code>、<code>git log --oneline</code> 等）语法正确。XML 任务计划格式与官方文档一致。JSON 配置示例语法正确。</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td>完整导入和依赖</td>
+<td>代码示例主要为 CLI 命令和配置文件，不涉及编程语言的 import/依赖。XML 格式示例基于官方文档 v1.35.0，要素完整。</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td>环境兼容性</td>
+<td>安装命令 <code>npx get-shit-done-cc@latest</code> 为官方推荐命令。Node.js 版本要求标注为 &gt;= 22.0.0。Claude Code CLI 为前置依赖。</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>预期输出合理性</td>
+<td>预期输出为模拟的终端输出示例，与工具实际行为一致。所有预期输出均标注为"示例内容"，避免了误导。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 对照官方 GitHub README 和 USER-GUIDE.md 检查命令语法和参数。</p>
+<hr />
+<h3 id="3">3. 内容完整性</h3>
+<p><strong>结论：通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.1</td>
+<td>discovery 基本信息项</td>
+<td>01-discovery.md 覆盖了名称、官方地址、GitHub 仓库、当前版本、License、编程语言、首次发布日期、创建者、一句话定位、核心特性、社区生态、技术栈定位、竞品、依赖关系、关键链接、信息来源等全部基本信息项。</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td>analysis 核心概念</td>
+<td>02-analysis.md 覆盖了技术背景与动机、核心原理（设计哲学、核心算法、数据流）、架构设计（整体架构、核心模块、扩展机制）、关键概念详解（上下文工程、元提示、波浪执行、原子 Git 提交）、横向对比、适用场景、优缺点、生态成熟度、生产就绪度、学习曲线等所有核心概念。</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td>tutorial 知识点覆盖</td>
+<td>03-tutorial.md 覆盖了从环境搭建、入门（上下文腐化、上下文工程、元提示、工作层次、核心工作流）、进阶（波浪执行、原子提交、模型配置、状态管理）、高级（棕地项目、Quick/自治模式、性能优化）、实战项目、常见问题排查到学习路线推荐的完整知识链。</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td>横向对比竞品数</td>
+<td>02-analysis.md 横向对比包含 GSD、Superpowers、gstack 三个主要竞品，覆盖核心理念、性能、易用性、生态丰富度、社区规模、学习曲线、生产就绪度、适用场景等 8 个维度。满足至少 3 个竞品的要求。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 逐项对照审阅清单检查各文档内容覆盖度。</p>
+<hr />
+<h3 id="4">4. 逻辑递进</h3>
+<p><strong>结论：通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1</td>
+<td>章节由浅入深</td>
+<td>03-tutorial.md 分为六部分：环境搭建 -&gt; 入门篇（基础概念） -&gt; 进阶篇（执行策略和配置） -&gt; 高级篇（棕地项目和自动化） -&gt; 实战项目 -&gt; 常见问题与排查。层次清晰，由浅入深。</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td>知识点依赖关系</td>
+<td>入门篇从"上下文腐化"问题出发，引出"上下文工程"解决方案，再到"元提示"执行方法，然后介绍"工作层次结构"组织方式，最后串联为完整的"核心工作流"。每个知识点建立在前一个之上。</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td>实战项目综合性</td>
+<td>实战项目（个人书签管理器）综合运用了上下文工程（.planning 文件）、元提示（XML 任务计划）、波浪执行（Wave 1/2 并行）和原子 Git 提交（独立 commit）四个核心知识点，并在"代码解析"部分明确对应。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 通读 03-tutorial.md 全文，检查概念引入顺序和前后引用关系。</p>
+<hr />
+<h3 id="5">5. 术语一致性</h3>
+<p><strong>结论：通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1</td>
+<td>统一术语使用</td>
+<td>全部三份文档一致使用以下术语："上下文腐化（Context Rot）"、"上下文工程（Context Engineering）"、"元提示（Meta-Prompting）"、"波浪执行（Wave Execution）"、"原子 Git 提交（Atomic Git Commits）"、"规格驱动开发（Spec-Driven Development）"。</td>
+</tr>
+<tr>
+<td>5.2</td>
+<td>中英文对应</td>
+<td>中英文术语首次出现时均标注英文原文和中文翻译，后续使用保持一致。v1 使用 "Phase" / v2 使用 "Slice" 的术语差异在 03-tutorial.md 第 1.4 节有明确说明。</td>
+</tr>
+<tr>
+<td>5.3</td>
+<td>代码与文字对应</td>
+<td>GSD 命令格式（如 <code>/gsd:new-project</code>、<code>/gsd:execute-phase N</code>）在文字描述和代码示例中完全一致。文件名（PROJECT.md、STATE.md 等）在所有文档中拼写统一。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 全文搜索关键术语，检查中英文对照和上下文使用的一致性。</p>
+<hr />
+<h3 id="6">6. 时效性</h3>
+<p><strong>结论：不通过 -&gt; 修复后通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>6.1</td>
+<td>信息基于最新版本</td>
+<td><strong>发现 P0 问题</strong>：02-analysis.md 和 03-tutorial.md 中引用 GSD v2 版本为 "v2.68"，但实际最新版本已为 v2.71.0。已修正。v1 版本号 v1.35.0 与 GitHub Releases 一致。</td>
+</tr>
+<tr>
+<td>6.2</td>
+<td>获取日期标注</td>
+<td>所有文档均在末尾标注了信息获取日期（2026-04-12）。01-discovery.md 的信息来源列表中每个来源均标注了获取日期。</td>
+</tr>
+<tr>
+<td>6.3</td>
+<td>过时信息标记</td>
+<td>v1 与 v2 的差异在各文档中均有清晰区分。02-analysis.md 明确标注了 "v1 机制" 和 "v2 机制" 的差异段落。03-tutorial.md 标注了 "教程基于版本：GSD v1.35.0"。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 检查 GitHub Releases 页面获取最新版本号，对照文档中引用的版本。</p>
+<hr />
+<h3 id="7">7. 来源可溯</h3>
+<p><strong>结论：通过</strong></p>
+<p><strong>具体发现：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>检查项</th>
+<th>发现</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7.1</td>
+<td>关键信息来源标注</td>
+<td>01-discovery.md 列出 8 个信息来源并标注获取日期。02-analysis.md 列出 10 个信息来源。03-tutorial.md 列出 6 个信息来源。所有关键链接均可追溯。</td>
+</tr>
+<tr>
+<td>7.2</td>
+<td>独立来源数量</td>
+<td>三个文档合计引用了超过 10 个独立信息来源，包括：官方网站（gsd.build）、GitHub 仓库（2 个）、npm 页面、Reddit（2 个帖子）、Hacker News、Medium（2 篇文章）、dev.to、YouTube。远超 3 个独立来源的最低要求。</td>
+</tr>
+<tr>
+<td>7.3</td>
+<td>来源链接可访问性</td>
+<td>经抽查验证，以下链接可正常访问：gsd.build、github.com/gsd-build/get-shit-done、npmjs.com/package/get-shit-done-cc、news.ycombinator.com/item?id=47417804。</td>
+</tr>
+</tbody>
+</table>
+<p><strong>验证方式：</strong> 统计信息来源数量，抽样访问验证链接可访问性。</p>
+<hr />
+<h2 id="_2">问题列表</h2>
+<table>
+<thead>
+<tr>
+<th>编号</th>
+<th>级别</th>
+<th>所在文件</th>
+<th>问题描述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>#1</td>
+<td>P0</td>
+<td>01-discovery.md</td>
+<td>GitHub Stars 数量不准确（声称 50,600+，实际约 49,200）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#2</td>
+<td>P0</td>
+<td>01-discovery.md</td>
+<td>SpecKit Stars 数量不准确（声称 86k，实际 70K-84K）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#3</td>
+<td>P0</td>
+<td>01-discovery.md</td>
+<td>G Stack Stars 数量不准确（声称 67k，实际约 50K）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#4</td>
+<td>P0</td>
+<td>02-analysis.md</td>
+<td>GSD v2 版本号错误（声称 v2.68，实际 v2.71.0）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#5</td>
+<td>P0</td>
+<td>02-analysis.md</td>
+<td>GitHub Stars 数据不准确（声称 ~50,600，实际 ~49,200）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#6</td>
+<td>P0</td>
+<td>03-tutorial.md</td>
+<td>GSD v2 版本号错误（声称 v2.68，实际 v2.71.0）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#7</td>
+<td>P1</td>
+<td>02-analysis.md</td>
+<td>Claude Code 市场份额数据来源无法验证（ByteIota 来源未找到）</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>#8</td>
+<td>P2</td>
+<td>02-analysis.md</td>
+<td>02-analysis.md 竞品对比表中 gstack Stars 数据来源仅引用一篇 Medium 文章，建议增加 OSS Insight 等来源</td>
+<td>未修复</td>
+</tr>
+<tr>
+<td>#9</td>
+<td>P2</td>
+<td>01-discovery.md</td>
+<td>npm 下载量"待验证"标注未补充，建议补充或删除该标注</td>
+<td>未修复</td>
+</tr>
+<tr>
+<td>#10</td>
+<td>P2</td>
+<td>03-tutorial.md</td>
+<td>练习题部分可增加参考答案或提示链接，方便自学者</td>
+<td>未修复</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">修正说明</h2>
+<h3 id="1github-stars-p0">修正 #1：GitHub Stars 数量（P0）</h3>
+<ul>
+<li><strong>修正文件：</strong> 01-discovery.md</li>
+<li><strong>修正位置：</strong> 社区生态 &gt; GitHub Stars</li>
+<li><strong>修正前：</strong> <code>GitHub Stars：50,600+（截至 2026-04-12）</code></li>
+<li><strong>修正后：</strong> <code>GitHub Stars：49,200+（截至 2026-04-12，来源：Star History）</code></li>
+<li><strong>验证来源：</strong> <a href="https://www.star-history.com/gsd-build/get-shit-done">Star History - gsd-build/get-shit-done</a>（显示约 49.2K Stars）、<a href="https://www.augmentcode.com/learn/gsd-stars-spec-driven-dev-claude-code">Augment Code</a>（显示约 48.9K Stars）</li>
+</ul>
+<h3 id="2speckit-stars-p0">修正 #2：SpecKit Stars 数量（P0）</h3>
+<ul>
+<li><strong>修正文件：</strong> 01-discovery.md</li>
+<li><strong>修正位置：</strong> 替代/竞品技术 &gt; SpecKit</li>
+<li><strong>修正前：</strong> <code>SpecKit - 门控阶段与显式检查点的规格驱动框架，86k GitHub Stars</code></li>
+<li><strong>修正后：</strong> <code>SpecKit - 门控阶段与显式检查点的规格驱动框架，约 70K-84K GitHub Stars（来源标注）</code></li>
+<li><strong>验证来源：</strong> <a href="https://githublb.vercel.app/repo/github/spec-kit">GitHub Stars Leaderboard</a>（约 70,310）、<a href="https://www.augmentcode.com/tools/intent-vs-github">Augment Code</a>（约 84.1K）</li>
+</ul>
+<h3 id="3g-stack-stars-p0">修正 #3：G Stack Stars 数量（P0）</h3>
+<ul>
+<li><strong>修正文件：</strong> 01-discovery.md</li>
+<li><strong>修正位置：</strong> 替代/竞品技术 &gt; G Stack</li>
+<li><strong>修正前：</strong> <code>G Stack - CEO 风格的计划/审查系统，67k Stars</code></li>
+<li><strong>修正后：</strong> <code>G Stack - CEO 风格的计划/审查系统，约 50K Stars（来源：OSS Insight）</code></li>
+<li><strong>验证来源：</strong> <a href="https://ossinsight.io/blog/personal-ai-stacks-2026">OSS Insight - Personal AI Stack Phenomenon</a>（16 天内达到 50K Stars）</li>
+</ul>
+<h3 id="4-6gsd-v2-p0">修正 #4 &amp; #6：GSD v2 版本号（P0）</h3>
+<ul>
+<li><strong>修正文件：</strong> 02-analysis.md、03-tutorial.md</li>
+<li><strong>修正位置：</strong> 多处引用 v2 版本号的段落</li>
+<li><strong>修正前：</strong> <code>v2.68</code></li>
+<li><strong>修正后：</strong> <code>v2.71.0</code></li>
+<li><strong>验证来源：</strong> <a href="https://github.com/gsd-build/gsd-2/releases">GitHub Releases - gsd-build/gsd-2</a>（显示 v2.71.0 为最新，105+ releases）</li>
+</ul>
+<h3 id="502-analysismd-github-starsp0">修正 #5：02-analysis.md GitHub Stars（P0）</h3>
+<ul>
+<li><strong>修正文件：</strong> 02-analysis.md</li>
+<li><strong>修正位置：</strong> 竞品对比表 &gt; 社区规模</li>
+<li><strong>修正前：</strong> <code>v1: ~50,600（2026-04-12）</code></li>
+<li><strong>修正后：</strong> <code>v1: ~49,200（2026-04-12，来源 Star History）</code></li>
+<li><strong>验证来源：</strong> 同修正 #1</li>
+</ul>
+<h3 id="7p1">修正 #7：市场份额数据来源（P1）</h3>
+<ul>
+<li><strong>修正文件：</strong> 02-analysis.md</li>
+<li><strong>修正位置：</strong> 技术背景与动机 &gt; 行业背景</li>
+<li><strong>修正前：</strong> <code>Claude Code 在开发者偏好调查中以 46% 的份额领先（Cursor 19%，GitHub Copilot 9%，来源：ByteIota 分析）</code></li>
+<li><strong>修正后：</strong> <code>Claude Code 在 AI 编码工具市场中处于领先地位（据多个来源报告市场份额约 54%，来源：LinkedIn 和 Threads 社区引用数据）[置信度：中]</code></li>
+<li><strong>验证来源：</strong> 经 WebSearch 多次搜索 "ByteIota" 均未找到相关调查报告。多个来源报告 Claude Code 市场份额约 54%（LinkedIn、Threads 社区引用）。</li>
+</ul>
+<hr />
+<h2 id="_4">质量评分</h2>
+<h3 id="c">评分：C 级</h3>
+<p><strong>评分依据：</strong></p>
+<ul>
+<li>P0 问题：6 个（已全部修复）</li>
+<li>P1 问题：1 个（已修复）</li>
+<li>P2 问题：3 个（未修复，为建议改进项）</li>
+</ul>
+<p>根据评分标准——C 级：有 P1 已修复，无 P0 未修复。所有 P0 和 P1 问题均已在本审阅中修复完成，P2 问题为建议改进项，不影响报告的整体质量。</p>
+<p><strong>修复后的实际评级应提升至 B 级</strong>（无未修复的 P0/P1 问题，P2 问题 3 个超过 2 个上限，不满足 A 级条件）。</p>
+<hr />
+<h2 id="_5">审阅总结</h2>
+<h3 id="_6">主要发现</h3>
+<ol>
+<li>
+<p><strong>事实准确性方面存在多处数据偏差</strong>：主要是 GitHub Stars 数据和竞品 Stars 数据偏高。这些偏差可能是由于数据获取时间点不同导致的（GitHub Stars 持续增长），但使用未经验证的 rounded-up 数据属于事实性问题。</p>
+</li>
+<li>
+<p><strong>版本号存在滞后</strong>：GSD v2 迭代速度极快（从 v2.68 到 v2.71.0 期间可能仅数天），报告写作时引用的版本号在审阅时已经过时。建议在报告中注明"截至"日期并定期更新。</p>
+</li>
+<li>
+<p><strong>市场份额数据来源不可追溯</strong>：02-analysis.md 引用的 "ByteIota 分析" 无法通过 WebSearch 独立验证，属于缺乏来源支撑的事实声明。已替换为可验证的多来源数据。</p>
+</li>
+<li>
+<p><strong>技术内容和代码示例质量高</strong>：XML 任务计划格式、GSD 命令示例、配置示例均与官方文档一致，代码可运行性良好。</p>
+</li>
+<li>
+<p><strong>文档结构和逻辑递进清晰</strong>：从入门到高级的层次分明，实战项目综合运用了教程中的核心知识点。</p>
+</li>
+</ol>
+<h3 id="_7">已执行修正</h3>
+<ul>
+<li>修正了 6 个 P0 问题（Stars 数据偏差 3 处 + 版本号错误 3 处）</li>
+<li>修正了 1 个 P1 问题（市场份额来源不可验证）</li>
+<li>所有修正均在源文件中添加了 <code>&lt;!-- reviewed: ... --&gt;</code> HTML 注释标注</li>
+<li>所有修正均在审阅报告中标注了验证来源 URL</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

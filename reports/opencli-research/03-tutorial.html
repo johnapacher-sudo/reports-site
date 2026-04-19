@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCLI - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 4-6 小时 | **前置知识：** 基本命令行操作、Node.js 环境配置、JavaScript/TypeScript 基础（适配器开发需要）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-adapter" class="toc-h3">1.1 核心概念：适配器（Adapter）</a></li>
+<li><a href="#12-browser-bridge" class="toc-h3">1.2 Browser Bridge 与浏览器连接</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 适配器生成四步流程</a></li>
+<li><a href="#22" class="toc-h3">2.2 自定义适配器开发</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-ai-agent" class="toc-h3">3.1 AI Agent 集成</a></li>
+<li><a href="#32" class="toc-h3">3.2 环境变量与配置优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenCLI - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 4-6 小时<br>**前置知识：** 基本命令行操作、Node.js 环境配置、JavaScript/TypeScript 基础（适配器开发需要）</div>
+                    </header>
+                    <h1 id="opencli-">OpenCLI - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 4-6 小时
+<strong>前置知识：</strong> 基本命令行操作、Node.js 环境配置、JavaScript/TypeScript 基础（适配器开发需要）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS / Linux / Windows（WSL2 推荐）</li>
+<li>运行时/依赖版本：Node.js &gt;= 21.0.0、npm &gt;= 10.0.0</li>
+<li>浏览器：Chrome 或 Chromium（需安装 Browser Bridge Extension）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 1. 确认 Node.js 版本
+node --version
+# 需要 v21.0.0 或更高版本
+
+# 2. 全局安装 OpenCLI
+npm install -g @jackwener/opencli
+
+# 3. 克隆仓库（用于获取 Browser Bridge Extension）
+git clone https://github.com/jackwener/opencli.git
+cd opencli
+
+# 4. 安装 Browser Bridge Chrome 扩展
+# 打开 Chrome，访问 chrome://extensions
+# 启用右上角&quot;开发者模式&quot;
+# 点击&quot;加载已解压的扩展程序&quot;
+# 选择 opencli 仓库中的 extension/ 目录
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 验证 OpenCLI 安装
+opencli --version
+# 预期输出：v1.7.0 或更高版本
+
+# 验证 Browser Bridge 连接
+opencli doctor
+# 预期输出：
+# ✅ Node.js version: v21.x.x
+# ✅ Chrome Browser: Connected
+# ✅ Browser Bridge: Active
+# ✅ Built-in Adapters: 91 loaded
+
+# 测试基本命令
+opencli hackernews top --limit 3 --format table
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>✅ Node.js version: v21.x.x
+✅ Chrome Browser: Connected
+✅ Browser Bridge: Active
+✅ Built-in Adapters: 91 loaded
+
+ Rank | Title                          | Points
+------|--------------------------------|--------
+ 1.   | Show HN: I built a...          | 342
+ 2.   | The future of AI agents...     | 289
+ 3.   | Why Rust is gaining...         | 256
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-adapter">1.1 核心概念：适配器（Adapter）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>适配器（Adapter）是 OpenCLI 的核心抽象。每个适配器是一个标准 JavaScript 模块，定义了"如何从特定网站提取结构化数据"的确定性规则。理解适配器是使用 OpenCLI 的基础。</p>
+<p>适配器的关键特征：
+- <strong>确定性</strong>：给定相同的页面，始终返回相同结构的数据
+- <strong>零 LLM 成本</strong>：执行时不需要调用大语言模型
+- <strong>标准化</strong>：所有适配器遵循统一的模块接口（name、description、commands）
+- <strong>可组合</strong>：一个适配器可包含多个命令（如 bilibili 适配器包含 trending、search、info 等命令）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看 OpenCLI 有哪些内置适配器
+opencli list
+
+# 使用 hackernews 适配器的 top 命令
+opencli hackernews top --limit 5 --format json
+
+# 使用 github 适配器的 repo 命令
+opencli github repo jackwener/opencli --format table
+
+# 使用不同输出格式
+opencli hackernews top --limit 3 --format csv
+opencli hackernews top --limit 3 --format yaml
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code class="language-json">[
+  {
+    &quot;rank&quot;: &quot;1.&quot;,
+    &quot;title&quot;: &quot;Show HN: I built a compiler in 500 lines&quot;,
+    &quot;url&quot;: &quot;https://example.com/compiler&quot;,
+    &quot;points&quot;: &quot;342 points&quot;
+  },
+  {
+    &quot;rank&quot;: &quot;2.&quot;,
+    &quot;title&quot;: &quot;The future of AI agents in production&quot;,
+    &quot;url&quot;: &quot;https://example.com/ai-agents&quot;,
+    &quot;points&quot;: &quot;289 points&quot;
+  }
+]
+</code></pre>
+<p><strong>练习题：</strong>
+1. 尝试使用 <code>opencli bilibili trending --limit 5 --format json</code> 获取 Bilibili 热门视频列表
+2. 使用 <code>--format csv</code> 导出 Hacker News 数据到文件：<code>opencli hackernews top --format csv &gt; hn.csv</code></p>
+<hr />
+<h3 id="12-browser-bridge">1.2 Browser Bridge 与浏览器连接</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Browser Bridge Extension 是 OpenCLI 与浏览器之间的桥梁。它通过 Chrome Extension native messaging API 连接到用户正在运行的 Chrome 实例，实现以下关键能力：</p>
+<ol>
+<li><strong>复用已登录会话</strong>：不需要单独管理 Cookie 或密码，直接使用用户已登录的所有网站</li>
+<li><strong>凭据隔离</strong>：登录凭据永远不离开 Chrome 浏览器，Node.js 进程无法获取</li>
+<li><strong>正常指纹</strong>：操作看起来像正常用户行为，不容易被反爬虫系统检测</li>
+</ol>
+<p>理解 Browser Bridge 是后续所有操作的基础——无论是使用内置适配器还是生成新适配器，都需要浏览器连接。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 检查浏览器连接状态
+opencli doctor
+
+# 截取网页截图（验证浏览器连接）
+opencli browser screenshot --url https://news.ycombinator.com --output ./hn-screenshot.png
+
+# 在浏览器中执行 JavaScript
+opencli browser eval --script &quot;document.title&quot;
+
+# 查看网络请求
+opencli browser network --url https://api.github.com
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code># opencli browser eval --script &quot;document.title&quot;
+&quot;Hacker News&quot;
+
+# opencli browser screenshot --url https://news.ycombinator.com --output ./hn-screenshot.png
+Screenshot saved to ./hn-screenshot.png (1280x720)
+</code></pre>
+<p><strong>注意事项：</strong>
+- Chrome 浏览器必须在运行状态，Browser Bridge Extension 必须已启用
+- 如果 <code>opencli doctor</code> 报连接失败，检查 Chrome 扩展是否已正确加载
+- 首次使用需要手动加载扩展（chrome://extensions → 开发者模式 → 加载已解压的扩展程序）</p>
+<p><strong>练习题：</strong>
+1. 执行 <code>opencli browser eval --script "navigator.userAgent"</code> 查看浏览器 User-Agent
+2. 截取任意网页截图并保存到本地文件</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 适配器生成四步流程</h3>
+<p><strong>详细讲解：</strong></p>
+<p>OpenCLI 最强大的功能是为新网站生成适配器。这个过程分为四步，每一步都有明确的输入和输出。理解这个流程是掌握 OpenCLI 的关键。</p>
+<p><strong>第一步：explore（探索）</strong>
+记录用户在真实浏览器中的交互行为，分析页面结构和数据位置。</p>
+<pre><code class="language-bash"># 探索目标网站
+opencli explore https://lobste.rs
+
+# 系统会打开浏览器，记录你的交互行为
+# 点击、滚动、输入等操作都会被记录
+# 完成后按 Ctrl+C 结束记录
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>🔍 Exploring https://lobste.rs...
+✅ Recording interactions...
+  - Navigated to https://lobste.rs
+  - Clicked element: .story a
+  - Scrolled down (2 times)
+  - Detected data patterns: story titles, scores, tags
+📝 Recording saved. Run `opencli synthesize` to generate draft.
+</code></pre>
+<p><strong>第二步：synthesize（综合）</strong>
+将记录的交互行为转化为适配器结构草稿。</p>
+<pre><code class="language-bash"># 从记录生成适配器草稿
+opencli synthesize
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>📋 Analyzing recorded interactions...
+✅ Draft adapter generated:
+  - Source: https://lobste.rs
+  - Detected commands: top, newest, search
+  - Data fields: title, url, score, tags, comments
+📝 Draft saved. Run `opencli generate` to create final adapter.
+</code></pre>
+<p><strong>第三步：generate（生成）</strong>
+AI 辅助将草稿转为完整可执行适配器代码，并自动验证。</p>
+<pre><code class="language-bash"># 生成并验证适配器
+opencli generate --url https://lobste.rs --action &quot;get story list&quot;
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>🤖 Generating adapter with AI assistance...
+✅ Adapter code generated
+🧪 Running validation tests...
+  ✅ Test 1: Navigate to lobste.rs - PASSED
+  ✅ Test 2: Extract story titles - PASSED
+  ✅ Test 3: Extract scores - PASSED
+📝 Adapter saved to: ~/.opencli/adapters/lobsters.js
+</code></pre>
+<p><strong>第四步：cascade（级联验证）</strong>
+验证认证策略，确保适配器在生产环境中可用。</p>
+<pre><code class="language-bash"># 验证认证策略
+opencli cascade
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>🔐 Checking authentication strategy for lobste.rs...
+✅ Strategy: PUBLIC (no authentication required)
+  - Tested: GET https://lobste.rs → 200 OK
+  - Data extraction: PASSED
+✅ Adapter lobsters is production-ready!
+</code></pre>
+<p><strong>注意事项：</strong>
+- explore 步骤需要手动在浏览器中操作，确保操作覆盖了你需要的数据
+- generate 步骤会消耗一次 LLM 调用（生成后不再需要）
+- 如果 generate 失败，可以手动编辑草稿后重新生成
+- 对于需要登录的网站，cascade 步骤会检测认证策略（COOKIE/HEADER/BEARER/ADVANCED）</p>
+<p><strong>练习题：</strong>
+1. 选择一个你常用的网站（如 Product Hunt、Reddit），尝试走完四步生成流程
+2. 比较不同网站的认证策略（PUBLIC vs COOKIE）</p>
+<hr />
+<h3 id="22">2.2 自定义适配器开发</h3>
+<p><strong>详细讲解：</strong></p>
+<p>除了四步自动生成流程，你还可以手动编写适配器。这在需要精细控制数据提取逻辑时非常有用。适配器是一个标准 JavaScript/TypeScript 模块，遵循统一的接口规范。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-javascript">// ~/.opencli/adapters/my-custom-adapter.js
+// 自定义适配器：获取 Lobsters 热门文章
+
+module.exports = {
+  name: 'lobsters',
+  description: 'Fetch Lobsters stories',
+  commands: {
+    top: {
+      description: 'Get top stories from Lobsters',
+      options: [
+        { flag: '--limit &lt;n&gt;', description: 'Number of stories', default: 20 }
+      ],
+      execute: async (options, browser) =&gt; {
+        // 导航到目标页面
+        await browser.goto('https://lobste.rs/');
+
+        // 使用确定性 CSS 选择器提取数据
+        const stories = await browser.eval(`
+          Array.from(document.querySelectorAll('.story'))
+            .slice(0, ${options.limit})
+            .map(el =&gt; ({
+              title: el.querySelector('.link a')?.innerText,
+              url: el.querySelector('.link a')?.href,
+              score: el.querySelector('.score')?.innerText,
+              tags: Array.from(el.querySelectorAll('.tag'))
+                .map(t =&gt; t.innerText),
+              comments: el.querySelector('.comments a')?.innerText
+            }))
+        `);
+
+        return stories;
+      }
+    },
+    newest: {
+      description: 'Get newest stories from Lobsters',
+      options: [
+        { flag: '--limit &lt;n&gt;', description: 'Number of stories', default: 20 }
+      ],
+      execute: async (options, browser) =&gt; {
+        await browser.goto('https://lobste.rs/recent');
+        const stories = await browser.eval(`
+          Array.from(document.querySelectorAll('.story'))
+            .slice(0, ${options.limit})
+            .map(el =&gt; ({
+              title: el.querySelector('.link a')?.innerText,
+              url: el.querySelector('.link a')?.href,
+              score: el.querySelector('.score')?.innerText,
+              date: el.querySelector('.byline time')?.innerText
+            }))
+        `);
+        return stories;
+      }
+    }
+  }
+};
+</code></pre>
+<pre><code class="language-bash"># 验证自定义适配器是否被识别
+opencli list | grep lobsters
+
+# 使用自定义适配器
+opencli lobsters top --limit 5 --format json
+opencli lobsters newest --limit 3 --format table
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code class="language-json">[
+  {
+    &quot;title&quot;: &quot;Writing a compiler in Rust&quot;,
+    &quot;url&quot;: &quot;https://example.com/rust-compiler&quot;,
+    &quot;score&quot;: &quot;42&quot;,
+    &quot;tags&quot;: [&quot;rust&quot;, &quot;compilers&quot;],
+    &quot;comments&quot;: &quot;18 comments&quot;
+  }
+]
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>browser.eval()</code> 中使用标准的 DOM API（querySelector、querySelectorAll）
+- 始终使用可选链（<code>?.</code>）防止元素不存在时崩溃
+- CSS 选择器可能因网站改版而失效，需要定期检查
+- v1.6.10 起推荐使用 TypeScript 格式编写适配器</p>
+<p><strong>练习题：</strong>
+1. 为你常访问的一个网站手动编写适配器，提取列表数据
+2. 为适配器添加第二个命令（如 search 或 detail）</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-ai-agent">3.1 AI Agent 集成</h3>
+<p>OpenCLI 提供原生 AI Agent Skill 集成，让 Claude Code 等 AI 工具能自动发现和调用 OpenCLI 命令。</p>
+<pre><code class="language-bash"># 安装 OpenCLI Skills 到 Claude Code
+npx skills add jackwener/opencli
+
+# 验证 Skills 安装
+# 在 Claude Code 中，Agent 可以自动发现并调用：
+# - opencli-usage: 发现可用的适配器
+# - opencli-browser: 底层浏览器控制
+# - opencli-oneshot: 单次执行操作
+# - opencli-explorer: 完整的适配器生成工作流
+</code></pre>
+<p><strong>Python AI Agent 集成示例：</strong></p>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+基于官方 README 和 dev.to 文章的 AI Agent 集成示例
+演示如何将 OpenCLI 作为 AI Agent 的数据采集层
+&quot;&quot;&quot;
+
+import subprocess
+import json
+import sys
+
+def fetch_hackernews_top(limit=10):
+    &quot;&quot;&quot;通过 OpenCLI 获取 Hacker News 热门文章&quot;&quot;&quot;
+    result = subprocess.run(
+        [&quot;opencli&quot;, &quot;hackernews&quot;, &quot;top&quot;, &quot;--limit&quot;, str(limit), &quot;--format&quot;, &quot;json&quot;],
+        capture_output=True, text=True
+    )
+
+    if result.returncode == 0:
+        return json.loads(result.stdout)
+    elif result.returncode == 66:
+        print(&quot;警告：结果为空&quot;)
+        return []
+    elif result.returncode == 69:
+        print(&quot;错误：服务不可用，检查 Browser Bridge 连接&quot;)
+        sys.exit(1)
+    elif result.returncode == 77:
+        print(&quot;错误：需要认证&quot;)
+        sys.exit(1)
+    else:
+        print(f&quot;未知错误：退出码 {result.returncode}&quot;)
+        print(result.stderr)
+        sys.exit(1)
+
+def analyze_trends(articles):
+    &quot;&quot;&quot;简单的趋势分析（不依赖 LLM）&quot;&quot;&quot;
+    # 按分数排序
+    sorted_articles = sorted(
+        articles,
+        key=lambda x: int(x.get('points', '0').replace(' points', '') or '0'),
+        reverse=True
+    )
+    return sorted_articles[:5]
+
+if __name__ == &quot;__main__&quot;:
+    # 获取数据
+    articles = fetch_hackernews_top(limit=20)
+
+    # 分析趋势
+    top_articles = analyze_trends(articles)
+
+    # 输出结果
+    print(&quot;=== Hacker News 热门趋势 ===&quot;)
+    for i, article in enumerate(top_articles, 1):
+        print(f&quot;{i}. {article.get('title', 'N/A')}&quot;)
+        print(f&quot;   分数: {article.get('points', 'N/A')}&quot;)
+        print(f&quot;   链接: {article.get('url', 'N/A')}&quot;)
+        print()
+</code></pre>
+<pre><code class="language-bash"># 运行 AI Agent 脚本
+python3 agent.py
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>=== Hacker News 热门趋势 ===
+1. Show HN: I built a compiler in 500 lines
+   分数: 342 points
+   链接: https://example.com/compiler
+
+2. The future of AI agents in production
+   分数: 289 points
+   链接: https://example.com/ai-agents
+</code></pre>
+<h3 id="32">3.2 环境变量与配置优化</h3>
+<ul>
+<li><strong>Daemon 模式</strong>：<code>OPENCLI_DAEMON_PORT=9515 opencli daemon</code> 启动常驻后台服务，避免每次启动的开销</li>
+<li><strong>远程 CDP</strong>：<code>OPENCLI_CDP_ENDPOINT=http://remote:9222</code> 连接远程 Chrome 实例，适合无头服务器环境</li>
+<li><strong>诊断模式</strong>：<code>OPENCLI_DIAGNOSTIC=1</code> 开启结构化诊断，用于调试适配器失败</li>
+<li><strong>详细日志</strong>：<code>OPENCLI_VERBOSE=1</code> 输出详细执行日志</li>
+</ul>
+<pre><code class="language-bash"># 启动 Daemon 模式
+OPENCLI_DAEMON_PORT=9515 opencli daemon &amp;
+
+# 使用 Daemon 执行命令（更快）
+opencli hackernews top --limit 5
+
+# 开启诊断模式调试适配器
+OPENCLI_DIAGNOSTIC=1 opencli mysite list
+
+# 连接远程 Chrome（CI/CD 环境推荐）
+OPENCLI_CDP_ENDPOINT=http://ci-server:9222 opencli hackernews top --format json
+</code></pre>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li><strong>适配器版本管理</strong>：将自定义适配器纳入 Git 版本控制，与团队共享</li>
+<li><strong>错误处理</strong>：根据退出码（0/66/69/77/78）设计不同的错误处理策略</li>
+<li><strong>输出格式选择</strong>：脚本集成用 JSON，人工查看用 table，数据导出用 CSV</li>
+<li><strong>适配器测试</strong>：生成适配器后立即验证，不要等到需要时才发现已失效</li>
+<li><strong>安全意识</strong>：评估自动化操作是否违反目标网站的服务条款</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个<strong>技术趋势监控工具</strong>，每日自动从 Hacker News、GitHub Trending 和 arXiv 采集数据，生成结构化趋势报告。综合运用以下知识点：
+1. 内置适配器使用（Hacker News、GitHub）
+2. 自定义适配器开发（arXiv 适配器）
+3. AI Agent 集成（Python 脚本 + 退出码处理）</p>
+<h3 id="_10">项目设计</h3>
+<ul>
+<li><strong>数据源</strong>：Hacker News（内置适配器）、GitHub Trending（内置适配器）、arXiv（自定义适配器）</li>
+<li><strong>输出格式</strong>：JSON 数据文件 + Markdown 趋势报告</li>
+<li><strong>技术选型</strong>：OpenCLI + Python 3 + cron 定时任务</li>
+<li><strong>错误处理</strong>：基于退出码的重试机制</li>
+</ul>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-javascript">// ~/.opencli/adapters/arxiv.js
+// 自定义适配器：arXiv 论文搜索（知识点2：自定义适配器开发）
+
+module.exports = {
+  name: 'arxiv',
+  description: 'Search arXiv papers',
+  commands: {
+    search: {
+      description: 'Search papers by keyword',
+      options: [
+        { flag: '--query &lt;q&gt;', description: 'Search query', required: true },
+        { flag: '--limit &lt;n&gt;', description: 'Number of results', default: 10 }
+      ],
+      execute: async (options, browser) =&gt; {
+        const url = `https://arxiv.org/search/?query=${encodeURIComponent(options.query)}&amp;searchtype=all`;
+        await browser.goto(url);
+
+        const papers = await browser.eval(`
+          Array.from(document.querySelectorAll('.arxiv-result'))
+            .slice(0, ${options.limit})
+            .map(el =&gt; ({
+              title: el.querySelector('.title')?.innerText?.trim(),
+              authors: el.querySelector('.authors')?.innerText?.trim(),
+              abstract: el.querySelector('.abstract-short')?.innerText?.trim(),
+              url: el.querySelector('p.list-title a')?.href,
+              published: el.querySelector('.is-size-7')?.innerText?.trim()
+            }))
+        `);
+
+        return papers;
+      }
+    }
+  }
+};
+</code></pre>
+<pre><code class="language-python">#!/usr/bin/env python3
+&quot;&quot;&quot;
+tech_trends.py — 技术趋势监控工具
+知识点1：内置适配器使用 + 退出码处理
+知识点2：自定义适配器（arXiv）
+知识点3：AI Agent 集成
+&quot;&quot;&quot;
+
+import subprocess
+import json
+import sys
+from datetime import datetime
+from pathlib import Path
+
+def run_opencli(adapter, command, args=None, fmt=&quot;json&quot;):
+    &quot;&quot;&quot;
+    通用 OpenCLI 调用函数
+    知识点1：使用内置适配器 + 标准退出码处理
+    &quot;&quot;&quot;
+    cmd = [&quot;opencli&quot;, adapter, command, &quot;--format&quot;, fmt]
+    if args:
+        for k, v in args.items():
+            cmd.extend([f&quot;--{k}&quot;, str(v)])
+
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+
+    if result.returncode == 0:
+        return json.loads(result.stdout) if fmt == &quot;json&quot; else result.stdout
+    elif result.returncode == 66:
+        print(f&quot;  警告：{adapter} {command} 返回空结果&quot;)
+        return []
+    elif result.returncode == 69:
+        print(f&quot;  错误：{adapter} {command} 服务不可用&quot;)
+        return []
+    elif result.returncode == 77:
+        print(f&quot;  错误：{adapter} {command} 需要认证&quot;)
+        return []
+    else:
+        print(f&quot;  错误：{adapter} {command} 执行失败 (退出码: {result.returncode})&quot;)
+        return []
+
+def collect_hackernews():
+    &quot;&quot;&quot;采集 Hacker News 热门文章&quot;&quot;&quot;
+    print(&quot;📡 采集 Hacker News...&quot;)
+    articles = run_opencli(&quot;hackernews&quot;, &quot;top&quot;, {&quot;limit&quot;: 10})
+    return {&quot;source&quot;: &quot;Hacker News&quot;, &quot;articles&quot;: articles}
+
+def collect_github():
+    &quot;&quot;&quot;采集 GitHub 热门仓库&quot;&quot;&quot;
+    print(&quot;📡 采集 GitHub Trending...&quot;)
+    repos = run_opencli(&quot;github&quot;, &quot;trending&quot;, {&quot;limit&quot;: 10})
+    return {&quot;source&quot;: &quot;GitHub Trending&quot;, &quot;repos&quot;: repos}
+
+def collect_arxiv():
+    &quot;&quot;&quot;
+    采集 arXiv AI 论文
+    知识点2：使用自定义适配器
+    &quot;&quot;&quot;
+    print(&quot;📡 采集 arXiv AI 论文...&quot;)
+    papers = run_opencli(&quot;arxiv&quot;, &quot;search&quot;, {&quot;query&quot;: &quot;AI agent&quot;, &quot;limit&quot;: 5})
+    return {&quot;source&quot;: &quot;arXiv&quot;, &quot;papers&quot;: papers}
+
+def generate_report(data_list):
+    &quot;&quot;&quot;生成 Markdown 趋势报告&quot;&quot;&quot;
+    date_str = datetime.now().strftime(&quot;%Y-%m-%d&quot;)
+    report = f&quot;# 技术趋势日报 — {date_str}\n\n&quot;
+
+    for data in data_list:
+        source = data[&quot;source&quot;]
+        report += f&quot;## {source}\n\n&quot;
+
+        if source == &quot;Hacker News&quot;:
+            for i, article in enumerate(data.get(&quot;articles&quot;, []), 1):
+                title = article.get(&quot;title&quot;, &quot;N/A&quot;)
+                points = article.get(&quot;points&quot;, &quot;N/A&quot;)
+                url = article.get(&quot;url&quot;, &quot;&quot;)
+                report += f&quot;{i}. **{title}** ({points})\n   {url}\n\n&quot;
+
+        elif source == &quot;GitHub Trending&quot;:
+            for i, repo in enumerate(data.get(&quot;repos&quot;, []), 1):
+                name = repo.get(&quot;name&quot;, &quot;N/A&quot;)
+                stars = repo.get(&quot;stars&quot;, &quot;N/A&quot;)
+                desc = repo.get(&quot;description&quot;, &quot;&quot;)
+                report += f&quot;{i}. **{name}** (⭐{stars})\n   {desc}\n\n&quot;
+
+        elif source == &quot;arXiv&quot;:
+            for i, paper in enumerate(data.get(&quot;papers&quot;, []), 1):
+                title = paper.get(&quot;title&quot;, &quot;N/A&quot;)
+                authors = paper.get(&quot;authors&quot;, &quot;&quot;)
+                report += f&quot;{i}. **{title}**\n   {authors}\n\n&quot;
+
+    return report
+
+if __name__ == &quot;__main__&quot;:
+    # 知识点3：AI Agent 集成 — 作为自动化工作流的一部分
+    print(f&quot;=== 技术趋势监控 — {datetime.now().strftime('%Y-%m-%d %H:%M')} ===\n&quot;)
+
+    # 采集数据
+    data_sources = []
+    data_sources.append(collect_hackernews())
+    data_sources.append(collect_github())
+    data_sources.append(collect_arxiv())
+
+    # 保存原始 JSON 数据
+    output_dir = Path(&quot;./trends-data&quot;)
+    output_dir.mkdir(exist_ok=True)
+    date_str = datetime.now().strftime(&quot;%Y-%m-%d&quot;)
+
+    json_path = output_dir / f&quot;{date_str}.json&quot;
+    with open(json_path, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+        json.dump(data_sources, f, ensure_ascii=False, indent=2)
+    print(f&quot;\n💾 JSON 数据已保存: {json_path}&quot;)
+
+    # 生成 Markdown 报告
+    report = generate_report(data_sources)
+    md_path = output_dir / f&quot;{date_str}.md&quot;
+    with open(md_path, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+        f.write(report)
+    print(f&quot;📄 Markdown 报告已保存: {md_path}&quot;)
+</code></pre>
+<pre><code class="language-bash"># 设置 cron 定时任务（每天早上 9 点执行）
+# crontab -e
+# 添加以下行：
+# 0 9 * * * cd /path/to/project &amp;&amp; python3 tech_trends.py &gt;&gt; /var/log/trends.log 2&gt;&amp;1
+
+# 手动运行测试
+python3 tech_trends.py
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>=== 技术趋势监控 — 2026-04-13 10:00:00 ===
+
+📡 采集 Hacker News...
+📡 采集 GitHub Trending...
+📡 采集 arXiv AI 论文...
+
+💾 JSON 数据已保存: trends-data/2026-04-13.json
+📄 Markdown 报告已保存: trends-data/2026-04-13.md
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<ol>
+<li><strong><code>run_opencli()</code> 函数</strong> — 运用了知识点1（内置适配器使用）和退出码处理（0/66/69/77/78）</li>
+<li><strong><code>collect_arxiv()</code> 函数</strong> — 运用了知识点2（自定义适配器），调用我们编写的 arXiv 适配器</li>
+<li><strong>整个脚本的自动化工作流</strong> — 运用了知识点3（AI Agent 集成），可作为 AI Agent 的数据采集层或 cron 定时任务</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li>添加邮件通知功能，在报告生成后自动发送到指定邮箱</li>
+<li>增加数据去重和历史对比功能，识别"持续热门"的趋势话题</li>
+<li>将 JSON 数据存入数据库（SQLite），构建长期趋势可视化仪表板</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Browser Bridge: Not Connected</code></td>
+<td>Chrome 扩展未加载或浏览器未运行</td>
+<td>打开 Chrome → chrome://extensions → 确认 Browser Bridge 已启用</td>
+</tr>
+<tr>
+<td><code>Error: CDP connection failed</code></td>
+<td>Chrome DevTools Protocol 连接失败</td>
+<td>检查 Chrome 是否运行，重启 Chrome 和 Browser Bridge 扩展</td>
+</tr>
+<tr>
+<td><code>Exit code 66: Empty result</code></td>
+<td>适配器执行成功但未提取到数据</td>
+<td>检查 CSS 选择器是否正确，网站结构可能已变更</td>
+</tr>
+<tr>
+<td><code>Exit code 69: Unavailable</code></td>
+<td>目标网站不可访问</td>
+<td>检查网络连接和目标网站是否可正常访问</td>
+</tr>
+<tr>
+<td><code>Exit code 77: Auth required</code></td>
+<td>目标页面需要登录</td>
+<td>确保在 Chrome 中已登录目标网站，刷新登录状态</td>
+</tr>
+<tr>
+<td><code>Exit code 78: Config error</code></td>
+<td>配置错误</td>
+<td>检查环境变量和适配器配置文件语法</td>
+</tr>
+<tr>
+<td><code>TypeError: Cannot read property of null</code></td>
+<td>CSS 选择器匹配失败</td>
+<td>网站结构变更，使用 <code>opencli explore</code> 重新分析页面</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>开启诊断模式</strong>：设置 <code>OPENCLI_DIAGNOSTIC=1</code> 环境变量，获取结构化错误信息（包括 DOM 快照和执行上下文）
+   <code>bash
+   OPENCLI_DIAGNOSTIC=1 opencli hackernews top --limit 5</code></p>
+</li>
+<li>
+<p><strong>开启详细日志</strong>：设置 <code>OPENCLI_VERBOSE=1</code>，查看完整的执行过程和浏览器通信细节
+   <code>bash
+   OPENCLI_VERBOSE=1 opencli hackernews top --limit 5</code></p>
+</li>
+<li>
+<p><strong>逐步调试适配器</strong>：使用 <code>browser eval</code> 手动测试 CSS 选择器，确认数据提取逻辑正确
+   <code>bash
+   # 先导航到页面
+   opencli browser screenshot --url https://target-site.com
+   # 然后测试选择器
+   opencli browser eval --script "document.querySelectorAll('.title').length"</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README</strong> — 快速入门、安装步骤、核心概念</li>
+<li><strong>docs/guide/getting-started.md</strong> — 环境搭建、Browser Bridge 配置</li>
+<li><strong>docs/guide/plugins.md</strong> — 插件开发、社区适配器贡献</li>
+<li><strong>内置适配器源码（clis/ 目录）</strong> — 学习适配器编写模式，推荐从简单的 hackernews.js 开始</li>
+<li><strong>skills/ 目录</strong> — 理解 AI Agent Skill 集成机制</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><a href="https://dev.to/wonderlab/one-open-source-project-a-day-no39-opencli-turning-any-website-into-a-zero-cost-cli-tool-for-cg8">dev.to 深度文章：OpenCLI 架构详解</a> — 涵盖 Self-Repair Protocol、四步生成流程、设计哲学</li>
+<li><a href="https://help.apiyi.com/en/opencli-ai-agent-cli-tool-website-command-line-apiyi-guide-en.html">Apiyi.com 五大核心能力详解</a> — 双引擎架构、AI Agent 集成模式、认证策略</li>
+<li><a href="https://github.com/jackwener/opencli/issues">GitHub Issues</a> — 社区常见问题和功能讨论</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

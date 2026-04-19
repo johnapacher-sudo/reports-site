@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashare - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">注：项目无正式版本号、无 Git Tag、无 GitHub Release。源码持续更新但未采用语义化版本管理。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#_8" class="toc-h4">双数据源热备机制</a></li>
+<li><a href="#api" class="toc-h4">新浪财经 API 调用机制</a></li>
+<li><a href="#api_1" class="toc-h4">腾讯股票 API 调用机制</a></li>
+<li><a href="#_9" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_10" class="toc-h2">架构设计</a></li>
+<li><a href="#_11" class="toc-h3">整体架构</a></li>
+<li><a href="#_12" class="toc-h3">核心模块</a></li>
+<li><a href="#_13" class="toc-h3">扩展机制</a></li>
+<li><a href="#_14" class="toc-h2">关键概念详解</a></li>
+<li><a href="#get_price" class="toc-h3">get_price() 统一接口</a></li>
+<li><a href="#dual-data-source-hot-standby" class="toc-h3">双数据源热备（Dual Data Source Hot-Standby）</a></li>
+<li><a href="#multi-code-format-compatibility" class="toc-h3">多代码格式兼容（Multi-Code Format Compatibility）</a></li>
+<li><a href="#multi-period-market-data" class="toc-h3">多周期行情数据（Multi-Period Market Data）</a></li>
+<li><a href="#_15" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_16" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_17" class="toc-h3">最佳场景</a></li>
+<li><a href="#_18" class="toc-h3">不适用场景</a></li>
+<li><a href="#_19" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_20" class="toc-h3">优势</a></li>
+<li><a href="#_21" class="toc-h3">劣势</a></li>
+<li><a href="#_22" class="toc-h3">风险点</a></li>
+<li><a href="#_23" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_24" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_25" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_26" class="toc-h2">总结与建议</a></li>
+<li><a href="#_27" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Ashare - 深度分析报告</h1>
+                        <div class="article-meta">注：项目无正式版本号、无 Git Tag、无 GitHub Release。源码持续更新但未采用语义化版本管理。</div>
+                    </header>
+                    <h1 id="ashare-">Ashare - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>中国 A 股市场的量化交易和程序化分析在 2020-2026 年间快速增长。Python 凭借 pandas、numpy 等科学计算生态，成为量化研究的主流语言。然而，获取 A 股行情数据的门槛一直是量化入门的核心痛点：</p>
+<ul>
+<li><strong>Tushare</strong>（2015 年创建，14,742 Stars）：专业级数据接口，但 2026 年已实行积分制，A股分钟级数据约 1,000 元/月，高精度数据需捐赠获取。</li>
+<li><strong>AKShare</strong>（2019 年创建，18,194 Stars）：功能全面的财经数据接口库，覆盖股票/期货/期权/基金/外汇/债券等，但其本质是网页爬虫聚合，存在 IP 频率限制和稳定性问题。</li>
+<li><strong>BaoStock</strong>：专注于历史 K 线和财务数据，数据种类相对有限。</li>
+</ul>
+<p>这些库普遍存在 API 复杂、依赖层级深、需要注册认证或积分等问题。对于只需要获取基本行情数据（开高低收量）的量化入门者和小型项目来说，使用门槛偏高。</p>
+<h3 id="_3">创立动机</h3>
+<p>Ashare 由 mpquant 于 2021 年 6 月创建，核心动机是：</p>
+<ol>
+<li><strong>将 A 股数据获取简化到极致</strong>：整个库只有一个文件（Ashare.py，约 70 行代码），只有一个对外暴露的函数 <code>get_price()</code>。用户无需学习复杂 API，安装后 <code>from Ashare import *</code> 即可使用。</li>
+<li><strong>消除配置和认证门槛</strong>：无需 API Key、无需注册账户、无需积分。直接调用公开的新浪财经和腾讯股票数据接口，零配置即可获取数据。</li>
+<li><strong>双数据源确保可用性</strong>：新浪财经接口作为主力，腾讯股票接口作为备用。主力接口异常时自动降级到备用接口，无需用户手动切换。</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2021-06-11</strong>：项目创建，发布初始版本，提供基于新浪 API 的基本行情数据获取</li>
+<li><strong>2021-2024</strong>：持续维护，逐步增加腾讯数据源作为备用接口，增加分钟线支持</li>
+<li><strong>2025-12-21</strong>：源码注释标注"2025-12-21日正常使用"，确认双核心接口仍在正常工作</li>
+<li><strong>2025-12-24</strong>：仓库最后一次 Git Push（截至 2026-04-12）</li>
+<li><strong>2026-04-12</strong>：GitHub Stars 达到 3,348，Forks 达到 610</li>
+</ul>
+<blockquote>
+<p>注：项目无正式版本号、无 Git Tag、无 GitHub Release。源码持续更新但未采用语义化版本管理。</p>
+</blockquote>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>Ashare 的设计围绕三个核心理念：</p>
+<ol>
+<li>
+<p><strong>极简优于全面（Simplicity over Completeness）</strong>：整个库只有 70 行代码、1 个文件、1 个对外函数。不追求覆盖所有金融数据类型，只专注于最核心的行情数据（开高低收量）。这与 AKShare 的"全面覆盖"理念形成鲜明对比。</p>
+</li>
+<li>
+<p><strong>免费优于专业（Free over Professional）</strong>：基于公开的财经网站 API（新浪、腾讯），无需任何认证或付费。牺牲了数据的全面性和官方保障，换取了零门槛的使用体验。</p>
+</li>
+<li>
+<p><strong>可用性优于一致性（Availability over Consistency）</strong>：双数据源热备设计，新浪失败自动切换腾讯。用户无需关心底层使用的是哪个数据源，只要能拿到数据即可。</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>仅行情数据 vs 全金融数据</strong>：只提供 K 线行情数据（open/close/high/low/volume），不提供财务报表、公告、指数估值等基本面数据。换取了极简的代码和使用方式。[置信度：高]
+- <strong>公开 API vs 私有数据源</strong>：依赖新浪/腾讯的公开 API，无 SLA 保障，接口可能随时变更。换取了完全免费和无认证。[置信度：高]
+- <strong>无版本管理 vs 语义化版本</strong>：没有正式版本号，直接在源码中更新。换取了维护简便，但增加了用户追踪变更的难度。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="_8">双数据源热备机制</h4>
+<p>Ashare 的核心创新在于双数据源的自动切换设计：</p>
+<pre><code>用户调用 get_price(code, end_date, count, frequency)
+  │
+  ▼
+判断 frequency 类型
+  │
+  ├─ 日线/周线/月线 ('1d'/'1w'/'1M')
+  │    │
+  │    ├─ try: get_price_sina() ← 主力（新浪财经 API）
+  │    │    │
+  │    │    ├─ 成功 → 返回 DataFrame
+  │    │    └─ 异常 ↓
+  │    │
+  │    └─ except: get_price_day_tx() ← 备用（腾讯股票 API）
+  │         └─ 返回 DataFrame
+  │
+  └─ 分钟线 ('1m'/'5m'/'15m'/'30m'/'60m')
+       │
+       ├─ '1m' (1分钟线) → get_price_min_tx() ← 仅腾讯支持
+       │
+       └─ 其他分钟线
+            ├─ try: get_price_sina() ← 主力
+            └─ except: get_price_min_tx() ← 备用
+</code></pre>
+<blockquote>
+<p>基于源码 Ashare.py（master 分支，2025-12-24）</p>
+</blockquote>
+<h4 id="api">新浪财经 API 调用机制</h4>
+<p>新浪接口是 Ashare 的主力数据源，用于日线和大部分分钟线数据：</p>
+<pre><code class="language-python"># 新浪 API 请求 URL 模式
+URL = f'http://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData?symbol={code}&amp;scale={ts}&amp;ma=5&amp;datalen={count}'
+</code></pre>
+<p>关键设计：
+- 频率转换：将 <code>'1d'</code> 转为 <code>'240m'</code>、<code>'1w'</code> 转为 <code>'1200m'</code>、<code>'1M'</code> 转为 <code>'7200m'</code>
+- 结束日期处理：通过计算 end_date 到当前日期的天数差，额外增加 count 值，再截取所需数量
+- 返回 JSON 解析后转为 pandas DataFrame，统一列名为 <code>['open', 'high', 'low', 'close', 'volume']</code></p>
+<h4 id="api_1">腾讯股票 API 调用机制</h4>
+<p>腾讯接口作为备用数据源，同时是 1 分钟线的唯一数据源：</p>
+<pre><code class="language-python"># 腾讯日线/周线/月线 API
+URL = f'http://web.ifzq.gtimg.cn/appstock/app/fqkline/get?param={code},{unit},,{end_date},{count},qfq'
+
+# 腾讯分钟线 API
+URL = f'http://ifzq.gtimg.cn/appstock/app/kline/mkline?param={code},m{ts},,{count}'
+</code></pre>
+<p>关键设计：
+- unit 参数映射：<code>'1w'</code> → <code>'week'</code>，<code>'1M'</code> → <code>'month'</code>，其他 → <code>'day'</code>
+- 指数数据处理：指数返回字段名不含 <code>'qfq'</code> 前缀（如 <code>'day'</code> 而非 <code>'qfqday'</code>），代码中做了兼容处理
+- 分钟线的最新收盘价通过 <code>qt</code>（实时行情）接口补充</p>
+<blockquote>
+<p>基于源码 Ashare.py（master 分支，2025-12-24）</p>
+</blockquote>
+<h3 id="_9">数据流/执行流程</h3>
+<pre><code>股票代码 + 参数
+  │
+  ▼
+get_price(code, end_date, count, frequency)
+  │
+  ├─ 1. 股票代码格式兼容处理
+  │     '600519.XSHG' → 'sh600519'
+  │     '000001.XSHE' → 'sz000001'
+  │     'sh600519'    → 'sh600519'（保持不变）
+  │
+  ├─ 2. 根据 frequency 分派到不同获取函数
+  │
+  ├─ 3. HTTP GET 请求（新浪或腾讯 API）
+  │     → JSON 文本响应
+  │
+  ├─ 4. JSON 解析 + DataFrame 构造
+  │     → pd.DataFrame(columns=['time','open','close','high','low','volume'])
+  │     → 数据类型转换（astype float）
+  │     → 时间索引设置（pd.to_datetime）
+  │
+  └─ 5. 返回 DataFrame（DatetimeIndex + OHLCV 列）
+</code></pre>
+<blockquote>
+<p>基于源码 Ashare.py（master 分支，2025-12-24）</p>
+</blockquote>
+<h2 id="_10">架构设计</h2>
+<h3 id="_11">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│              用户接口层（User API Layer）              │
+│   get_price(code, end_date, count, frequency)       │
+├─────────────────────────────────────────────────────┤
+│              代码适配层（Code Adapter Layer）          │
+│   XSHG/XSHE → sh/sz 格式转换                         │
+├─────────────────────────────────────────────────────┤
+│              频率路由层（Frequency Router Layer）      │
+│   日线/周线/月线 → get_price_sina (主) / _tx (备)     │
+│   分钟线       → get_price_sina (主) / _tx (备)      │
+│   1分钟线      → get_price_min_tx (仅腾讯)           │
+├─────────────────────────────────────────────────────┤
+│              数据源层（Data Source Layer）             │
+│   新浪财经 API（money.finance.sina.com.cn）          │
+│   腾讯股票 API（web.ifzq.gtimg.cn / ifzq.gtimg.cn） │
+├─────────────────────────────────────────────────────┤
+│              数据处理层（Data Processing Layer）       │
+│   JSON 解析 → pandas DataFrame → 类型转换 → 索引设置 │
+└─────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_12">核心模块</h3>
+<ul>
+<li><strong>get_price()（统一入口函数）</strong> - 唯一对外暴露的函数，负责股票代码格式兼容处理、频率路由（日线/周线/月线走新浪+腾讯备用，分钟线走新浪+腾讯备用，1分钟线仅腾讯），以及 try-except 自动降级逻辑。</li>
+<li><strong>get_price_sina()（新浪全周期获取）</strong> - 新浪财经 API 封装，支持全部周期（通过 scale 参数映射），包含 end_date 时的 count 增量计算逻辑，处理 JSON 响应并构造 DataFrame。</li>
+<li><strong>get_price_day_tx()（腾讯日/周/月线获取）</strong> - 腾讯股票日线 API 封装，处理指数和股票的不同返回格式（qfqday vs day），构造 DataFrame。</li>
+<li><strong>get_price_min_tx()（腾讯分钟线获取）</strong> - 腾讯股票分钟线 API 封装，解析 frequency 获取周期数，额外获取实时行情修正最新收盘价。</li>
+</ul>
+<h3 id="_13">扩展机制</h3>
+<p>Ashare 不提供正式的扩展机制（无插件系统、无钩子、无中间件）。但基于其极简架构，用户可以通过以下方式定制：</p>
+<ol>
+<li><strong>直接修改 Ashare.py</strong>：由于只有 70 行代码，用户可以直接修改源码添加新的数据源或数据字段。</li>
+<li><strong>函数级覆盖</strong>：Python 的动态特性允许用户重新绑定 <code>get_price</code> 函数或其内部函数，实现自定义行为。</li>
+<li><strong>MCP 封装</strong>：社区已有 <a href="https://ubos.tech/mcp/ashare-stock-market-data-service-a%E8%82%A1%E6%95%B0%E6%8D%AE%E6%9F%A5%E8%AF%A2/">Ashare-MCP</a> 项目，将 Ashare 封装为 MCP（Model Context Protocol）工具，支持 AI Agent 调用。</li>
+</ol>
+<h2 id="_14">关键概念详解</h2>
+<h3 id="get_price">get_price() 统一接口</h3>
+<ul>
+<li><strong>定义：</strong> Ashare 唯一对外暴露的函数，接受股票代码、结束日期、数据条数和频率参数，返回 pandas DataFrame 格式的行情数据。</li>
+<li><strong>作用：</strong> 将不同数据源（新浪/腾讯）、不同周期（日/周/月/分钟）的差异化逻辑完全封装，对外提供统一的调用接口。用户只需关心"我要什么股票、什么周期、多少条数据"三个参数。</li>
+<li><strong>使用场景：</strong> 获取任意 A 股的行情数据，用于量化策略开发、技术分析、数据回测等。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于官方 README 及源码（master 分支，2025-12-24）
+
+from Ashare import *
+
+# 获取上证指数最近 10 日日线数据
+df = get_price('sh000001', frequency='1d', count=10)
+print('上证指数日线行情\n', df)
+
+# 获取贵州茅台最近 20 日日线数据
+df = get_price('sh600519', frequency='1d', count=20)
+print(df)
+
+# 获取平安银行最近 10 条 15 分钟线数据（同花顺代码格式）
+df = get_price('000001.XSHE', frequency='15m', count=10)
+print('平安银行分钟线\n', df)
+
+# 获取指定结束日期的日线数据
+df = get_price('sh600519', end_date='2025-12-20', count=10, frequency='1d')
+print(df)
+</code></pre>
+<blockquote>
+<p>基于官方 README 及源码（master 分支，2025-12-24）</p>
+</blockquote>
+<h3 id="dual-data-source-hot-standby">双数据源热备（Dual Data Source Hot-Standby）</h3>
+<ul>
+<li><strong>定义：</strong> Ashare 内置新浪财经和腾讯股票两个数据源，通过 try-except 机制实现自动故障切换。</li>
+<li><strong>作用：</strong> 当主力数据源（新浪）请求失败时（网络异常、接口变更、频率限制等），自动降级到备用数据源（腾讯），确保数据获取的高可用性。</li>
+<li><strong>使用场景：</strong> 在新浪财经 API 不稳定或临时不可用时，自动切换到腾讯股票 API 继续获取数据，用户无感知。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 源码中的热备实现逻辑（基于 Ashare.py master 分支，2025-12-24）
+
+def get_price(code, end_date='', count=10, frequency='1d', fields=[]):
+    # ... 代码格式转换 ...
+
+    if frequency in ['1d', '1w', '1M']:  # 日线/周线/月线
+        try:
+            return get_price_sina(xcode, ...)      # 主力：新浪接口
+        except:
+            return get_price_day_tx(xcode, ...)     # 备用：腾讯接口
+
+    if frequency in ['1m', '5m', '15m', '30m', '60m']:  # 分钟线
+        if frequency in '1m':
+            return get_price_min_tx(xcode, ...)     # 1分钟线仅腾讯支持
+        try:
+            return get_price_sina(xcode, ...)       # 主力：新浪接口
+        except:
+            return get_price_min_tx(xcode, ...)     # 备用：腾讯接口
+</code></pre>
+<blockquote>
+<p>基于源码 Ashare.py（master 分支，2025-12-24）</p>
+</blockquote>
+<h3 id="multi-code-format-compatibility">多代码格式兼容（Multi-Code Format Compatibility）</h3>
+<ul>
+<li><strong>定义：</strong> Ashare 支持多种常见的 A 股代码格式，内部自动转换为新浪/腾讯 API 要求的格式。</li>
+<li><strong>作用：</strong> 降低从其他量化平台（聚宽、同花顺等）迁移代码时的改造成本。用户无需手动将 <code>600519.XSHG</code> 转换为 <code>sh600519</code>。</li>
+<li><strong>使用场景：</strong> 从聚宽、同花顺等平台迁移量化策略时，直接复用原有的股票代码格式。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 源码中的代码转换逻辑（基于 Ashare.py master 分支，2025-12-24）
+
+# 以下三种格式获取同一只股票（贵州茅台）的数据
+df1 = get_price('sh600519')           # 通达信格式
+df2 = get_price('600519.XSHG')        # 同花顺/聚宽格式
+df3 = get_price('sz000001')           # 通达信格式（深圳）
+df4 = get_price('000001.XSHE')        # 同花顺/聚宽格式（深圳）
+
+# 内部转换逻辑：
+# '600519.XSHG' → 去掉后缀 → '600519' → 加上交易所前缀 → 'sh600519'
+# '000001.XSHE' → 去掉后缀 → '000001' → 加上交易所前缀 → 'sz000001'
+</code></pre>
+<blockquote>
+<p>基于源码 Ashare.py（master 分支，2025-12-24）</p>
+</blockquote>
+<h3 id="multi-period-market-data">多周期行情数据（Multi-Period Market Data）</h3>
+<ul>
+<li><strong>定义：</strong> Ashare 支持日线（<code>'1d'</code>）、周线（<code>'1w'</code>）、月线（<code>'1M'</code>）和分钟线（<code>'1m'</code>、<code>'5m'</code>、<code>'15m'</code>、<code>'30m'</code>、<code>'60m'</code>）共 8 种周期。</li>
+<li><strong>作用：</strong> 覆盖量化分析中最常用的行情周期。日线用于中长期趋势分析，分钟线用于短线和日内策略。</li>
+<li><strong>使用场景：</strong> 构建多周期量化策略、技术指标计算（如 MACD、KDJ）、K 线形态识别。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于官方 README 及源码（master 分支，2025-12-24）
+
+from Ashare import *
+
+# 日线数据（默认）
+df_day = get_price('sh600519', frequency='1d', count=30)
+
+# 周线数据
+df_week = get_price('sh600519', frequency='1w', count=20)
+
+# 月线数据
+df_month = get_price('sh600519', frequency='1M', count=12)
+
+# 5 分钟线数据
+df_5min = get_price('sh600519', frequency='5m', count=100)
+
+# 60 分钟线数据
+df_60min = get_price('sh600519', frequency='60m', count=50)
+</code></pre>
+<blockquote>
+<p>基于官方 README 及源码（master 分支，2025-12-24）</p>
+</blockquote>
+<h2 id="_15">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Ashare</th>
+<th>AKShare</th>
+<th>Tushare</th>
+<th>BaoStock</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>极简主义，单文件单函数</td>
+<td>全面覆盖，多源聚合</td>
+<td>专业级数据服务，积分制</td>
+<td>历史数据专精，适合回测</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>3,348</td>
+<td>18,194</td>
+<td>14,742</td>
+<td>约 1,500（估算）</td>
+</tr>
+<tr>
+<td>GitHub Forks</td>
+<td>610</td>
+<td>3,032</td>
+<td>4,420</td>
+<td>约 600（估算）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>未标注</td>
+<td>MIT</td>
+<td>BSD-3-Clause</td>
+<td>MIT（估算）</td>
+</tr>
+<tr>
+<td>代码规模</td>
+<td>单文件约 70 行</td>
+<td>大型库，数百个模块</td>
+<td>中大型库，多模块</td>
+<td>中型库</td>
+</tr>
+<tr>
+<td>数据类型</td>
+<td>仅 K 线行情（OHLCV）</td>
+<td>股票/期货/期权/基金/外汇/债券/宏观等</td>
+<td>股票/期货/基金/债券/港股/美股/宏观等</td>
+<td>A 股历史 K 线 + 财务数据</td>
+</tr>
+<tr>
+<td>数据周期</td>
+<td>日线/周线/月线/分钟线（8 种）</td>
+<td>日线/周线/月线/分钟线 + 更多</td>
+<td>日线/周线/月线/分钟线 + 更多</td>
+<td>日线/周线/月线/分钟线/5 分钟线</td>
+</tr>
+<tr>
+<td>数据源</td>
+<td>新浪 + 腾讯（双源热备）</td>
+<td>多源爬虫聚合（新浪/东财/同花顺等）</td>
+<td>自建数据服务</td>
+<td>自建数据服务</td>
+</tr>
+<tr>
+<td>认证要求</td>
+<td>无（零配置）</td>
+<td>无（免费）</td>
+<td>需注册 + 积分（高级数据需付费）</td>
+<td>需注册登录（免费）</td>
+</tr>
+<tr>
+<td>输出格式</td>
+<td>pandas DataFrame</td>
+<td>pandas DataFrame</td>
+<td>pandas DataFrame</td>
+<td>pandas DataFrame</td>
+</tr>
+<tr>
+<td>对外 API 数量</td>
+<td>1 个（get_price）</td>
+<td>数百个</td>
+<td>数百个</td>
+<td>数十个</td>
+</tr>
+<tr>
+<td>安装方式</td>
+<td>pip install ashares</td>
+<td>pip install akshare</td>
+<td>pip install tushare</td>
+<td>pip install baostock</td>
+</tr>
+<tr>
+<td>依赖项</td>
+<td>pandas + requests</td>
+<td>pandas + requests + 多个</td>
+<td>pandas + requests</td>
+<td>pandas</td>
+</tr>
+<tr>
+<td>最近更新</td>
+<td>2025-12-24</td>
+<td>2026-04-12（活跃）</td>
+<td>2024-03-13（停止更新约 2 年）</td>
+<td>较低频更新</td>
+</tr>
+<tr>
+<td>费用</td>
+<td>完全免费</td>
+<td>完全免费</td>
+<td>基础免费，分钟数据约 1,000 元/月</td>
+<td>完全免费</td>
+</tr>
+<tr>
+<td>IP 限制</td>
+<td>无明显限制</td>
+<td>有 IP 频率限制</td>
+<td>有频控和封禁机制</td>
+<td>有频控机制</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>低（无 SLA，接口可能变更）</td>
+<td>中（爬虫本质，稳定性受限）</td>
+<td>高（专业数据服务）</td>
+<td>中（稳定但数据种类有限）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>快速获取行情、量化入门、小型项目</td>
+<td>学术研究、多源数据需求</td>
+<td>专业量化交易、有预算的团队</td>
+<td>历史回测、基本面分析</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-12。Stars/Forks 数据来自 GitHub API 实时查询。BaoStock 因无明确 GitHub 仓库，Stars 和 Forks 为估算值，基于社区观察标注 <code>[置信度：低]</code>。Tushare 仓库最后推送日期为 2024-03-13，表明开源版已约 2 年未更新。Ashare 的 BaoStock 对比数据中 License 标注为"估算" <code>[置信度：低]</code>。</p>
+</blockquote>
+<h2 id="_16">适用场景分析</h2>
+<h3 id="_17">最佳场景</h3>
+<ol>
+<li>
+<p><strong>量化交易入门学习</strong>：Ashare 的零配置、单函数 API 是量化入门的最佳选择。学习者无需注册账户、无需处理复杂的数据清洗逻辑，只需 <code>get_price()</code> 即可获得标准格式的行情数据，可将精力集中在策略开发而非数据获取上。[置信度：高]</p>
+</li>
+<li>
+<p><strong>小型量化项目快速原型</strong>：需要快速验证某个交易思路或策略假设时，Ashare 可以在几分钟内搭建数据获取管道。70 行代码的极简架构意味着即使出问题也容易排查和修复。[置信度：高]</p>
+</li>
+<li>
+<p><strong>股票数据获取教学</strong>：在编程教学场景中，Ashare 是演示"如何用 Python 获取股票数据"的理想工具。代码简洁、无配置门槛、输出标准格式，适合课堂教学和在线教程。[置信度：高]</p>
+</li>
+<li>
+<p><strong>MCP/AI Agent 数据集成</strong>：Ashare 的极简 API 使其成为 MCP（Model Context Protocol）封装的理想底层库。社区已有 Ashare-MCP 项目，将 <code>get_price()</code> 封装为 AI Agent 可调用的工具。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_18">不适用场景</h3>
+<ol>
+<li>
+<p><strong>专业量化交易系统</strong>：缺乏 SLA 保障、数据验证机制、频率控制和错误重试策略。专业量化系统建议使用 Tushare Pro 或自建数据服务。</p>
+</li>
+<li>
+<p><strong>需要基本面数据的项目</strong>：Ashare 仅提供 K 线行情数据，不支持财务报表、公司公告、指数估值、行业分类等基本面数据。需要基本面分析的场景建议使用 AKShare 或 Tushare。</p>
+</li>
+<li>
+<p><strong>高频率实时数据需求</strong>：基于公开 API 的实现存在延迟，不适合需要实时或近实时数据的场景（如高频交易、实时监控系统）。</p>
+</li>
+</ol>
+<h2 id="_19">优缺点深度分析</h2>
+<h3 id="_20">优势</h3>
+<ol>
+<li>
+<p><strong>极致的简洁性</strong> - 整个库只有一个文件（70 行代码），只有一个对外函数。这是 Ashare 最大的差异化优势。相比 AKShare 的数百个函数和 Tushare 的复杂认证体系，Ashare 的学习成本几乎为零。[置信度：高]</p>
+</li>
+<li>
+<p><strong>零配置零认证</strong> - 无需 API Key、无需注册、无需积分。安装后直接使用，没有任何配置门槛。这是量化入门者最需要的特性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>双数据源热备</strong> - 新浪 + 腾讯双源自动切换，提高了数据获取的可用性。新浪接口异常时自动降级到腾讯，用户无需手动干预。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多代码格式兼容</strong> - 支持通达信、同花顺/聚宽两种主流代码格式，降低了从其他平台迁移的改造成本。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_21">劣势</h3>
+<ol>
+<li>
+<p><strong>数据类型极其有限</strong> - 仅提供 K 线行情数据（OHLCV），不支持财务报表、公告、指数、基金、期货等任何其他数据类型。功能覆盖面远小于 AKShare 和 Tushare。[置信度：高]</p>
+</li>
+<li>
+<p><strong>无版本管理</strong> - 没有正式版本号、Git Tag 或 Release。源码直接在 master 分支更新，用户无法追踪 API 变更，也无法固定依赖版本。这对生产环境使用构成风险。[置信度：高]</p>
+</li>
+<li>
+<p><strong>无 License 声明</strong> - 仓库中无 LICENSE 文件，法律上意味着默认适用版权法（All Rights Reserved），虽然 mpquant 大概率无意限制使用，但严格的合规场景下存在法律不确定性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>维护频率较低</strong> - 最后一次 Git Push 为 2025-12-24（距今约 3.5 个月），虽然源码注释标注接口仍正常使用，但长期维护节奏不确定。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_22">风险点</h3>
+<ol>
+<li>
+<p><strong>上游 API 不稳定</strong> - 新浪和腾讯的公开 API 随时可能变更或关闭，无任何 SLA 保障。一旦上游 API 变更，Ashare 将无法正常工作，需要等待维护者更新源码。[置信度：高]</p>
+</li>
+<li>
+<p><strong>无错误处理和重试机制</strong> - 源码中的 try-except 仅做简单的数据源切换，没有请求超时设置、重试次数控制、异常信息记录等机制。在网络不稳定时可能导致静默失败。[置信度：高]</p>
+</li>
+<li>
+<p><strong>无数据验证</strong> - 返回的数据未经过完整性校验（如缺失值检查、日期连续性验证），用户需要自行验证数据质量。[置信度：高]</p>
+</li>
+</ol>
+<h2 id="_23">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 无。Ashare 不提供插件系统。唯一的生态扩展是社区开发的 Ashare-MCP，将 Ashare 封装为 MCP 工具供 AI Agent 使用。[置信度：高]</li>
+<li><strong>第三方库支持：</strong> 低。Ashare 本身是底层工具，不依赖也不被其他主要库依赖。但其输出格式（pandas DataFrame）与整个 Python 数据科学生态天然兼容。[置信度：高]</li>
+<li><strong>企业采用案例：</strong> 未发现公开的企业采用案例。项目主要面向个人开发者和量化入门者。[置信度：高]</li>
+<li><strong>文档质量：</strong> 基础。README 提供了基本的使用示例和安装说明，但没有 API 文档、常见问题或架构说明。源码本身是自文档化的（70 行代码），可读性很高。[置信度：高]</li>
+</ul>
+<h2 id="_24">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 低。依赖公开的第三方 API，无 SLA 保障。新浪/腾讯接口可能因反爬虫策略、服务器维护或接口变更而中断。双数据源热备部分缓解了单点故障，但无法根治。[置信度：高]</li>
+<li><strong>性能表现：</strong> 基础。每次调用 <code>get_price()</code> 发起一个 HTTP GET 请求，无缓存机制。高频调用可能触发上游 API 的频率限制。对于单次获取少量数据的场景（如每日获取几只股票的日线），性能足够。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 无。不提供日志、指标或错误追踪。请求失败时静默切换数据源，不记录失败详情。[置信度：高]</li>
+<li><strong>故障恢复：</strong> 基础。仅通过 try-except 实现数据源切换，无自动重试、指数退避或熔断机制。[置信度：高]</li>
+<li><strong>安全合规：</strong> 需关注。无 License 声明存在法律风险。此外，通过 HTTP（非 HTTPS）访问新浪财经 API，数据传输未加密。[置信度：高]</li>
+</ul>
+<h2 id="_25">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>Python 基础（变量、函数调用、import）</li>
+<li>pandas 基本操作（DataFrame 查看和简单处理）</li>
+<li>
+<p>A 股市场基本概念（股票代码、K 线、交易所）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 5-10 分钟。<code>pip install ashares</code> 安装后，<code>from Ashare import *</code> 导入，调用 <code>get_price()</code> 即可获取数据。无需阅读文档。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 1-2 小时。需要阅读源码（仅 70 行），理解双数据源切换逻辑、频率参数映射、代码格式转换等细节。由于库本身功能有限，精通更多是指理解其局限性和适用边界。</p>
+</li>
+</ul>
+<h2 id="_26">总结与建议</h2>
+<p>Ashare 是一个定位极端明确的工具：为量化入门者和快速原型开发提供最简化的 A 股行情数据获取方式。70 行代码、1 个函数、零配置的设计理念在同类工具中独树一帜。双数据源热备机制在一定程度上弥补了公开 API 的不稳定性。</p>
+<p><strong>推荐使用：</strong> 量化交易入门学习者、需要快速验证交易策略假设的个人开发者、Python 金融数据获取教学场景、MCP/AI Agent 的轻量级数据层。</p>
+<p><strong>谨慎使用：</strong> 专业量化交易系统（建议使用 Tushare Pro）、需要基本面数据的分析项目（建议使用 AKShare）、对数据稳定性和完整性有高要求的生产环境。</p>
+<p><strong>综合评分：</strong> 6.0/10。在其定位（极简 A 股行情数据获取）上表现出色，但功能覆盖面过于有限，缺乏版本管理、License 声明和生产级保障机制。适合作为入门工具和快速原型构建，不适合作为生产系统的核心数据层。</p>
+<h2 id="_27">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> 源码 master 分支（2025-12-24 最后更新），无正式版本号</li>
+<li><strong>信息获取日期：</strong> 2026-04-12</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/mpquant/Ashare">GitHub 仓库 mpquant/Ashare</a></li>
+<li><a href="https://github.com/mpquant/Ashare/blob/main/Ashare.py">Ashare 源码 Ashare.py</a></li>
+<li><a href="https://api.github.com/repos/mpquant/Ashare">GitHub API - mpquant/Ashare</a>（Stars: 3,348, Forks: 610）</li>
+<li><a href="https://api.github.com/repos/akfamily/akshare">GitHub API - akfamily/akshare</a>（Stars: 18,194, Forks: 3,032）</li>
+<li><a href="https://api.github.com/repos/waditu/tushare">GitHub API - waditu/tushare</a>（Stars: 14,742, Forks: 4,420）</li>
+<li><a href="https://zhuanlan.zhihu.com/p/2590244600">从0开始学量化：使用Ashare获取A股数据 — 知乎</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/2005025480454197447">2026年量化数据源终极选型 — 知乎</a></li>
+<li><a href="https://developer.baidu.com/article/details/2794524">AKShare、baostock、Ashare和Pytdx获取股票行情数据的完全指南 — 百度开发者社区</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

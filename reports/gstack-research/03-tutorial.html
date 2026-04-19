@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GStack - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 2-3 小时 | **前置知识：** Claude Code 基本使用（安装、命令行操作、知道什么是 slash command）、Git 基础操作（clone、commit、branch、PR）、软件开发流程的基本理解（规划、编码、测试、发布）、产品思维的基本概念（用户需求、功能优先级）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-office-hours-think" class="toc-h3">1.1 第一次使用：运行 /office-hours 启动 Think 阶段</a></li>
+<li><a href="#12-sprint-think-reflect" class="toc-h3">1.2 理解 Sprint 冲刺流程：从 Think 到 Reflect</a></li>
+<li><a href="#_5" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-plan-ceo-review-ceo" class="toc-h3">2.1 使用 /plan-ceo-review 进行 CEO 评审</a></li>
+<li><a href="#22-autoplan" class="toc-h3">2.2 使用 /autoplan 一键执行三轮评审</a></li>
+<li><a href="#23-review-qa" class="toc-h3">2.3 使用 /review 和 /qa 进行代码审查和测试</a></li>
+<li><a href="#_6" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-carefulfreezeguard" class="toc-h3">3.1 安全护栏：/careful、/freeze、/guard</a></li>
+<li><a href="#32-pair-agent-hostconfig" class="toc-h3">3.2 多代理协调：/pair-agent 和 HostConfig</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践与避坑指南</a></li>
+<li><a href="#_7" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_8" class="toc-h3">项目需求</a></li>
+<li><a href="#_9" class="toc-h3">项目设计</a></li>
+<li><a href="#_10" class="toc-h3">完整实施步骤</a></li>
+<li><a href="#_11" class="toc-h3">代码解析</a></li>
+<li><a href="#_12" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_13" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_14" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_15" class="toc-h3">调试技巧</a></li>
+<li><a href="#_16" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_17" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_18" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_19" class="toc-h3">进阶方向建议</a></li>
+<li><a href="#_20" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GStack - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 2-3 小时<br>**前置知识：** Claude Code 基本使用（安装、命令行操作、知道什么是 slash command）、Git 基础操作（clone、commit、branch、PR）、软件开发流程的基本理解（规划、编码、测试、发布）、产品思维的基本概念（用户需求、功能优先级）</div>
+                    </header>
+                    <h1 id="gstack-">GStack - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 2-3 小时
+<strong>前置知识：</strong> Claude Code 基本使用（安装、命令行操作、知道什么是 slash command）、Git 基础操作（clone、commit、branch、PR）、软件开发流程的基本理解（规划、编码、测试、发布）、产品思维的基本概念（用户需求、功能优先级）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS / Linux / Windows（WSL2）</li>
+<li>Claude Code：最新稳定版（已安装并配置 Anthropic API 密钥）</li>
+<li>Git：2.x 及以上</li>
+<li>Node.js：18.x 及以上（部分技能如 GStack Browser 依赖）</li>
+<li>磁盘空间：约 50MB（技能文件 + 依赖）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>第一步：确认 Claude Code 已安装</strong></p>
+<pre><code class="language-bash"># 检查 Claude Code 是否已安装
+claude --version
+# 预期输出: Claude Code x.x.x 或类似版本信息
+
+# 确认 API 密钥已配置
+echo $ANTHROPIC_API_KEY
+# 预期输出: sk-ant-...（你的 API 密钥）
+</code></pre>
+<p><strong>第二步：克隆 GStack 仓库</strong></p>
+<pre><code class="language-bash"># 克隆 GStack 到 Claude Code 技能目录
+git clone https://github.com/garrytan/gstack.git ~/.claude/skills/gstack
+
+# 进入目录查看文件结构
+ls ~/.claude/skills/gstack/
+# 预期输出: setup  README.md  skills/  ...
+</code></pre>
+<p><strong>第三步：运行安装脚本</strong></p>
+<pre><code class="language-bash"># 运行 GStack 安装脚本
+cd ~/.claude/skills/gstack &amp;&amp; ./setup
+
+# setup 脚本会：
+# 1. 将技能文件链接到 Claude Code 技能目录
+# 2. 配置必要的 hooks（如 SessionStart）
+# 3. 验证安装环境
+</code></pre>
+<p><strong>第四步：验证安装</strong></p>
+<pre><code class="language-bash"># 启动 Claude Code
+claude
+
+# 在 Claude Code 中输入 / 查看可用技能
+# 预期输出中应包含 GStack 的技能列表：
+# /office-hours    /plan-ceo-review    /plan-eng-review
+# /plan-design-review    /autoplan    /review
+# /qa    /ship    /retro    /careful    /freeze
+# /guard    /cso    /codex    /learn    /browse
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README 安装指南</p>
+</blockquote>
+<hr />
+<h2 id="_4">第一部分：入门篇</h2>
+<h3 id="11-office-hours-think">1.1 第一次使用：运行 /office-hours 启动 Think 阶段</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GStack 的核心工作方式是 Sprint 冲刺流程（Sprint Process），包含七个阶段：Think → Plan → Build → Review → Test → Ship → Reflect。每个阶段有对应的技能命令（Slash Command）驱动。</p>
+<p>/office-hours 是 Sprint 流程的起点，也是 GStack 的"Think（思考）"阶段。它模拟了 Y Combinator 办公时间的场景——你和 AI 坐下来，讨论你要做什么、为什么做、怎么做。最终输出一份 DESIGN.md（设计文档），作为后续所有阶段的输入。</p>
+<p>为什么需要这个阶段？因为大多数开发失败不是编码失败，而是思考失败。/office-hours 强迫你在动手之前明确问题和目标。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 在 Claude Code 中启动 /office-hours
+
+# 1. 进入你的项目目录
+cd ~/my-project
+
+# 2. 在 Claude Code 中输入以下 slash command
+/office-hours
+
+# 3. Claude 会以 CEO/创始人角色与你对话
+# 你需要描述你的需求，例如：
+# &quot;我想给这个 SaaS 产品添加一个团队协作功能。
+#  目前用户只能单独使用，需要支持多人共享项目、
+#  实时协作编辑和权限管理。&quot;
+
+# 4. Claude 会追问关键问题：
+# - 这个功能解决的核心用户痛点是什么？
+# - 目标用户是谁？现有的团队规模？
+# - 与竞品相比，你的差异化在哪？
+# - 优先级最高的子功能是什么？
+
+# 5. 对话结束后，Claude 生成 DESIGN.md 到项目目录
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /office-hours 运行后的典型输出（模拟输出）
+
+[Office Hours - Think Phase]
+
+CEO: Let's discuss what you're building. What's the core user problem?
+
+You: I want to add team collaboration to my SaaS product...
+
+CEO: Good. Before we design the feature, let me challenge the
+assumption — do users actually need real-time collaboration, or
+would async sharing with permissions be sufficient for your
+current user base?
+
+[... 对话持续 ...]
+
+✓ Design document generated: DESIGN.md
+✓ Saved to: ~/my-project/DESIGN.md
+
+Design Doc Summary:
+- Problem: Solo users outgrowing the product, need team features
+- Target: Small teams (3-10 people)
+- Core features: Shared projects, role-based permissions
+- Non-goals: Real-time co-editing (defer to v2)
+- Success metric: 30% of solo users invite teammates within 30 days
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GStack GitHub README 和 Medium 深度评测文章</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 选择一个你正在开发的项目，运行 /office-hours 并描述一个新功能需求。观察 Claude 的追问是否帮你发现了之前没有考虑到的产品问题。
+2. 对比有 /office-hours 和直接让 Claude 编码两种方式，思考：Think 阶段生成的 DESIGN.md 对后续开发有什么价值？</p>
+<hr />
+<h3 id="12-sprint-think-reflect">1.2 理解 Sprint 冲刺流程：从 Think 到 Reflect</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Sprint 冲刺流程是 GStack 的骨架。它将 AI 编码从无结构的"提问-回答"模式转变为有节奏的冲刺开发。理解这七个阶段的目的是有效使用 GStack 的基础。</p>
+<p>七个阶段的职责如下：
+- <strong>Think（思考）</strong>：/office-hours → 定义问题和目标，输出 DESIGN.md
+- <strong>Plan（规划）</strong>：三轮评审（CEO → 工程 → 设计）→ 从多个视角审查设计决策
+- <strong>Build（构建）</strong>：Claude Code 原生模式编码 → 无 GStack 技能覆盖（结构性缺口）
+- <strong>Review（审查）</strong>：/review → 自动修复 lint，标记生产缺陷
+- <strong>Test（测试）</strong>：/qa → 启动真实浏览器测试，生成回归测试
+- <strong>Ship（发布）</strong>：/ship → 同步、测试、创建 PR
+- <strong>Reflect（回顾）</strong>：/retro → 冲刺回顾，识别改进点</p>
+<p>关键设计决策：Build 阶段没有对应的 GStack 技能。GStack 专注于决策质量（Think 和 Plan），而不是执行过程（Build）。如果你需要 Build 阶段的过程约束，可以组合使用 Superpowers 或 GSD2。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 完整 Sprint 冲刺流程的命令序列
+
+# ===== Step 1: Think =====
+/office-hours
+# → 输入：你的需求描述
+# → 输出：DESIGN.md
+
+# ===== Step 2: Plan（三种方式任选其一）=====
+# 方式 A：逐步执行三轮评审（推荐初学者）
+/plan-ceo-review
+# → 读取 DESIGN.md，输出 CEO_REVIEW.md
+
+/plan-eng-review
+# → 读取 DESIGN.md + CEO_REVIEW.md，输出 ENG_REVIEW.md
+
+/plan-design-review
+# → 读取 DESIGN.md + CEO_REVIEW.md + ENG_REVIEW.md
+# → 输出 DESIGN_REVIEW.md
+
+# 方式 B：一键执行三轮评审
+/autoplan
+# → 自动串联 CEO → 工程 → 设计 三轮评审
+
+# ===== Step 3: Build =====
+# 使用 Claude Code 原生模式编码
+# 直接告诉 Claude 实现设计文档中描述的功能
+
+# ===== Step 4: Review =====
+/review
+# → 自动修复 lint 问题
+# → 标记竞态条件和生产缺陷
+# → 输出 REVIEW.md
+
+# ===== Step 5: Test =====
+/qa
+# → 启动 Playwright Chromium 浏览器
+# → 自动化 UI 测试
+# → 发现 bug 并生成回归测试
+# → 原子化提交修复
+
+# ===== Step 6: Ship =====
+/ship
+# → 同步 main 分支
+# → 运行测试
+# → 执行覆盖率审计
+# → 创建 PR
+
+# ===== Step 7: Reflect =====
+/retro
+# → 回顾本次冲刺
+# → 识别流程改进点
+# → 输出 RETRO.md
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># Sprint 流程中各技能生成的文件（模拟输出）
+
+my-project/
+├── DESIGN.md            # /office-hours 生成
+├── CEO_REVIEW.md        # /plan-ceo-review 生成
+├── ENG_REVIEW.md        # /plan-eng-review 生成
+├── DESIGN_REVIEW.md     # /plan-design-review 生成
+├── REVIEW.md            # /review 生成
+├── RETRO.md             # /retro 生成
+├── src/                 # Build 阶段生成的代码
+└── tests/               # /qa 生成的回归测试
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 在你的项目中运行完整的 Sprint 流程（从 /office-hours 到 /retro），记录每个阶段生成的文件内容。观察数据链如何从前一阶段传递到后一阶段。
+2. 思考：为什么 GStack 在 Build 阶段没有对应技能？这个设计选择对开发者意味着什么？</p>
+<hr />
+<h2 id="_5">第二部分：进阶篇</h2>
+<h3 id="21-plan-ceo-review-ceo">2.1 使用 /plan-ceo-review 进行 CEO 评审</h3>
+<p><strong>概念讲解：</strong></p>
+<p>/plan-ceo-review 是 GStack 最具特色的技能。它将 Claude 置于 CEO/创始人角色，不是审查代码质量，而是追问产品方向：这个功能背后解决什么用户问题？有没有更大的机会被忽略了？</p>
+<p>这个技能编码了 Garry Tan 在 YC 评审数千家创业公司积累的评估方法论。它提供四种评审模式，适用于不同的场景：</p>
+<ol>
+<li><strong>scope expansion（范围扩展）</strong>：追问"真正的机会是什么？"，探索请求之外更大的产品可能性。适合早期项目探索阶段。</li>
+<li><strong>selective expansion（选择性扩展）</strong>：保持核心范围，精选最佳扩展方向。适合有明确方向但想探索优化的场景。</li>
+<li><strong>hold scope（保持范围）</strong>：对当前计划施加最大严格度，不改变范围，深挖实现细节。适合范围已确定、需要精确执行的场景。</li>
+<li><strong>scope reduction（范围缩减）</strong>：剥离到核心本质，识别最小可行产品。适合需要快速验证或资源有限的场景。</li>
+</ol>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 Medium 深度评测文章（luongnv89）
+# 使用 /plan-ceo-review 进行 CEO 评审
+
+# 1. 确保 DESIGN.md 已生成（通过 /office-hours）
+# 2. 在 Claude Code 中执行：
+
+/plan-ceo-review
+
+# Claude 会读取 DESIGN.md，然后以 CEO 角色进行评审
+# 你可以选择评审模式，或者让 Claude 根据项目阶段自动选择
+
+# 例如，如果你选择 &quot;scope expansion&quot; 模式：
+# Claude 会追问：
+# - &quot;这个功能背后的真正用户痛点是什么？&quot;
+# - &quot;有没有一个更大的市场机会被忽略了？&quot;
+# - &quot;如果把视野放宽一倍，产品的想象空间在哪？&quot;
+
+# 例如，如果你选择 &quot;scope reduction&quot; 模式：
+# Claude 会帮你：
+# - 剥离非核心功能
+# - 识别最小可行产品（MVP）
+# - 专注于最关键的 20% 功能
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /plan-ceo-review 的典型输出（模拟输出）
+
+[CEO Review - Plan Phase]
+
+Mode: scope reduction
+
+Analyzing DESIGN.md...
+
+Key findings:
+1. The design includes 8 features, but only 2 address the core
+   user pain point (team sharing).
+2. Real-time collaboration is nice-to-have but doubles complexity.
+   Recommend deferring to v2.
+3. The permissions system is over-engineered for the current user
+   base (3-10 person teams). Start with owner/editor roles.
+
+Recommendations:
+- Reduce scope to: shared projects + basic permissions
+- Remove: real-time co-editing, audit logs, custom roles
+- Keep: sharing links, owner/editor/viewer roles, activity feed
+- MVP can ship in 1 sprint instead of 3
+
+✓ CEO review generated: CEO_REVIEW.md
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 Medium 深度评测文章（luongnv89）</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- CEO 评审关注的是产品方向和用户价值，不是代码实现细节。不要期望它给你选择框架或修复 bug 的建议。
+- 四种模式的选择取决于你的项目阶段。早期项目建议 scope expansion，接近发布建议 hold scope 或 scope reduction。
+- CEO 评审的输出会被后续的工程评审和设计评审消费，所以认真对待这个阶段可以避免后续返工。</p>
+<p><strong>练习题：</strong>
+1. 对同一个 DESIGN.md，分别尝试 scope expansion 和 scope reduction 两种模式，对比输出差异。思考哪种模式更适合你当前的项目阶段。
+2. 阅读 CEO_REVIEW.md 的内容，检查其中是否有你之前没考虑到的产品方向问题。</p>
+<hr />
+<h3 id="22-autoplan">2.2 使用 /autoplan 一键执行三轮评审</h3>
+<p><strong>概念讲解：</strong></p>
+<p>/autoplan 是 GStack 的"快进键"——它将 /plan-ceo-review → /plan-eng-review → /plan-design-review 三轮评审串联为一条管道自动执行。每个评审的输出自动成为下一个评审的输入，形成完整的数据链（Data Chain）。</p>
+<p>数据链的传递方式：
+- /plan-ceo-review 读取 DESIGN.md → 输出 CEO_REVIEW.md
+- /plan-eng-review 读取 DESIGN.md + CEO_REVIEW.md → 输出 ENG_REVIEW.md（含架构图）
+- /plan-design-review 读取 DESIGN.md + CEO_REVIEW.md + ENG_REVIEW.md → 输出 DESIGN_REVIEW.md</p>
+<p>这种链式传递确保每个评审都建立在前面所有评审的分析基础上，而不是孤立地进行。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 使用 /autoplan 一键执行三轮评审
+
+# 确保 DESIGN.md 已存在（通过 /office-hours 生成）
+ls DESIGN.md
+
+# 执行 /autoplan
+/autoplan
+
+# /autoplan 会自动执行：
+# 1. /plan-ceo-review → 生成 CEO_REVIEW.md
+# 2. /plan-eng-review → 生成 ENG_REVIEW.md（读取前面的 CEO_REVIEW.md）
+# 3. /plan-design-review → 生成 DESIGN_REVIEW.md（读取前面两份评审）
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /autoplan 的典型输出（模拟输出）
+
+[AutoPlan - Running 3 review stages]
+
+Stage 1/3: CEO Review (/plan-ceo-review)
+  Reading: DESIGN.md
+  Mode: selective expansion
+  ✓ Generated: CEO_REVIEW.md
+
+Stage 2/3: Engineering Review (/plan-eng-review)
+  Reading: DESIGN.md + CEO_REVIEW.md
+  Architecture decisions locked: 3
+  Technical risks identified: 2
+  ✓ Generated: ENG_REVIEW.md (includes architecture diagram)
+
+Stage 3/3: Design Review (/plan-design-review)
+  Reading: DESIGN.md + CEO_REVIEW.md + ENG_REVIEW.md
+  Design assumptions reviewed: 5
+  UX concerns raised: 2
+  ✓ Generated: DESIGN_REVIEW.md
+
+All review stages complete. Ready for Build phase.
+Files generated:
+  - CEO_REVIEW.md
+  - ENG_REVIEW.md
+  - DESIGN_REVIEW.md
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- /autoplan 适合对 GStack 流程已经熟悉的开发者。首次使用建议手动逐步执行三轮评审，理解每个阶段的输出。
+- 三轮评审的顺序不可更改——CEO 评审必须在工程评审之前，因为工程评审需要读取 CEO 评审的产品方向判断。
+- 如果某轮评审的结果不满意，可以单独重新运行该评审（例如重新运行 /plan-eng-review），后续评审需要手动重新运行以消费更新后的输入。</p>
+<p><strong>练习题：</strong>
+1. 先手动逐步执行三轮评审，记录每轮的输出和耗时。然后用 /autoplan 重新执行，对比两种方式的时间效率和输出质量。
+2. 阅读 ENG_REVIEW.md，检查其中是否包含架构图。思考：为什么工程评审需要在 CEO 评审之后进行？</p>
+<hr />
+<h3 id="23-review-qa">2.3 使用 /review 和 /qa 进行代码审查和测试</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Build 阶段完成后（使用 Claude Code 原生模式编码），GStack 提供两个质量保障技能：</p>
+<p>/review 从代码质量角度审查变更。它自动修复 lint 问题、标记竞态条件和生产缺陷、输出 REVIEW.md。Review Readiness Dashboard 会显示哪些审查已运行、哪些缺失、是否可以发布。</p>
+<p>/qa 从用户角度测试功能。它启动 Playwright Chromium 浏览器，像真实用户一样点击通过用户流程，发现 bug 并生成回归测试，然后原子化提交修复。这是同类框架中唯一提供真实浏览器测试的能力。</p>
+<p>两个技能互补：/review 关注代码层面的质量问题（lint、竞态条件、生产缺陷），/qa 关注用户层面的功能问题（UI 交互、用户流程、回归缺陷）。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 代码审查和测试流程
+
+# Step 1: 运行代码审查
+/review
+
+# /review 会：
+# 1. 读取当前代码变更（git diff）
+# 2. 自动修复 lint 问题
+# 3. 标记竞态条件和生产缺陷
+# 4. 输出 REVIEW.md
+
+# Step 2: 查看 Review Readiness Dashboard
+# Dashboard 显示审查状态：
+# - [DONE] /review
+# - [DONE] /plan-eng-review（硬性门控）
+# - [SKIP] /plan-ceo-review（建议性）
+# - [SKIP] /plan-design-review（建议性）
+# → 结论：可以发布（工程审查已通过）
+
+# Step 3: 运行 QA 测试
+/qa
+
+# /qa 会：
+# 1. 启动 Playwright Chromium 浏览器
+# 2. 导航到本地开发服务器
+# 3. 点击通过用户流程
+# 4. 发现 bug，生成回归测试
+# 5. 原子化提交修复
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /review 的典型输出（模拟输出）
+
+[Code Review]
+
+Scanning changed files: 14 files, +892 lines, -45 lines
+
+Auto-fixed issues:
+  ✓ lint: Removed unused import in src/api/auth.ts
+  ✓ lint: Fixed semicolon in src/utils/helpers.ts
+  ✓ format: Aligned parameters in src/services/user.ts
+
+Flagged issues:
+  ⚠ Race condition: src/api/data.ts:45 — concurrent access to
+    shared state without mutex
+  ⚠ Production risk: src/config.ts:12 — hardcoded localhost URL
+    will fail in production
+
+✓ Review generated: REVIEW.md
+
+---
+
+# /qa 的典型输出（模拟输出）
+
+[QA Testing - Playwright Browser]
+
+Starting Chromium browser...
+Navigating to http://localhost:3000
+
+Test 1: User registration flow
+  ✓ Fill registration form
+  ✓ Submit form
+  ✓ Verify confirmation email sent
+
+Test 2: Team project sharing
+  ✓ Create new project
+  ✓ Invite team member
+  ✗ Permission change not reflected in real-time
+    → Bug captured, regression test generated
+    → Fix committed: abc1234
+
+Test 3: Shared project editing
+  ✓ Open shared project
+  ✓ Edit project name
+  ✓ Verify change saved
+
+Summary: 8 tests, 7 passed, 1 failed (fixed)
+Regression tests generated: 3
+Atomic commits: 1
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- /qa 需要 Playwright 和 Chromium 已安装。首次运行时 GStack 会自动引导安装。如果你的项目没有本地开发服务器，需要先启动（如 <code>npm run dev</code>）。
+- Review Readiness Dashboard 中，工程审查（/plan-eng-review）是硬性门控——必须通过才能发布。CEO 和设计审查为建议性——缺失不影响发布。
+- /qa 的原子化提交修复意味着每个 bug 修复是独立的 git commit，方便单独审查或回滚。</p>
+<p><strong>练习题：</strong>
+1. 在你的项目中运行 /review，检查输出的 REVIEW.md 中标记的问题。尝试手动修复其中一个生产缺陷。
+2. 运行 /qa 并观察 Playwright 浏览器的测试过程。如果发现 bug，查看生成的回归测试代码，理解其结构。</p>
+<hr />
+<h2 id="_6">第三部分：高级篇</h2>
+<h3 id="31-carefulfreezeguard">3.1 安全护栏：/careful、/freeze、/guard</h3>
+<p><strong>概念讲解：</strong></p>
+<p>当 AI 代理在自主运行时，可能执行破坏性操作——删除文件、覆盖关键代码、修改配置。GStack 的安全护栏（Safety Guardrails）提供三级防护，在不同粒度上限制代理的行为范围。</p>
+<p>三级防护：
+- <strong>/careful（谨慎模式）</strong>：最低级别。在执行破坏性命令前发出警告，用户需要确认才能继续。
+- <strong>/freeze（冻结模式）</strong>：中等级别。锁定编辑到一个指定目录，AI 只能修改被冻结目录内的文件。
+- <strong>/guard（守卫模式）</strong>：最严格级别。同时激活 /careful 和 /freeze，适合生产环境操作。</p>
+<p>此外，/investigate 技能在检测到异常时自动冻结到调试模块，防止异常扩散。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 安全护栏的使用场景
+
+# 场景 1: 在生产环境操作前启用守卫模式
+/guard
+# → 同时激活 /careful 和 /freeze
+# → AI 被限制在指定目录内操作
+# → 破坏性命令需要确认
+
+# 场景 2: 调试异常时使用自动冻结
+/investigate
+# → 检测到异常时自动冻结到调试模块
+# → AI 只能修改调试相关的文件
+# → 所有安全操作有完整日志
+
+# 场景 3: 只需要警告而不限制目录
+/careful
+# → 破坏性命令前发出警告
+# → 用户确认后继续执行
+# → 不限制可操作的文件范围
+
+# 场景 4: 限制 AI 只修改特定目录
+/freeze src/components/
+# → AI 只能修改 src/components/ 目录内的文件
+# → 其他目录的文件受到保护
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /guard 模式的典型行为（模拟输出）
+
+[Guard Mode Activated]
+  /careful: ENABLED — destructive commands require confirmation
+  /freeze:  ENABLED — edits locked to: src/features/auth/
+
+AI: I need to update the authentication middleware.
+    This is within the frozen directory. Proceeding.
+
+AI: I also need to modify src/config/database.ts for the
+    connection string update.
+    ⚠ BLOCKED: This file is outside the frozen directory
+    (src/features/auth/). Manual approval required.
+
+AI: Do you want to proceed with modifying database config?
+    [y/N]
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GStack GitHub README</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 在生产环境操作时，始终使用 /guard 而不是单独使用 /careful。/freeze 的目录限制提供了额外的安全保障。
+- /investigate 的自动冻结机制会在 AI 检测到代码异常（如意外错误、测试失败）时自动触发，无需手动调用。
+- 安全操作日志可以在项目目录中找到，用于事后审计。</p>
+<hr />
+<h3 id="32-pair-agent-hostconfig">3.2 多代理协调：/pair-agent 和 HostConfig</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GStack 通过 HostConfig 系统和 /pair-agent 技能，实现 8 种 AI 编码代理之间的任务分发和协调。不同代理有不同的优势——Claude Code 擅长代码生成，Codex CLI 擅长独立审查——/pair-agent 将任务分发到最适合的代理执行。</p>
+<p>HostConfig 是 GStack 的多代理适配层。它通过 TypeScript 配置文件将 GStack 的技能定义映射到不同代理的命令接口。当前支持 8 种代理：Claude Code、Codex CLI、OpenCode、Cursor、Factory Droid、Slate、Kiro 和 OpenClaw。添加新代理只需一个配置文件。</p>
+<p>Conductor 调度器支持 10-15 个 Claude Code 会话同时运行，每个会话执行不同的冲刺任务，通过 git worktree 实现代码隔离。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README 和 Augment Code 分析
+# 多代理协调的使用
+
+# 场景 1: 使用 /pair-agent 分发任务
+/pair-agent
+
+# /pair-agent 会：
+# 1. 分析当前任务的类型（代码生成、审查、测试等）
+# 2. 选择最适合的代理执行
+# 3. 将任务参数转换为代理的输入格式
+# 4. 执行并收集结果
+
+# 场景 2: 跨代理协调——让 Codex 审查 Claude 的代码
+/codex
+
+# /codex 会：
+# 1. 将 Claude Code 的代码输出发送到 OpenAI Codex CLI
+# 2. Codex 独立分析，生成审查报告
+# 3. GStack 生成跨模型对比分析：
+#    → 重叠发现（两个模型都发现的问题）
+#    → Claude 独有发现
+#    → Codex 独有发现
+</code></pre>
+<pre><code class="language-typescript">// 基于 GStack GitHub README 和 Augment Code 分析
+// HostConfig 配置示例（简化）
+// 新增代理只需创建类似的配置文件
+
+// 文件位置：~/.claude/skills/gstack/hosts/cursor.config.ts
+export default {
+  // 代理基本信息
+  name: &quot;cursor&quot;,
+  displayName: &quot;Cursor&quot;,
+  version: &quot;1.0.0&quot;,
+
+  // 命令行接口
+  cli: {
+    command: &quot;cursor-agent&quot;,
+    args: [&quot;--skill&quot;],
+  },
+
+  // 技能映射规则
+  // 将 GStack 技能名映射到 Cursor 的命令接口
+  skillMapping: {
+    &quot;/office-hours&quot;: &quot;plan&quot;,
+    &quot;/review&quot;: &quot;review&quot;,
+    &quot;/qa&quot;: &quot;test&quot;,
+    &quot;/ship&quot;: &quot;deploy&quot;,
+  },
+};
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /codex 跨模型审查的典型输出（模拟输出）
+
+[Cross-Model Review — Claude x Codex]
+
+Sending code to OpenAI Codex CLI for independent review...
+
+Analysis complete:
+
+Overlapping findings (both models found):
+  1. Missing error handling in payment webhook handler
+  2. SQL query vulnerable to N+1 problem in user service
+
+Claude-only findings:
+  3. Type safety issue in API response handler
+  4. Missing rate limiting on public endpoints
+
+Codex-only findings:
+  5. Potential memory leak in WebSocket connection pool
+  6. Hardcoded retry logic should use exponential backoff
+
+Summary:
+  Total findings: 6
+  Overlapping: 2 (33%) — high confidence issues
+  Claude unique: 2 (33%)
+  Codex unique: 2 (33%)
+
+Recommendation: Address all overlapping findings first (highest
+confidence), then review unique findings from each model.
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 Augment Code 分析</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- /codex 需要 OpenAI API 密钥。确保已设置 <code>OPENAI_API_KEY</code> 环境变量。
+- HostConfig 配置文件是 TypeScript 格式，修改后无需重新编译——GStack 在运行时读取配置。
+- Conductor 的并行会话调度目前在 v0.15.x 中仍处于实验阶段，不建议在生产环境中依赖。</p>
+<hr />
+<h3 id="33">3.3 最佳实践与避坑指南</h3>
+<p><strong>最佳实践：</strong></p>
+<ol>
+<li>
+<p><strong>小功能用精简流程</strong>：不是每个功能都需要完整的七步 Sprint。Bug 修复可以跳过 Think 和 Plan，直接 Build → /review → /ship。GStack 的技能是按需使用的，不必拘泥于完整流程。</p>
+</li>
+<li>
+<p><strong>先 /office-hours 再编码</strong>：即使不运行完整的 Sprint 流程，也建议在编码前运行 /office-hours。30 秒的 Think 阶段可能帮你避免数小时的返工。这是 GStack 投资回报率最高的单个技能。</p>
+</li>
+<li>
+<p><strong>CEO 评审选对模式</strong>：/plan-ceo-review 的四种模式适用于不同场景。选错模式会导致评审输出不匹配你的需求——在需要 scope reduction 时选择了 scope expansion 会浪费时间和 token。</p>
+</li>
+<li>
+<p><strong>用 /guard 保护生产代码</strong>：在修改生产代码时始终激活 /guard。安全护栏的成本几乎为零，但可以防止 AI 意外修改关键文件。</p>
+</li>
+<li>
+<p><strong>组合使用其他框架</strong>：GStack 的 Build 阶段没有对应技能。如果需要执行过程约束，在 Build 阶段引入 Superpowers 的 TDD 原则或 GSD2 的上下文隔离。三个框架理论上可以叠加使用。</p>
+</li>
+</ol>
+<p><strong>常见陷阱（来自社区反馈）：</strong></p>
+<ul>
+<li><strong>完整 Sprint 对小功能过于沉重</strong>：完整 Sprint（Think → Reflect）消耗大量 token 和时间。社区反馈显示，对于小型 bug 修复，直接编码 + /review 比完整 Sprint 更高效。</li>
+<li><strong>盲目使用 scope expansion 模式</strong>：scope expansion 会探索更大的产品可能性，这在探索阶段有价值，但在执行阶段会导致范围蔓延。在需要精确执行的场景使用 hold scope 或 scope reduction。</li>
+<li><strong>忽略 /learn 技能</strong>：/learn 分析项目代码库学习项目特定的模式和约定。跳过这个步骤会导致后续技能的输出不符合项目的代码风格。</li>
+<li><strong>成本意识不足</strong>：三轮评审 + /qa 浏览器 + /codex 跨模型审查的组合会消耗大量 API token。没有使用过完整 Sprint 的开发者往往低估了总成本。</li>
+</ul>
+<hr />
+<h2 id="_7">第四部分：实战项目</h2>
+<h3 id="_8">项目需求</h3>
+<p>使用 GStack 完成一个"用户反馈收集系统"的完整 Sprint 冲刺开发，综合运用以下知识点：</p>
+<ol>
+<li><strong>Sprint 冲刺流程</strong>（知识点 1.1 和 1.2）：从 Think 到 Reflect 的完整流程</li>
+<li><strong>/plan-ceo-review CEO 评审</strong>（知识点 2.1）：使用 scope reduction 模式评估功能范围</li>
+<li><strong>/autoplan 一键规划</strong>（知识点 2.2）：三轮评审的数据链传递</li>
+<li><strong>/review 和 /qa 质量保障</strong>（知识点 2.3）：代码审查和浏览器测试</li>
+<li><strong>安全护栏</strong>（知识点 3.1）：使用 /guard 保护生产代码</li>
+</ol>
+<p>功能要求：
+- Next.js 14 前端（App Router + TypeScript）
+- 用户可以提交反馈（文本 + 截图上传）
+- 管理员可以查看和回复反馈
+- 反馈状态管理（新建 → 处理中 → 已关闭）
+- 响应式设计（Tailwind CSS）</p>
+<h3 id="_9">项目设计</h3>
+<pre><code>feedback-app/
+│
+├── DESIGN.md              # /office-hours 生成
+├── CEO_REVIEW.md          # /plan-ceo-review 生成
+├── ENG_REVIEW.md          # /plan-eng-review 生成
+├── DESIGN_REVIEW.md       # /plan-design-review 生成
+├── REVIEW.md              # /review 生成
+├── RETRO.md               # /retro 生成
+│
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx     # 根布局
+│   │   ├── page.tsx       # 首页（反馈提交表单）
+│   │   ├── admin/
+│   │   │   └── page.tsx   # 管理员面板（反馈列表+回复）
+│   │   └── api/
+│   │       ├── feedback/
+│   │       │   ├── route.ts       # GET（列表）POST（提交）
+│   │       │   └── [id]/route.ts  # PATCH（状态更新+回复）
+│   │       └── upload/route.ts    # 截图上传
+│   ├── components/
+│   │   ├── FeedbackForm.tsx       # 反馈提交表单
+│   │   ├── FeedbackList.tsx       # 反馈列表
+│   │   ├── FeedbackCard.tsx       # 单条反馈卡片
+│   │   ├── ReplyForm.tsx          # 管理员回复表单
+│   │   └── StatusBadge.tsx        # 状态标签组件
+│   └── lib/
+│       ├── db.ts          # SQLite 数据库操作
+│       └── storage.ts     # 文件存储（截图）
+│
+├── data/
+│   └── feedback.db        # SQLite 数据库文件
+│
+└── uploads/               # 截图上传目录
+</code></pre>
+<h3 id="_10">完整实施步骤</h3>
+<p><strong>第一步：启动 Sprint — Think 阶段</strong></p>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 创建项目并启动 Think 阶段
+
+# 创建项目目录
+mkdir ~/feedback-app &amp;&amp; cd ~/feedback-app
+git init
+
+# 在 Claude Code 中启动 /office-hours
+/office-hours
+
+# 描述需求：
+# &quot;Build a user feedback collection system with:
+#  - Next.js 14 (App Router, TypeScript)
+#  - Users can submit feedback with text and screenshot
+#  - Admin panel to view and reply to feedback
+#  - Status management (new → in-progress → closed)
+#  - Tailwind CSS responsive design
+#  - SQLite database for simplicity&quot;
+</code></pre>
+<p><strong>第二步：Plan 阶段 — CEO 评审选择 scope reduction</strong></p>
+<pre><code class="language-bash"># 使用 scope reduction 模式精简功能范围
+/plan-ceo-review
+
+# CEO 评审可能建议：
+# - 去掉截图上传功能（MVP 不需要，文字反馈已够用）
+# - 简化状态管理（新建 → 已关闭，去掉&quot;处理中&quot;）
+# - 先做单用户版本，后续再添加管理员/权限
+
+# 你可以选择接受或拒绝 CEO 的缩减建议
+# 接受后进入工程评审
+</code></pre>
+<p><strong>第三步：Plan 阶段 — /autoplan 一键完成剩余评审</strong></p>
+<pre><code class="language-bash"># 一键执行工程评审 + 设计评审
+/autoplan
+
+# /autoplan 会：
+# 1. 读取 DESIGN.md + CEO_REVIEW.md
+# 2. /plan-eng-review：锁定架构决策（SQLite、Next.js API Routes）
+# 3. /plan-design-review：审查 UX 假设（表单设计、反馈列表交互）
+</code></pre>
+<p><strong>第四步：Build 阶段 — 启用安全护栏后编码</strong></p>
+<pre><code class="language-bash"># 先启用 /guard 保护关键配置文件
+/guard src/app/
+
+# 然后使用 Claude Code 原生模式编码
+# 告诉 Claude 根据 DESIGN.md + 评审文件实现功能
+
+# Claude 会：
+# 1. 创建 Next.js 项目结构
+# 2. 实现 API Routes
+# 3. 创建数据库 schema
+# 4. 构建前端组件
+# 5. 添加 Tailwind CSS 样式
+</code></pre>
+<p><strong>第五步：Review → Test → Ship → Reflect</strong></p>
+<pre><code class="language-bash"># 代码审查
+/review
+# → 自动修复 lint，标记缺陷，生成 REVIEW.md
+
+# QA 测试
+/qa
+# → 启动 Playwright 浏览器
+# → 测试反馈提交、管理员回复、状态变更流程
+# → 发现 bug 并生成回归测试
+
+# 发布
+/ship
+# → 同步 main → 测试 → 覆盖率审计 → 创建 PR
+
+# 回顾
+/retro
+# → 回顾本次 Sprint
+# → 识别改进点
+# → 生成 RETRO.md
+</code></pre>
+<h3 id="_11">代码解析</h3>
+<p><strong>知识点运用说明：</strong></p>
+<ol>
+<li>
+<p><strong>Sprint 冲刺流程</strong>（1.1 和 1.2 节）：项目严格遵循 Think → Plan → Build → Review → Test → Ship → Reflect 七步流程。每步有明确的输入（前一阶段的输出文件）和输出（本阶段生成的文件）。DESIGN.md 是整个数据链的起点。</p>
+</li>
+<li>
+<p><strong>CEO 评审</strong>（2.1 节）：选择 scope reduction 模式精简了功能范围——去掉截图上传和复杂状态管理。这让 MVP 可以在一个 Sprint 内完成，而不是三个。CEO 评审的输出（CEO_REVIEW.md）被工程评审消费，确保工程评审基于精简后的范围进行架构设计。</p>
+</li>
+<li>
+<p><strong>/autoplan 数据链</strong>（2.2 节）：通过 /autoplan 一键串联工程评审和设计评审。工程评审读取 CEO_REVIEW.md 锁定架构决策，设计评审读取 CEO_REVIEW.md + ENG_REVIEW.md 审查 UX 假设。数据链确保每个评审都建立在前面所有分析基础上。</p>
+</li>
+<li>
+<p><strong>/review 和 /qa</strong>（2.3 节）：/review 从代码层面审查质量（lint、竞态条件），/qa 从用户层面测试功能（Playwright 浏览器点击通过用户流程）。两者互补，覆盖代码质量和功能正确性。</p>
+</li>
+<li>
+<p><strong>安全护栏</strong>（3.1 节）：Build 阶段前启用 /guard，限制 AI 只能在 src/app/ 目录内操作，防止意外修改配置文件和数据库文件。守卫模式的破坏性命令确认机制在 AI 尝试执行 <code>DROP TABLE</code> 等操作时提供保护。</p>
+</li>
+</ol>
+<h3 id="_12">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加截图上传功能</strong>：在 CEO 评审中被缩减的截图上传功能，现在作为 v2 迭代添加。重新运行 /office-hours 描述新需求，观察 GStack 如何处理增量功能开发。</p>
+</li>
+<li>
+<p><strong>使用 /codex 跨模型审查</strong>：在 /review 之后运行 /codex，对比 Claude 和 Codex 对同一代码库的审查结果。检查两个模型的发现重叠度和独特发现。</p>
+</li>
+<li>
+<p><strong>组合 Superpowers 在 Build 阶段</strong>：在 Build 阶段引入 Superpowers 的 TDD 原则，体验 GStack + Superpowers 的组合使用效果。对比有/无 TDD 的代码质量差异。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_13">第五部分：常见问题与排查指南</h2>
+<h3 id="_14">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>command not found: claude</code></td>
+<td>Claude Code 未安装或不在 PATH 中</td>
+<td>安装 Claude Code：<code>npm install -g @anthropic-ai/claude-code</code>，确认 npm 全局 bin 目录在 PATH 中</td>
+</tr>
+<tr>
+<td><code>/office-hours</code> 不是可用命令</td>
+<td>GStack 未正确安装</td>
+<td>重新运行 <code>cd ~/.claude/skills/gstack &amp;&amp; ./setup</code>，确认技能文件存在于 <code>~/.claude/skills/gstack/skills/</code> 目录</td>
+</tr>
+<tr>
+<td><code>DESIGN.md not found</code></td>
+<td>在运行 Plan 阶段前未执行 Think 阶段</td>
+<td>先运行 <code>/office-hours</code> 生成 DESIGN.md，再运行 /plan-ceo-review 等规划技能</td>
+</tr>
+<tr>
+<td><code>Playwright browser not found</code></td>
+<td>/qa 需要 Playwright 和 Chromium</td>
+<td>运行 <code>npx playwright install chromium</code> 安装浏览器。GStack 首次运行 /qa 时会自动引导安装</td>
+</tr>
+<tr>
+<td><code>OPENAI_API_KEY not set</code></td>
+<td>/codex 需要 OpenAI API 密钥</td>
+<td>设置环境变量：<code>export OPENAI_API_KEY="your-key"</code>，然后 <code>source ~/.zshrc</code></td>
+</tr>
+<tr>
+<td><code>No local dev server running</code></td>
+<td>/qa 需要本地开发服务器</td>
+<td>在另一个终端启动开发服务器（如 <code>npm run dev</code>），确保 http://localhost:3000 可访问</td>
+</tr>
+<tr>
+<td><code>Permission denied: ./setup</code></td>
+<td>setup 脚本没有执行权限</td>
+<td>运行 <code>chmod +x ~/.claude/skills/gstack/setup</code>，然后重新执行 <code>./setup</code></td>
+</tr>
+<tr>
+<td><code>git worktree failed</code></td>
+<td>Git 版本过旧或仓库有未提交变更</td>
+<td>更新 Git 到 2.x+；确保工作目录干净（<code>git stash</code> 或 <code>git commit</code>）</td>
+</tr>
+<tr>
+<td><code>/guard blocking edits</code></td>
+<td>安全护栏限制了对目标目录的修改</td>
+<td>这是正常行为。如需修改其他目录，使用 <code>/freeze &lt;new-dir&gt;</code> 更新冻结目录，或取消护栏</td>
+</tr>
+<tr>
+<td>三轮评审 token 消耗过高</td>
+<td>/autoplan 一次性执行三轮评审消耗大量 token</td>
+<td>改为手动逐步执行，只运行必要的评审。小型项目可以跳过设计评审</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>基于 GStack GitHub README 和社区常见问题</p>
+</blockquote>
+<h3 id="_15">调试技巧</h3>
+<ol>
+<li>
+<p><strong>检查生成的中间文件</strong>：GStack 的数据链依赖中间文件（DESIGN.md、CEO_REVIEW.md 等）。如果某个技能的输出不符合预期，先检查它的输入文件是否存在且内容完整。例如 /plan-eng-review 需要 DESIGN.md 和 CEO_REVIEW.md 都存在。</p>
+</li>
+<li>
+<p><strong>查看 Review Readiness Dashboard</strong>：/ship 在执行前会检查 Review Readiness Dashboard。如果 /ship 拒绝发布，检查 Dashboard 中哪些审查缺失。工程审查（/plan-eng-review）是硬性门控，必须通过。</p>
+</li>
+<li>
+<p><strong>用 /learn 注入项目上下文</strong>：如果 GStack 的输出不符合项目的代码风格或约定，先运行 /learn 让 GStack 分析项目代码库。/learn 的发现会注入到后续技能的上下文中，改善输出质量。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_16">第六部分：学习路线推荐</h2>
+<h3 id="_17">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README 快速入门</strong> — 安装、配置、技能命令一览</li>
+<li>地址：https://github.com/garrytan/gstack#readme</li>
+<li>
+<p>重点：setup 安装步骤、23 个技能命令的简要说明、Sprint 流程图</p>
+</li>
+<li>
+<p><strong>技能定义文件（SKILL.md）</strong> — 每个技能的详细行为定义</p>
+</li>
+<li>地址：~/.claude/skills/gstack/skills/ 目录下</li>
+<li>
+<p>重点：理解每个技能的输入、输出、角色定位和质量标准</p>
+</li>
+<li>
+<p><strong>HostConfig 配置说明</strong> — 多代理适配层</p>
+</li>
+<li>地址：GitHub 仓库中的 hosts/ 目录</li>
+<li>
+<p>重点：TypeScript 配置文件的结构、如何添加新代理</p>
+</li>
+<li>
+<p><strong>Augment Code 深度分析</strong> — 第三方技术分析</p>
+</li>
+<li>地址：https://augmentcode.com/learn/garry-tan-gstack-claude-code</li>
+<li>重点：HostConfig 架构、团队使用场景、与竞品的对比</li>
+</ol>
+<h3 id="_18">推荐进阶资源</h3>
+<ul>
+<li><strong>Medium - Superpowers, GSD, and gstack: What Each Claude Code Framework Actually Constrains</strong></li>
+<li>https://medium.com/@tentenco/superpowers-gsd-and-gstack-what-each-claude-code-framework-actually-constrains-12a1560960ad</li>
+<li>
+<p>三框架深度对比、设计哲学分析、组合使用建议。帮助理解 GStack 在 AI 编码工具生态中的独特定位。</p>
+</li>
+<li>
+<p><strong>Medium - gstack is not a dev tool. it's Garry Tan's brain on AI</strong></p>
+</li>
+<li>https://medium.com/@luongnv89/gstack-is-not-a-dev-tool-its-garry-tan-s-brain-on-ai-b813e09b32c7</li>
+<li>
+<p>实际使用体验、/plan-ceo-review 四种模式的详细解读、YC 评审方法论的编码方式。</p>
+</li>
+<li>
+<p><strong>SitePoint - How to Use GStack for Claude Code</strong></p>
+</li>
+<li>第三方完整教程，包含安装、配置、实战案例。</li>
+</ul>
+<h3 id="_19">进阶方向建议</h3>
+<p>完成本教程后，建议按以下方向深入学习：</p>
+<ol>
+<li>
+<p><strong>多代理协调实践</strong>：配置 Codex CLI 和 Cursor 的 HostConfig，体验 /pair-agent 的跨代理协调和 /codex 的跨模型审查。理解"优化最佳输出而非单一供应商"的设计哲学在实际项目中的价值。</p>
+</li>
+<li>
+<p><strong>组合框架使用</strong>：在 Build 阶段引入 Superpowers 的 TDD 原则或 GSD2 的上下文隔离，体验 GStack + Superpowers/GSD2 的组合效果。这是社区尚未充分探索的方向。</p>
+</li>
+<li>
+<p><strong>自定义技能开发</strong>：创建自己的 SKILL.md 文件，定义符合团队工作流的角色和流程。GStack 的扩展门槛很低——一个 Markdown 文件就是一个新技能。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_20">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> GStack v0.15.14.0（2026-04-06 数据）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/garrytan/gstack">GitHub 仓库 garrytan/gstack</a> — 源码、README、23+ 技能定义</li>
+<li><a href="https://api.github.com/repos/garrytan/gstack">GitHub API - garrytan/gstack</a> — 项目元数据</li>
+<li><a href="https://augmentcode.com/learn/garry-tan-gstack-claude-code">Augment Code - Garry Tan open-sources gstack</a> — 深度技术分析、HostConfig 架构</li>
+<li><a href="https://medium.com/@tentenco/superpowers-gsd-and-gstack-what-each-claude-code-framework-actually-constrains-12a1560960ad">Medium - Superpowers, GSD, and gstack Framework Comparison</a> — 三框架深度对比</li>
+<li><a href="https://medium.com/@luongnv89/gstack-is-not-a-dev-tool-its-garry-tan-s-brain-on-ai-b813e09b32c7">Medium - gstack is not a dev tool</a> — 实际使用体验、CEO 评审详解</li>
+<li><a href="https://www.sitepoint.com/">SitePoint - How to Use GStack for Claude Code</a> — 第三方完整教程</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

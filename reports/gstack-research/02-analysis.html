@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GStack - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GStack GitHub README、Augment Code 分析和 Medium 深度评测文章</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#sprint" class="toc-h4">Sprint 冲刺流程</a></li>
+<li><a href="#_8" class="toc-h4">角色聚焦机制</a></li>
+<li><a href="#_9" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_10" class="toc-h2">架构设计</a></li>
+<li><a href="#_11" class="toc-h3">整体架构</a></li>
+<li><a href="#_12" class="toc-h3">核心模块</a></li>
+<li><a href="#_13" class="toc-h3">扩展机制</a></li>
+<li><a href="#_14" class="toc-h2">关键概念详解</a></li>
+<li><a href="#sprint-sprint-process" class="toc-h3">Sprint 冲刺流程（Sprint Process）</a></li>
+<li><a href="#ceo-plan-ceo-review" class="toc-h3">CEO 评审（/plan-ceo-review）</a></li>
+<li><a href="#multi-agent-orchestration" class="toc-h3">多代理协调（Multi-Agent Orchestration）</a></li>
+<li><a href="#safety-guardrails" class="toc-h3">安全护栏（Safety Guardrails）</a></li>
+<li><a href="#cross-model-review-with-codex" class="toc-h3">跨模型独立审查（Cross-Model Review with /codex）</a></li>
+<li><a href="#data-chain-orchestration" class="toc-h3">数据链编排（Data Chain Orchestration）</a></li>
+<li><a href="#_15" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_16" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_17" class="toc-h3">最佳场景</a></li>
+<li><a href="#_18" class="toc-h3">不适用场景</a></li>
+<li><a href="#_19" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_20" class="toc-h3">优势</a></li>
+<li><a href="#_21" class="toc-h3">劣势</a></li>
+<li><a href="#_22" class="toc-h3">风险点</a></li>
+<li><a href="#_23" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_24" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_25" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_26" class="toc-h2">总结与建议</a></li>
+<li><a href="#_27" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GStack - 深度分析报告</h1>
+                        <div class="article-meta">基于 GStack GitHub README、Augment Code 分析和 Medium 深度评测文章</div>
+                    </header>
+                    <h1 id="gstack-">GStack - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2024-2026 年间，AI 编码工具从比拼速度转向比拼质量。Claude Code 在开发者偏好调查中以 46% 的份额领先（ByteIota 分析），远超 Cursor 的 19% 和 GitHub Copilot 的 9%。但原始的 Claude Code 仍然跳过测试、构建混乱的架构、在输出中埋藏安全漏洞。</p>
+<p>问题的本质不是模型能力不足，而是<strong>纪律缺失</strong>。你让 AI 添加一个功能，它确实交付了——但可能有测试也可能没有，可能符合你讨论的规格也可能偏离。它就像一个编码很快但从不发起代码审查的团队成员。</p>
+<p>与此同时，三类核心痛点浮现：</p>
+<ol>
+<li>
+<p><strong>缺乏结构化的角色分工</strong>：开发者在使用 AI 编码工具时，需要同时扮演产品经理、架构师、开发者、测试工程师和发布经理等角色。AI 工具没有内置的角色意识，导致每个阶段的思考方式相同，缺乏专业视角的深度。</p>
+</li>
+<li>
+<p><strong>决策质量的不可控性</strong>：AI 代理在编码过程中做出的架构决策、产品决策和设计决策缺乏独立的审查机制。一个错误的早期决策会被后续代码层层叠加放大，导致大量返工。</p>
+</li>
+<li>
+<p><strong>多代理协调的复杂性</strong>：随着 Claude Code、Codex CLI、Cursor、OpenCode 等多种 AI 编码代理的涌现，开发者需要在多个代理之间协调任务，但缺乏统一的协调框架。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>GStack 由 Garry Tan 创建，核心动机是：</p>
+<ol>
+<li>
+<p><strong>将创业评审经验编码为可复用的流程</strong>：作为 Y Combinator CEO，Garry Tan 评审了数千家创业公司。他将这种评审方法论——如何评估产品方向、如何挑战假设、如何识别真正的机会——编码为 /plan-ceo-review 等技能。这不是通用的规划流程，而是一个特定的人在特定位置上积累的判断力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>角色治理而非通用辅助</strong>：GStack 不关心开发过程或上下文窗口健康——它治理的是"谁做什么决策"。当 Claude 以工程经理角色审查代码时，它忽略 UI 颜色的反馈，专注于框架选择和可维护性。当它以 CEO 角色运作时，它追问功能请求背后的用户问题而非跳入实现。[置信度：高]</p>
+</li>
+<li>
+<p><strong>固化工具代替临时提示</strong>：Garry Tan 使用 Claude Code 在 60 天内生成了 600K+ 行代码，同时全职运营 YC。这个过程催生的不是更好的提示模板，而是一套固化在技能命令中的工作流程——每个技能有明确的输入输出、角色定位和质量标准。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-11</strong>：GitHub 仓库创建，初始版本发布</li>
+<li><strong>2026-03-12</strong>：正式开源发布</li>
+<li><strong>2026-03-14</strong>：~10K Stars（48 小时内），MarkTechPost 报道</li>
+<li><strong>2026-03-17</strong>：TechCrunch 深度报道（"Why Garry Tan's Claude Code Setup Has Gotten So Much Love and Hate"），Hacker News Show HN 帖引发分裂式讨论</li>
+<li><strong>2026-03-18</strong>：~23K Stars（一周内），Medium 出现首批深度评测</li>
+<li><strong>2026-03 月下旬</strong>：SitePoint 教程、Product Hunt 页面、多个 YouTube 评测</li>
+<li><strong>2026-04-06</strong>：v0.15.14.0，204 commits，33 contributors，9,100 forks，66K Stars（Augment Code 报道）</li>
+<li><strong>2026-04-11</strong>：GitHub 最后推送日期</li>
+<li><strong>2026-04-13</strong>：70,526 Stars，9,921 Forks，344 Open Issues</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>GStack 的设计围绕五个核心理念：</p>
+<ol>
+<li>
+<p><strong>决策视角约束（Decision-Making Perspective）</strong>：GStack 不约束开发过程（如 Superpowers）或执行环境（如 GSD），而是约束决策视角。每个技能命令让 AI 从特定角色的角度思考问题——CEO 关注产品方向和用户价值，工程经理关注架构和可维护性，设计师关注用户体验，QA 关注边界情况和回归。这种角色切换不是装饰性的提示词修改，而是从根本上改变了 AI 分析问题的框架。[置信度：高]</p>
+</li>
+<li>
+<p><strong>固化观点而非通用框架（Opinionated Over Generic）</strong>：GStack 不提供可配置的通用框架，而是固化了 Garry Tan 的个人工作流。23 个技能命令体现的是"一个人如何使用 AI 高效开发"的具体答案，而不是"如何配置 AI 开发工具"的通用方案。这种观点化的设计降低了选择困难，但也意味着用户必须接受或适配这些预设的偏好。[置信度：高]</p>
+</li>
+<li>
+<p><strong>数据链编排（Data Chain Orchestration）</strong>：每个技能的输出是下一个技能的输入。/office-hours 的设计文档被 /plan-ceo-review 消费，/plan-ceo-review 的评审结果被 /plan-eng-review 消费，/plan-eng-review 的工程计划被 /plan-design-review 消费。这不是独立的提示命令集合，而是一条结构化的决策链。[置信度：高]</p>
+</li>
+<li>
+<p><strong>"煮湖"哲学（Boil the Lake）</strong>：GStack 内嵌了一个决策原则——"湖可以煮干"（例如让一个模块达到 100% 测试覆盖率），"海洋不能煮干"（例如从零重写整个系统）。这个原则贯穿每个技能的设计，引导 AI 和开发者关注可达成的小目标而非不可控的大愿景。[置信度：高]</p>
+</li>
+<li>
+<p><strong>认知负载适应（Cognitive Load Adaptation）</strong>：当 GStack 检测到多个并行对话时，技能进入 ELI16 模式（Explain Like I'm 16，像对 16 岁人解释一样），重建完整上下文以防止碎片化。这是一种对 AI 在多会话环境中信息丢失问题的应对策略。[置信度：中]</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>固化观点 vs 灵活配置</strong>：获得零配置开箱即用和一致的体验，代价是用户必须适配 Garry Tan 的工作偏好。[置信度：高]
+- <strong>Markdown 技能 vs 运行时应用</strong>：获得极简的维护成本（所有技能都是 Markdown 文件，无专有运行时），代价是缺乏程序化的状态管理和上下文控制能力。[置信度：高]
+- <strong>角色治理 vs 过程约束</strong>：获得深度思考质量和多视角分析，代价是 Build 阶段缺乏对应技能的结构化覆盖。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="sprint">Sprint 冲刺流程</h4>
+<pre><code>用户需求
+  │
+  ├─ Think（思考）: /office-hours
+  │     → 定义问题和目标
+  │     → 生成设计文档（Design Doc）
+  │     → 输出：DESIGN.md
+  │
+  ├─ Plan（规划）: 三轮评审
+  │     ├─ /plan-ceo-review（CEO 评审）
+  │     │     → 4 种模式：scope expansion / selective expansion / hold scope / scope reduction
+  │     │     → 寻找&quot;隐藏在请求中的 10 星产品&quot;
+  │     │     → 输出：CEO_REVIEW.md
+  │     │
+  │     ├─ /plan-eng-review（工程评审）
+  │     │     → 锁定架构决策
+  │     │     → 识别技术风险和依赖
+  │     │     → 输出：ENG_REVIEW.md（含架构图）
+  │     │
+  │     └─ /plan-design-review（设计评审）
+  │           → 审查设计假设
+  │           → 输出：DESIGN_REVIEW.md
+  │
+  ├─ Build（构建）: Claude Code 原生模式
+  │     → ⚠️ 无对应 GStack 技能
+  │     → AI 在默认模式下执行编码
+  │     → 这是 GStack 的结构性缺口
+  │
+  ├─ Review（审查）: /review
+  │     → 自动修复 lint 问题
+  │     → 标记竞态条件和生产缺陷
+  │     → 输出：REVIEW.md
+  │
+  ├─ Test（测试）: /qa
+  │     → 启动 Playwright Chromium 浏览器
+  │     → 点击通过用户流程
+  │     → 发现 bug，生成回归测试
+  │     → 原子化提交修复
+  │
+  ├─ Ship（发布）: /ship
+  │     → 同步 main 分支
+  │     → 运行测试
+  │     → 引导测试框架（如不存在）
+  │     → 执行覆盖率审计
+  │     → 创建 PR
+  │
+  └─ Reflect（回顾）: /retro
+        → 回顾本次冲刺
+        → 识别改进点
+        → 输出：RETRO.md
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README、Augment Code 分析和 Medium 深度评测文章</p>
+</blockquote>
+<p><strong>关键设计决策：</strong> Build 阶段是 GStack 唯一没有对应技能的阶段。这既是一个结构性缺口（AI 在默认模式下运行，没有过程约束），也是一个有意的设计选择——GStack 专注于决策质量而非执行过程。</p>
+<h4 id="_8">角色聚焦机制</h4>
+<pre><code>技能调用时的角色切换
+  │
+  ├─ CEO 角色（/plan-ceo-review, /office-hours）
+  │     → 追问&quot;这个功能背后解决什么用户问题&quot;
+  │     → 而非跳入实现细节
+  │     → 关注：产品方向、用户价值、市场机会
+  │
+  ├─ 工程经理角色（/plan-eng-review）
+  │     → 忽略 UI 颜色反馈
+  │     → 专注框架选择和可维护性
+  │     → 关注：架构、技术债务、依赖管理
+  │
+  ├─ 设计师角色（/plan-design-review）
+  │     → 审查设计假设
+  │     → 防止设计决策成为昂贵的重设计
+  │     → 关注：用户体验、交互模式、视觉一致性
+  │
+  ├─ QA 角色（/qa）
+  │     → 打开真实浏览器测试
+  │     → 生成回归测试套件
+  │     → 关注：边界情况、回归缺陷、覆盖率
+  │
+  └─ 安全官角色（/cso）
+        → 安全审计
+        → 关注：漏洞、合规、数据安全
+</code></pre>
+<blockquote>
+<p>基于 Medium 深度分析文章（tentenco）</p>
+</blockquote>
+<h3 id="_9">数据流/执行流程</h3>
+<pre><code>用户启动 /office-hours
+  │
+  ├─ 1. 思考阶段
+  │     → 用户描述需求（文本输入或语音）
+  │     → /office-hours 生成设计文档
+  │     → 输出持久化到项目目录
+  │
+  ├─ 2. 规划阶段（可手动逐步或 /autoplan 一键执行）
+  │     ├─ /plan-ceo-review
+  │     │     → 读取 DESIGN.md
+  │     │     → 4 种模式选择
+  │     │     → 输出 CEO_REVIEW.md
+  │     │
+  │     ├─ /plan-eng-review
+  │     │     → 读取 DESIGN.md + CEO_REVIEW.md
+  │     │     → 生成架构图
+  │     │     → 输出 ENG_REVIEW.md
+  │     │
+  │     └─ /plan-design-review
+  │           → 读取 DESIGN.md + CEO_REVIEW.md + ENG_REVIEW.md
+  │           → 输出 DESIGN_REVIEW.md
+  │
+  ├─ 3. 构建阶段
+  │     → AI 在 Claude Code 默认模式下编码
+  │     → 无 GStack 技能覆盖
+  │
+  ├─ 4. 审查阶段
+  │     → /review 读取代码变更
+  │     → 自动修复 lint 问题
+  │     → 标记生产缺陷
+  │
+  ├─ 5. 测试阶段
+  │     → /qa 启动 Playwright 浏览器
+  │     → 自动化 UI 测试
+  │     → 生成回归测试
+  │
+  ├─ 6. 发布阶段
+  │     → /ship 执行完整发布流程
+  │     → 同步、测试、创建 PR
+  │
+  └─ 7. 回顾阶段
+        → /retro 生成冲刺回顾
+        → 识别流程改进点
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<h2 id="_10">架构设计</h2>
+<h3 id="_11">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   用户交互层（User Interaction Layer）          │
+│   Claude Code CLI（/slash commands）                         │
+│   其他 7 种 AI 编码代理（Codex CLI, Cursor, OpenCode 等）     │
+├─────────────────────────────────────────────────────────────┤
+│                   技能层（Skill Layer）                        │
+│   23+ Markdown 技能文件（SKILL.md）                          │
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ 规划技能      │ │ 质量技能      │ │ 发布技能      │      │
+│   │ /office-hours│ │ /review      │ │ /ship        │      │
+│   │ /plan-ceo    │ │ /qa          │ │ /land-deploy │      │
+│   │ /plan-eng    │ │ /cso         │ │ /canary      │      │
+│   │ /plan-design │ │ /careful     │ │ /benchmark   │      │
+│   │ /autoplan    │ │ /freeze      │ │ /doc-release │      │
+│   │ /learn       │ │ /guard       │ │ /devex-review│      │
+│   │ /retro       │ │ /investigate │ │ /design-cons │      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ 浏览器技能    │ │ 协调技能      │ │ 设计技能      │      │
+│   │ /browse      │ │ /pair-agent  │ │ /design-shot │      │
+│   │ (Chromium)   │ │ /codex       │ │ /design-html │      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+├─────────────────────────────────────────────────────────────┤
+│                   数据链层（Data Chain Layer）                 │
+│   DESIGN.md → CEO_REVIEW.md → ENG_REVIEW.md →              │
+│   DESIGN_REVIEW.md → 代码变更 → REVIEW.md →                │
+│   QA 结果 → PR → RETRO.md                                   │
+├─────────────────────────────────────────────────────────────┤
+│                   多代理适配层（Multi-Agent Adapter Layer）    │
+│   HostConfig 系统（TypeScript 配置文件）                      │
+│   ├─ Claude Code 适配器                                      │
+│   ├─ Codex CLI 适配器                                        │
+│   ├─ OpenCode 适配器                                         │
+│   ├─ Cursor 适配器                                           │
+│   ├─ Factory Droid 适配器                                    │
+│   ├─ Slate 适配器                                            │
+│   ├─ Kiro 适配器                                             │
+│   └─ OpenClaw 适配器（ClawHub 集成）                         │
+├─────────────────────────────────────────────────────────────┤
+│                   基础设施层（Infrastructure Layer）           │
+│   Claude Code Skills 机制 / Playwright（浏览器测试）          │
+│   Git / Chromium（GStack Browser）/ OpenAI API（/codex）     │
+│   Conductor（并行会话调度）/ 语音输入（AquaVoice, Whisper）    │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<h3 id="_12">核心模块</h3>
+<ul>
+<li>
+<p><strong>规划技能组（Planning Skills）</strong> — 包含 /office-hours、/plan-ceo-review、/plan-eng-review、/plan-design-review、/autoplan 五个技能。/office-hours 生成设计文档，三轮评审从 CEO、工程、设计三个视角审查，/autoplan 将三轮评审串联为一条管道。数据链是结构化的：每个技能的输出是下一个技能的输入。</p>
+</li>
+<li>
+<p><strong>质量技能组（Quality Skills）</strong> — 包含 /review、/qa、/cso 三个技能。/review 自动修复 lint 问题并标记生产缺陷，/qa 启动 Playwright 浏览器进行自动化 UI 测试，/cso 提供安全审计。Review Readiness Dashboard 显示哪些审查已运行、哪些缺失、是否可以发布。工程审查是硬性门控，CEO 和设计审查为建议性。</p>
+</li>
+<li>
+<p><strong>安全护栏技能组（Safety Guardrails）</strong> — 包含 /careful（谨慎模式，破坏性命令前警告）、/freeze（冻结模式，锁定编辑到一个目录）、/guard（守卫模式，同时激活前两者）、/investigate（自动冻结到调试模块）四个技能。所有安全操作有完整日志。</p>
+</li>
+<li>
+<p><strong>发布技能组（Release Skills）</strong> — 包含 /ship、/land-and-deploy、/canary、/benchmark、/document-release、/devex-review 六个技能。/ship 执行完整的同步→测试→PR 流程，/canary 支持灰度发布，/benchmark 执行性能基准测试。</p>
+</li>
+<li>
+<p><strong>多代理协调模块（Multi-Agent Coordination）</strong> — /pair-agent 技能实现跨代理协调，将任务分发到最适合的代理执行。HostConfig 系统通过 TypeScript 配置文件适配 8 种 AI 编码代理。添加新代理只需一个配置文件。</p>
+</li>
+<li>
+<p><strong>浏览器模块（GStack Browser）</strong> — 基于 Chromium 的 AI 控制浏览器，具备反检测隐身模式、侧边栏代理、Cookie 导入、视觉截图分析能力。由 /browse 和 /qa 技能驱动。</p>
+</li>
+</ul>
+<h3 id="_13">扩展机制</h3>
+<p>GStack 的扩展方式主要体现在以下方面：</p>
+<ol>
+<li>
+<p><strong>技能文件扩展</strong>：每个技能是一个 Markdown 文件（SKILL.md），存放于 <code>~/.claude/skills/gstack/</code> 目录。添加新技能只需创建新的 SKILL.md 文件，无需修改运行时代码。</p>
+</li>
+<li>
+<p><strong>HostConfig 代理扩展</strong>：通过 TypeScript 配置文件添加新的 AI 编码代理支持。声明式配置指定代理名称、命令行接口和技能映射规则。当前支持 8 种代理，新增代理的门槛较低。</p>
+</li>
+<li>
+<p><strong>ClawHub 集成</strong>：通过 OpenClaw 生态的 ClawHub 平台集成 4 个原生 OpenClaw 技能，扩展了在 OpenClaw 代理上的能力。</p>
+</li>
+<li>
+<p><strong>Team Mode 自动更新</strong>：通过 <code>./setup --team</code> 安装后，SessionStart hook 每小时自动拉取最新版本。团队共享仓库中不会出现 vendored 文件。</p>
+</li>
+<li>
+<p><strong>/learn 自我学习</strong>：/learn 技能分析项目代码库，学习项目特定的模式和约定，将发现注入到后续技能的上下文中。</p>
+</li>
+</ol>
+<h2 id="_14">关键概念详解</h2>
+<h3 id="sprint-sprint-process">Sprint 冲刺流程（Sprint Process）</h3>
+<ul>
+<li><strong>定义：</strong> GStack 定义的七步开发流程——Think → Plan → Build → Review → Test → Ship → Reflect，每步有对应的技能命令驱动，形成从想法到发布的完整工作流。</li>
+<li><strong>作用：</strong> 将 AI 编码从无结构的提示-响应模式转变为有节奏的冲刺开发。每个阶段有明确的输入、处理和输出，使开发过程可追踪、可审计。</li>
+<li><strong>使用场景：</strong> 功能开发、Bug 修复、技术债务清理等任何需要从想法到发布的开发任务。</li>
+<li><strong>流程说明：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 完整的 Sprint 冲刺流程
+
+# Step 1: Think — 定义问题和目标
+/office-hours
+# → 输入：用户需求描述
+# → 输出：DESIGN.md（设计文档）
+
+# Step 2: Plan — 三轮评审（可逐步或一键）
+/autoplan
+# → 串联 /plan-ceo-review → /plan-eng-review → /plan-design-review
+# → 输出：CEO_REVIEW.md + ENG_REVIEW.md + DESIGN_REVIEW.md
+
+# Step 3: Build — 编码（Claude Code 原生模式）
+# 无 GStack 技能，AI 在默认模式下执行编码
+
+# Step 4: Review — 代码审查
+/review
+# → 自动修复 lint，标记缺陷
+# → 输出：REVIEW.md
+
+# Step 5: Test — QA 测试
+/qa
+# → 启动 Playwright 浏览器
+# → 自动化 UI 测试 + 回归测试
+# → 原子化提交修复
+
+# Step 6: Ship — 发布
+/ship
+# → 同步 main → 测试 → 引导框架 → 覆盖率审计 → 创建 PR
+
+# Step 7: Reflect — 回顾
+/retro
+# → 冲刺回顾，识别改进点
+# → 输出：RETRO.md
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README</p>
+</blockquote>
+<h3 id="ceo-plan-ceo-review">CEO 评审（/plan-ceo-review）</h3>
+<ul>
+<li><strong>定义：</strong> GStack 最具特色的技能，将 Claude 置于 CEO/创始人模式，重新思考问题以寻找"隐藏在请求中的 10 星产品"。提供四种评审模式。</li>
+<li><strong>作用：</strong> 这不是通用的规划流程，而是编码了 Garry Tan 在 YC 评审数千家创业公司积累的评估方法论。它追问功能请求背后的用户问题，而非直接跳入实现。</li>
+<li><strong>使用场景：</strong> 新功能规划、产品方向评估、需求优先级排序。</li>
+<li><strong>模式说明：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 Medium 深度评测文章（luongnv89）
+// /plan-ceo-review 的四种评审模式
+
+// 1. scope expansion（范围扩展）
+//    → 追问&quot;真正的机会是什么？&quot;
+//    → 探索请求之外更大的产品可能性
+//    → 适合早期项目探索阶段
+
+// 2. selective expansion（选择性扩展）
+//    → 保持核心范围，精选最佳扩展方向
+//    → 在不偏离核心的前提下发现增量价值
+//    → 适合有明确方向但想探索优化的场景
+
+// 3. hold scope（保持范围）
+//    → 对当前计划施加最大严格度
+//    → 不改变范围，深挖实现细节
+//    → 适合范围已确定、需要精确执行的场景
+
+// 4. scope reduction（范围缩减）
+//    → 剥离到核心本质
+//    → 识别最小可行产品
+//    → 适合需要快速验证或资源有限的场景
+</code></pre>
+<blockquote>
+<p>基于 Medium 深度评测文章（luongnv89）</p>
+</blockquote>
+<h3 id="multi-agent-orchestration">多代理协调（Multi-Agent Orchestration）</h3>
+<ul>
+<li><strong>定义：</strong> 通过 HostConfig 系统和 /pair-agent 技能，实现 8 种 AI 编码代理之间的任务分发和协调。</li>
+<li><strong>作用：</strong> 解决多代理环境下的协调问题。不同代理有不同的优势领域——Claude Code 擅长代码生成，Codex 擅长独立审查——/pair-agent 将任务分发到最适合的代理。</li>
+<li><strong>使用场景：</strong> 多代理并行开发、跨模型交叉验证、大规模项目的并行冲刺。</li>
+<li><strong>架构说明：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 GStack GitHub README 和 Augment Code 分析
+// HostConfig 声明式代理配置系统
+
+// 添加新代理只需一个 TypeScript 配置文件
+// 声明式配置指定：
+//   - 代理名称和标识
+//   - 命令行接口路径
+//   - 技能映射规则
+//   - 输入/输出格式转换
+
+// 当前支持的 8 种代理：
+// Claude Code  — 主要宿主，完整技能支持
+// Codex CLI    — OpenAI 代理，/codex 交叉审查
+// OpenCode     — 开源替代，基础技能支持
+// Cursor       — IDE 集成，技能映射
+// Factory Droid — 自动化测试专用
+// Slate         — Slate Auto 内部代理
+// Kiro          — 亚马逊 Kiro 代理
+// OpenClaw      — 通过 ClawHub 集成 4 个原生技能
+
+// 并行会话调度
+// Conductor 支持 10-15 个 Claude Code 会话同时运行
+// 每个会话执行不同的冲刺任务
+// git worktree 实现代码隔离
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README 和 Augment Code 分析</p>
+</blockquote>
+<h3 id="safety-guardrails">安全护栏（Safety Guardrails）</h3>
+<ul>
+<li><strong>定义：</strong> 通过 /careful、/freeze、/guard、/investigate 四个技能提供三级安全防护，保护代码库免受 AI 代理的意外破坏。</li>
+<li><strong>作用：</strong> AI 代理在自主运行时可能执行破坏性操作（删除文件、覆盖关键代码、修改配置）。安全护栏在不同粒度上限制代理的行为范围。</li>
+<li><strong>使用场景：</strong> 自主运行期间的防护、调试异常时的自动冻结、CI/CD 中的安全门控。</li>
+<li><strong>机制说明：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GStack GitHub README
+# 安全护栏的三级防护
+
+# Level 1: /careful — 谨慎模式
+#   → 破坏性命令前发出警告
+#   → 用户需要确认才能继续
+#   → 最低级别的防护
+
+# Level 2: /freeze — 冻结模式
+#   → 锁定编辑到一个指定目录
+#   → AI 只能修改被冻结目录内的文件
+#   → 中等级别的防护
+
+# Level 3: /guard — 守卫模式
+#   → 同时激活 /careful 和 /freeze
+#   → 最严格的防护级别
+#   → 适合生产环境操作
+
+# 自动冻结: /investigate
+#   → 检测到异常时自动冻结到调试模块
+#   → 防止异常扩散到其他代码区域
+#   → 所有安全操作有完整日志
+</code></pre>
+<blockquote>
+<p>基于 GStack GitHub README</p>
+</blockquote>
+<h3 id="cross-model-review-with-codex">跨模型独立审查（Cross-Model Review with /codex）</h3>
+<ul>
+<li><strong>定义：</strong> /codex 技能调用 OpenAI 的 Codex CLI 对 Claude Code 的输出进行独立审查，生成跨模型分析报告。</li>
+<li><strong>作用：</strong> 降低单一模型的盲点和偏见。Claude 和 Codex 基于不同的训练数据和方法论，交叉验证可以发现任一模型单独遗漏的问题。</li>
+<li><strong>使用场景：</strong> 关键代码的安全审查、架构决策的独立验证、高可靠性要求的代码审查。</li>
+<li><strong>流程说明：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 Augment Code 分析
+# /codex 跨模型审查流程
+
+# 1. Claude Code 完成代码编写或审查
+# 2. /codex 将代码发送到 OpenAI Codex CLI
+# 3. Codex 独立分析，生成审查报告
+# 4. GStack 生成跨模型对比分析：
+#    → 重叠发现（两个模型都发现的问题）
+#    → Claude 独有发现
+#    → Codex 独有发现
+# 5. 开发者综合两份报告做出决策
+
+# 这种多模型交叉验证在同类工具中是独特的
+# Garry Tan 的设计哲学：&quot;不优化单一供应商，优化最佳输出&quot;
+</code></pre>
+<blockquote>
+<p>基于 Augment Code 分析</p>
+</blockquote>
+<h3 id="data-chain-orchestration">数据链编排（Data Chain Orchestration）</h3>
+<ul>
+<li><strong>定义：</strong> GStack 技能之间的结构化数据传递机制，每个技能的输出成为下一个技能的输入，形成完整的决策链。</li>
+<li><strong>作用：</strong> 将独立的提示命令转变为有序的决策管道。不是孤立地运行各个技能，而是确保每个阶段都建立在前面所有阶段的分析基础上。</li>
+<li><strong>使用场景：</strong> 所有使用多个 GStack 技能的开发流程。</li>
+<li><strong>数据流说明：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 Medium 分析文章（tentenco）和 GStack GitHub README
+// GStack 的数据链编排
+
+// 数据流方向：左 → 右，上游 → 下游
+
+// /office-hours
+//   → 输出: DESIGN.md（设计文档）
+//   ↓
+// /plan-ceo-review
+//   → 输入: DESIGN.md
+//   → 输出: CEO_REVIEW.md（产品方向评审）
+//   ↓
+// /plan-eng-review
+//   → 输入: DESIGN.md + CEO_REVIEW.md
+//   → 输出: ENG_REVIEW.md（工程评审，含架构图）
+//   ↓
+// /plan-design-review
+//   → 输入: DESIGN.md + CEO_REVIEW.md + ENG_REVIEW.md
+//   → 输出: DESIGN_REVIEW.md（设计评审）
+//   ↓
+// Build（Claude Code 原生模式，无 GStack 技能）
+//   ↓
+// /review
+//   → 输入: 代码变更
+//   → 输出: REVIEW.md（代码审查）
+//   ↓
+// /qa
+//   → 输入: 代码变更 + REVIEW.md
+//   → 输出: 测试结果 + 回归测试
+//   ↓
+// /ship
+//   → 输入: 全部审查结果
+//   → 输出: PR
+</code></pre>
+<blockquote>
+<p>基于 Medium 分析文章（tentenco）</p>
+</blockquote>
+<h2 id="_15">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GStack</th>
+<th>Superpowers</th>
+<th>GSD2</th>
+<th>BMAD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>决策视角约束——约束 AI 从什么角色做决策</td>
+<td>过程约束——七阶段管道强制 TDD</td>
+<td>执行环境约束——每任务全新 200K 上下文</td>
+<td>多代理角色——12-21 个专门化代理角色</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>70,526（2026-04-13）</td>
+<td>~94,000（2026-03）</td>
+<td>5,505（2026-04-13）</td>
+<td>N/A（独立框架）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>TypeScript（Markdown 技能）</td>
+<td>TypeScript（Markdown 技能）</td>
+<td>TypeScript（Pi SDK 应用）</td>
+<td>Markdown + 多语言</td>
+</tr>
+<tr>
+<td>范式</td>
+<td>角色治理 + 数据链编排</td>
+<td>TDD 管道 + 子任务委派</td>
+<td>规格驱动 + 状态机自主</td>
+<td>角色扮演 + 多代理协作</td>
+</tr>
+<tr>
+<td>约束维度</td>
+<td>决策视角</td>
+<td>开发过程</td>
+<td>执行环境</td>
+<td>团队治理</td>
+</tr>
+<tr>
+<td>崩溃恢复</td>
+<td>无（依赖宿主代理）</td>
+<td>无</td>
+<td>是（锁文件 + 会话取证）</td>
+<td>有限</td>
+</tr>
+<tr>
+<td>并行执行</td>
+<td>是（Conductor 10-15 并行会话）</td>
+<td>单会话</td>
+<td>是（多 worktree 并行里程碑）</td>
+<td>Party Mode 多代理辩论</td>
+</tr>
+<tr>
+<td>跨模型支持</td>
+<td>是（/codex OpenAI 独立审查）</td>
+<td>否</td>
+<td>是（20+ 模型提供商）</td>
+<td>否</td>
+</tr>
+<tr>
+<td>浏览器测试</td>
+<td>是（Playwright Chromium）</td>
+<td>否</td>
+<td>否（24 内置扩展含 Browser）</td>
+<td>否</td>
+</tr>
+<tr>
+<td>安全护栏</td>
+<td>是（/careful /freeze /guard /investigate）</td>
+<td>是（守卫栏）</td>
+<td>有限</td>
+<td>有限</td>
+</tr>
+<tr>
+<td>成本控制</td>
+<td>无内置</td>
+<td>无内置</td>
+<td>是（每阶段模型选择 + token 配置）</td>
+<td>手动配置</td>
+</tr>
+<tr>
+<td>Build 阶段覆盖</td>
+<td>无（结构性缺口）</td>
+<td>是（TDD + 子任务委派）</td>
+<td>是（原子任务 + 上下文隔离）</td>
+<td>是（多代理协作）</td>
+</tr>
+<tr>
+<td>多代理支持</td>
+<td>8 种 AI 编码代理</td>
+<td>5 种</td>
+<td>Claude Code 为主</td>
+<td>Claude Code 为主</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低-中（固化流程，零配置）</td>
+<td>中（七阶段管道，TDD 强制）</td>
+<td>中-高（三级分解、状态机）</td>
+<td>高（12-21 个角色）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>创始人-工程师、产品驱动开发</td>
+<td>代码质量优先的独立开发者</td>
+<td>大型项目长时间自主开发</td>
+<td>团队协作、合规环境</td>
+</tr>
+<tr>
+<td>创建者</td>
+<td>Garry Tan（YC CEO）</td>
+<td>Jesse Vincent（Perl 社区）</td>
+<td>Lex Christopherson</td>
+<td>独立框架</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。GStack Stars 来自 GitHub API 实时查询。Superpowers Stars 来自 Medium 分析文章（tentenco，2026-04-06 数据）。GSD2 Stars 来自 GitHub API。[置信度：GStack 高，Superpowers 中，GSD2 高，BMAD 中]</p>
+</blockquote>
+<h2 id="_16">适用场景分析</h2>
+<h3 id="_17">最佳场景</h3>
+<ol>
+<li>
+<p><strong>创始人-工程师的产品驱动开发</strong>：GStack 最适合同时扮演 CEO、工程师、设计师等多角色的独立开发者或小团队。/plan-ceo-review 迫使你在写代码前回答"这个功能到底解决什么问题"，/plan-eng-review 锁定架构防止 AI 幻觉出破碎系统。多位评测者指出，CEO 评审发现的产品方向问题比工程问题更有价值。[置信度：高]</p>
+</li>
+<li>
+<p><strong>需要多视角审查的复杂决策</strong>：当一个功能涉及产品方向、技术架构和用户体验的多重权衡时，GStack 的三轮评审（CEO/工程/设计）提供结构化的多视角分析。Augment Code 分析指出，/autoplan 链式管道的每一步都建立在前一步的分析基础上，比独立提示更深入。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多代理并行开发环境</strong>：对于使用多种 AI 编码代理的团队，GStack 的 HostConfig 系统提供统一的技能层，一个技能定义适配 8 种代理。/pair-agent 的跨代理协调和 /codex 的跨模型审查在多代理环境中尤为有价值。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>创业公司快速迭代</strong>：YC S26 批次创始人的正面反馈集中在 GStack 帮助他们快速从想法到发布的完整流程。"10K Stars 在 48 小时内"和"600K+ LOC 在 60 天"的数据反映了创业社区的强烈需求。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_18">不适用场景</h3>
+<ol>
+<li>
+<p><strong>需要精细执行过程控制的场景</strong>：GStack 在 Build 阶段没有对应技能，AI 在默认模式下执行编码。如果项目需要强制 TDD（如 Superpowers）或上下文隔离（如 GSD2），GStack 单独使用无法满足。建议在此场景下组合使用 Superpowers 或 GSD2。</p>
+</li>
+<li>
+<p><strong>成本敏感的大规模项目</strong>：GStack 没有内置的 token 优化或成本控制机制。三轮评审 + QA 浏览器 + /codex 跨模型审查的组合会消耗大量 token。对于大规模项目，GSD2 的每阶段模型选择和 token 优化配置更为适合。</p>
+</li>
+<li>
+<p><strong>需要状态持久化和崩溃恢复的长时间自主运行</strong>：GStack 是纯 Markdown 技能文件，没有运行时状态管理。如果需要数小时无人值守的自主运行，GSD2 的崩溃恢复和状态机更适合。</p>
+</li>
+</ol>
+<h2 id="_19">优缺点深度分析</h2>
+<h3 id="_20">优势</h3>
+<ol>
+<li>
+<p><strong>独特的决策视角约束</strong> - GStack 是目前唯一约束"AI 从什么角色做决策"的框架。Superpowers 约束开发过程，GSD 约束执行环境，GStack 约束决策视角。这三者解决完全不同的问题，且理论上可以叠加使用。/plan-ceo-review 编码了 Garry Tan 的创业评审方法论，这不是通用提示词能复制的能力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>零配置开箱即用</strong> - 所有技能都是 Markdown 文件，无需安装运行时、无需配置文件、无需理解复杂的概念模型。<code>git clone</code> + <code>./setup</code> 即可使用。对于不想投入时间学习复杂框架的开发者，这是最低门槛的入门选择。Augment Code 评价："你不是在采用新基础设施，而是在采用一个流程。"[置信度：高]</p>
+</li>
+<li>
+<p><strong>跨模型和多代理支持</strong> - /codex 的跨模型独立审查和 HostConfig 的多代理适配是同类工具中独一无二的。在一个团队可能同时使用 Claude Code 和 Cursor 的现实中，统一的技能层具有实际价值。Garry Tan 的设计哲学是"优化最佳输出而非单一供应商"。[置信度：高]</p>
+</li>
+<li>
+<p><strong>真实浏览器测试</strong> - /qa 技能启动 Playwright Chromium 进行自动化 UI 测试，这是同类框架中唯一提供真实浏览器测试的。点击通过用户流程、发现 bug、生成回归测试、原子化提交修复的完整能力，对前端项目的质量保障尤为有价值。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_21">劣势</h3>
+<ol>
+<li>
+<p><strong>Build 阶段的结构性缺口</strong> - GStack 覆盖了 Think → Plan → Review → Test → Ship → Reflect 六个阶段，但 Build 阶段没有对应技能。这是 AI 编码最核心的阶段，也是最需要过程约束的阶段。Medium 分析文章（tentenco）明确指出："Build 阶段是 GStack 的结构性缺口，恰好是 Superpowers 和 GSD 最强的领域。"[置信度：高]</p>
+</li>
+<li>
+<p><strong>缺乏运行时状态管理</strong> - 纯 Markdown 技能的设计意味着没有程序化的状态管理、上下文控制或崩溃恢复。与 GSD2（TypeScript 应用，状态持久化到磁盘）相比，GStack 在长时间自主运行场景中可靠性不足。[置信度：高]</p>
+</li>
+<li>
+<p><strong>强依赖创建者个人经验</strong> - GStack 的核心价值来自 Garry Tan 的个人评审方法论。如果用户不认同这种评审方式，或项目类型不匹配（如底层库开发、基础设施代码），GStack 的价值会大幅降低。一位 Twitter 用户评价："GStack 的真正价值在于决策和实际 QA，而不是编码能力。"[置信度：中]</p>
+</li>
+<li>
+<p><strong>缺乏成本控制机制</strong> - 三轮评审 + QA 浏览器 + /codex 跨模型审查的组合会消耗大量 API token，且没有内置的 token 优化或成本追踪。社区反馈中未提及成本问题，可能反映早期用户的付费能力较强（多为 YC 创始人）。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_22">风险点</h3>
+<ol>
+<li>
+<p><strong>名人效应驱动的采用可能掩盖工具本身的问题</strong> - 70,526 Stars 的快速增长部分来自 Garry Tan 的个人影响力和 YC 生态。Reddit r/ClaudeAI 社区的评价是"大多是炒作，但并非完全无用"。TechCrunch 报道的标题直接点出"爱与恨"的分裂。名人效应退潮后，工具的真实价值需要经受更严格的检验。[置信度：中]</p>
+</li>
+<li>
+<p><strong>快速迭代中的稳定性风险</strong> - 截至 2026-04-06 版本为 v0.15.14.0，仍在 0.x 阶段。204 commits 和每日更新表明项目在快速迭代中，但 0.x 版本意味着 API 和技能定义可能在版本间发生不兼容变更。对于团队采用，版本稳定性是一个需要考虑的因素。[置信度：中]</p>
+</li>
+<li>
+<p><strong>社区负面反馈的选择偏差</strong> - Reddit 社区存在批判性讨论（"大多数是炒作"），但 HN 和 Product Hunt 的评价偏向正面。这种分裂可能反映不同用户群体的不同需求，也可能反映早期采用者的选择偏差。随着用户基数从 YC 生态扩展到更广泛的开发者社区，可能出现更多负面反馈。[置信度：低-中]</p>
+</li>
+</ol>
+<h2 id="_23">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>插件/扩展数量：</strong> 23+ 个内置技能 + 8 个能力工具。技能覆盖完整开发生命周期。通过 ClawHub 集成 4 个 OpenClaw 原生技能。新技能以 Markdown 文件形式添加，门槛低。[置信度：高]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> 核心依赖 Claude Code Skills 机制、Playwright（浏览器测试）、Chromium（GStack Browser）、OpenAI API（/codex 跨模型审查）。上游依赖本身成熟稳定。没有专有运行时。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> YC S26 批次创始人广泛采用（Reddit r/ycombinator 正面评价）。Garry Tan 个人声称 600K+ LOC in 60 days。TechCrunch 报道一位 CTO 朋友称其为"god mode"（在代码中即时发现安全缺陷）。但缺乏大型企业的官方采用报告。[置信度：低-中]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> 中-高。GitHub README 非常详细（被社区评价为"极其全面"）。SitePoint 有独立第三方教程。Augment Code 有深入分析。但部分技能的内部文档（SKILL.md）细节有限。TechCrunch 文章 URL 在审阅时返回 404，可能已被移动或删除。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_24">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 中。版本号 v0.15.14.0 表明仍在 0.x 阶段，快速迭代中。204 commits 和每日更新意味着 API 可能不稳定。344 个 Open Issues 相对于 70K Stars 比例较低，但绝对数量仍需关注。缺乏独立的稳定性测试报告。[置信度：中]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> 中。Markdown 技能文件的解析开销极低。但三轮评审 + QA 浏览器 + /codex 的完整流程消耗较多 token 和时间。社区反馈显示完整的 Sprint 流程（Think → Ship）对于小功能可能过于沉重。多代理并行通过 Conductor 调度，但 Conductor 的官方实现尚不完整。[置信度：中]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> 低-中。Review Readiness Dashboard 显示审查状态。安全操作有日志记录。但缺乏内置的 token 使用追踪、成本报告和性能指标。/benchmark 技能提供性能基准测试，但不是持续监控。[置信度：低-中]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> 低。纯 Markdown 技能没有运行时状态管理。崩溃恢复完全依赖宿主代理（Claude Code 等）的能力。与 GSD2 的多层崩溃恢复相比，这是 GStack 的明显短板。[置信度：低]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> 中。安全护栏（/careful, /freeze, /guard, /investigate）提供了实用的防护机制。/cso 提供安全审计。TechCrunch 报道 GStack 能即时发现安全缺陷。但 API 密钥管理依赖宿主代理，没有独立的合规认证。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_25">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>Claude Code 基本使用（安装、命令行操作）</li>
+<li>软件开发流程的基本理解（规划、编码、测试、发布）</li>
+<li>Git 基础操作（clone、commit、branch、PR）</li>
+<li>
+<p>产品思维的基本概念（用户需求、功能优先级、MVP）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 30 分钟 - 1 小时。<code>git clone</code> + <code>./setup</code> 安装，运行 <code>/office-hours</code> 即可开始第一个冲刺。零配置设计降低了入门门槛。Augment Code 评价："30 秒安装和 /office-hours 命令是发现观点是否匹配你的最快方式。"</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 1-2 周。需要理解 23 个技能的最佳使用时机和组合方式、数据链编排的流程、多代理协调的配置、安全护栏的适用场景。特别是理解 /plan-ceo-review 四种模式的适用场景和"煮湖"哲学的应用需要实践经验。</p>
+</li>
+</ul>
+<h2 id="_26">总结与建议</h2>
+<p>GStack 在"AI 编码代理的角色治理"这一维度建立了独特的定位。它的核心创新在于：</p>
+<ol>
+<li>
+<p><strong>决策视角约束</strong>：GStack 是目前唯一约束"AI 从什么角色做决策"的框架。它不关心开发过程或执行环境，而是治理决策视角。编码了 Garry Tan 的创业评审方法论的 /plan-ceo-review 是同类工具中最独特的技能。</p>
+</li>
+<li>
+<p><strong>跨模型和多代理支持</strong>：/codex 的跨模型独立审查和 HostConfig 的多代理适配在同类工具中独一无二。在多代理时代，这种"优化最佳输出而非单一供应商"的设计哲学具有前瞻性。</p>
+</li>
+<li>
+<p><strong>零配置的流程采用</strong>：纯 Markdown 技能 + 一键安装 = 最低门槛的结构化开发流程。你不是在采用新基础设施，而是在采用一个流程。</p>
+</li>
+</ol>
+<p>然而，GStack 在 Build 阶段有结构性缺口，缺乏运行时状态管理和崩溃恢复，且缺乏成本控制机制。项目仍在 0.x 阶段，API 稳定性待验证。</p>
+<p><strong>推荐使用：</strong> 创始人-工程师和产品驱动的独立开发者；需要多视角审查的复杂决策场景；使用多种 AI 编码代理的团队；创业公司快速迭代。</p>
+<p><strong>谨慎使用：</strong> 需要精细执行过程控制的场景——建议组合 Superpowers 或 GSD2；成本敏感的大规模项目；需要长时间无人值守自主运行的场景。</p>
+<p><strong>组合建议：</strong> Medium 分析文章（tentenco）指出，三个框架理论上可以叠加使用——GStack 处理思考和审查，Superpowers 的 TDD 原则应用于 Build 阶段，GSD 的上下文隔离防止长时间会话的质量退化。但在实践中，没有一键集成方案，需要手动配置。</p>
+<p><strong>综合评分：</strong> 7.5/10。在"决策视角约束"和"多代理协调"两个维度上是最完整的开源实现，/plan-ceo-review 和 /codex 是真正的技术亮点。扣分主要来自 Build 阶段的结构性缺口、缺乏运行时状态管理、0.x 版本的稳定性风险。70K+ Stars 反映了强烈的社区需求，但也伴随名人效应带来的审视风险。</p>
+<h2 id="_27">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> GStack v0.15.14.0（2026-04-06 数据）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/garrytan/gstack">GitHub 仓库 garrytan/gstack</a> — 源码、README、23+ 技能定义</li>
+<li><a href="https://api.github.com/repos/garrytan/gstack">GitHub API - garrytan/gstack</a>（Stars: 70,526, Forks: 9,921, Open Issues: 344, License: MIT, Language: TypeScript, Created: 2026-03-11, Pushed: 2026-04-11） — 项目元数据</li>
+<li><a href="https://augmentcode.com/learn/garry-tan-gstack-claude-code">Augment Code - Garry Tan open-sources gstack: what developers should know</a> — 深度技术分析、HostConfig 架构、团队使用场景</li>
+<li><a href="https://medium.com/@tentenco/superpowers-gsd-and-gstack-what-each-claude-code-framework-actually-constrains-12a1560960ad">Medium - Superpowers, GSD, and gstack: What Each Claude Code Framework Actually Constrains</a> — 三框架深度对比、设计哲学分析、组合建议</li>
+<li><a href="https://medium.com/@luongnv89/gstack-is-not-a-dev-tool-its-garry-tan-s-brain-on-ai-b813e09b32c7">Medium - gstack is not a dev tool. it's Garry Tan's brain on AI</a> — 实际使用体验、/plan-ceo-review 四种模式详解</li>
+<li><a href="https://www.sitepoint.com/">SitePoint - How to Use GStack for Claude Code</a> — 第三方完整教程</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

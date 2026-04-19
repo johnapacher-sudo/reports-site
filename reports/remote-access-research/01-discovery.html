@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网双机远程访问 - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">局域网双机远程访问是指在同一局域网（LAN）内的两台计算机之间，通过远程桌面协议（RDP/VNC）或命令行协议（SSH）实现远程控制、文件传输和系统管理的技术方案集合。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#rustdesk" class="toc-h3">RustDesk（最具代表性的开源方案）</a></li>
+<li><a href="#windows-rdp" class="toc-h3">Windows RDP</a></li>
+<li><a href="#sshopenssh" class="toc-h3">SSH/OpenSSH</a></li>
+<li><a href="#vnc" class="toc-h3">VNC</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">主流方案对比</a></li>
+<li><a href="#_7" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_8" class="toc-h3">官方资源</a></li>
+<li><a href="#_9" class="toc-h3">教程资源</a></li>
+<li><a href="#_10" class="toc-h3">社区资源</a></li>
+<li><a href="#_11" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>局域网双机远程访问 - 技术发现报告</h1>
+                        <div class="article-meta">局域网双机远程访问是指在同一局域网（LAN）内的两台计算机之间，通过远程桌面协议（RDP/VNC）或命令行协议（SSH）实现远程控制、文件传输和系统管理的技术方案集合。</div>
+                    </header>
+                    <h1 id="-">局域网双机远程访问 - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> 局域网双机远程访问（LAN Remote Access）</li>
+<li><strong>官方地址：</strong> 无单一官方地址（涵盖多种协议和工具，见下方链接汇总）</li>
+<li><strong>GitHub 仓库：</strong> 以 RustDesk（最具代表性的开源方案）为例：https://github.com/rustdesk/rustdesk</li>
+<li><strong>当前版本：</strong></li>
+<li>RustDesk 1.4.6（开源客户端）</li>
+<li>Windows RDP（随 Windows 11 更新，协议版本 10.0）</li>
+<li>VNC/RFB 协议（RFC 6143，稳定标准）</li>
+<li>SSH（OpenSSH 9.x，随操作系统更新）</li>
+<li><strong>License：</strong> 视具体工具而定：</li>
+<li>RustDesk：GPL-3.0</li>
+<li>Windows RDP：Windows 商业许可（Pro/Enterprise 版本内置）</li>
+<li>VNC：各实现不同（TigerVNC 为 GPL-2.0，RealVNC 为商业许可）</li>
+<li>SSH/OpenSSH：BSD-2-Clause / ISC</li>
+<li><strong>主要编程语言：</strong> Rust（RustDesk）、C/C++（VNC/OpenSSH）、Windows 内核（RDP）</li>
+<li><strong>首次发布日期：</strong></li>
+<li>RDP：1998 年（Windows NT 4.0 Terminal Server Edition）</li>
+<li>VNC：1999 年（AT&amp;T Laboratories Cambridge）</li>
+<li>SSH：1995 年（Tatu Ylonen）</li>
+<li>RustDesk：2021 年</li>
+<li><strong>创建者/维护团队：</strong></li>
+<li>RDP：Microsoft</li>
+<li>VNC：RealVNC Ltd.（源自 AT&amp;T Laboratories Cambridge）</li>
+<li>SSH：IETF SECSH Working Group / OpenBSD 项目</li>
+<li>RustDesk：RustDesk 团队（开源社区）</li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>局域网双机远程访问是指在同一局域网（LAN）内的两台计算机之间，通过远程桌面协议（RDP/VNC）或命令行协议（SSH）实现远程控制、文件传输和系统管理的技术方案集合。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>图形化远程桌面控制（RDP/VNC/自研协议）</strong> - 通过传输屏幕画面和接收键盘鼠标输入，实现对远端计算机的完整图形界面操作。局域网内延迟通常低于 20ms，可达到接近本地操作的体验。</p>
+</li>
+<li>
+<p><strong>命令行远程管理（SSH）</strong> - 通过 SSH 协议建立加密隧道，进行远程终端操作、命令执行、文件传输（SCP/SFTP）和端口转发。带宽占用极小（通常 &lt; 10KB/s），是服务器运维的首选方式。</p>
+</li>
+<li>
+<p><strong>端到端加密与安全认证</strong> - 主流方案均支持 TLS/NLA/NaCl 等加密技术，结合密码认证、公钥认证、网络级别认证（NLA）等多重安全机制，保障远程会话的数据安全和身份验证。</p>
+</li>
+<li>
+<p><strong>跨平台支持</strong> - 主流工具（RustDesk、AnyDesk、VNC）支持 Windows、macOS、Linux、Android、iOS 等多平台间的互联互通，SSH 则几乎内置所有操作系统。</p>
+</li>
+<li>
+<p><strong>自托管与数据主权（RustDesk）</strong> - 开源方案支持完全自建中继/注册服务器，所有数据不离开局域网，满足隐私合规和安全审计需求。</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<h3 id="rustdesk">RustDesk（最具代表性的开源方案）</h3>
+<ul>
+<li><strong>GitHub Stars：</strong> ~110,900（2026 年 4 月，GitHub 全球排名 #76）</li>
+<li><strong>Contributors：</strong> 421+</li>
+<li><strong>最近更新日期：</strong> 2026 年 4 月（持续活跃开发中）</li>
+<li><strong>社区讨论热度：</strong> 极高。Discord、Reddit、Twitter 活跃社区</li>
+<li><strong>下载量：</strong> 无公开数据，但 GitHub Release 下载量庞大</li>
+</ul>
+<h3 id="windows-rdp">Windows RDP</h3>
+<ul>
+<li><strong>市场占有率：</strong> Windows 局域网远程桌面的事实标准</li>
+<li><strong>社区讨论热度：</strong> 极高，Microsoft 官方文档完善</li>
+<li><strong>生态成熟度：</strong> 25+ 年历史，企业级支持</li>
+</ul>
+<h3 id="sshopenssh">SSH/OpenSSH</h3>
+<ul>
+<li><strong>GitHub Stars（OpenSSH）：</strong> 无独立 GitHub 仓库（OpenBSD 项目的一部分）</li>
+<li><strong>Contributors：</strong> OpenBSD 核心团队 + 全球贡献者</li>
+<li><strong>最近更新日期：</strong> 持续更新（OpenSSH 9.x 系列）</li>
+<li><strong>社区讨论热度：</strong> 极高，所有 Linux/Unix 系统标配</li>
+</ul>
+<h3 id="vnc">VNC</h3>
+<ul>
+<li><strong>GitHub Stars（TigerVNC）：</strong> ~2,800+</li>
+<li><strong>Contributors：</strong> 多个实现（TigerVNC、LibVNC、x11vnc）各有社区</li>
+<li><strong>最近更新日期：</strong> 持续维护</li>
+<li><strong>社区讨论热度：</strong> 中等，主要在 Linux 服务器管理场景使用</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> 网络通信 / 远程控制 / 系统管理</li>
+<li><strong>解决的核心问题：</strong> 在局域网内实现两台计算机之间的远程桌面控制、命令行管理和文件传输，无需互联网连接</li>
+<li><strong>替代/竞品技术：</strong></li>
+<li>图形化方案互为竞品：RDP vs VNC vs RustDesk vs AnyDesk vs NoMachine</li>
+<li>命令行方案：SSH vs Telnet（已淘汰）</li>
+<li>跨互联网方案：TeamViewer、ToDesk、向日葵（非局域网场景）</li>
+<li><strong>依赖的上游技术：</strong> TCP/IP 网络协议栈、加密库（OpenSSL/LibreSSL/NaCl）、编解码器（H.264/AV1/VPx）、图形框架（Flutter/Qt/GTK）</li>
+<li><strong>下游使用者/集成方：</strong> IT 运维团队、MSP（托管服务提供商）、开发人员、远程办公用户</li>
+</ul>
+<h2 id="_6">主流方案对比</h2>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>协议/技术</th>
+<th>适用平台</th>
+<th>图形化</th>
+<th>LAN 性能</th>
+<th>安全性</th>
+<th>成本</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Windows RDP</strong></td>
+<td>RDP 协议</td>
+<td>Windows（被控端需 Pro/Enterprise）</td>
+<td>是</td>
+<td>优秀（局域网极低延迟）</td>
+<td>高（NLA + TLS）</td>
+<td>免费（Windows 内置）</td>
+</tr>
+<tr>
+<td><strong>VNC</strong></td>
+<td>RFB 协议（RFC 6143）</td>
+<td>全平台</td>
+<td>是</td>
+<td>中等（帧缓冲传输，带宽占用较高）</td>
+<td>中（需额外配置加密）</td>
+<td>免费开源</td>
+</tr>
+<tr>
+<td><strong>SSH</strong></td>
+<td>SSH-2 协议</td>
+<td>全平台</td>
+<td>否（纯命令行）</td>
+<td>优秀（带宽极小）</td>
+<td>高（端到端加密 + 公钥认证）</td>
+<td>免费（系统内置）</td>
+</tr>
+<tr>
+<td><strong>RustDesk</strong></td>
+<td>自研协议（NaCl 加密）</td>
+<td>全平台（含移动端）</td>
+<td>是</td>
+<td>优秀（局域网直连）</td>
+<td>高（E2E 加密 + 自托管）</td>
+<td>免费开源</td>
+</tr>
+<tr>
+<td><strong>AnyDesk</strong></td>
+<td>DeskRT 编解码</td>
+<td>全平台</td>
+<td>是</td>
+<td>优秀（低延迟编解码）</td>
+<td>高（但 2024 年有安全事件）</td>
+<td>免费版/付费版</td>
+</tr>
+<tr>
+<td><strong>NoMachine</strong></td>
+<td>NX 协议</td>
+<td>全平台</td>
+<td>是</td>
+<td>优秀（局域网优化）</td>
+<td>高</td>
+<td>免费/企业版</td>
+</tr>
+<tr>
+<td><strong>macOS 屏幕共享</strong></td>
+<td>VNC（Apple 定制）</td>
+<td>macOS</td>
+<td>是</td>
+<td>优秀（系统级优化）</td>
+<td>高（系统级集成）</td>
+<td>免费（macOS 内置）</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_7">关键链接汇总</h2>
+<h3 id="_8">官方资源</h3>
+<ul>
+<li><a href="https://rustdesk.com/">RustDesk 官方网站</a></li>
+<li><a href="https://github.com/rustdesk/rustdesk">RustDesk GitHub 仓库</a></li>
+<li><a href="https://rustdesk.com/pricing.html">RustDesk Server Pro</a></li>
+<li><a href="https://learn.microsoft.com/zh-cn/windows-server/remote/remote-desktop-services/">Microsoft 远程桌面文档</a></li>
+<li><a href="https://en.wikipedia.org/wiki/VNC">VNC（Wikipedia 技术概述）</a></li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6143">RFB 协议规范 RFC 6143</a></li>
+<li><a href="https://www.openssh.com/">OpenSSH 官方网站</a></li>
+<li><a href="https://www.nomachine.com/">NoMachine 官方网站</a></li>
+</ul>
+<h3 id="_9">教程资源</h3>
+<ul>
+<li><a href="https://github.com/rustdesk/rustdesk-server">RustDesk 自托管服务器搭建指南</a></li>
+<li><a href="https://learn.microsoft.com/zh-cn/windows-server/remote/remote-desktop-services/rds-plan-access-from-anywhere">Windows RDP 远程桌面设置指南</a></li>
+<li><a href="https://www.ssh.com/academy/ssh/command">SSH 快速入门教程</a></li>
+<li><a href="https://github.com/TigerVNC/tigervnc">TigerVNC 项目</a></li>
+</ul>
+<h3 id="_10">社区资源</h3>
+<ul>
+<li><a href="https://discord.gg/nDCEAn5WQa">RustDesk Discord 社区</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/1908468956345398738">知乎 - 六款主流远程控制软件横向测评</a></li>
+<li><a href="https://sspai.com/post/74204">少数派 - 7 款软件 4 大维度远程桌面横评</a></li>
+<li><a href="https://hk.v2ex.com/t/745358">V2EX - 内网远程控制方案讨论</a></li>
+<li><a href="https://www.cnblogs.com/gccbuaa/p/19576478">博客园 - 远程桌面方案全对比</a></li>
+<li><a href="https://www.reddit.com/r/sysadmin/">Reddit r/sysadmin 远程桌面工具讨论</a></li>
+</ul>
+<h2 id="_11">信息来源</h2>
+<ul>
+<li><a href="https://github.com/rustdesk/rustdesk">RustDesk GitHub 仓库</a> - 获取日期：2026-04-12</li>
+<li><a href="https://sobrii.io/blog/best-remote-desktop-software-2026">Sobrii - Best Remote Desktop Software 2026: 10 Tools Compared</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.pcmag.com/picks/the-best-remote-access-software">PCMag - The Best Remote Access Software We've Tested for 2026</a> - 获取日期：2026-04-12</li>
+<li><a href="https://en.wikipedia.org/wiki/VNC">VNC - Wikipedia</a> - 获取日期：2026-04-12</li>
+<li><a href="https://datatracker.ietf.org/doc/html/rfc6143">RFC 6143 - The Remote Framebuffer Protocol</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.cloudflare.com/learning/access-management/what-is-ssh/">Cloudflare - What is SSH?</a> - 获取日期：2026-04-12</li>
+<li><a href="https://zhuanlan.zhihu.com/p/1908468956345398738">知乎 - 六款主流远程控制软件横向测评</a> - 获取日期：2026-04-12</li>
+<li><a href="https://cloud.tencent.com/developer/article/2523302">腾讯云开发者社区 - 远程工具系列横向对比</a> - 获取日期：2026-04-12</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

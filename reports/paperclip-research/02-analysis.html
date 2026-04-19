@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaperClip - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#company" class="toc-h3">Company（公司）</a></li>
+<li><a href="#org-chart" class="toc-h3">Org Chart（组织架构图）</a></li>
+<li><a href="#adapter" class="toc-h3">Adapter（适配器）</a></li>
+<li><a href="#heartbeat" class="toc-h3">Heartbeat（心跳）</a></li>
+<li><a href="#ticket" class="toc-h3">Ticket（工单）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>PaperClip - 深度分析报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="paperclip-">PaperClip - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025 年是单个 AI Agent 证明自身价值的年份。OpenClaw 等自主 Agent 展示了具备记忆系统和心跳调度的单个 Agent 可以在无需持续监督的情况下完成有意义的工作。然而，当企业需要 5 个、10 个甚至 50 个 Agent 协同工作时，协调问题变得突出：无共享上下文、无成本追踪、无状态恢复能力、无治理机制、无目标对齐。现有的多 Agent 框架（CrewAI、AutoGen、LangGraph）主要关注 Agent 间的通信和工作流编排，缺乏企业级的组织管理能力。</p>
+<h3 id="_3">创立动机</h3>
+<p>PaperClip 的创建者 @dotta 在运营一个自动化对冲基金时，发现自己同时打开了 20+ 个 Claude Code 标签页，没有共享上下文、没有成本追踪、重启后无法恢复状态。这种实战中的痛点催生了 PaperClip——它不是另一个 Agent 框架，而是在所有 Agent 之上提供"公司运营"这一编排层。核心理念来自 OpenClaw 社区的一句格言："If OpenClaw is an employee, Paperclip is the company."[来源：Towards AI 深度分析]</p>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-04：</strong> PaperClip 在 GitHub 正式发布（paperclipai/paperclip），定位为"零人类公司的开源编排平台"</li>
+<li><strong>2026-03 中旬：</strong> 12 天内 Stars 突破 24,000，成为 2026 年初增长最快的 AI Agent 项目之一[来源：知乎专栏]</li>
+<li><strong>2026-03 下旬：</strong> 3 周内突破 30,000 Stars，登上 GitHub Trending 榜首[来源：Towards AI]</li>
+<li><strong>2026-04 月初：</strong> Stars 突破 38,000（4 周内）[来源：WebSearchAPI Blog]，后续持续增长至 49,518[来源：GitHub API 2026-04-13]</li>
+<li><strong>已完成的路线图项：</strong> Plugin 系统、OpenClaw 集成、companies.sh 导入/导出、AGENTS.md、Skills Manager、Scheduled Routines、Budgeting、Agent Reviews</li>
+<li><strong>规划中的路线图项：</strong> Multiple Human Users、Cloud/Sandbox agents、Artifacts、Memory/Knowledge、Enforced Outcomes、Self-Organization、CEO Chat、Cloud deployments、Desktop App、Clipmart（公司模板市场）</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>PaperClip 的设计遵循三条核心哲学：</p>
+<ol>
+<li>
+<p><strong>编排而非代理（Orchestration, Not Agency）</strong> — PaperClip 自身不实现任何 Agent 能力，不处理 LLM 调用、不维护对话状态、不执行工具调用。它通过适配器（Adapter）系统连接外部 Agent 运行时（Claude Code、OpenClaw、Codex、Cursor、Bash、HTTP API），专注于组织层面的编排。[来源：GitHub README]</p>
+</li>
+<li>
+<p><strong>公司隐喻（Company Metaphor）</strong> — 用企业组织架构来建模多 Agent 系统。公司（Company）→ 目标（Goals）→ 项目（Projects）→ 任务（Tasks）→ 工单（Tickets），形成完整的目标传递链条。每个 Agent 都能追溯到"我为什么做这件事"——从当前任务一直回溯到公司使命。[来源：Towards AI 深度分析]</p>
+</li>
+<li>
+<p><strong>最小信任原则（Least Trust Principle）</strong> — 默认情况下，Agent 的自主行为受预算上限、审批门控和审计日志约束。重要操作（如招聘新 Agent、执行高成本任务）需要"董事会"（人类操作者）审批。所有操作记录在仅追加的审计日志中，不可编辑、不可删除。[来源：GitHub README]</p>
+</li>
+</ol>
+<h3 id="_7">核心机制</h3>
+<p><strong>目标感知执行（Goal-Aware Execution）</strong> 是 PaperClip 最核心的创新机制。当 Agent 接收到一个 Ticket 时，它看到的是完整的目标谱系：</p>
+<pre><code>&quot;I am researching Facebook ads for Granola&quot; (current task)
+  → because I need to create Facebook ads for our software (parent)
+    → because I need to grow signups by 100 users (parent)
+      → because I need revenue to $2,000 this week (parent)
+        → because our mission is building the #1 AI note-taking app
+</code></pre>
+<p>这种目标感知意味着 Agent 始终知道"为什么"而不仅仅是"做什么"，在实践中这种区分非常重要。[来源：Towards AI 深度分析]</p>
+<p><strong>心跳调度（Heartbeats）</strong> 机制继承自 OpenClaw 并扩展为跨 Agent 协调层。Agent 按预设时间表被唤醒，检查工作队列，执行分配的任务，并向上级报告。关键区别在于：在心跳之间，Agent 处于休眠状态——不消耗 Token、不产生成本。这更接近"员工定期检查收件箱"的模式，而非 24/7 运行。[来源：Flowtivity 对比分析]</p>
+<p><strong>预算控制（Budget Controls）</strong> 在多个层级运作：每个 Agent、每个任务、每个项目、每个目标和每个公司。当 Agent 使用量达到 80% 时发出警告；达到 100% 时自动暂停，新任务被阻止。人类操作者（"董事会"）可以覆盖此限制。[来源：Towards AI 深度分析]</p>
+<h3 id="_8">数据流/执行流程</h3>
+<p>PaperClip 的完整执行流程如下：</p>
+<pre><code>1. 人类操作者定义公司（名称 + 使命）
+2. 设置业务目标（Goals）
+3. 雇佣 CEO Agent（选择运行时适配器）
+4. CEO 将战略目标分解为项目 → 分配给下属 Agent
+5. 各 Agent 按心跳调度被唤醒
+6. Agent 通过适配器接收 Ticket → 执行任务 → 返回结果
+7. 每次交互生成 Ticket（仅追加审计日志）
+8. 跨 Agent 的任务通过工单系统传递
+9. 人类通过 React Dashboard 监控、审批、干预
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>PaperClip 采用分层架构，自上而下为：</p>
+<pre><code>┌──────────────────────────────────────────────┐
+│          React Dashboard (UI Layer)          │
+│  公司管理 / Agent 监控 / 预算追踪 / 审批门控  │
+├──────────────────────────────────────────────┤
+│        Orchestration Layer (编排层)           │
+│  目标分解 / 任务调度 / 工单系统 / 治理引擎    │
+├──────────────────────────────────────────────┤
+│           Adapter System (适配器层)           │
+│  Process / HTTP / OpenClaw Gateway / 自定义   │
+├──────────────────────────────────────────────┤
+│        External Agent Runtimes (外部Agent)    │
+│  Claude Code / OpenClaw / Codex / Cursor /   │
+│  Hermes / Bash / 任何 HTTP Agent              │
+├──────────────────────────────────────────────┤
+│      Embedded PostgreSQL (数据持久化层)        │
+└──────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li><strong>Company Model（公司模型）</strong> — 管理公司定义、使命声明、目标层级。使命向下传播，每个 Agent 的工作都可追溯到公司使命</li>
+<li><strong>Org Chart Engine（组织架构引擎）</strong> — 实现层级组织结构，支持 CEO → CTO/CMO → Engineer/QA 等层级，自动处理任务委派和信息流</li>
+<li><strong>Heartbeat Scheduler（心跳调度器）</strong> — 按 Agent 维度配置唤醒时间表，协调跨 Agent 的调度，确保任务在正确的时间到达正确的 Agent</li>
+<li><strong>Ticket System（工单系统）</strong> — 所有 Agent 间通信通过结构化工单完成，仅追加审计日志，支持完整追踪</li>
+<li><strong>Budget Engine（预算引擎）</strong> — 多层级预算管理（Agent/任务/项目/目标/公司），80% 警告 + 100% 自动暂停机制</li>
+<li><strong>Adapter System（适配器系统）</strong> — 可插拔模块，桥接编排层与外部 Agent 运行时。支持 Process（本地进程）、HTTP（远程 API）、OpenClaw Gateway（WebSocket 协议）三种内置适配器</li>
+<li><strong>Governance Module（治理模块）</strong> — 审批门控、配置版本化（支持回滚）、董事会级别的决策审批</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p><strong>适配器扩展：</strong> PaperClip 的适配器模型是可扩展的。第三方可以发布自定义适配器——例如 Nous Research 发布了 <code>hermes-paperclip-adapter</code>，将其 Hermes Agent（30+ 原生工具、持久记忆、MCP 支持）集成为 PaperClip 的"员工"。适配器以标准接口接入：生成子进程或发送 HTTP 请求 → 捕获输出 → 解析 Token 使用量 → 报告结果。[来源：Towards AI 深度分析]</p>
+<p><strong>公司模板扩展：</strong> 通过 <code>companies.sh</code> 导入/导出功能，用户可以分享和使用预构建的公司模板。规划中的 Clipmart 市场将进一步简化这一流程。</p>
+<p><strong>Plugin 系统：</strong> 已完成路线图中的 Plugin 系统开发，允许社区扩展 PaperClip 的核心功能。</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="company">Company（公司）</h3>
+<ul>
+<li><strong>定义：</strong> PaperClip 的顶层组织单元，包含名称、使命声明和一组业务目标</li>
+<li><strong>作用：</strong> 所有 Agent、目标、项目、任务的容器，提供多公司隔离能力</li>
+<li><strong>使用场景：</strong> 运营多个独立业务线（如内容营销公司 + 加密交易公司），各公司数据和配置完全隔离</li>
+<li><strong>代码示例：</strong> 基于 GitHub README 和 Towards AI 文章</li>
+</ul>
+<pre><code class="language-json">{
+  &quot;name&quot;: &quot;Granola Marketing Agency&quot;,
+  &quot;mission&quot;: &quot;Build the #1 AI note-taking app&quot;,
+  &quot;goals&quot;: [
+    &quot;Achieve revenue of $2,000 this week&quot;,
+    &quot;Grow signups by 100 users&quot;
+  ]
+}
+</code></pre>
+<h3 id="org-chart">Org Chart（组织架构图）</h3>
+<ul>
+<li><strong>定义：</strong> 定义 Agent 之间的层级关系和职责分工的可视化结构</li>
+<li><strong>作用：</strong> 自动化任务委派、信息流控制、跨团队协调</li>
+<li><strong>使用场景：</strong> CEO Agent 接收公司使命 → 分解为战略目标 → 委派给 CTO/CMO → 进一步分配给 Engineer/QA</li>
+<li><strong>代码示例：</strong> 基于 Towards AI 文章的典型设置</li>
+</ul>
+<pre><code class="language-text">CEO Agent (战略决策, 目标分解)
+├── CTO Agent (技术决策, 工程任务分配)
+│   ├── Senior Engineer Agent (核心编码)
+│   └── QA Agent (代码审查, 质量把关)
+└── CMO Agent (营销策略, 内容任务分配)
+    ├── Content Writer Agent (内容创作)
+    └── Social Media Agent (社媒运营)
+</code></pre>
+<h3 id="adapter">Adapter（适配器）</h3>
+<ul>
+<li><strong>定义：</strong> 桥接 PaperClip 编排层与外部 Agent 运行时的可插拔模块</li>
+<li><strong>作用：</strong> 让 PaperClip 支持任意 Agent 运行时，不绑定特定框架</li>
+<li><strong>使用场景：</strong> 本地 Agent 使用 Process 适配器，远程 OpenClaw 实例使用 Gateway 适配器，自定义 Agent 使用 HTTP 适配器</li>
+<li><strong>代码示例：</strong> 基于 Towards AI 文章</li>
+</ul>
+<pre><code class="language-json">// Process Adapter - 本地 Claude Code Agent
+{
+  &quot;adapterType&quot;: &quot;process&quot;,
+  &quot;adapterConfig&quot;: {
+    &quot;adapter&quot;: &quot;claude_local&quot;,
+    &quot;model&quot;: &quot;claude-sonnet-4-20250514&quot;,
+    &quot;billingType&quot;: &quot;api&quot;,
+    &quot;sessionBehavior&quot;: &quot;resume-or-new&quot;,
+    &quot;heartbeatSchedule&quot;: {
+      &quot;enabled&quot;: true,
+      &quot;intervalSec&quot;: 1800
+    }
+  }
+}
+</code></pre>
+<pre><code class="language-json">// HTTP Adapter - 远程 Agent
+{
+  &quot;adapterType&quot;: &quot;http&quot;,
+  &quot;adapterConfig&quot;: {
+    &quot;url&quot;: &quot;https://openclaw.example.com/invoke&quot;,
+    &quot;method&quot;: &quot;POST&quot;,
+    &quot;headers&quot;: {
+      &quot;Authorization&quot;: &quot;Bearer {{OPENCLAW_TOKEN}}&quot;
+    },
+    &quot;timeoutMs&quot;: 30000
+  }
+}
+</code></pre>
+<h3 id="heartbeat">Heartbeat（心跳）</h3>
+<ul>
+<li><strong>定义：</strong> 按预设时间表自动唤醒 Agent 执行任务的调度机制</li>
+<li><strong>作用：</strong> 实现 Agent 的自主运营，无需人工触发</li>
+<li><strong>使用场景：</strong> Agent 每 30 分钟检查工作队列，有任务则执行，无任务则返回 HEARTBEAT_OK 继续休眠</li>
+<li><strong>关键特性：</strong> 心跳间 Agent 休眠不消耗 Token，节约成本；跨 Agent 协调确保任务按时到达正确的 Agent</li>
+</ul>
+<h3 id="ticket">Ticket（工单）</h3>
+<ul>
+<li><strong>定义：</strong> PaperClip 中所有 Agent 间通信的结构化单元</li>
+<li><strong>作用：</strong> 记录每条指令、每个响应、每次工具调用和决策，实现全链路追踪</li>
+<li><strong>使用场景：</strong> Agent 间的任务分配、结果汇报、审批请求、跨团队协调</li>
+<li><strong>关键特性：</strong> 仅追加审计日志，不可编辑、不可删除，确保完整问责</li>
+</ul>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>PaperClip</th>
+<th>CrewAI</th>
+<th>AutoGen</th>
+<th>LangGraph</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>零人类公司的编排平台</td>
+<td>基于角色的多 Agent 协作框架</td>
+<td>对话式多 Agent 编程框架</td>
+<td>基于图的有状态 Agent 编排框架</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>49,518（2026-04-13）</td>
+<td>44,335+（2026-04）</td>
+<td>54,897+（2026-02）</td>
+<td>数据待验证[置信度：中]</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>TypeScript</td>
+<td>Python</td>
+<td>Python</td>
+<td>Python</td>
+</tr>
+<tr>
+<td>Agent 运行时</td>
+<td>自带（任何 Agent）</td>
+<td>内置（基于 LLM）</td>
+<td>内置（基于 LLM）</td>
+<td>内置（基于 LangChain）</td>
+</tr>
+<tr>
+<td>组织模型</td>
+<td>公司级（Org Chart + 治理）</td>
+<td>Crew（角色团队）</td>
+<td>对话组</td>
+<td>图（DAG 状态机）</td>
+</tr>
+<tr>
+<td>预算控制</td>
+<td>多层级预算 + 自动暂停</td>
+<td>无内置</td>
+<td>无内置</td>
+<td>无内置</td>
+</tr>
+<tr>
+<td>审计追踪</td>
+<td>仅追加审计日志</td>
+<td>无内置</td>
+<td>无内置</td>
+<td>部分支持（LangSmith）</td>
+</tr>
+<tr>
+<td>心跳调度</td>
+<td>内置跨 Agent 协调</td>
+<td>无（被动触发）</td>
+<td>无（被动触发）</td>
+<td>无（被动触发）</td>
+</tr>
+<tr>
+<td>通信方式</td>
+<td>工单系统</td>
+<td>Agent 间直接通信</td>
+<td>对话式消息传递</td>
+<td>图节点间状态传递</td>
+</tr>
+<tr>
+<td>适配器系统</td>
+<td>支持（Process/HTTP/Gateway）</td>
+<td>无</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>较陡（需要组织设计思维）</td>
+<td>较低（角色定义直观）</td>
+<td>中等（对话式模型）</td>
+<td>较陡（图论概念）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>早期（1 个月历史）</td>
+<td>GA 1.0（Fortune 500 采用）</td>
+<td>成熟（微软支持）</td>
+<td>成熟（LangChain 生态）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>5+ Agent 的自主公司运营</td>
+<td>角色化任务团队</td>
+<td>研究/对话式多 Agent</td>
+<td>复杂有状态工作流</td>
+</tr>
+<tr>
+<td>数据来源</td>
+<td>GitHub API 2026-04-13</td>
+<td>GitHub + CrewAI Blog</td>
+<td>The Agent Times 2026-02</td>
+<td>LangGraph GitHub + Gurusup</td>
+</tr>
+</tbody>
+</table>
+<p>[置信度说明：CrewAI Stars 数据 44,335+ 来源于 The Agent Times 文章，与 GitHub 仓库描述一致；AutoGen Stars 54,897+ 来源于 2026-02-25 数据，截至 2026-04-13 可能有所增长；LangGraph GitHub Stars 数据在搜索中未获取到确切数值，标记为"数据待验证"]</p>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>多 Agent 自主运营公司</strong> — 当你需要 5 个以上 Agent 以公司组织架构协同运营一个业务时，PaperClip 的 Org Chart、目标对齐、预算控制和治理机制提供了企业级管理能力。这是 PaperClip 的核心定位。[置信度：高]</p>
+</li>
+<li>
+<p><strong>需要成本控制的 Agent 集群</strong> — 当 Agent 集群可能在一夜之间消耗数百美元 API 费用时，PaperClip 的多层级预算管理（80% 警告 + 100% 自动暂停）提供了有效的成本防线。[置信度：高]</p>
+</li>
+<li>
+<p><strong>需要审计合规的 Agent 系统</strong> — 当 Agent 的决策需要可追溯、可审计时（如金融交易、客户服务），PaperClip 的仅追加审计日志提供了完整的问责记录。[置信度：高]</p>
+</li>
+<li>
+<p><strong>混合 Agent 运行时环境</strong> — 当团队使用不同 Agent 框架（OpenClaw + Claude Code + Codex）需要统一管理时，PaperClip 的适配器系统支持任意 Agent 运行时的接入。[置信度：高]</p>
+</li>
+<li>
+<p><strong>内容营销/电商等预构建场景</strong> — PaperClip 提供 16 个预构建公司模板（内容营销、加密交易、电商运营、YouTube 生产等），包含 440+ Agent 和 500+ 技能，可快速部署。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>单个 Agent 场景</strong> — 如果你只有一个 Agent，使用独立的 OpenClaw 或 Claude Code 会话就足够了。PaperClip 的组织编排能力在单 Agent 场景下是过度设计。[置信度：高]</p>
+</li>
+<li>
+<p><strong>工作流自动化需求</strong> — 如果你需要的是拖拽式工作流编排（如 Zapier、n8n），PaperClip 不适合。它建模的是组织而非管道。正如 FAQ 明确声明："Paperclip is not a workflow builder"。[置信度：高]</p>
+</li>
+<li>
+<p><strong>代码审查/PR 管理工具</strong> — 如果你主要需要代码审查功能，PaperClip 不适合。它编排的是工作，而非 Pull Request。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>真正的框架无关性</strong> — 通过适配器系统支持任何 Agent 运行时，不绑定特定 LLM 或 Agent 框架。这在多 Agent 领域是独特优势——CrewAI、AutoGen、LangGraph 都自带 Agent 运行时。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业级治理能力</strong> — 预算控制、审批门控、审计日志、配置版本化，这些是其他多 Agent 框架不具备的。对需要合规和安全保障的企业用户尤其有价值。[置信度：高]</p>
+</li>
+<li>
+<p><strong>创新的公司隐喻</strong> — 将多 Agent 系统建模为公司组织架构而非工作流管道，这是一个范式转变。它更自然地映射了现实世界的协作模式，降低了管理认知复杂度。[置信度：高]</p>
+</li>
+<li>
+<p><strong>爆发式社区增长</strong> — 1 个月内接近 50,000 Stars，88 位贡献者，多个技术媒体的深度评测，显示了极强的市场共鸣和社区活力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>丰富的预构建模板</strong> — 16 个预构建公司、440+ Agent、500+ 技能，大幅降低了入门门槛。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>极度年轻（仅 1 个月历史）</strong> — 项目创建于 2026-03-02，截至分析日期仅 6 周。尚未经历长期生产环境考验，文档仍在完善中。[置信度：高]</p>
+</li>
+<li>
+<p><strong>学习曲线陡峭</strong> — 需要用户具备"组织设计"思维——不仅仅是定义 Agent，还要设计组织架构、治理规则、预算策略。这比 CrewAI 的"定义角色"复杂得多。[置信度：高]</p>
+</li>
+<li>
+<p><strong>文档不完善</strong> — 作为快速发展的新项目，文档仍在构建中。Medium 文章和社区文章是目前主要的学习资源，官方文档（Mintlify）尚不完整。[置信度：中]</p>
+</li>
+<li>
+<p><strong>安全风险间接继承</strong> — 虽然PaperClip 提供治理层，但其编排的 Agent（如 OpenClaw）可能存在安全漏洞。OpenClaw 曾被 Cisco 标记为潜在安全风险，且存在已知 CVE（CVE-2026-25253，已修补）。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>项目成熟度风险</strong> — 项目仅 6 周历史，核心功能仍在快速迭代。API 可能频繁变更，Breaking Changes 风险较高。建议等待至少 3 个月的稳定期后再用于生产环境。[置信度：高]</p>
+</li>
+<li>
+<p><strong>单一核心开发者风险</strong> — 项目由化名开发者 @dotta 主导，虽然有 88 位贡献者，但核心决策高度集中。如果核心开发者退出，项目可持续性存疑。[置信度：中]</p>
+</li>
+<li>
+<p><strong>默认启用遥测</strong> — PaperClip 默认启用遥测（可通过环境变量或配置禁用），在敏感环境中需要注意数据隐私问题。[置信度：高]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 适配器生态正在形成。已有 Nous Research 发布的 <code>hermes-paperclip-adapter</code> 等第三方适配器。Plugin 系统已完成开发。</li>
+<li><strong>第三方库支持：</strong> 与 OpenClaw 有深度集成（专用 Gateway 适配器），同时支持 Claude Code、Codex、Cursor、Hermes 等。</li>
+<li><strong>企业采用案例：</strong> 目前以个人开发者和小团队为主，尚无大型企业公开案例。已上架 AWS Marketplace。</li>
+<li><strong>文档质量：</strong> 官方文档（Mintlify）仍在构建中。社区文章（Towards AI、Flowtivity、知乎）质量较高，是目前主要的学习资源。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 低。项目仅 6 周历史，1,883 个 Open Issues 说明活跃开发中，Breaking Changes 风险高。[置信度：高]</li>
+<li><strong>性能表现：</strong> 中。Node.js 服务端 + 嵌入式 PostgreSQL 的架构对中小规模部署合理，但大规模 Agent 集群（50+）的性能表现待验证。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 中。内置 Dashboard 提供基本的 Agent 监控、预算追踪和审计日志，但缺乏与主流监控工具（Prometheus、Grafana）的集成。[置信度：中]</li>
+<li><strong>故障恢复：</strong> 低。缺乏明确的容错设计、降级策略和备份方案文档。嵌入式 PostgreSQL 在生产环境中可能成为单点故障。[置信度：中]</li>
+<li><strong>安全合规：</strong> 中。提供预算上限、审批门控、审计日志等治理机制，但 Agent 本身的安全（如 OpenClaw 的 CVE-2026-25253）需要用户自行处理。默认启用遥测需注意。[置信度：高]</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong> Node.js 基础（部署）、多 Agent 系统概念、组织设计思维（理解 Org Chart 和治理规则）、至少一种 Agent 运行时的使用经验（如 OpenClaw 或 Claude Code）</li>
+<li><strong>入门时间估计：</strong> 2-4 小时（完成 <code>npx paperclipai onboard --yes</code>，创建第一个公司，部署预构建公司模板）</li>
+<li><strong>精通时间估计：</strong> 1-2 周（设计自定义组织架构、配置治理规则、编写自定义适配器、优化预算策略）</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>PaperClip 代表了 AI Agent 编排领域的一次范式转变——从"工作流管道"到"公司组织架构"。它的核心创新不在于让单个 Agent 更智能，而在于让多个 Agent 更好地协调。在多 Agent 协作这个新兴领域中，PaperClip 是目前唯一提供企业级治理能力（预算控制、审批门控、审计日志）的开源平台。</p>
+<p><strong>综合评分：7.5/10</strong></p>
+<p><strong>推荐场景：</strong> 已有 5+ Agent 协作需求、需要成本控制和审计合规的团队。建议先在非关键业务场景中试点，等待项目成熟（预计 3-6 个月）后再用于生产环境。</p>
+<p><strong>不推荐场景：</strong> 单 Agent 场景、需要稳定 API 的生产项目、缺乏多 Agent 经验的入门用户。</p>
+<p><strong>关键建议：</strong> 如果你在使用 OpenClaw，PaperClip 是自然的下一步。两者互补的设计（"OpenClaw 是员工，PaperClip 是公司"）使得集成体验流畅。对于非 OpenClaw 用户，建议先熟悉单个 Agent 的运行管理，再考虑引入 PaperClip 进行编排。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> GitHub 主分支（截至 2026-04-08 最后推送），未发布正式版本</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://api.github.com/repos/paperclipai/paperclip">GitHub API - paperclipai/paperclip</a> — Stars: 49,518, Forks: 8,121, Open Issues: 1,883, License: MIT, Created: 2026-03-02, Pushed: 2026-04-08</li>
+<li><a href="https://github.com/paperclipai/paperclip/blob/main/README.md">GitHub README - paperclipai/paperclip</a> — 功能特性、适配器系统、预构建公司、Roadmap</li>
+<li><a href="https://paperclip.ing">PaperClip 官网</a> — 产品定位和核心功能</li>
+<li><a href="https://pub.towardsai.net/paperclip-the-open-source-operating-system-for-zero-human-companies-2c16f3f22182">Towards AI - Paperclip: The Open-Source Operating System for Zero-Human Companies</a> — 深度架构分析、适配器详解、实战案例</li>
+<li><a href="https://flowtivity.ai/blog/openclaw-vs-paperclip-ai-agent-framework-comparison/">Flowtivity - OpenClaw vs Paperclip Comparison</a> — 功能对比、部署建议</li>
+<li><a href="https://zhuanlan.zhihu.com/p/2016813406292824770">知乎专栏 - Paperclip："开公司的"AI Agent</a> — 增长数据、社区分析</li>
+<li><a href="https://theagenttimes.com/articles/44335-stars-and-counting-crewais-github-surge-maps-the-rise-of-the-multi-agent-e">The Agent Times - CrewAI Stars Data</a> — CrewAI 44,335+ Stars</li>
+<li><a href="https://theagenttimes.com/articles/autogen-blows-past-54000-github-stars-cementing-its-grip-on-multi-agent-orchestr">The Agent Times - AutoGen Stars Data</a> — AutoGen 54,897+ Stars</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

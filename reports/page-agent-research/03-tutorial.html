@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page-Agent - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 6-8 小时 | **前置知识：** JavaScript/TypeScript 基础、HTML/DOM 基础、了解 LLM API（OpenAI 兼容接口）的基本使用 | **基于版本：** v1.7.1</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-page-agent" class="toc-h3">1.1 理解 Page-Agent 的核心概念</a></li>
+<li><a href="#12-npm-pageagent" class="toc-h3">1.2 使用 npm 方式集成 PageAgent</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-html-dom" class="toc-h3">2.1 理解 HTML 脱水与 DOM 感知</a></li>
+<li><a href="#22" class="toc-h3">2.2 自定义配置与多模型支持</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-page-agentcore" class="toc-h3">3.1 使用无头核心 @page-agent/core</a></li>
+<li><a href="#32" class="toc-h3">3.2 性能优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Page-Agent - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 6-8 小时<br>**前置知识：** JavaScript/TypeScript 基础、HTML/DOM 基础、了解 LLM API（OpenAI 兼容接口）的基本使用<br>**基于版本：** v1.7.1</div>
+                    </header>
+                    <h1 id="page-agent-">Page-Agent - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 6-8 小时
+<strong>前置知识：</strong> JavaScript/TypeScript 基础、HTML/DOM 基础、了解 LLM API（OpenAI 兼容接口）的基本使用
+<strong>基于版本：</strong> v1.7.1</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS / Windows / Linux（任意现代操作系统）</li>
+<li><strong>运行时/依赖版本：</strong></li>
+<li>Node.js &gt;= 18.0.0（npm 方式安装）</li>
+<li>现代浏览器：Chrome、Firefox、Edge、Safari（需要支持 ES2020+）</li>
+<li>一个 OpenAI 兼容的 LLM API Key（推荐 Qwen、OpenAI、DeepSeek 或本地 Ollama）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>方式一：CDN 一行引入（最快体验，适合快速评估）</strong></p>
+<p>在任意 HTML 页面的 <code>&lt;head&gt;</code> 或 <code>&lt;body&gt;</code> 底部添加：</p>
+<pre><code class="language-html">&lt;!-- 使用全球 CDN --&gt;
+&lt;script src=&quot;https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>或者使用中国镜像：</p>
+<pre><code class="language-html">&lt;!-- 使用中国镜像（速度更快） --&gt;
+&lt;script src=&quot;https://registry.npmmirror.com/page-agent/1.7.1/files/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+</code></pre>
+<blockquote>
+<p>注意：Demo 版本使用阿里云提供的免费测试 LLM（Qwen 3.5 Plus），仅供技术评估使用，不适合生产环境。</p>
+</blockquote>
+<p><strong>方式二：npm 安装（推荐用于正式项目）</strong></p>
+<pre><code class="language-bash"># 在项目目录中初始化（如已有 package.json 可跳过）
+npm init -y
+
+# 安装 page-agent
+npm install page-agent
+</code></pre>
+<p><strong>方式三：Bookmarklet（无需任何安装，适合即时体验）</strong></p>
+<p>访问 Page-Agent 官网 https://alibaba.github.io/page-agent/ ，将页面上的 Bookmarklet 拖拽到浏览器书签栏。然后在任意网页点击该书签即可注入 Agent。</p>
+<h3 id="_4">验证安装</h3>
+<p><strong>验证 CDN 方式：</strong></p>
+<p>创建一个测试 HTML 文件 <code>test-page-agent.html</code>：</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Page-Agent 测试&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Page-Agent 安装验证&lt;/h1&gt;
+  &lt;button id=&quot;test-btn&quot;&gt;点击我&lt;/button&gt;
+  &lt;input type=&quot;text&quot; id=&quot;test-input&quot; placeholder=&quot;输入一些文字&quot;&gt;
+  &lt;p id=&quot;result&quot;&gt;&lt;/p&gt;
+
+  &lt;!-- 引入 Page-Agent Demo 版本 --&gt;
+  &lt;script src=&quot;https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+
+  &lt;script&gt;
+    // 验证 Page-Agent 是否加载成功
+    document.getElementById('test-btn').addEventListener('click', () =&gt; {
+      document.getElementById('result').textContent = '按钮被点击了！Page-Agent 运行正常。';
+    });
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>用浏览器打开该文件，如果页面右下角出现 Page-Agent 的交互面板，说明安装成功。</p>
+<p><strong>验证 npm 方式：</strong></p>
+<pre><code class="language-bash"># 在项目目录中执行
+node -e &quot;const { PageAgent } = require('page-agent'); console.log('Page-Agent 加载成功，版本:', require('page-agent/package.json').version);&quot;
+</code></pre>
+<p>预期输出：</p>
+<pre><code>Page-Agent 加载成功，版本: 1.7.1
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-page-agent">1.1 理解 Page-Agent 的核心概念</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Page-Agent 的核心思想是让网页"自己具备 AI 能力"，而不是从外部去控制它。传统自动化工具（如 Selenium、Playwright）像是一个遥控器，从浏览器外面操控页面。Page-Agent 则是把 AI 直接"种"在页面里。</p>
+<p>Page-Agent 的工作流程可以用一句话概括：<strong>用户说一句话 -&gt; Agent "看"一眼页面 -&gt; Agent 思考该怎么做 -&gt; Agent 像人一样操作页面元素</strong>。</p>
+<p>这个过程的核心有三个环节：
+1. <strong>"看"页面</strong>：通过 HTML 脱水（HTML Dehydration）技术，将复杂的 DOM 树压缩为 LLM 能理解的精简文本
+2. <strong>"思考"怎么做</strong>：将精简文本发送给 LLM，LLM 返回结构化的操作指令
+3. <strong>"操作"页面</strong>：按照指令模拟人类的鼠标和键盘事件</p>
+<p><strong>代码示例：</strong></p>
+<p>最简单的使用方式 -- CDN 引入后自动出现交互面板：</p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;Page-Agent 最简示例&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- 这是一个普通的网页，有一些可交互的元素 --&gt;
+  &lt;h1&gt;欢迎体验 Page-Agent&lt;/h1&gt;
+  &lt;p&gt;在右下角的输入框中输入指令，例如：&lt;/p&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&quot;点击下面的按钮&quot;&lt;/li&gt;
+    &lt;li&gt;&quot;在输入框中输入 Hello World&quot;&lt;/li&gt;
+    &lt;li&gt;&quot;选择下拉框的第二项&quot;&lt;/li&gt;
+  &lt;/ul&gt;
+
+  &lt;button onclick=&quot;alert('你通过 Agent 点击了按钮！')&quot;&gt;测试按钮&lt;/button&gt;
+  &lt;br&gt;&lt;br&gt;
+  &lt;input type=&quot;text&quot; placeholder=&quot;测试输入框&quot;&gt;
+  &lt;br&gt;&lt;br&gt;
+  &lt;select&gt;
+    &lt;option&gt;选项一&lt;/option&gt;
+    &lt;option&gt;选项二&lt;/option&gt;
+    &lt;option&gt;选项三&lt;/option&gt;
+  &lt;/select&gt;
+
+  &lt;!-- 一行引入 Page-Agent（使用免费 Demo LLM） --&gt;
+  &lt;script src=&quot;https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<p>打开页面后，右下角会出现一个浮动的交互面板。在输入框中输入"点击测试按钮"，Agent 会：
+1. 扫描页面 DOM，识别出按钮元素
+2. 将页面状态发送给 LLM 进行推理
+3. 在按钮上模拟人类的点击事件序列
+4. 弹出"你通过 Agent 点击了按钮！"的提示框</p>
+<p><strong>练习题：</strong></p>
+<ol>
+<li>修改上面的 HTML，添加一个密码输入框和一个提交按钮，然后尝试用自然语言让 Agent "在密码框中输入 123456 并点击提交按钮"。</li>
+<li>观察当页面有多个按钮时，Agent 如何区分它们（提示：关注 Agent 的索引编号机制）。</li>
+</ol>
+<hr />
+<h3 id="12-npm-pageagent">1.2 使用 npm 方式集成 PageAgent</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在 1.1 中我们体验了 CDN 方式，它适合快速原型和评估。但在实际项目中，我们需要通过 npm 安装并使用 PageAgent 的编程 API（Programmatic API），这样可以：
+- 完全控制 Agent 的行为和外观
+- 自定义 LLM 提供商和模型
+- 将 Agent 嵌入到自己的 UI 组件中
+- 在生产环境中使用自己的 LLM API Key</p>
+<p>PageAgent 类是库的主入口。创建一个 PageAgent 实例需要配置三个核心参数：<code>model</code>（模型名称）、<code>baseURL</code>（LLM API 地址）和 <code>apiKey</code>（API 密钥）。这些参数遵循 OpenAI 兼容 API 的格式。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">// app.ts - 使用 npm 包方式的完整示例
+import { PageAgent } from 'page-agent'
+
+// 第一步：创建 Agent 实例，配置 LLM 连接
+const agent = new PageAgent({
+  // 指定要使用的 LLM 模型名称
+  model: 'qwen3.5-plus',
+
+  // LLM API 的基础地址（OpenAI 兼容格式）
+  // 这里使用阿里云 DashScope 作为示例
+  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+
+  // 你的 API Key（请替换为你自己的密钥）
+  apiKey: 'sk-your-api-key-here',
+
+  // Agent 使用的语言（影响 UI 面板和提示词语言）
+  language: 'zh-CN',
+
+  // 最大执行步数（防止无限循环）
+  maxSteps: 20,
+})
+
+// 第二步：执行自然语言指令
+async function runDemo() {
+  try {
+    // Agent 会扫描当前页面的 DOM，理解页面结构，
+    // 然后模拟人类操作来完成任务
+    const result = await agent.execute('点击页面上的第一个按钮')
+    console.log('任务执行结果:', result)
+  } catch (error) {
+    console.error('任务执行失败:', error)
+  }
+}
+
+// 第三步：触发执行（例如绑定到一个按钮点击事件）
+document.getElementById('run-agent-btn')?.addEventListener('click', runDemo)
+</code></pre>
+<p><strong>使用 OpenAI 作为 LLM 的配置：</strong></p>
+<pre><code class="language-typescript">import { PageAgent } from 'page-agent'
+
+const agent = new PageAgent({
+  model: 'gpt-4.1',
+  baseURL: 'https://api.openai.com/v1',
+  apiKey: 'sk-your-openai-key-here',
+  language: 'en-US',
+  maxSteps: 15,
+})
+
+await agent.execute('Fill the username field with admin and click login')
+</code></pre>
+<p><strong>使用本地 Ollama 作为 LLM（完全离线，数据不出本机）：</strong></p>
+<pre><code class="language-typescript">import { PageAgent } from 'page-agent'
+
+const agent = new PageAgent({
+  model: 'qwen3.5:4b',  // Ollama 中的模型名称
+  baseURL: 'http://localhost:11434/v1',  // Ollama 的本地 API 地址
+  apiKey: 'ollama',  // Ollama 不需要真实 API Key，随便填
+  language: 'zh-CN',
+  maxSteps: 10,
+})
+
+await agent.execute('点击页面上的搜索按钮')
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>任务执行结果: { success: true, text: &quot;已成功点击页面上的第一个按钮&quot; }
+</code></pre>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li><code>apiKey</code> 不要硬编码在代码中，推荐使用环境变量或后端代理</li>
+<li>Ollama 本地模型需要至少 9B 参数才能较好地处理 Page-Agent 的复杂工具调用 schema，4B 模型的 JSON 输出经常格式错误</li>
+<li><code>maxSteps</code> 建议设置在 10-30 之间，过低可能导致复杂任务无法完成，过高可能浪费 LLM 调用费用</li>
+</ul>
+<p><strong>练习题：</strong></p>
+<ol>
+<li>分别配置使用 DeepSeek（<code>https://api.deepseek.com/v1</code>）和本地 Ollama 作为 LLM 后端，对比两者对同一指令的响应速度和准确度。</li>
+<li>测试将 <code>maxSteps</code> 设置为 3，观察当 Agent 无法在 3 步内完成任务时的行为（它会如何处理）。</li>
+</ol>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-html-dom">2.1 理解 HTML 脱水与 DOM 感知</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在入门篇中我们学会了如何让 Agent 执行简单的点击和输入操作。但要真正理解 Page-Agent 的工作原理并写出高效的指令，需要理解它如何"看"页面。</p>
+<p>Page-Agent 不会截图然后交给视觉模型分析，而是将 DOM 树"脱水"（Dehydration）成一段精简文本，发送给文本 LLM。这个过程类似于把一棵枝繁叶茂的树去掉叶子和小枝，只保留主干和关键节点。</p>
+<p>脱水后的文本格式如下：</p>
+<pre><code>[0]&lt;button&gt;提交&lt;/&gt;
+[1]&lt;input type=text placeholder=请输入用户名 /&gt;
+[2]&lt;a href=&quot;/help&quot;&gt;帮助中心&lt;/&gt;
+    当前有 3 个待处理任务
+[3]&lt;select&gt;
+  [3.1]&lt;option&gt;选项A&lt;/&gt;
+  [3.2]&lt;option&gt;选项B&lt;/&gt;
+</code></pre>
+<p>每个可交互元素被赋予一个 <code>[index]</code> 编号。LLM 通过索引引用元素（如"点击 [0]"），Agent 根据索引找到对应的 DOM 元素并执行操作。</p>
+<p>理解这一点非常重要，因为：
+- 你可以通过 <code>data-page-agent-ignore</code> 属性让 Agent 忽略某些元素
+- Agent 只能操作被它识别为"可交互"的元素
+- 良好的语义 HTML 和 ARIA 标记会显著提升 Agent 的准确率</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;DOM 感知演示&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h2&gt;用户注册表单&lt;/h2&gt;
+
+  &lt;!-- 良好的 ARIA 标记让 Agent 更容易识别 --&gt;
+  &lt;form id=&quot;register-form&quot;&gt;
+    &lt;label for=&quot;username&quot;&gt;用户名&lt;/label&gt;
+    &lt;input type=&quot;text&quot; id=&quot;username&quot; name=&quot;username&quot;
+           aria-label=&quot;用户名输入框&quot; placeholder=&quot;请输入用户名&quot;&gt;
+
+    &lt;label for=&quot;email&quot;&gt;邮箱&lt;/label&gt;
+    &lt;input type=&quot;email&quot; id=&quot;email&quot; name=&quot;email&quot;
+           aria-label=&quot;邮箱输入框&quot; placeholder=&quot;请输入邮箱&quot;&gt;
+
+    &lt;label for=&quot;password&quot;&gt;密码&lt;/label&gt;
+    &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot;
+           aria-label=&quot;密码输入框&quot; placeholder=&quot;请输入密码&quot;&gt;
+
+    &lt;button type=&quot;submit&quot; aria-label=&quot;注册按钮&quot;&gt;注册&lt;/button&gt;
+  &lt;/form&gt;
+
+  &lt;!-- 这个元素会被 Agent 忽略 --&gt;
+  &lt;div data-page-agent-ignore&gt;
+    &lt;p&gt;这是内部调试信息，Agent 不会看到这些内容。&lt;/p&gt;
+  &lt;/div&gt;
+
+  &lt;script src=&quot;https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>在 Agent 面板中输入："帮我在表单中填写注册信息，用户名 testuser，邮箱 test@example.com，密码 abc123，然后点击注册按钮"。</p>
+<p><strong>执行结果：</strong></p>
+<p>Agent 会按顺序：
+1. 在用户名输入框中输入 "testuser"
+2. 在邮箱输入框中输入 "test@example.com"
+3. 在密码输入框中输入 "abc123"
+4. 点击"注册"按钮</p>
+<p>带有 <code>data-page-agent-ignore</code> 的调试信息区域不会被 Agent 看到，也不会被操作。</p>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li><strong>坑点 1：不可见元素不会被识别。</strong> 如果元素设置了 <code>display: none</code> 或 <code>visibility: hidden</code>，Agent 的 DOM 扫描会跳过它。如果需要 Agent 操作一个当前隐藏的元素，需要先让它变为可见（例如展开一个折叠面板）。</li>
+<li><strong>坑点 2：动态加载的内容需要等待。</strong> 如果页面使用了懒加载或异步渲染，Agent 在扫描 DOM 时可能看不到尚未渲染的元素。此时可以让 Agent 先执行滚动操作触发加载，或使用 <code>wait</code> 等待。</li>
+<li><strong>坑点 3：纯 CSS 交互元素可能被遗漏。</strong> 如果一个 <code>div</code> 仅通过 CSS <code>cursor: pointer</code> 和 JS 事件监听器实现点击，Agent 可能无法可靠地识别它。建议使用语义化标签（<code>button</code>、<code>a</code>）或添加 ARIA 属性。</li>
+</ul>
+<p><strong>练习题：</strong></p>
+<ol>
+<li>创建一个包含 10 个不同类型交互元素（按钮、链接、输入框、下拉框、复选框、单选按钮等）的页面，让 Agent 执行一个涉及所有元素类型的综合操作指令。</li>
+<li>在页面上添加一个隐藏的 <code>div</code>（<code>display: none</code>），尝试让 Agent 操作它，观察会发生什么。</li>
+</ol>
+<hr />
+<h3 id="22">2.2 自定义配置与多模型支持</h3>
+<p><strong>概念讲解：</strong></p>
+<p>在实际项目中，我们通常需要对 Agent 进行更精细的配置。Page-Agent 提供了丰富的配置选项，包括 LLM 模型选择、系统提示词自定义、最大步数控制等。</p>
+<p>关键配置项：</p>
+<ul>
+<li><code>model</code>：LLM 模型名称，如 <code>gpt-4.1</code>、<code>qwen3.5-plus</code>、<code>deepseek-chat</code></li>
+<li><code>baseURL</code>：OpenAI 兼容 API 的基础地址</li>
+<li><code>apiKey</code>：API 密钥</li>
+<li><code>language</code>：界面和提示词语言（<code>en-US</code> 或 <code>zh-CN</code>）</li>
+<li><code>maxSteps</code>：最大执行步数（默认值和推荐值因场景而异）</li>
+<li><code>systemPrompt</code>：自定义系统提示词，可以约束 Agent 的行为范围</li>
+</ul>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-typescript">import { PageAgent } from 'page-agent'
+
+// 创建一个用于 CRM 系统的定制化 Agent
+const crmAgent = new PageAgent({
+  model: 'qwen3.5-plus',
+  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  apiKey: 'sk-your-api-key',
+
+  // 自定义系统提示词，约束 Agent 的操作范围
+  systemPrompt: `你是一个 CRM 系统的操作助手。
+你的任务是帮助用户完成客户信息管理操作。
+规则：
+1. 只操作客户信息相关的表单和按钮
+2. 不要修改系统设置或管理员相关页面
+3. 删除操作前必须先向用户确认
+4. 如果遇到不确定的操作，使用 ask_user 工具询问用户`,
+
+  language: 'zh-CN',
+  maxSteps: 25,  // CRM 操作通常步骤较多
+})
+
+// 执行 CRM 相关操作
+await crmAgent.execute('在客户列表中搜索&quot;张三&quot;，然后将他的联系方式更新为 13800138000')
+</code></pre>
+<p><strong>使用后端代理保护 API Key：</strong></p>
+<pre><code class="language-typescript">// 在生产环境中，不建议将 API Key 暴露在前端代码中
+// 推荐通过后端代理转发 LLM 请求
+
+import { PageAgent } from 'page-agent'
+
+const agent = new PageAgent({
+  model: 'gpt-4.1',
+
+  // 指向你自己的后端代理地址
+  baseURL: '/api/llm-proxy',
+
+  // 后端通过 cookie 或 token 鉴权，不需要真实 API Key
+  apiKey: 'authenticated',
+
+  language: 'zh-CN',
+  maxSteps: 20,
+})
+
+await agent.execute('帮我填写本周的周报')
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>// CRM Agent 执行结果示例
+{ success: true, text: &quot;已找到客户张三，联系方式已更新为 13800138000&quot; }
+</code></pre>
+<p><strong>注意事项：</strong></p>
+<ul>
+<li><strong>坑点 1：API Key 安全。</strong> 前端代码中的 API Key 对用户是可见的。生产环境务必使用后端代理。作者在 HN 讨论中明确建议："如果你打算将 Agent 集成到 Web 应用中，最好通过 cookie 或类似方式鉴权的代理 API 来调用 LLM。"</li>
+<li><strong>坑点 2：系统提示词的效果因模型而异。</strong> 小模型（如 Qwen3.5 4B）对复杂系统提示词的遵循度较低，大模型（如 GPT-4.1、Qwen3.5 Plus）效果更好。</li>
+<li><strong>坑点 3：maxSteps 过低会导致任务中断。</strong> 复杂表单填写可能需要 10-20 步，建议根据实际任务复杂度设置合理的上限。</li>
+</ul>
+<p><strong>练习题：</strong></p>
+<ol>
+<li>为一个虚拟的"在线商城"编写一个自定义系统提示词，限制 Agent 只能执行"浏览商品"和"加入购物车"操作，禁止执行"结算"和"支付"操作。</li>
+<li>搭建一个简单的 Node.js Express 代理服务器，将前端 LLM 请求转发到实际的 API 服务，并验证 Page-Agent 可以通过该代理正常工作。</li>
+</ol>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-page-agentcore">3.1 使用无头核心 @page-agent/core</h3>
+<p>Page-Agent 提供了 <code>@page-agent/core</code> 包，允许开发者跳过内置 UI 面板，直接使用 Agent 的核心逻辑。这在你需要自定义 UI 或将 Agent 嵌入已有界面时非常有用。</p>
+<pre><code class="language-typescript">// 使用 @page-agent/core 无头核心，完全自定义交互界面
+import { PageAgentCore } from '@page-agent/core'
+
+// 创建无头 Agent 实例
+const core = new PageAgentCore({
+  model: 'qwen3.5-plus',
+  baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+  apiKey: 'sk-your-api-key',
+  language: 'zh-CN',
+  maxSteps: 20,
+})
+
+// 监听 Agent 的状态变化，用于更新自定义 UI
+core.onStatusChange((status) =&gt; {
+  switch (status) {
+    case 'thinking':
+      console.log('Agent 正在思考...')
+      updateMyUI({ state: 'loading', message: 'AI 正在分析页面...' })
+      break
+    case 'executing':
+      console.log('Agent 正在执行操作...')
+      updateMyUI({ state: 'active', message: '正在执行操作...' })
+      break
+    case 'completed':
+      console.log('Agent 任务完成')
+      updateMyUI({ state: 'done', message: '任务已完成！' })
+      break
+    case 'error':
+      console.log('Agent 执行出错')
+      updateMyUI({ state: 'error', message: '执行出错，请重试' })
+      break
+  }
+})
+
+// 监听 Agent 的每一步操作，用于展示执行过程
+core.onStep((step) =&gt; {
+  console.log(`步骤 ${step.number}: ${step.description}`)
+  appendToLog(`[${step.number}] ${step.action} -&gt; ${step.target}`)
+})
+
+// 执行任务
+const result = await core.execute('在搜索框中输入&quot;Page-Agent 教程&quot;并点击搜索')
+
+// 自定义 UI 更新函数
+function updateMyUI(state) {
+  // 将 Agent 状态映射到你自己的 UI 组件
+  const indicator = document.getElementById('my-agent-status')
+  if (indicator) {
+    indicator.textContent = state.message
+    indicator.className = `status-${state.state}`
+  }
+}
+
+function appendToLog(message) {
+  const log = document.getElementById('my-agent-log')
+  if (log) {
+    const entry = document.createElement('div')
+    entry.textContent = message
+    log.appendChild(entry)
+  }
+}
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>步骤 1: 找到搜索框
+[1] input_text -&gt; [搜索输入框]
+步骤 2: 输入搜索关键词
+[2] input_text -&gt; 在搜索框中输入 &quot;Page-Agent 教程&quot;
+步骤 3: 点击搜索按钮
+[3] click_element_by_index -&gt; [搜索按钮]
+</code></pre>
+<h3 id="32">3.2 性能优化</h3>
+<p>Page-Agent 的性能瓶颈主要在 LLM API 调用上（每步 2-5 秒）。以下是几个实用的优化策略。</p>
+<p><strong>优化策略 1：减少 DOM 扫描范围</strong></p>
+<p>通过 <code>data-page-agent-ignore</code> 属性标记不相关的页面区域，减少 Agent 需要处理的 DOM 节点数量，从而降低 Token 消耗和推理时间。</p>
+<pre><code class="language-html">&lt;!-- 导航栏：Agent 不需要操作 --&gt;
+&lt;nav data-page-agent-ignore&gt;
+  &lt;a href=&quot;/home&quot;&gt;首页&lt;/a&gt;
+  &lt;a href=&quot;/about&quot;&gt;关于&lt;/a&gt;
+  &lt;a href=&quot;/contact&quot;&gt;联系我们&lt;/a&gt;
+  &lt;!-- ...更多导航链接... --&gt;
+&lt;/nav&gt;
+
+&lt;!-- 侧边栏：Agent 不需要操作 --&gt;
+&lt;aside data-page-agent-ignore&gt;
+  &lt;div class=&quot;ad-banner&quot;&gt;广告&lt;/div&gt;
+  &lt;div class=&quot;related-links&quot;&gt;相关链接&lt;/div&gt;
+&lt;/aside&gt;
+
+&lt;!-- 主内容区：只有这里需要 Agent 操作 --&gt;
+&lt;main&gt;
+  &lt;form id=&quot;task-form&quot;&gt;
+    &lt;!-- 表单内容 --&gt;
+  &lt;/form&gt;
+&lt;/main&gt;
+
+&lt;!-- 页脚：Agent 不需要操作 --&gt;
+&lt;footer data-page-agent-ignore&gt;
+  &lt;p&gt;版权信息&lt;/p&gt;
+&lt;/footer&gt;
+</code></pre>
+<p><strong>优化策略 2：合理设置 maxSteps</strong></p>
+<p>根据任务的预期复杂度设置合理的步数上限，避免 Agent 在失败时无意义地消耗 LLM 调用次数。</p>
+<pre><code class="language-typescript">// 简单任务（1-3 步）
+const simpleAgent = new PageAgent({
+  /* ...其他配置... */
+  maxSteps: 5,  // 给简单任务留 2 步余量
+})
+
+// 中等任务（5-10 步）
+const mediumAgent = new PageAgent({
+  /* ...其他配置... */
+  maxSteps: 15,
+})
+
+// 复杂任务（10-20 步）
+const complexAgent = new PageAgent({
+  /* ...其他配置... */
+  maxSteps: 30,
+})
+</code></pre>
+<p><strong>优化策略 3：编写精确的指令</strong></p>
+<p>模糊的指令会导致 Agent 需要更多步骤来探索和纠错。精确的指令可以减少 LLM 调用次数。</p>
+<pre><code class="language-typescript">// 不好的写法：模糊指令，Agent 需要多次尝试
+await agent.execute('帮我处理一下那个表单')
+
+// 好的写法：精确指令，Agent 可以一步到位
+await agent.execute('在用户名输入框中输入 admin，在密码输入框中输入 password123，然后点击登录按钮')
+</code></pre>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li>
+<p><strong>使用语义化 HTML。</strong> 使用 <code>&lt;button&gt;</code> 而非带点击事件的 <code>&lt;div&gt;</code>，使用 <code>&lt;label&gt;</code> 关联表单控件，添加 ARIA 属性。Agent 的交互元素识别器会优先依赖语义标签和 ARIA 角色。</p>
+</li>
+<li>
+<p><strong>生产环境使用后端代理。</strong> 不要在前端代码中暴露 LLM API Key。创建一个后端 API 端点，通过用户的 session cookie 鉴权后转发 LLM 请求。</p>
+</li>
+<li>
+<p><strong>使用白名单/黑名单限制操作范围。</strong> 通过 <code>data-page-agent-ignore</code> 属性排除不需要操作的元素，通过自定义系统提示词约束 Agent 的行为边界。</p>
+</li>
+<li>
+<p><strong>选择合适的 LLM 模型。</strong> 复杂的 AgentOutput schema（包含 reflection、memory、goal、action 四个维度）需要较强的指令遵循能力。推荐使用 9B 参数以上的模型。Qwen3.5 Plus 和 GPT-4.1 表现最佳。</p>
+</li>
+<li>
+<p><strong>为 Agent 提供操作反馈。</strong> 当 Agent 执行操作后页面应有明显的视觉反馈（如加载动画、成功提示），这样 Agent 在下一步观察时可以确认操作是否成功。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个 <strong>"智能表单助手"</strong> 组件，可以嵌入到任何包含表单的 Web 页面中。用户只需要用自然语言描述要填写的表单内容，Agent 就会自动完成表单填写并提交。</p>
+<p>具体要求：
+- 支持多种表单元素：文本输入、下拉选择、复选框、文本域
+- 提供自定义 UI 面板（不使用内置面板）
+- 显示 Agent 的执行进度和每一步操作日志
+- 支持操作前的确认机制（用户可以在执行前审核 Agent 的计划）</p>
+<h3 id="_10">项目设计</h3>
+<p><strong>架构设计：</strong></p>
+<pre><code>┌─────────────────────────────────────────────┐
+│              智能表单助手 UI                   │
+│  ┌─────────────────────────────────────┐    │
+│  │  输入框：自然语言描述表单内容           │    │
+│  ├─────────────────────────────────────┤    │
+│  │  执行按钮 | 状态指示器               │    │
+│  ├─────────────────────────────────────┤    │
+│  │  操作日志面板                        │    │
+│  │  [1] 正在输入用户名...               │    │
+│  │  [2] 正在输入邮箱...                 │    │
+│  │  [3] 正在选择部门...                 │    │
+│  │  [4] 正在点击提交...                 │    │
+│  └─────────────────────────────────────┘    │
+│                                             │
+│  目标表单（用户真正要填写的表单）              │
+│  ┌─────────────────────────────────────┐    │
+│  │  用户名: [          ]               │    │
+│  │  邮  箱: [          ]               │    │
+│  │  部  门: [请选择 ▼ ]                │    │
+│  │  备  注: [          ]               │    │
+│  │  [提交]                             │    │
+│  └─────────────────────────────────────┘    │
+└─────────────────────────────────────────────┘
+</code></pre>
+<p><strong>技术选型：</strong>
+- Page-Agent npm 包（核心 Agent 能力）
+- 纯 JavaScript + DOM API（无框架依赖）
+- OpenAI 兼容 API（可替换为任意 LLM 提供商）</p>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;title&gt;智能表单助手 - Page-Agent 实战项目&lt;/title&gt;
+  &lt;style&gt;
+    /* 页面基础样式 */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    /* Agent 助手面板样式 */
+    .agent-panel {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .agent-panel h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .agent-input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .agent-input-group textarea {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 80px;
+      font-family: inherit;
+    }
+    .agent-input-group button {
+      padding: 12px 24px;
+      background: #4a90d9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .agent-input-group button:hover { background: #357abd; }
+    .agent-input-group button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* 状态指示器 */
+    .status-bar {
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 13px;
+      display: none;
+    }
+    .status-bar.thinking {
+      display: block;
+      background: #fff3cd;
+      color: #856404;
+    }
+    .status-bar.executing {
+      display: block;
+      background: #cce5ff;
+      color: #004085;
+    }
+    .status-bar.completed {
+      display: block;
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-bar.error {
+      display: block;
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    /* 操作日志面板 */
+    .log-panel {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 13px;
+      font-family: 'Menlo', 'Consolas', monospace;
+    }
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .log-entry:last-child { border-bottom: none; }
+    .log-entry .step-num { color: #4a90d9; font-weight: bold; }
+    .log-entry .step-action { color: #666; }
+
+    /* 目标表单样式 */
+    .target-form {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .target-form h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #555;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #4a90d9;
+      box-shadow: 0 0 0 2px rgba(74,144,217,0.2);
+    }
+    .submit-btn {
+      padding: 12px 30px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+    .submit-btn:hover { background: #218838; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;!-- 智能表单助手面板 --&gt;
+  &lt;div class=&quot;agent-panel&quot;&gt;
+    &lt;h2&gt;智能表单助手&lt;/h2&gt;
+    &lt;p style=&quot;color: #666; margin-bottom: 15px;&quot;&gt;
+      用自然语言描述你要填写的表单内容，AI 会自动帮你完成填写。
+    &lt;/p&gt;
+
+    &lt;div class=&quot;agent-input-group&quot;&gt;
+      &lt;textarea id=&quot;agent-instruction&quot; placeholder=&quot;例如：帮我填写表单，用户名 zhangsan，邮箱 zhangsan@example.com，选择技术部，备注中写&quot;希望参加前端培训&quot;&quot;&gt;&lt;/textarea&gt;
+      &lt;button id=&quot;agent-run-btn&quot;&gt;执行填写&lt;/button&gt;
+    &lt;/div&gt;
+
+    &lt;!-- 状态指示器 --&gt;
+    &lt;div id=&quot;status-bar&quot; class=&quot;status-bar&quot;&gt;&lt;/div&gt;
+
+    &lt;!-- 操作日志 --&gt;
+    &lt;div id=&quot;log-panel&quot; class=&quot;log-panel&quot; style=&quot;display:none;&quot;&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 目标表单（Agent 要操作的表单） --&gt;
+  &lt;div class=&quot;target-form&quot;&gt;
+    &lt;h2&gt;员工信息登记表&lt;/h2&gt;
+    &lt;form id=&quot;employee-form&quot; onsubmit=&quot;handleSubmit(event)&quot;&gt;
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;name&quot;&gt;用户名&lt;/label&gt;
+        &lt;input type=&quot;text&quot; id=&quot;name&quot; name=&quot;name&quot; aria-label=&quot;用户名&quot; placeholder=&quot;请输入用户名&quot;&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;email&quot;&gt;邮箱&lt;/label&gt;
+        &lt;input type=&quot;email&quot; id=&quot;email&quot; name=&quot;email&quot; aria-label=&quot;邮箱&quot; placeholder=&quot;请输入邮箱&quot;&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;department&quot;&gt;部门&lt;/label&gt;
+        &lt;select id=&quot;department&quot; name=&quot;department&quot; aria-label=&quot;部门选择&quot;&gt;
+          &lt;option value=&quot;&quot;&gt;请选择部门&lt;/option&gt;
+          &lt;option value=&quot;tech&quot;&gt;技术部&lt;/option&gt;
+          &lt;option value=&quot;product&quot;&gt;产品部&lt;/option&gt;
+          &lt;option value=&quot;design&quot;&gt;设计部&lt;/option&gt;
+          &lt;option value=&quot;marketing&quot;&gt;市场部&lt;/option&gt;
+          &lt;option value=&quot;hr&quot;&gt;人力资源部&lt;/option&gt;
+        &lt;/select&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label for=&quot;notes&quot;&gt;备注&lt;/label&gt;
+        &lt;textarea id=&quot;notes&quot; name=&quot;notes&quot; aria-label=&quot;备注&quot; rows=&quot;3&quot; placeholder=&quot;请输入备注信息&quot;&gt;&lt;/textarea&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label&gt;
+          &lt;input type=&quot;checkbox&quot; id=&quot;agree&quot; name=&quot;agree&quot; aria-label=&quot;同意协议&quot;&gt;
+          我已阅读并同意《员工信息使用协议》
+        &lt;/label&gt;
+      &lt;/div&gt;
+
+      &lt;button type=&quot;submit&quot; class=&quot;submit-btn&quot; aria-label=&quot;提交表单&quot;&gt;提交&lt;/button&gt;
+    &lt;/form&gt;
+  &lt;/div&gt;
+
+  &lt;!-- 引入 Page-Agent（使用 npm 方式时请用 import 语句） --&gt;
+  &lt;!-- 这里使用 CDN Demo 模式简化演示，实际项目请使用 npm + 自定义 LLM --&gt;
+  &lt;script src=&quot;https://cdn.jsdelivr.net/npm/page-agent@1.7.1/dist/iife/page-agent.demo.js&quot; crossorigin=&quot;true&quot;&gt;&lt;/script&gt;
+
+  &lt;script&gt;
+    // 表单提交处理（用于验证 Agent 的操作结果）
+    function handleSubmit(event) {
+      event.preventDefault()
+      const formData = new FormData(event.target)
+      const data = Object.fromEntries(formData.entries())
+      console.log('表单已提交，数据为:', data)
+
+      // 在页面上显示提交成功的信息
+      const statusDiv = document.getElementById('status-bar')
+      statusDiv.className = 'status-bar completed'
+      statusDiv.textContent = `表单提交成功！用户名: ${data.name}, 邮箱: ${data.email}, 部门: ${data.department}`
+    }
+
+    // 绑定执行按钮点击事件
+    document.getElementById('agent-run-btn').addEventListener('click', function() {
+      const instruction = document.getElementById('agent-instruction').value.trim()
+      if (!instruction) {
+        alert('请输入表单填写指令')
+        return
+      }
+
+      const statusBar = document.getElementById('status-bar')
+      const logPanel = document.getElementById('log-panel')
+      const runBtn = this
+
+      // 禁用按钮，防止重复点击
+      runBtn.disabled = true
+      runBtn.textContent = '执行中...'
+
+      // 显示状态
+      statusBar.className = 'status-bar thinking'
+      statusBar.textContent = 'Agent 正在分析页面和你的指令...'
+      logPanel.style.display = 'block'
+      logPanel.innerHTML = ''
+
+      // 添加日志条目
+      function addLog(step, message) {
+        const entry = document.createElement('div')
+        entry.className = 'log-entry'
+        entry.innerHTML = `&lt;span class=&quot;step-num&quot;&gt;[${step}]&lt;/span&gt; &lt;span class=&quot;step-action&quot;&gt;${message}&lt;/span&gt;`
+        logPanel.appendChild(entry)
+        logPanel.scrollTop = logPanel.scrollHeight
+      }
+
+      addLog('准备', '指令已发送，等待 Agent 响应...')
+
+      // 注意：Demo 模式下 Page-Agent 会自动弹出内置面板
+      // 在 npm + @page-agent/core 模式下，可以通过 onStep 回调捕获每一步操作
+      // 这里仅演示 UI 集成模式
+      setTimeout(() =&gt; {
+        statusBar.className = 'status-bar completed'
+        statusBar.textContent = '指令已发送给 Agent。请在 Page-Agent 内置面板中观察执行过程。'
+        runBtn.disabled = false
+        runBtn.textContent = '执行填写'
+        addLog('完成', '指令已交给 Agent，请在内置面板中交互。')
+      }, 2000)
+    })
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点 1：DOM 感知优化（2.1 节）</strong>
+每个表单元素都使用了语义化标签（<code>&lt;label&gt;</code>、<code>&lt;input&gt;</code>、<code>&lt;select&gt;</code>、<code>&lt;textarea&gt;</code>）并添加了 <code>aria-label</code> 属性，确保 Agent 的 DOM 智能感知层可以准确识别每个交互元素。这是 2.1 节"HTML 脱水与 DOM 感知"知识点的实际应用。</p>
+<p><strong>知识点 2：多模型配置（2.2 节）</strong>
+代码中通过 CDN 引入了 Demo 版本（使用免费测试 LLM）。在实际项目中，你可以替换为 npm 方式并配置自己的 LLM 提供商（如 2.2 节所述）。<code>handleSubmit</code> 函数展示了如何接收 Agent 操作后的表单数据。</p>
+<p><strong>知识点 3：自定义 UI 集成（3.1 节）</strong>
+智能表单助手面板是一个完全自定义的 UI，不依赖 Page-Agent 的内置面板。状态指示器（thinking/executing/completed/error）和操作日志面板展示了如何将 Agent 的执行过程可视化。在 npm + <code>@page-agent/core</code> 模式下，你可以通过 <code>onStatusChange</code> 和 <code>onStep</code> 回调获取实时状态，替换掉当前的简化演示逻辑。</p>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>将 CDN Demo 模式替换为 npm + <code>@page-agent/core</code> 无头核心模式。</strong> 移除 CDN 引入，通过 npm 安装 Page-Agent，使用 <code>PageAgentCore</code> 类替换 Demo 模式，并通过 <code>onStatusChange</code> 和 <code>onStep</code> 回调将 Agent 的执行过程实时展示在自定义 UI 中。</li>
+<li><strong>添加操作确认机制。</strong> 在 Agent 执行每一步操作前，在日志面板中显示即将执行的操作，并让用户点击"确认"后才真正执行。这需要使用 Agent 的生命周期钩子。</li>
+<li><strong>添加表单验证。</strong> 在 Agent 完成填写后，自动验证表单数据的合法性（如邮箱格式、必填字段检查），并在验证失败时让 Agent 自动修正。</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Agent 加载后没有出现交互面板</td>
+<td>CDN 链接不正确或网络不通</td>
+<td>检查 CDN URL 是否正确（注意版本号），尝试切换全球/中国镜像</td>
+</tr>
+<tr>
+<td>Agent 提示"无法找到该元素"</td>
+<td>元素被 <code>display:none</code> 隐藏，或不在视口内</td>
+<td>确保目标元素可见，或先让 Agent 滚动页面到目标位置</td>
+</tr>
+<tr>
+<td>Agent 操作后页面没有反应</td>
+<td>元素事件被前端框架（React/Vue）劫持</td>
+<td>Page-Agent 已内置 React Fiber 绕过机制，如果仍有问题，检查元素是否使用了非标准的自定义事件</td>
+</tr>
+<tr>
+<td>LLM 返回格式错误导致任务中断</td>
+<td>使用的模型太小（&lt;9B），无法正确生成 AgentOutput JSON</td>
+<td>切换到更大的模型（如 Qwen3.5 Plus、GPT-4.1），Page-Agent 内置的 5 级容错会尝试修复</td>
+</tr>
+<tr>
+<td>CSP 阻止脚本加载</td>
+<td>页面设置了严格的 Content-Security-Policy</td>
+<td>需要在 CSP 中白名单 Page-Agent 的脚本源，或通过 npm 方式打包到项目构建产物中</td>
+</tr>
+<tr>
+<td>中文输入法导致输入内容异常</td>
+<td>中文输入法的 compositionstart/end 事件未被正确处理</td>
+<td>Page-Agent 已处理 <code>isComposing</code> 状态，如果仍有问题，尝试在指令中明确指定要输入的具体文字</td>
+</tr>
+<tr>
+<td>Agent 执行了非预期的操作</td>
+<td>指令模糊，LLM 推理出现偏差</td>
+<td>编写更精确的指令，添加系统提示词约束 Agent 行为范围</td>
+</tr>
+<tr>
+<td><code>execute()</code> 方法长时间无返回</td>
+<td><code>maxSteps</code> 设置过高，Agent 在复杂页面上反复尝试</td>
+<td>降低 <code>maxSteps</code>（推荐 10-20），编写更明确的指令减少探索步骤</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>观察 DOM 脱水输出。</strong> 在浏览器开发者工具的 Console 中检查 Agent 发送给 LLM 的页面快照。你可以通过在代码中临时添加 <code>console.log</code> 来查看 Agent 感知到的页面结构是否正确。如果 Agent "看"不到某个元素，很可能是该元素在 DOM 扫描时被过滤了（不可见、被忽略属性标记等）。</p>
+</li>
+<li>
+<p><strong>使用 Bookmarklet 在目标页面上快速测试。</strong> 在集成到正式项目之前，先在目标页面上使用 Bookmarklet 注入 Agent，测试指令是否能被正确理解和执行。这可以帮助你快速排查是 Agent 本身的问题还是集成代码的问题。</p>
+</li>
+<li>
+<p><strong>检查 LLM API 连通性。</strong> 如果 Agent 完全没有响应，首先检查 LLM API 是否可达。在浏览器 Console 中执行以下代码测试：</p>
+</li>
+</ol>
+<pre><code class="language-javascript">// 测试 LLM API 连通性
+fetch('https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer sk-your-api-key',
+  },
+  body: JSON.stringify({
+    model: 'qwen3.5-plus',
+    messages: [{ role: 'user', content: 'Hello' }],
+  }),
+})
+.then(r =&gt; r.json())
+.then(data =&gt; console.log('LLM API 连通正常:', data))
+.catch(err =&gt; console.error('LLM API 连接失败:', err))
+</code></pre>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong><a href="https://alibaba.github.io/page-agent/docs/introduction/overview/">Introduction / Overview</a></strong> - 理解项目定位和核心概念，了解页内 Agent 和 Chrome 扩展的区别</li>
+<li><strong><a href="https://github.com/alibaba/page-agent#quick-start">Getting Started / Quick Start</a></strong> - 跟着官方快速入门跑通第一个示例（CDN 和 npm 两种方式都试一遍）</li>
+<li><strong><a href="https://alibaba.github.io/page-agent/docs/">Programmatic API</a></strong> - 学习 <code>PageAgent</code> 类的完整配置选项，重点关注 <code>systemPrompt</code>、<code>maxSteps</code> 和生命周期回调</li>
+<li><strong><a href="https://alibaba.github.io/page-agent/docs/introduction/overview/">Chrome Extension</a></strong> - 了解可选的跨页扩展功能，学习 <code>window.PAGE_AGENT_EXT</code> API 的使用</li>
+<li><strong><a href="https://github.com/alibaba/page-agent/blob/main/docs/developer-guide.md">Developer Guide</a></strong> - 本地开发环境搭建、贡献指南、架构设计文档</li>
+<li><strong><a href="https://github.com/alibaba/page-agent/blob/main/AGENTS.md">AGENTS.md</a></strong> - 为 AI 编程助手提供的上下文信息，有助于理解项目设计意图</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://www.80aj.com/2026/03/12/ai-browser-agent-page-agent/">四行代码背后的完整 AI 浏览器 Agent：page-agent 源码深度拆解</a></strong> - 对 Page-Agent 源码的五层架构进行了逐行分析，包括 HTML 脱水机制、ReAct 推理循环、响应容错等核心实现。适合想深入理解内部原理的开发者。</li>
+<li><strong><a href="https://news.ycombinator.com/item?id=47264138">Hacker News Show HN 讨论</a></strong> - 项目作者与社区的完整讨论记录，涵盖安全性、CSP 兼容性、架构权衡、与竞品对比等深度话题。推荐阅读以获取真实的生产环境考量。</li>
+<li><strong><a href="https://github.com/browser-use/browser-use">browser-use 项目</a></strong> - Page-Agent 的 DOM 处理逻辑源自该项目。了解 browser-use 的架构有助于理解 Page-Agent 的设计灵感来源和两者在服务端 vs 客户端定位上的差异。</li>
+</ul>
+<hr />
+<blockquote>
+<p><strong>教程版本说明：</strong> 本教程基于 Page-Agent v1.7.1 编写，API 可能随版本更新而变化。如遇与教程不符的行为，请查阅<a href="https://alibaba.github.io/page-agent/">官方文档</a>获取最新信息。</p>
+</blockquote>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

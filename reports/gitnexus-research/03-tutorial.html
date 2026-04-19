@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitNexus - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 3-4 小时 | **前置知识：** 命令行基本操作（cd、ls、npm 基础）、至少一种编程语言基础（理解函数、类、模块概念）、了解 AI 编码工具的基本使用（如 Cursor、Claude Code）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11" class="toc-h3">1.1 第一次索引：构建代码知识图谱</a></li>
+<li><a href="#12" class="toc-h3">1.2 符号搜索：语义化代码查询</a></li>
+<li><a href="#13" class="toc-h3">1.3 代码概览：理解项目结构</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-ai" class="toc-h3">2.1 配置 AI 编码工具集成</a></li>
+<li><a href="#22" class="toc-h3">2.2 影响分析：评估代码修改风险</a></li>
+<li><a href="#23-360" class="toc-h3">2.3 360 度上下文视图：全面理解代码</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 多仓库索引与跨仓库搜索</a></li>
+<li><a href="#32-wiki" class="toc-h3">3.2 Wiki 生成与版本变更检测</a></li>
+<li><a href="#33" class="toc-h3">3.3 性能优化与最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实施代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">进阶方向建议</a></li>
+<li><a href="#_21" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GitNexus - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 3-4 小时<br>**前置知识：** 命令行基本操作（cd、ls、npm 基础）、至少一种编程语言基础（理解函数、类、模块概念）、了解 AI 编码工具的基本使用（如 Cursor、Claude Code）</div>
+                    </header>
+                    <h1 id="gitnexus-">GitNexus - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 3-4 小时
+<strong>前置知识：</strong> 命令行基本操作（cd、ls、npm 基础）、至少一种编程语言基础（理解函数、类、模块概念）、了解 AI 编码工具的基本使用（如 Cursor、Claude Code）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：macOS / Linux / Windows（WSL2 推荐）</li>
+<li>Node.js：18 及以上</li>
+<li>npm：8 及以上</li>
+<li>Git：2.30 及以上</li>
+<li>磁盘空间：约 100MB（CLI 工具 + 依赖）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>第一步：检查前置依赖</strong></p>
+<pre><code class="language-bash"># 检查 Node.js 版本（需要 18+）
+node --version
+
+# 如果未安装或版本过低
+# macOS:
+brew install node@18
+# Ubuntu/Debian:
+# curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# sudo apt install nodejs
+
+# 检查 npm 版本
+npm --version
+
+# 检查 Git 版本
+git --version
+</code></pre>
+<p><strong>第二步：安装 GitNexus CLI</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+# 全局安装 GitNexus CLI
+npm install -g gitnexus
+
+# 验证安装
+gitnexus --version
+</code></pre>
+<p><strong>第三步：准备示例项目</strong></p>
+<pre><code class="language-bash"># 克隆一个示例项目用于练习
+git clone https://github.com/abhigyanpatwari/GitNexus.git
+cd GitNexus
+
+# 或者使用你自己的项目
+# cd /path/to/your/project
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 检查 GitNexus 是否安装成功
+gitnexus --version
+# 预期输出: 1.6.0（或更高版本）
+
+# 查看可用命令
+gitnexus --help
+# 预期输出:
+# Usage: gitnexus [command] [options]
+#
+# Commands:
+#   index [path]     Build knowledge graph for a codebase
+#   serve            Start MCP server for AI tool integration
+#   setup            Configure AI tool integration
+#   wiki [path]      Generate wiki documentation
+#   search &lt;query&gt;   Search symbols in indexed codebase
+#   status           Show indexing status
+#   version          Show version info
+</code></pre>
+<pre><code># 典型验证输出
+
+$ gitnexus --version
+gitnexus v1.6.0
+
+$ gitnexus --help
+Usage: gitnexus [command] [options]
+
+Commands:
+  index [path]     Build knowledge graph for a codebase
+  serve            Start MCP server for AI tool integration
+  setup            Configure AI tool integration
+  wiki [path]      Generate wiki documentation
+  search &lt;query&gt;   Search symbols in indexed codebase
+  status           Show indexing status
+  version          Show version info
+
+Options:
+  -v, --verbose    Enable verbose logging
+  -h, --help       Show help
+</code></pre>
+<blockquote>
+<p>基于 GitNexus v1.6.0 官方 README</p>
+</blockquote>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11">1.1 第一次索引：构建代码知识图谱</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GitNexus 的核心能力来源于知识图谱（Knowledge Graph）。在使用任何功能之前，需要先对代码库进行索引——GitNexus 会扫描所有源文件、解析代码结构、建立实体关系、生成向量嵌入，并将这些信息存储为知识图谱。</p>
+<p>索引过程分为 6 个阶段：Structure（结构提取）→ Parsing（AST 解析）→ Resolution（引用解析）→ Clustering（聚类分析）→ Processes（流程识别）→ Search（搜索索引）。每个阶段都有明确的职责，共同将原始代码转化为结构化的知识图谱。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 进入要索引的项目目录
+cd /path/to/your/project
+
+# 执行索引（自动执行全部 6 个阶段）
+gitnexus index
+
+# 如果项目较大，可以启用详细日志观察进度
+gitnexus index --verbose
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 中等规模项目的典型索引输出
+
+$ gitnexus index
+[Structure] Scanning project files...
+  Found 1,247 source files across 14 languages
+
+[Parsing] AST parsing with Tree-sitter...
+  TypeScript: 892 files
+  Python: 213 files
+  JavaScript: 142 files
+  Extracted 8,342 code entities (functions, classes, interfaces, variables)
+
+[Resolution] Resolving references...
+  Resolved 12,567 import/call/inheritance relationships
+
+[Clustering] Clustering by module...
+  Identified 23 functional modules
+
+[Processes] Identifying business processes...
+  Discovered 15 cross-module process chains
+
+[Search] Building search index...
+  Generated 8,342 vector embeddings (384-dim, all-MiniLM-L6-v2)
+
+Indexing complete!
+  Storage: ~18MB (IndexedDB)
+  Duration: 45s
+  Ready for search and MCP integration
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的索引管线描述。实际输出取决于项目规模和本地性能。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 选择一个你熟悉的中小型项目（&lt;1,000 文件），执行索引并观察 6 个阶段的输出。记录每个阶段处理的时间，分析哪个阶段是瓶颈。
+2. 尝试对一个非常小的项目（如单个文件）执行索引，对比输出与大型项目的差异。</p>
+<hr />
+<h3 id="12">1.2 符号搜索：语义化代码查询</h3>
+<p><strong>概念讲解：</strong></p>
+<p>索引完成后，最基本的使用场景是符号搜索（Symbol Search）。与传统的 grep/ripgrep 文本搜索不同，GitNexus 的搜索是语义化的——你可以用自然语言描述你要找的代码，系统会通过向量相似度和知识图谱找到语义相关的代码块。</p>
+<p>例如，搜索"处理用户认证的函数"不仅会返回名称中包含"auth"的函数，还会返回名称不同但功能相关的函数（如 <code>verifyToken</code>、<code>checkSession</code>、<code>validateCredentials</code>）。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 基本搜索
+gitnexus search &quot;用户认证相关函数&quot;
+
+# 更具体的搜索
+gitnexus search &quot;数据库连接和查询处理&quot;
+
+# 搜索特定类型
+gitnexus search &quot;错误处理中间件&quot; --type=function
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 语义搜索的典型输出
+
+$ gitnexus search &quot;用户认证相关函数&quot;
+Found 7 results (sorted by relevance):
+
+1. [function] auth/login.ts:handleLogin()
+   Score: 0.89 | Lines 45-78
+   Handles user login with email/password authentication...
+
+2. [function] auth/middleware.ts:verifyToken()
+   Score: 0.85 | Lines 12-34
+   JWT token verification middleware for protected routes...
+
+3. [function] auth/service.ts:validateCredentials()
+   Score: 0.82 | Lines 56-72
+   Validates user credentials against the database...
+
+4. [class] auth/PassportStrategy.ts
+   Score: 0.79 | Lines 1-89
+   Passport.js authentication strategy configuration...
+
+5. [function] api/users.ts:getCurrentUser()
+   Score: 0.74 | Lines 23-31
+   Returns the currently authenticated user profile...
+
+6. [function] auth/refresh.ts:refreshToken()
+   Score: 0.71 | Lines 8-22
+   Refreshes expired JWT tokens...
+
+7. [function] utils/session.ts:createSession()
+   Score: 0.68 | Lines 15-38
+   Creates a new user session after successful authentication...
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的语义搜索能力描述。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 用自然语言描述一个你想找的功能，执行语义搜索。对比搜索结果与 <code>grep -r</code> 文本搜索的结果，分析哪些结果是语义搜索独有的。
+2. 尝试用英文和中文分别搜索同一个概念，对比结果差异。</p>
+<hr />
+<h3 id="13">1.3 代码概览：理解项目结构</h3>
+<p><strong>概念讲解：</strong></p>
+<p>代码概览（Code Overview）是 GitNexus 提供的另一个基础功能。它通过知识图谱生成代码库的结构化概览，包括：模块划分、核心实体、模块间依赖关系、入口文件等。这比单纯阅读 README 或浏览目录树更能帮助理解代码的架构。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 通过 CLI 获取代码概览
+gitnexus overview
+
+# 或者在已连接的 AI 工具中使用
+# 在 Claude Code 中直接提问:
+# &quot;使用 get_code_overview 工具给我看这个项目的代码概览&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 代码概览的典型输出
+
+$ gitnexus overview
+
+=== Project Overview ===
+
+Project: my-web-app
+Languages: TypeScript (89%), CSS (8%), HTML (3%)
+Total Files: 142
+Total Entities: 1,247
+
+--- Module Structure ---
+
+[core] (23 files, 156 entities)
+  Main exports: AppServer, Router, Middleware
+  Dependencies: auth, database, cache
+
+[auth] (12 files, 89 entities)
+  Main exports: AuthService, UserController, PassportStrategy
+  Dependencies: database, utils
+
+[database] (8 files, 67 entities)
+  Main exports: DatabasePool, QueryBuilder, MigrationRunner
+  Dependencies: utils
+
+[api] (34 files, 312 entities)
+  Main exports: UserAPI, ProductAPI, OrderAPI
+  Dependencies: auth, database, cache
+
+[utils] (15 files, 98 entities)
+  Main exports: Logger, Validator, DateHelper
+  Dependencies: (none)
+
+--- Entry Points ---
+  src/index.ts → AppServer
+  src/server.ts → AppServer.start()
+
+--- Cross-Module Processes ---
+  &quot;User Registration&quot;: routes → UserController → AuthService → DatabasePool
+  &quot;Order Checkout&quot;: routes → OrderAPI → PaymentService → OrderModel
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的代码概览能力描述。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 对一个你不熟悉的开源项目执行索引和代码概览，评估概览结果是否帮助你快速理解了项目结构。
+2. 对比自己编写的项目，检查概览中的模块划分是否符合你的设计意图。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-ai">2.1 配置 AI 编码工具集成</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GitNexus 的最大价值在于与 AI 编码工具的集成。通过 MCP（Model Context Protocol），GitNexus 将 16 个代码智能工具暴露给 AI 编码工具。当你在 Claude Code 中提问"这个函数影响了哪些代码"时，Claude Code 会调用 GitNexus 的 <code>find_impact_analysis</code> 工具获取准确的结构化信息。</p>
+<p>GitNexus 支持多个 AI 编码工具，其中 Claude Code 的集成最深（支持 Skills、Prompts、Resources 全部 MCP 能力）。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 方式一：自动配置（推荐）
+# 进入项目目录
+cd /path/to/your/project
+
+# 自动配置 Claude Code 集成
+gitnexus setup --tool=claude-code
+
+# 自动配置 Cursor 集成
+gitnexus setup --tool=cursor
+
+# 自动配置 Windsurf 集成
+gitnexus setup --tool=windsurf
+
+# 方式二：手动配置
+# 启动 MCP 服务器
+gitnexus serve
+# 输出: MCP server running on stdio (ready for AI tool connections)
+</code></pre>
+<pre><code class="language-json">// Claude Code 的 MCP 配置（gitnexus setup 自动生成）
+// 写入 .claude/mcp.json 或等效配置文件
+{
+  &quot;mcpServers&quot;: {
+    &quot;gitnexus&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;],
+      &quot;cwd&quot;: &quot;/path/to/your/project&quot;
+    }
+  }
+}
+</code></pre>
+<pre><code class="language-json">// Cursor 的 MCP 配置
+// 写入 .cursor/mcp.json
+{
+  &quot;mcpServers&quot;: {
+    &quot;gitnexus&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;],
+      &quot;cwd&quot;: &quot;/path/to/your/project&quot;
+    }
+  }
+}
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 自动配置的典型输出
+
+$ gitnexus setup --tool=claude-code
+✓ Detected Claude Code installation
+✓ Checking project index... Found (8,342 entities)
+✓ Writing MCP configuration to .claude/mcp.json
+✓ Configuration complete!
+
+To use GitNexus with Claude Code:
+1. Open Claude Code in this project directory
+2. Start a conversation and ask code-related questions
+3. Claude Code will automatically use GitNexus tools
+
+Available tools:
+  - get_code_overview: Get an overview of the codebase structure
+  - search_symbols: Search for code symbols using natural language
+  - find_impact_analysis: Analyze the impact of code changes
+  - get_process_grouped_search_results: Search grouped by business process
+  - get_360_degree_context_view: Get complete context for a symbol
+  - get_multi_file_rename: Rename symbols across multiple files
+  - find_all_changes_between_versions: Compare versions
+  ...and 9 more tools
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的配置流程描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 确保在配置前已经完成项目索引（<code>gitnexus index</code>）。否则 AI 工具调用时会返回空结果。
+- <code>cwd</code> 参数必须指向项目的根目录。如果路径错误，索引数据将无法找到。
+- 每次切换项目时，需要更新配置中的 <code>cwd</code> 路径或重新执行 <code>gitnexus setup</code>。</p>
+<p><strong>练习题：</strong>
+1. 配置 Claude Code 或 Cursor 集成，在 AI 工具中尝试提问："这个项目的主要模块有哪些？"观察 AI 是否调用了 GitNexus 工具。
+2. 对比配置前后 AI 编码工具回答代码结构问题的准确性差异。</p>
+<hr />
+<h3 id="22">2.2 影响分析：评估代码修改风险</h3>
+<p><strong>概念讲解：</strong></p>
+<p>影响分析（Impact Analysis）是 GitNexus 最有价值的高级功能之一。通过知识图谱的边（edges），GitNexus 可以追踪代码变更的影响范围。当你计划修改一个函数或类时，GitNexus 可以找出所有直接和间接引用它的代码实体。</p>
+<p>这在以下场景特别有用：
+- 评估重构的风险（"如果我改了这个接口，会影响多少代码？"）
+- PR Review 中理解变更的影响范围
+- AI 辅助代码修改时的安全检查</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 在 AI 编码工具中，使用自然语言触发影响分析
+# 例如在 Claude Code 中:
+# &quot;分析修改 UserService.validate() 的影响&quot;
+
+# AI 工具会自动调用 find_impact_analysis 工具
+# 参数: { &quot;symbol&quot;: &quot;UserService.validate&quot;, &quot;depth&quot;: 2 }
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 影响分析的典型输出（AI 工具返回）
+
+=== Impact Analysis: UserService.validate() ===
+
+Direct Impact (depth=1): 8 symbols in 4 files
+  → auth/LoginController.handleLogin()     [calls]
+  → auth/RegistrationController.register() [calls]
+  → api/UserAPI.updateProfile()            [calls]
+  → middleware/AuthMiddleware.validate()    [calls]
+  → tests/auth.test.ts: testValidateUser() [calls]
+  → tests/api.test.ts: testUpdateUser()    [calls]
+  → services/PasswordReset.ts: reset()     [calls]
+  → admin/UserAdmin.ts: editUser()         [calls]
+
+Indirect Impact (depth=2): 12 symbols in 6 files
+  → routes/auth.ts → LoginController → validate()
+  → routes/api.ts → UserAPI → validate()
+  → middleware/error.ts → AuthMiddleware → validate()
+  ...
+
+Summary:
+  Total affected files: 12
+  Total affected symbols: 47
+  Risk level: HIGH
+  Suggestion: Consider creating a new method instead of modifying validate() directly
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的影响分析能力描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 影响分析的深度（depth）影响结果的全面性。depth=1 只显示直接引用者，depth=2 包含间接引用。深度越大，结果越全面但噪声也越多。
+- 分析结果的准确性取决于索引的完整性。如果有文件未被索引（如动态生成的代码），影响范围可能被低估。
+- <code>risk_level</code> 是 GitNexus 基于受影响符号数量的估算，实际风险需要结合业务逻辑判断。</p>
+<p><strong>练习题：</strong>
+1. 选择一个你项目中的核心函数，执行影响分析。检查结果中是否有你意料之外的调用方。
+2. 尝试不同的 depth 参数（1 vs 2），对比结果的数量和准确性的变化。</p>
+<hr />
+<h3 id="23-360">2.3 360 度上下文视图：全面理解代码</h3>
+<p><strong>概念讲解：</strong></p>
+<p>360 度上下文视图（360-Degree Context View）是 GitNexus 提供的综合代码理解工具。对于一个给定的符号（函数、类、接口），它提供：
+- <strong>定义</strong>：代码的完整定义和注释
+- <strong>调用方</strong>：谁调用了这个符号
+- <strong>被调用方</strong>：这个符号调用了谁
+- <strong>依赖</strong>：这个符号导入了哪些模块
+- <strong>被依赖</strong>：哪些模块导入了这个符号
+- <strong>继承</strong>：父类和子类关系
+- <strong>相关流程</strong>：包含这个符号的业务流程</p>
+<p>这相当于在 IDE 中右键"Find Usages"+"Go to Definition"+"Call Hierarchy"+"Type Hierarchy"的一站式汇总。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 在 AI 编码工具中使用
+# 例如在 Claude Code 中:
+# &quot;给我看 UserService 类的 360 度上下文视图&quot;
+
+# AI 工具调用 get_360_degree_context_view 工具
+# 参数: { &quot;symbol&quot;: &quot;UserService&quot; }
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 360 度上下文视图的典型输出
+
+=== 360° Context View: UserService ===
+
+[Definition]
+File: src/services/UserService.ts
+Lines: 15-156
+Type: class
+Methods: validate(), create(), update(), delete(), findByEmail()
+
+[Callers] (who calls UserService)
+  → auth/LoginController.handleLogin()     [uses validate()]
+  → api/UserAPI.getProfile()               [uses findByEmail()]
+  → admin/UserAdminController.listUsers()  [uses findAll()]
+  → cron/CleanupJob.run()                  [uses delete()]
+
+[Callees] (what UserService calls)
+  → DatabasePool.query()                   [data access]
+  → Validator.validateEmail()              [input validation]
+  → Logger.info()                          [logging]
+  → CacheManager.get()/set()               [caching]
+
+[Dependencies] (what UserService imports)
+  → src/models/User.ts
+  → src/utils/Validator.ts
+  → src/config/database.ts
+  → src/services/CacheService.ts
+
+[Dependents] (who imports UserService)
+  → src/api/UserAPI.ts
+  → src/auth/AuthService.ts
+  → src/admin/UserAdminController.ts
+
+[Inheritance]
+  Parent: BaseService (src/services/BaseService.ts)
+  Interfaces: IUserService
+
+[Related Processes]
+  &quot;User Registration&quot;: routes → UserController → UserService.validate() → DatabasePool
+  &quot;Password Reset&quot;: routes → AuthController → UserService.findByEmail() → EmailService
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的 360 度上下文视图能力描述。</p>
+</blockquote>
+<p><strong>练习题：</strong>
+1. 选择你项目中一个核心服务类，获取 360 度上下文视图。检查是否有你不知道的调用方或依赖。
+2. 选择一个你不太熟悉的类，通过 360 度上下文视图快速理解它在系统中的角色。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 多仓库索引与跨仓库搜索</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GitNexus 支持多仓库 MCP（Multi-Repo MCP），可以同时索引多个代码仓库。这在以下场景特别有用：
+- 微服务架构：需要理解服务间的 API 调用关系
+- Monorepo 管理：不同子项目之间的依赖分析
+- 代码复用审计：查找多个仓库中的相似代码</p>
+<p>多仓库索引为每个仓库维护独立的知识图谱，但通过 MCP 的多仓库能力，AI 工具可以跨仓库搜索和分析。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 索引多个仓库
+gitnexus index /path/to/repo-a
+gitnexus index /path/to/repo-b
+gitnexus index /path/to/repo-c
+
+# 配置多仓库 MCP
+gitnexus setup --tool=claude-code --multi-repo=/path/to/repo-a,/path/to/repo-b,/path/to/repo-c
+</code></pre>
+<pre><code class="language-json">// 多仓库 MCP 配置
+// .claude/mcp.json
+{
+  &quot;mcpServers&quot;: {
+    &quot;gitnexus-repo-a&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;, &quot;--repo=/path/to/repo-a&quot;]
+    },
+    &quot;gitnexus-repo-b&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;, &quot;--repo=/path/to/repo-b&quot;]
+    },
+    &quot;gitnexus-repo-c&quot;: {
+      &quot;command&quot;: &quot;gitnexus&quot;,
+      &quot;args&quot;: [&quot;serve&quot;, &quot;--repo=/path/to/repo-c&quot;]
+    }
+  }
+}
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 多仓库索引的典型输出
+
+$ gitnexus index /path/to/repo-a
+Indexing complete! 8,342 entities, ~18MB storage.
+
+$ gitnexus index /path/to/repo-b
+Indexing complete! 3,567 entities, ~8MB storage.
+
+$ gitnexus index /path/to/repo-c
+Indexing complete! 5,891 entities, ~12MB storage.
+
+# 在 AI 工具中跨仓库搜索:
+# &quot;在所有仓库中搜索处理支付的相关代码&quot;
+# GitNexus 会在三个仓库中分别搜索并合并结果
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的多仓库能力描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- 每个仓库的索引是独立的，存储在各自的 IndexedDB 中。总存储空间取决于仓库数量和大小。
+- 跨仓库搜索的性能取决于仓库数量和每个仓库的索引大小。建议不超过 5 个仓库同时索引。
+- 跨仓库的引用解析（如 API 调用链）需要仓库间有明确的接口定义。如果仓库间通过运行时动态调用，图谱可能无法正确解析。</p>
+<hr />
+<h3 id="32-wiki">3.2 Wiki 生成与版本变更检测</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GitNexus 可以基于知识图谱自动生成 Wiki 文档，包含架构概述、模块说明、API 文档等。它还支持版本间变更检测（<code>find_all_changes_between_versions</code>），帮助理解代码在不同版本间的演进。</p>
+<p>Wiki 生成不是简单的文档模板填充，而是基于知识图谱的结构化理解——模块边界、核心实体、依赖关系都来自图谱数据，而非代码注释。</p>
+<p><strong>操作步骤：</strong></p>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0 官方 README
+
+# 生成 Wiki 文档
+gitnexus wiki /path/to/your/project
+
+# 指定输出目录
+gitnexus wiki /path/to/your/project --output=/path/to/wiki-output
+
+# 版本变更检测
+# 对比当前版本与 Git 中的上一个版本
+gitnexus diff --from=HEAD~1 --to=HEAD
+
+# 对比两个 Git tag
+gitnexus diff --from=v1.5.0 --to=v1.6.0
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># Wiki 生成的典型输出
+
+$ gitnexus wiki /path/to/your/project
+Generating wiki documentation...
+
+Analyzing module structure...
+  Found 23 modules, 8,342 entities
+
+Generating architecture overview...
+  Entry points: src/index.ts, src/server.ts
+  Core modules: core, auth, database, api, utils
+
+Generating module documentation...
+  ✓ core (23 files, 156 entities)
+  ✓ auth (12 files, 89 entities)
+  ✓ database (8 files, 67 entities)
+  ✓ api (34 files, 312 entities)
+  ✓ utils (15 files, 98 entities)
+
+Generating API documentation...
+  ✓ 142 exported functions documented
+  ✓ 34 exported classes documented
+  ✓ 12 exported interfaces documented
+
+Wiki generated successfully!
+  Output: /path/to/your/project/wiki/
+  Files: 28 pages, ~45,000 words
+</code></pre>
+<pre><code># 版本变更检测的典型输出
+
+$ gitnexus diff --from=v1.5.0 --to=v1.6.0
+Comparing versions...
+
+Added entities: 234
+  + src/services/PaymentService.ts (new file, 12 entities)
+  + src/api/PaymentAPI.ts (new file, 45 entities)
+  + src/models/Payment.ts (new file, 8 entities)
+  ...
+
+Removed entities: 12
+  - src/utils/LegacyHelper.ts (deleted file, 12 entities)
+  ...
+
+Modified entities: 89
+  ~ src/services/UserService.ts
+    - validate(): signature changed (added 2fa parameter)
+    + verifyTwoFactor(): new method added
+  ~ src/auth/AuthService.ts
+    ~ login(): now calls UserService.verifyTwoFactor()
+  ...
+
+Breaking changes detected: 3
+  ⚠ UserService.validate() signature changed (may break callers)
+  ⚠ AuthService.login() now requires 2fa flow
+  ⚠ DatabasePool.connect() removed (use DatabasePool.create() instead)
+</code></pre>
+<blockquote>
+<p>以上输出为模拟结果，基于 GitNexus v1.6.0 的 Wiki 生成和变更检测能力描述。</p>
+</blockquote>
+<p><strong>注意事项：</strong>
+- Wiki 生成的质量取决于知识图谱的完整性。如果索引时某些文件被跳过（如配置文件、动态生成的代码），Wiki 中会缺少相关内容。
+- 版本变更检测需要 Git 历史。如果项目使用浅克隆（shallow clone），可能无法对比早期版本。
+- Wiki 输出为 Markdown 格式，可以集成到 GitHub Pages、GitBook、Notion 等文档平台。</p>
+<hr />
+<h3 id="33">3.3 性能优化与最佳实践</h3>
+<p><strong>概念讲解：</strong></p>
+<p>GitNexus 的客户端架构在带来隐私优势的同时，也面临性能约束。理解和优化索引和搜索性能对于大型代码库的使用至关重要。</p>
+<p><strong>优化策略：</strong></p>
+<ul>
+<li><strong>策略 1：排除不必要的文件</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GitNexus v1.6.0
+# 创建 .gitnexusignore 文件（类似 .gitignore）
+
+# .gitnexusignore
+node_modules/
+dist/
+build/
+.next/
+coverage/
+*.min.js
+*.bundle.js
+*.map
+vendor/
+__pycache__/
+*.pyc
+target/
+bin/
+obj/
+
+# 这可以将索引文件数减少 50-80%
+</code></pre>
+<ul>
+<li><strong>策略 2：增量更新而非全量重建</strong></li>
+</ul>
+<pre><code class="language-bash"># GitNexus 支持增量索引（仅重新索引变更的文件）
+# 默认行为：检测文件 mtime 变化，增量更新
+
+# 如果只需更新几个文件，可以指定路径
+gitnexus index --incremental src/services/UserService.ts src/api/UserAPI.ts
+
+# 查看索引状态
+gitnexus status
+# 输出:
+# Index status: up-to-date
+# Last indexed: 2026-04-13 14:30:00
+# Total entities: 8,342
+# Index size: 18MB
+</code></pre>
+<ul>
+<li><strong>策略 3：调整搜索参数</strong></li>
+</ul>
+<pre><code class="language-bash"># 搜索时限制返回结果数量
+gitnexus search &quot;认证函数&quot; --limit=5
+
+# 指定搜索范围（只搜索特定模块）
+gitnexus search &quot;认证函数&quot; --module=auth
+
+# 限制图遍历深度（减少搜索时间）
+gitnexus search &quot;认证函数&quot; --graph-depth=1
+</code></pre>
+<p><strong>最佳实践：</strong></p>
+<ol>
+<li>
+<p><strong>在 CI/CD 中预索引</strong>：对于频繁使用的项目，在 CI 管道中执行索引并缓存结果，避免每次启动时重新索引。</p>
+</li>
+<li>
+<p><strong>定期清理索引</strong>：如果索引数据变得过大或搜索结果异常，可以删除索引并重建：</p>
+</li>
+</ol>
+<pre><code class="language-bash">gitnexus index --clean   # 清除旧索引后重新索引
+</code></pre>
+<ol>
+<li>
+<p><strong>选择合适的嵌入模型</strong>：默认的 all-MiniLM-L6-v2（384 维）是通用模型。如果主要搜索代码，可以考虑微调或使用代码专用模型（需要手动配置）。</p>
+</li>
+<li>
+<p><strong>监控索引大小</strong>：IndexedDB 的存储上限因浏览器而异（通常 50MB-数GB）。对于大型项目，定期检查索引大小，避免超出限制。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个"代码库健康检查报告"工具，综合运用以下知识点：
+1. <strong>代码索引</strong>（知识点 1.1）：对目标代码库执行索引
+2. <strong>符号搜索</strong>（知识点 1.2）：搜索特定类型的代码实体
+3. <strong>影响分析</strong>（知识点 2.2）：评估核心模块的修改风险
+4. <strong>代码概览</strong>（知识点 1.3）：获取项目结构概览
+5. <strong>版本变更检测</strong>（知识点 3.2）：对比版本间的变化</p>
+<p>功能要求：
+- 对指定代码库执行索引并生成结构化报告
+- 分析项目的模块耦合度（通过依赖关系图）
+- 识别高风险修改点（影响范围大的函数/类）
+- 对比两个版本间的变更并标注破坏性变化</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>codebase-health-check/
+│
+├── bin/
+│   └── health-check.sh           # 主脚本
+│
+├── config/
+│   └── .gitnexusignore           # GitNexus 忽略规则
+│
+├── reports/
+│   └── output/                   # 生成的报告
+│
+└── scripts/
+    └── analyze.sh                # 分析脚本
+</code></pre>
+<h3 id="_11">完整实施代码</h3>
+<p><strong>第一步：创建主脚本</strong></p>
+<pre><code class="language-bash">#!/bin/bash
+# bin/health-check.sh
+# 代码库健康检查报告工具
+# 基于 GitNexus v1.6.0 CLI
+
+set -euo pipefail
+
+# 配置
+PROJECT_PATH=&quot;${1:-.}&quot;
+REPORT_DIR=&quot;reports/output&quot;
+TIMESTAMP=$(date +&quot;%Y%m%d_%H%M%S&quot;)
+REPORT_FILE=&quot;${REPORT_DIR}/health-report-${TIMESTAMP}.md&quot;
+
+# 创建输出目录
+mkdir -p &quot;${REPORT_DIR}&quot;
+
+echo &quot;=== 代码库健康检查 ===&quot;
+echo &quot;项目路径: ${PROJECT_PATH}&quot;
+echo &quot;报告输出: ${REPORT_FILE}&quot;
+echo &quot;&quot;
+
+# 第一步：执行索引（知识点 1.1）
+echo &quot;[1/5] 正在索引代码库...&quot;
+gitnexus index &quot;${PROJECT_PATH}&quot; --verbose 2&gt;&amp;1 | tee /tmp/gitnexus-index.log
+
+# 提取索引统计
+ENTITY_COUNT=$(grep -oP 'Extracted \K\d+' /tmp/gitnexus-index.log || echo &quot;N/A&quot;)
+RELATION_COUNT=$(grep -oP 'Resolved \K\d+' /tmp/gitnexus-index.log || echo &quot;N/A&quot;)
+STORAGE_SIZE=$(grep -oP 'Storage: ~\K[\d.]+' /tmp/gitnexus-index.log || echo &quot;N/A&quot;)
+
+# 第二步：获取代码概览（知识点 1.3）
+echo &quot;[2/5] 获取代码概览...&quot;
+gitnexus overview &gt; /tmp/gitnexus-overview.txt 2&gt;/dev/null || echo &quot;概览获取失败&quot;
+
+# 第三步：搜索高影响实体（知识点 1.2）
+echo &quot;[3/5] 搜索核心模块...&quot;
+gitnexus search &quot;核心服务&quot; --limit=20 &gt; /tmp/gitnexus-core.txt 2&gt;/dev/null || echo &quot;搜索失败&quot;
+
+# 第四步：分析版本变更（知识点 3.2）
+echo &quot;[4/5] 检测版本变更...&quot;
+gitnexus diff --from=HEAD~10 --to=HEAD &gt; /tmp/gitnexus-diff.txt 2&gt;/dev/null || echo &quot;变更检测失败&quot;
+
+# 第五步：生成报告（知识点 2.2 综合运用）
+echo &quot;[5/5] 生成健康检查报告...&quot;
+
+cat &gt; &quot;${REPORT_FILE}&quot; &lt;&lt; EOF
+# 代码库健康检查报告
+
+&gt; 生成时间: $(date +&quot;%Y-%m-%d %H:%M:%S&quot;)
+&gt; 项目路径: ${PROJECT_PATH}
+
+## 1. 索引统计
+
+| 指标 | 值 |
+|------|-----|
+| 代码实体数 | ${ENTITY_COUNT} |
+| 关系数 | ${RELATION_COUNT} |
+| 索引大小 | ${STORAGE_SIZE}MB |
+
+## 2. 代码概览
+
+$(cat /tmp/gitnexus-overview.txt 2&gt;/dev/null || echo &quot;概览数据不可用&quot;)
+
+## 3. 核心模块搜索
+
+$(cat /tmp/gitnexus-core.txt 2&gt;/dev/null || echo &quot;搜索数据不可用&quot;)
+
+## 4. 近期变更
+
+$(cat /tmp/gitnexus-diff.txt 2&gt;/dev/null || echo &quot;变更数据不可用&quot;)
+
+## 5. 建议
+
+基于以上分析，建议关注以下方面:
+- 检查核心模块的依赖耦合度
+- 关注影响范围大的函数变更
+- 定期执行健康检查跟踪代码库演进
+EOF
+
+echo &quot;&quot;
+echo &quot;=== 健康检查完成 ===&quot;
+echo &quot;报告已保存到: ${REPORT_FILE}&quot;
+</code></pre>
+<p><strong>第二步：创建分析脚本</strong></p>
+<pre><code class="language-bash">#!/bin/bash
+# scripts/analyze.sh
+# 深度分析指定符号的影响范围
+# 基于 GitNexus v1.6.0
+
+set -euo pipefail
+
+SYMBOL=&quot;${1:?用法: analyze.sh &lt;symbol_name&gt;}&quot;
+PROJECT_PATH=&quot;${2:-.}&quot;
+
+echo &quot;=== 影响分析: ${SYMBOL} ===&quot;
+echo &quot;项目: ${PROJECT_PATH}&quot;
+echo &quot;&quot;
+
+# 搜索符号（知识点 1.2）
+echo &quot;--- 符号搜索 ---&quot;
+gitnexus search &quot;${SYMBOL}&quot; --limit=10
+
+echo &quot;&quot;
+
+# 影响分析（知识点 2.2）
+echo &quot;--- 影响分析 ---&quot;
+# 在实际使用中，这通过 AI 工具调用 find_impact_analysis MCP 工具完成
+# CLI 模式下可以通过 search + 人工分析图遍历结果实现类似效果
+echo &quot;在 Claude Code 或 Cursor 中，AI 会自动调用 find_impact_analysis 工具。&quot;
+echo &quot;提示: 在 AI 工具中输入 \&quot;分析 ${SYMBOL} 的影响范围\&quot;&quot;
+
+echo &quot;&quot;
+
+# 360 度上下文视图（知识点 2.3）
+echo &quot;--- 360度上下文视图 ---&quot;
+echo &quot;在 AI 工具中输入 \&quot;给我看 ${SYMBOL} 的 360 度上下文视图\&quot;&quot;
+</code></pre>
+<p><strong>第三步：创建忽略规则</strong></p>
+<pre><code class="language-bash"># config/.gitnexusignore
+# 复制到目标项目的 .gitnexusignore 文件中
+
+# 依赖和构建输出
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+.nyc_output/
+
+# 编译产物
+*.min.js
+*.bundle.js
+*.chunk.js
+*.map
+*.d.ts
+
+# 测试快照
+__snapshots__/
+*.snap
+
+# 第三方代码
+vendor/
+third_party/
+external/
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
+.temp/
+
+# 非代码文件
+*.md
+*.txt
+*.csv
+*.json
+*.yaml
+*.yml
+*.lock
+package-lock.json
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点运用说明：</strong></p>
+<ol>
+<li>
+<p><strong>代码索引</strong>（1.1 节）：<code>health-check.sh</code> 第一步执行 <code>gitnexus index</code> 命令，对目标代码库建立知识图谱。这是所有后续分析的基础——没有索引，搜索和影响分析都无法工作。</p>
+</li>
+<li>
+<p><strong>符号搜索</strong>（1.2 节）：<code>health-check.sh</code> 第三步执行 <code>gitnexus search</code> 搜索核心模块，<code>analyze.sh</code> 中也使用搜索功能定位目标符号。</p>
+</li>
+<li>
+<p><strong>影响分析</strong>（2.2 节）：<code>analyze.sh</code> 的核心功能——分析指定符号的影响范围。在实际使用中，这通过 AI 工具调用 <code>find_impact_analysis</code> MCP 工具完成。</p>
+</li>
+<li>
+<p><strong>代码概览</strong>（1.3 节）：<code>health-check.sh</code> 第二步执行 <code>gitnexus overview</code> 获取项目结构概览，为健康检查报告提供模块和依赖信息。</p>
+</li>
+<li>
+<p><strong>版本变更检测</strong>（3.2 节）：<code>health-check.sh</code> 第四步执行 <code>gitnexus diff</code> 检测近期变更，帮助识别破坏性变化和高风险修改。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加自动化 CI 集成</strong>：将健康检查脚本集成到 GitHub Actions 或 GitLab CI 中，每次 PR 时自动生成代码健康报告。</p>
+</li>
+<li>
+<p><strong>构建可视化仪表板</strong>：将健康检查结果以 Web 仪表板形式展示，包含模块依赖图、影响分析热力图和变更趋势图表。</p>
+</li>
+<li>
+<p><strong>添加自定义分析规则</strong>：基于 GitNexus 的搜索和图谱 API，编写自定义的分析规则（如"检测循环依赖"、"识别未使用的导出"等）。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gitnexus: command not found</code></td>
+<td>GitNexus CLI 未安装或不在 PATH 中</td>
+<td>执行 <code>npm install -g gitnexus</code> 安装。检查 <code>npm bin -g</code> 是否在 PATH 中</td>
+</tr>
+<tr>
+<td><code>No source files found in path</code></td>
+<td>项目目录中没有支持的文件类型</td>
+<td>检查项目路径是否正确。确认项目包含 GitNexus 支持的 14 种语言文件</td>
+</tr>
+<tr>
+<td><code>Indexing failed: Tree-sitter parse error</code></td>
+<td>某些文件包含无法解析的语法</td>
+<td>更新 GitNexus 到最新版本。检查是否有不兼容的语法特性。添加问题文件到 <code>.gitnexusignore</code></td>
+</tr>
+<tr>
+<td><code>MCP server connection timeout</code></td>
+<td>AI 工具无法连接 GitNexus MCP 服务器</td>
+<td>确认 <code>gitnexus serve</code> 正在运行。检查配置中的 <code>cwd</code> 路径是否正确</td>
+</tr>
+<tr>
+<td><code>Search returned 0 results</code></td>
+<td>项目未索引或索引为空</td>
+<td>先执行 <code>gitnexus index</code> 建立索引。使用 <code>gitnexus status</code> 检查索引状态</td>
+</tr>
+<tr>
+<td><code>IndexedDB quota exceeded</code></td>
+<td>索引数据超出浏览器存储限制</td>
+<td>清理旧索引 <code>gitnexus index --clean</code>。减少索引文件数（配置 <code>.gitnexusignore</code>）</td>
+</tr>
+<tr>
+<td><code>Embedding generation slow</code></td>
+<td>向量生成耗时过长</td>
+<td>检查系统资源（CPU/内存）。使用 <code>.gitnexusignore</code> 减少索引文件数。考虑增量更新</td>
+</tr>
+<tr>
+<td><code>Impact analysis incomplete</code></td>
+<td>影响分析结果不完整</td>
+<td>某些文件可能未被索引。检查是否有动态导入或反射调用。重新索引确保完整性</td>
+</tr>
+<tr>
+<td><code>gitnexus setup --tool=claude-code failed</code></td>
+<td>Claude Code 未安装或配置路径不正确</td>
+<td>确认 Claude Code 已安装。手动创建 MCP 配置文件</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>基于 GitNexus v1.6.0 官方 README 和常见使用场景</p>
+</blockquote>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>启用详细日志</strong>：使用 <code>gitnexus index --verbose</code> 或 <code>gitnexus serve --verbose</code> 启用详细日志。日志中包含每个索引阶段的处理详情、文件解析错误和搜索过程。对于索引失败，重点关注 <code>[Parsing]</code> 和 <code>[Resolution]</code> 阶段的错误信息。</p>
+</li>
+<li>
+<p><strong>检查索引状态</strong>：使用 <code>gitnexus status</code> 查看当前索引状态，包括实体数量、关系数量、存储大小和最后索引时间。如果索引数据看起来异常（如实体数为 0），尝试清除索引并重建。</p>
+</li>
+<li>
+<p><strong>验证 MCP 连接</strong>：在 AI 工具中手动调用 <code>get_code_overview</code> 工具。如果返回有效数据，说明 MCP 连接正常。如果返回错误，检查 <code>gitnexus serve</code> 进程是否在运行，配置文件路径是否正确。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>GitHub README 快速入门</strong> — 安装、CLI 命令、MCP 配置</li>
+<li>地址：https://github.com/abhigyanpatwari/GitNexus#readme</li>
+<li>
+<p>重点：安装步骤、<code>gitnexus index</code> 命令、<code>gitnexus setup</code> 配置</p>
+</li>
+<li>
+<p><strong>MCP 工具列表</strong> — 16 个工具的功能说明</p>
+</li>
+<li>地址：https://github.com/abhigyanpatwari/GitNexus（README 中的 MCP Tools 部分）</li>
+<li>
+<p>重点：每个工具的参数和返回格式、适用场景</p>
+</li>
+<li>
+<p><strong>Web UI 使用指南</strong> — 在线可视化界面的使用</p>
+</li>
+<li>地址：https://gitnexus.vercel.app/</li>
+<li>
+<p>重点：上传代码库、可视化知识图谱、在线搜索</p>
+</li>
+<li>
+<p><strong>Releases 更新日志</strong> — 版本迭代和功能变更</p>
+</li>
+<li>地址：https://github.com/abhigyanpatwari/GitNexus/releases</li>
+<li>重点：新功能、Bug 修复、破坏性变更</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong>SitePoint - Client-Side RAG: Building Knowledge Graphs in the Browser with GitNexus</strong></li>
+<li>https://www.sitepoint.com/</li>
+<li>
+<p>详细的架构分析文章，包含 AST 分块、嵌入生成、向量搜索、图遍历的代码示例和原理讲解</p>
+</li>
+<li>
+<p><strong>Medium - GitNexus: The Tool That Gives AI Agents a Nervous System for Code</strong></p>
+</li>
+<li>https://medium.com/</li>
+<li>
+<p>技术动机和使用场景深度分析（2026-03-22 发布）</p>
+</li>
+<li>
+<p><strong>MCP 协议官方文档</strong></p>
+</li>
+<li>https://modelcontextprotocol.io/</li>
+<li>理解 MCP 协议的设计理念和工具规范有助于深度使用 GitNexus 的集成能力</li>
+</ul>
+<h3 id="_20">进阶方向建议</h3>
+<p>完成本教程后，建议按以下方向深入学习：</p>
+<ol>
+<li>
+<p><strong>深入 Tree-sitter</strong>：学习 Tree-sitter 的语法文件（grammar）编写，为 GitNexus 添加新的语言支持或改进现有语言的解析精度。</p>
+</li>
+<li>
+<p><strong>嵌入模型优化</strong>：研究代码专用嵌入模型（如 CodeBERT、UniXcoder），评估替换 all-MiniLM-L6-v2 的可行性和收益。</p>
+</li>
+<li>
+<p><strong>自定义 MCP 工具</strong>：基于 GitNexus 的图谱 API 开发自定义的代码分析工具，如代码复杂度分析、依赖健康度评分等。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_21">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于版本：</strong> GitNexus v1.6.0（2026-04-12 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/abhigyanpatwari/GitNexus">GitHub 仓库 abhigyanpatwari/GitNexus</a> — 源码、README、Releases</li>
+<li><a href="https://api.github.com/repos/abhigyanpatwari/GitNexus">GitHub API - abhigyanpatwari/GitNexus</a>（Stars: 26,818, Forks: 3,030）</li>
+<li><a href="https://gitnexus.vercel.app/">GitNexus Web UI</a> — 在线可视化界面</li>
+<li><a href="https://www.sitepoint.com/">SitePoint - Client-Side RAG</a> — 详细架构分析</li>
+<li><a href="https://medium.com/">Medium - AI Agents Nervous System</a> — 技术动机分析</li>
+<li><a href="https://modelcontextprotocol.io/">MCP 协议官方文档</a> — MCP 协议规范</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

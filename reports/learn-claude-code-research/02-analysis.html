@@ -1,0 +1,1498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnClaudeCode - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 PyShine 深度分析文章和 GitHub s00-architecture-overview.md</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#agent-loop-s01" class="toc-h4">Agent Loop（代理循环）— s01</a></li>
+<li><a href="#tool-dispatch-map-s02" class="toc-h4">Tool Dispatch Map（工具调度映射）— s02</a></li>
+<li><a href="#permission-pipeline-s07" class="toc-h4">Permission Pipeline（权限管道）— s07</a></li>
+<li><a href="#two-layer-skill-model-s05" class="toc-h4">Two-Layer Skill Model（两层技能模型）— s05</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#agent-loop" class="toc-h3">Agent Loop（代理循环）</a></li>
+<li><a href="#tool-dispatch-map" class="toc-h3">Tool Dispatch Map（工具调度映射）</a></li>
+<li><a href="#subagent" class="toc-h3">Subagent（子代理）</a></li>
+<li><a href="#permission-pipeline" class="toc-h3">Permission Pipeline（权限管道）</a></li>
+<li><a href="#multi-agent-team-communication" class="toc-h3">Multi-Agent Team Communication（多代理团队通信）</a></li>
+<li><a href="#context-compaction" class="toc-h3">Context Compaction（上下文压缩）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>LearnClaudeCode - 深度分析报告</h1>
+                        <div class="article-meta">基于 PyShine 深度分析文章和 GitHub s00-architecture-overview.md</div>
+                    </header>
+                    <h1 id="learnclaudecode-">LearnClaudeCode - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2024-2026 年间，AI Agent 从概念验证走向生产部署。Claude Code、Cursor Agent、Codex CLI 等 AI 编码代理的涌现，让 Agent 不再是学术论文中的概念，而是开发者日常使用的工具。然而，一个深刻的鸿沟随之出现：</p>
+<ol>
+<li>
+<p><strong>"会用框架但不懂原理"的普遍困境</strong>：LangChain（90K+ Stars）、CrewAI（30K+ Stars）、AutoGen（50K+ Stars）等框架让开发者能在数小时内搭建 Agent，但大多数开发者对 Agent Loop（代理循环）、工具调度（Tool Dispatch）、上下文管理（Context Management）、权限控制（Permission Control）等核心机制缺乏深入理解。当框架的抽象层掩盖了底层逻辑，开发者面对调试、性能优化和定制化需求时往往束手无策。</p>
+</li>
+<li>
+<p><strong>AI 编码代理的技术黑箱问题</strong>：Claude Code、Cursor 等 AI 编码代理虽然被广泛使用，但其内部工作机制对大多数开发者来说是黑箱。开发者知道"输入需求 → 得到代码"，但不知道中间发生了什么——Agent Loop 如何运转、工具调用如何被路由、上下文如何被压缩、权限如何被检查。这种理解缺失限制了开发者对工具的有效使用和问题排查能力。</p>
+</li>
+<li>
+<p><strong>教学资源与生产实践之间的断层</strong>：市面上的 Agent 教程分为两类——要么是框架使用教程（"如何用 LangChain 搭建 Agent"），要么是学术论文（"Agent 系统的理论框架"）。前者不触及核心原理，后者脱离工程实践。缺乏一种"从零手写、逐层构建"的教学路径，帮助开发者真正理解生产级 Agent 系统的每个组件。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>LearnClaudeCode 由 shareAI-lab 创建，核心动机是：</p>
+<ol>
+<li>
+<p><strong>让开发者"从零到一"理解 Agent 的核心机制</strong>：项目的核心理念是"Bash is all you need"——不依赖任何 Agent 框架，用纯 Python + LLM API 手写一个类 Claude Code 的 Agent 系统。通过最小化抽象层，让学习者直接触碰决定 Agent 能力的底层机制。[置信度：高]</p>
+</li>
+<li>
+<p><strong>以 Claude Code 为蓝本的教学解构</strong>：Claude Code 是当前最成功的 AI 编码代理之一。LearnClaudeCode 不是教用户如何使用 Claude Code，而是解构 Claude Code 的架构——Agent Loop、工具调度、权限管道、Hook 系统、Memory 系统、任务系统、多代理团队、Worktree 隔离、MCP 插件——将生产级系统拆解为 19 个可独立理解和实现的核心机制。[置信度：高]</p>
+</li>
+<li>
+<p><strong>渐进式构建而非一次性展示</strong>：每个章节只新增一个核心机制，严格建立在前一章节的基础上。这种"每一章加一层"的设计确保学习者始终理解新机制在整体架构中的位置和作用。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2025-06-29</strong>：GitHub 仓库创建</li>
+<li><strong>2025 年 7 月</strong>：初期版本发布，包含核心章节（s01-s06）</li>
+<li><strong>2025 年下半年</strong>：逐步补齐 19 章内容和配套文档</li>
+<li><strong>2026 年初</strong>：配套仓库 mini-claude-code 发布（5 个版本的渐进式完整实现）</li>
+<li><strong>2026 年</strong>：在线学习站点 learn.shareai.run 上线，提供 Timeline/Layers/Compare 三种视图</li>
+<li><strong>2026 年</strong>：多语言文档支持（英文、日文翻译）</li>
+<li><strong>2026 年</strong>：HelloGitHub 第 119 期收录，评分 10.0/10</li>
+<li><strong>2026-03-17</strong>：GitHub 最后推送日期</li>
+<li><strong>2026-04-13</strong>：33,787 Stars（GitHub API），约 51.3K Stars（HelloGitHub 数据）</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>LearnClaudeCode 的设计围绕五个核心理念：</p>
+<ol>
+<li>
+<p><strong>"Bash is all you need"零抽象原则</strong>：不使用任何 Agent 框架，用纯 Python + LLM API 从零构建。核心理念：通过消除框架的抽象层，学习者直接面对 Agent 系统的真实复杂度——如何解析工具调用响应、如何管理上下文窗口、如何实现权限控制管道。这种"零抽象"不是目的，而是手段：让学习者理解框架替你做了什么。[置信度：高]</p>
+</li>
+<li>
+<p><strong>渐进式分层构建（Progressive Layering）</strong>：19 个章节分为 4 个阶段，每章新增恰好一个核心机制。教学路径严格遵循"先做出能工作的 agent，再补安全、扩展、记忆和恢复，再把临时清单升级成持久化任务系统，最后进入多 agent、隔离执行和外部工具平台"的顺序。这种顺序符合初学者的心智模型——先建立稳定的主线，再逐步扩展。[置信度：高]</p>
+</li>
+<li>
+<p><strong>设计主脉络高保真，而非实现细节 1:1</strong>：项目明确声明"目标不是逐行复制任何生产仓库"。追求的是：主要模块有哪些、模块之间怎么协作、每个模块的核心职责是什么、关键状态存在哪里、一条请求在系统里是怎么流动的。刻意省略了打包、跨平台兼容、历史兼容分支或产品化胶水代码。[置信度：高]</p>
+</li>
+<li>
+<p><strong>状态驱动的系统理解</strong>：理解 Agent 系统的关键不是背功能名，而是知道"状态放在哪里"。项目在架构概览文档中列出了从 <code>messages</code>（对话状态）到 <code>mcp_clients</code>（外部能力）的全部关键数据结构，帮助学习者建立对系统状态的全局认知。[置信度：高]</p>
+</li>
+<li>
+<p><strong>概念区分的显式教学</strong>：项目在架构概览中专门列出容易混淆的概念对——<code>Todo</code> vs <code>Task</code>、<code>Memory</code> vs <code>Context</code>、<code>Subagent</code> vs <code>Teammate</code>、<code>System Prompt</code> vs <code>System Reminder</code>——帮助学习者建立精确的概念边界。[置信度：高]</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>教学清晰度 vs 实现完整性</strong>：为了教学清晰度，刻意省略了产品级启动流程、账号策略、遥测、灰度等逻辑。获得可理解的渐进式教学路径，代价是实现不覆盖生产环境的所有细节。[置信度：高]
+- <strong>Python 教学实现 vs TypeScript 生产实现</strong>：教学代码使用 Python（降低入门门槛），Claude Code 实际使用 TypeScript。两者的核心逻辑一致，但语言差异可能在学习者迁移到真实代码时造成少量认知成本。[置信度：高]
+- <strong>单一代码路径 vs 生产级防御性编程</strong>：教学实现通常展示"最简正确路径"，省略了边界条件处理和防御性编程。获得代码可读性，代价是代码健壮性不如生产级系统。[置信度：中]</p>
+<h3 id="_7">核心算法/机制</h3>
+<h4 id="agent-loop-s01">Agent Loop（代理循环）— s01</h4>
+<p>Agent Loop 是所有 AI Agent 系统的心脏。它将 LLM 从"问答系统"转变为"能行动的参与者"。</p>
+<pre><code>Agent Loop 的核心循环：
+
+1. 接收用户输入，加入 messages[]
+2. 将 messages[] 发送给 LLM
+3. 检查 LLM 返回的 stop_reason
+   ├─ 如果 stop_reason == &quot;tool_use&quot; → 执行工具调用
+   │   └─ 将工具结果（tool_result）写回 messages[]
+   │   └─ 回到步骤 2（继续循环）
+   └─ 如果 stop_reason != &quot;tool_use&quot; → 返回结果（循环结束）
+</code></pre>
+<p>关键洞察：整个 Agent Loop 在 Python 中可以压缩到 30 行以内。19 章中所有后续机制都是在这个核心循环上叠加的，不改变其基本形状。</p>
+<blockquote>
+<p>基于 PyShine 深度分析文章和 GitHub s00-architecture-overview.md</p>
+</blockquote>
+<h4 id="tool-dispatch-map-s02">Tool Dispatch Map（工具调度映射）— s02</h4>
+<p>工具调度系统将单一的 Bash Agent 转变为具有专业化工具的编码代理。</p>
+<pre><code>工具调度架构：
+
+LLM 返回 tool_use 响应
+  │
+  ├─ 解析 tool_name 和 input 参数
+  │
+  ├─ 查找 TOOL_HANDLERS 字典（dispatch map）
+  │   ├─ &quot;bash&quot;       → run_bash(command)
+  │   ├─ &quot;read_file&quot;  → run_read(path, limit)
+  │   ├─ &quot;write_file&quot; → run_write(path, content)
+  │   └─ &quot;edit_file&quot;  → run_edit(path, old_text, new_text)
+  │
+  ├─ 执行路径沙箱检查（safe_path 防止路径逃逸）
+  │
+  ├─ 执行工具函数
+  │
+  └─ 截断输出到合理大小（防止上下文爆炸）
+</code></pre>
+<p>关键设计：dispatch map 是一个简单的 Python 字典。添加新工具只需添加一个条目，不需要 if/elif 链、类层次结构或复杂的路由逻辑。Agent Loop 本身不需要知道任何具体工具的细节。</p>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h4 id="permission-pipeline-s07">Permission Pipeline（权限管道）— s07</h4>
+<p>权限系统是一个四阶段决策管道，不是简单的"是/否"门。</p>
+<pre><code>四阶段权限管道：
+
+工具调用请求
+  │
+  ├─ Stage 1: Deny Rules（拒绝规则）
+  │   → 硬编码的不可绕过的安全边界
+  │   → 例如：阻止 rm -rf /、sudo、读取 /etc/shadow
+  │   → 拒绝规则永远优先，不可被模式或允许规则覆盖
+  │
+  ├─ Stage 2: Mode-Based Decisions（模式决策）
+  │   → default 模式：每个未匹配的工具调用都询问用户
+  │   → plan 模式：阻止所有写操作，允许读操作
+  │   → auto 模式：自动允许读操作，写操作询问用户
+  │
+  ├─ Stage 3: Allow Rules（允许规则）
+  │   → 用户之前选择&quot;总是允许&quot;的操作模式
+  │   → 运行时动态添加的已知安全操作列表
+  │
+  └─ Stage 4: Interactive User Approval（交互式用户审批）
+      → 提供 Yes / No / Always 三个选项
+      → 连续 3 次拒绝后建议切换到 plan 模式（断路器机制）
+</code></pre>
+<p>关键洞察：安全不是一个布尔值，而是一个考虑硬边界（拒绝规则）、上下文策略（模式决策）、学习偏好（允许规则）和人类判断（交互式审批）的多层决策过程。</p>
+<blockquote>
+<p>基于 PyShine 深度分析文章和 GitHub s00-architecture-overview.md</p>
+</blockquote>
+<h4 id="two-layer-skill-model-s05">Two-Layer Skill Model（两层技能模型）— s05</h4>
+<p>技能系统解决了"如何在提供领域专业知识的同时不膨胀上下文窗口"的根本问题。</p>
+<pre><code>两层技能模型：
+
+Layer 1: 廉价广告（始终存在于系统提示中）
+  ├─ 技能名称 + 一行描述
+  ├─ 每个技能约 100 tokens
+  └─ 让模型知道有哪些可用能力
+
+Layer 2: 按需加载（通过工具调用触发）
+  ├─ 模型调用 load_skill(&quot;git&quot;)
+  ├─ 系统返回完整的 SKILL.md 内容
+  ├─ 每个技能约 2,000 tokens
+  └─ 只在需要时加载，不浪费上下文空间
+
+技能文件格式：
+skills/
+  git/SKILL.md     — YAML frontmatter + 完整指令
+  test/SKILL.md
+  review/SKILL.md
+</code></pre>
+<p>关键洞察：10 个技能全部加载需要 20,000 tokens，但通过两层模型，系统提示中只需约 1,000 tokens（广告），运行时只加载当前需要的 1-2 个技能（2,000-4,000 tokens）。这是懒加载（Lazy Loading）原则在 Agent 系统中的应用。</p>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>一条请求在系统中的完整流动：
+
+1. 用户发来任务
+   │
+2. 系统组装 prompt 和上下文
+   ├─ System Prompt（s10 组装管道）
+   ├─ Memory 跨会话信息（s09）
+   ├─ Skill 广告（s05 Layer 1）
+   └─ messages[] 当前对话历史
+   │
+3. 调用 LLM API
+   │
+4. 检查 LLM 返回
+   ├─ 普通文本 → 返回给用户
+   └─ tool_use 请求 → 进入工具管道
+       │
+5. 工具管道
+   ├─ Permission 检查（s07 四阶段管道）
+   ├─ Hook 触发（s08 前置/后置钩子）
+   ├─ 工具执行（s02 dispatch map 路由）
+   └─ tool_result 写回 messages[]
+   │
+6. 主循环继续（回到步骤 2）
+   │
+7. 可选的分支路径：
+   ├─ 任务太大 → 写入 Todo/Tasks（s03/s12）
+   ├─ 需要探索 → 派生 Subagent（s04）
+   ├─ 上下文过长 → 触发 Compact（s06）
+   ├─ 慢操作 → 走 Background Task（s13）
+   ├─ 需要协作 → Team 多代理（s15-s16）
+   ├─ 需要隔离 → Worktree（s18）
+   └─ 需要外部工具 → MCP（s19）
+   │
+8. 直到模型结束这一轮
+</code></pre>
+<blockquote>
+<p>基于 GitHub s00-architecture-overview.md</p>
+</blockquote>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   用户交互层（User Interaction）               │
+│   命令行输入 / 在线学习平台（learn.shareai.run）               │
+├─────────────────────────────────────────────────────────────┤
+│                   核心循环层（Core Loop — s01）               │
+│   Agent Loop: 思考 → 行动 → 观察 → 再思考                    │
+│   messages[] + stop_reason 检测 + tool_result 写回           │
+├─────────────────────────────────────────────────────────────┤
+│                   工具与安全层（Tool &amp; Safety — s02, s07, s08）│
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ Tool Dispatch │ │ Permission   │ │ Hook System  │      │
+│   │ Map (s02)     │ │ Pipeline(s07)│ │ (s08)        │      │
+│   │ bash/read/    │ │ Deny/Mode/   │ │ 前置/后置钩子 │      │
+│   │ write/edit    │ │ Allow/Ask    │ │ 扩展控制点    │      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+├─────────────────────────────────────────────────────────────┤
+│                   上下文管理层（Context — s03, s05, s06, s09） │
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ Todo/Planning│ │ Skill Loader │ │ Context      │      │
+│   │ (s03)        │ │ Two-Layer(s05)│ │ Compact (s06)│      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+│   ┌──────────────┐ ┌──────────────┐                        │
+│   │ Memory (s09) │ │ Prompt Pipe  │                        │
+│   │ 跨会话持久化  │ │ (s10)        │                        │
+│   └──────────────┘ └──────────────┘                        │
+├─────────────────────────────────────────────────────────────┤
+│                   任务运行时层（Task Runtime — s12, s13, s14） │
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ Task Graph   │ │ Background   │ │ Cron         │      │
+│   │ (s12)        │ │ Tasks (s13)  │ │ Scheduler(s14)│      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+├─────────────────────────────────────────────────────────────┤
+│                   多代理平台层（Platform — s15-s19）          │
+│   ┌──────────────┐ ┌──────────────┐ ┌──────────────┐      │
+│   │ Agent Teams  │ │ Team Proto   │ │ Autonomous   │      │
+│   │ (s15)        │ │ (s16)        │ │ Agents (s17) │      │
+│   └──────────────┘ └──────────────┘ └──────────────┘      │
+│   ┌──────────────┐ ┌──────────────┐                        │
+│   │ Worktree     │ │ MCP &amp; Plugin │                        │
+│   │ Isolation(s18)│ │ (s19)        │                        │
+│   └──────────────┘ └──────────────┘                        │
+├─────────────────────────────────────────────────────────────┤
+│                   基础设施层（Infrastructure）                │
+│   Python 3.x / LLM API（Anthropic/OpenAI）/ Bash / Git     │
+│   JSONL 文件通信 / 文件系统持久化 / worktree 隔离             │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p>基于 GitHub s00-architecture-overview.md 和 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>Agent Loop（s01）</strong> — 系统心脏。只做一件事：不停地推动"思考 → 行动 → 观察 → 再思考"的循环。核心数据结构是 <code>messages[]</code>（对话历史）和 <code>LoopState</code>（循环状态）。</p>
+</li>
+<li>
+<p><strong>Tool Dispatch Map（s02）</strong> — 工具路由层。将 LLM 的工具调用意图（tool_name + input）路由到对应的 Python 处理函数。包含路径沙箱（safe_path）和输出大小管理。核心数据结构是 <code>ToolSpec</code>（工具规格）和 <code>ToolDispatchMap</code>（调度映射）。</p>
+</li>
+<li>
+<p><strong>Permission Pipeline（s07）</strong> — 四阶段权限决策管道：拒绝规则（Deny）→ 模式决策（Mode）→ 允许规则（Allow）→ 交互式审批（Ask）。核心数据结构是 <code>PermissionRule</code>（权限规则）和 <code>PermissionDecision</code>（权限决策）。</p>
+</li>
+<li>
+<p><strong>Hook System（s08）</strong> — 不修改主循环即可扩展行为的机制。外部脚本通过标准化的退出码协议（Exit Code Protocol）观察和影响工具调用。核心数据结构是 <code>HookEvent</code>（钩子事件）和 <code>HookResult</code>（钩子结果）。</p>
+</li>
+<li>
+<p><strong>Skill Loader（s05）</strong> — 两层技能加载模型：Layer 1 在系统提示中廉价广告技能名称和描述；Layer 2 在模型需要时通过工具调用加载完整的 SKILL.md 内容。核心数据结构是 <code>SkillRegistry</code>（技能注册表）和 <code>SkillContent</code>（技能内容）。</p>
+</li>
+<li>
+<p><strong>Memory System（s09）</strong> — 让真正有价值的信息跨会话持久化。与 Context（当前对话的临时信息）不同，Memory 保存的是未来其他会话也可能有价值的知识。核心数据结构是 <code>MemoryEntry</code>（记忆条目）和 <code>MemoryStore</code>（记忆存储）。</p>
+</li>
+<li>
+<p><strong>Task System（s12-s14）</strong> — 将"聊天中的临时清单"升级为"磁盘上的持久化任务图"。包含任务图（s12）、后台执行槽（s13）和定时触发器（s14）。核心数据结构是 <code>TaskRecord</code>（任务记录）、<code>RuntimeTaskState</code>（运行时任务状态）和 <code>ScheduleRecord</code>（调度记录）。</p>
+</li>
+<li>
+<p><strong>Multi-Agent Platform（s15-s19）</strong> — 从单 Agent 升级为多 Agent 平台。包含持久化队友（s15）、结构化团队协议（s16）、自主认领任务（s17）、Worktree 隔离（s18）和 MCP 外部能力路由（s19）。核心数据结构包括 <code>TeamMember</code>（团队成员）、<code>MessageEnvelope</code>（消息信封）、<code>WorktreeRecord</code>（工作树记录）和 <code>MCPServerConfig</code>（MCP 服务器配置）。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>LearnClaudeCode 的扩展方式主要体现在以下方面：</p>
+<ol>
+<li>
+<p><strong>新增工具</strong>：只需向 <code>TOOL_HANDLERS</code> 字典添加一个条目。不需要修改 Agent Loop 或工具调度逻辑。</p>
+</li>
+<li>
+<p><strong>新增技能</strong>：创建一个包含 <code>SKILL.md</code> 文件的目录，放入 <code>skills/</code> 目录。YAML frontmatter 提供元数据（名称、描述），正文提供完整指令。SkillLoader 自动发现并注册。</p>
+</li>
+<li>
+<p><strong>Hook 扩展</strong>：通过外部脚本（Shell/Python）实现，无需修改主循环。标准化的退出码协议定义了脚本对工具调用的干预方式。</p>
+</li>
+<li>
+<p><strong>MCP 外部能力</strong>：通过 MCP（Model Context Protocol）协议接入外部工具服务器，将外部能力并入系统主控制面。</p>
+</li>
+<li>
+<p><strong>多代理团队扩展</strong>：通过 JSONL 收件箱（Inbox）文件实现 Agent 间通信。添加新队友只需在团队配置中注册，创建对应的收件箱文件。</p>
+</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="agent-loop">Agent Loop（代理循环）</h3>
+<ul>
+<li><strong>定义：</strong> AI Agent 的核心执行模式——将 LLM 从被动的问答系统转变为能主动执行操作的循环。循环包含：接收输入 → 调用 LLM → 检查是否有工具调用 → 执行工具 → 将结果写回对话 → 继续下一轮。</li>
+<li><strong>作用：</strong> 是所有 Agent 系统的基础。没有 Agent Loop，LLM 只能回答问题；有了 Agent Loop，LLM 能执行命令、读写文件、修改系统。19 章中所有后续机制都叠加在这个循环之上。</li>
+<li><strong>使用场景：</strong> 任何需要 AI 自主执行操作的场景——编码、测试、文件管理、系统运维等。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 PyShine 深度分析文章和 GitHub 仓库
+# 最简 Agent Loop 实现（s01 核心逻辑）
+
+def agent_loop(query):
+    messages = [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: query}]
+    while True:
+        # 调用 LLM，传入对话历史和工具定义
+        response = client.messages.create(
+            model=MODEL,
+            system=SYSTEM,
+            messages=messages,
+            tools=TOOLS,
+            max_tokens=8000,
+        )
+        # 将 LLM 响应加入对话历史
+        messages.append({&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: response.content})
+
+        # 检查是否需要继续循环
+        if response.stop_reason != &quot;tool_use&quot;:
+            return  # 模型认为任务完成，退出循环
+
+        # 执行所有工具调用
+        results = []
+        for block in response.content:
+            if block.type == &quot;tool_use&quot;:
+                # 执行 Bash 命令（s01 只有一个工具）
+                output = run_bash(block.input[&quot;command&quot;])
+                results.append({
+                    &quot;type&quot;: &quot;tool_result&quot;,
+                    &quot;tool_use_id&quot;: block.id,
+                    &quot;content&quot;: output,
+                })
+        # 将工具结果写回对话（Write-Back 模式）
+        messages.append({&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: results})
+</code></pre>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="tool-dispatch-map">Tool Dispatch Map（工具调度映射）</h3>
+<ul>
+<li><strong>定义：</strong> 将 LLM 的工具调用意图路由到对应处理函数的映射机制。核心是一个 Python 字典，键是工具名，值是处理函数。</li>
+<li><strong>作用：</strong> 让 Agent Loop 不需要知道任何具体工具的实现细节。添加新工具只需向字典添加一个条目，Agent Loop 本身永远不需要修改。</li>
+<li><strong>使用场景：</strong> 当 Agent 需要执行除 Bash 以外的专业化操作时——读写文件、编辑代码、路径沙箱检查等。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 PyShine 深度分析文章
+# 工具调度映射（s02 核心逻辑）
+
+import subprocess
+from pathlib import Path
+
+WORKDIR = Path.cwd()
+
+def safe_path(p: str) -&gt; Path:
+    &quot;&quot;&quot;路径沙箱：防止路径逃逸出工作目录&quot;&quot;&quot;
+    path = (WORKDIR / p).resolve()
+    if not path.is_relative_to(WORKDIR):
+        raise ValueError(f&quot;Path escapes workspace: {p}&quot;)
+    return path
+
+def run_bash(command: str) -&gt; str:
+    &quot;&quot;&quot;执行 Bash 命令，截断过长输出&quot;&quot;&quot;
+    result = subprocess.run(
+        command, shell=True, capture_output=True, text=True, timeout=30
+    )
+    output = result.stdout + result.stderr
+    return output[:30000]  # 防止输出过长导致上下文爆炸
+
+def run_read(path: str, limit: int = None) -&gt; str:
+    &quot;&quot;&quot;读取文件内容&quot;&quot;&quot;
+    p = safe_path(path)
+    lines = p.read_text().splitlines()
+    if limit:
+        lines = lines[:limit]
+    return &quot;\n&quot;.join(lines)
+
+def run_write(path: str, content: str) -&gt; str:
+    &quot;&quot;&quot;写入文件（自动创建目录）&quot;&quot;&quot;
+    p = safe_path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(content)
+    return f&quot;Wrote {len(content)} chars to {path}&quot;
+
+def run_edit(path: str, old_text: str, new_text: str) -&gt; str:
+    &quot;&quot;&quot;精确编辑文件（字符串替换而非全文重写）&quot;&quot;&quot;
+    p = safe_path(path)
+    text = p.read_text()
+    text = text.replace(old_text, new_text)
+    p.write_text(text)
+    return f&quot;Replaced in {path}&quot;
+
+# 调度映射：工具名 → 处理函数
+TOOL_HANDLERS = {
+    &quot;bash&quot;:       lambda **kw: run_bash(kw[&quot;command&quot;]),
+    &quot;read_file&quot;:  lambda **kw: run_read(kw[&quot;path&quot;], kw.get(&quot;limit&quot;)),
+    &quot;write_file&quot;: lambda **kw: run_write(kw[&quot;path&quot;], kw[&quot;content&quot;]),
+    &quot;edit_file&quot;:  lambda **kw: run_edit(kw[&quot;path&quot;], kw[&quot;old_text&quot;],
+                                        kw[&quot;new_text&quot;]),
+}
+</code></pre>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="subagent">Subagent（子代理）</h3>
+<ul>
+<li><strong>定义：</strong> 由主 Agent 派生的临时执行单元，拥有独立的 <code>messages[]</code>（对话历史），用于隔离探索性工作的上下文。子代理完成任务后只返回摘要，不污染主 Agent 的上下文。</li>
+<li><strong>作用：</strong> 解决"大任务污染主上下文"的问题。当主 Agent 需要调查一个分支问题时，派生子代理在干净的上下文中工作，完成后只将摘要写回主上下文。这是上下文隔离（Context Isolation）的核心机制。</li>
+<li><strong>使用场景：</strong> 探索性代码分析、分支问题调查、独立模块测试等不希望影响主 Agent 上下文的工作。</li>
+<li><strong>与 Teammate 的区别：</strong> Subagent 是一次性的——创建、工作、返回摘要、消失。Teammate 是持久化的——可以空闲、恢复、反复接活。</li>
+</ul>
+<blockquote>
+<p>基于 GitHub s00-architecture-overview.md</p>
+</blockquote>
+<h3 id="permission-pipeline">Permission Pipeline（权限管道）</h3>
+<ul>
+<li><strong>定义：</strong> 四阶段权限决策管道，确保每个工具调用在执行前通过多层安全检查。安全不是一个布尔值，而是一个考虑多种因素的决策过程。</li>
+<li><strong>作用：</strong> 保护系统免受 AI 模型的误操作和潜在恶意提示的影响。拒绝规则（Deny Rules）提供不可绕过的硬安全边界，模式决策（Mode）提供上下文相关的策略，允许规则（Allow Rules）提供学习偏好，交互式审批（Interactive Approval）提供人类判断兜底。</li>
+<li><strong>使用场景：</strong> 所有涉及工具执行的 AI Agent 系统。特别是在自主运行场景中，权限管道是防止 AI 执行破坏性操作的关键安全机制。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 PyShine 深度分析文章
+# 权限管道核心逻辑（s07 简化版）
+
+class PermissionGate:
+    def __init__(self):
+        self.deny_rules = [
+            {&quot;tool&quot;: &quot;bash&quot;, &quot;pattern&quot;: &quot;rm -rf /&quot;, &quot;behavior&quot;: &quot;deny&quot;},
+            {&quot;tool&quot;: &quot;bash&quot;, &quot;pattern&quot;: &quot;sudo *&quot;, &quot;behavior&quot;: &quot;deny&quot;},
+        ]
+        self.allow_rules = []
+        self.mode = &quot;default&quot;  # default / plan / auto
+        self.consecutive_denials = 0
+
+    def check(self, tool_name: str, tool_input: dict) -&gt; str:
+        &quot;&quot;&quot;四阶段权限检查管道&quot;&quot;&quot;
+
+        # Stage 1: Deny Rules（不可绕过）
+        for rule in self.deny_rules:
+            if self._matches(rule, tool_name, tool_input):
+                self.consecutive_denials += 1
+                return &quot;DENIED by deny rule&quot;
+
+        # Stage 2: Mode-Based Decisions
+        if self.mode == &quot;plan&quot;:
+            # plan 模式：阻止所有写操作
+            if tool_name in (&quot;write_file&quot;, &quot;edit_file&quot;, &quot;bash&quot;):
+                return &quot;DENIED by plan mode (writes blocked)&quot;
+
+        # Stage 3: Allow Rules
+        for rule in self.allow_rules:
+            if self._matches(rule, tool_name, tool_input):
+                self.consecutive_denials = 0
+                return &quot;ALLOWED by allow rule&quot;
+
+        # Stage 4: Interactive User Approval
+        # （实际实现中会弹出交互式确认）
+        self.consecutive_denials += 1
+
+        # 断路器：连续 3 次拒绝后建议切换模式
+        if self.consecutive_denials &gt;= 3:
+            return &quot;DENIED (suggest switching to plan mode)&quot;
+
+        return &quot;ASK_USER&quot;
+</code></pre>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="multi-agent-team-communication">Multi-Agent Team Communication（多代理团队通信）</h3>
+<ul>
+<li><strong>定义：</strong> 通过 JSONL 收件箱（Inbox）文件实现的 Agent 间通信机制。每个队友拥有独立的收件箱文件，通信通过追加消息实现，读取时排空（Drain-on-Read）。</li>
+<li><strong>作用：</strong> 让多个持久化 Agent 能够并行工作、互相通信。比子代理更适合长期协作场景——队友可以空闲后恢复、反复接活，而不像子代理那样一次性使用后消失。</li>
+<li><strong>使用场景：</strong> 大型项目需要多个专家 Agent 并行工作——前端、后端、测试、文档等角色同时推进。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 PyShine 深度分析文章
+# JSONL 收件箱通信（s15-s16 核心逻辑）
+
+import json
+import time
+from pathlib import Path
+
+class TeamBus:
+    def __init__(self, team_dir: Path):
+        self.dir = team_dir / &quot;inbox&quot;
+        self.dir.mkdir(parents=True, exist_ok=True)
+
+    def send(self, sender: str, to: str, content: str, msg_type=&quot;message&quot;):
+        &quot;&quot;&quot;向队友发送消息（追加到收件箱）&quot;&quot;&quot;
+        msg = {
+            &quot;type&quot;: msg_type,
+            &quot;from&quot;: sender,
+            &quot;content&quot;: content,
+            &quot;timestamp&quot;: time.time(),
+        }
+        inbox_path = self.dir / f&quot;{to}.jsonl&quot;
+        with open(inbox_path, &quot;a&quot;) as f:
+            f.write(json.dumps(msg) + &quot;\n&quot;)
+
+    def read_inbox(self, name: str) -&gt; str:
+        &quot;&quot;&quot;读取并排空收件箱（Drain-on-Read 模式）&quot;&quot;&quot;
+        path = self.dir / f&quot;{name}.jsonl&quot;
+        if not path.exists():
+            return &quot;[]&quot;
+        msgs = [json.loads(l) for l in path.read_text().strip().splitlines() if l]
+        path.write_text(&quot;&quot;)  # 排空：确保消息不被重复处理
+        return json.dumps(msgs, indent=2)
+</code></pre>
+<blockquote>
+<p>基于 PyShine 深度分析文章</p>
+</blockquote>
+<h3 id="context-compaction">Context Compaction（上下文压缩）</h3>
+<ul>
+<li><strong>定义：</strong> 当对话历史（messages[]）增长到接近上下文窗口限制时，将历史对话压缩为摘要的技术。压缩后保留核心上下文，丢弃冗余细节。</li>
+<li><strong>作用：</strong> 解决"上下文无限膨胀"问题。随着 Agent 执行的任务增多，messages[] 会持续增长。如果不压缩，最终会触及 LLM 的 token 限制，导致 Agent 无法继续工作。</li>
+<li><strong>使用场景：</strong> 长时间运行的 Agent 会话、大型项目中执行多个相关任务、任何对话历史超过上下文窗口的场景。</li>
+<li><strong>核心数据结构：</strong> <code>CompactSummary</code>（压缩摘要）和 <code>PersistedOutput</code>（持久化输出）。压缩结果保存为摘要，关键的文件变更等输出持久化到磁盘，不依赖于对话历史。</li>
+</ul>
+<blockquote>
+<p>基于 GitHub s00-architecture-overview.md</p>
+</blockquote>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>LearnClaudeCode</th>
+<th>LangChain/LangGraph 教程</th>
+<th>Anthropic 官方 Claude Code 文档</th>
+<th>DeepLearning.AI Agent 课程</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>从零手写 Agent 系统，理解核心机制</td>
+<td>框架使用导向，快速搭建 Agent</td>
+<td>产品使用说明，如何高效使用 Claude Code</td>
+<td>理论 + 实践结合的通用 Agent 课程</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>33,787-51.3K（2026-04）</td>
+<td>LangChain 90K+（框架本身）</td>
+<td>N/A（官方文档站点）</td>
+<td>N/A（课程平台）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>Anthropic 商业许可</td>
+<td>商业课程</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>Python（教学实现）</td>
+<td>Python/TypeScript</td>
+<td>文档 + 示例代码</td>
+<td>Python</td>
+</tr>
+<tr>
+<td>教学深度</td>
+<td>极深：逐行实现 19 个核心机制</td>
+<td>中等：框架 API 使用和最佳实践</td>
+<td>浅：产品功能介绍和使用技巧</td>
+<td>中深：概念讲解 + 代码示例</td>
+</tr>
+<tr>
+<td>教学广度</td>
+<td>宽：覆盖完整 Agent 技术栈</td>
+<td>窄：聚焦 LangChain 生态</td>
+<td>窄：聚焦 Claude Code 产品</td>
+<td>中：通用 Agent 设计模式</td>
+</tr>
+<tr>
+<td>框架依赖</td>
+<td>无（纯 Python + LLM API）</td>
+<td>强依赖 LangChain/LangGraph</td>
+<td>N/A</td>
+<td>依赖多种库</td>
+</tr>
+<tr>
+<td>涵盖机制</td>
+<td>Agent Loop / Tool Dispatch / Permission / Hook / Memory / Task / Team / Worktree / MCP</td>
+<td>Chain / Agent / Tool / Memory / Retriever / LangGraph 状态图</td>
+<td>Skills / Hooks / Memory / MCP / 权限模式</td>
+<td>ReAct / Planning / Tool Use / Multi-Agent / Evaluation</td>
+</tr>
+<tr>
+<td>代码可运行性</td>
+<td>高：每章有完整可运行的 Python 代码</td>
+<td>高：基于成熟框架的示例</td>
+<td>中：命令行演示为主</td>
+<td>中：Jupyter Notebook 示例</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低→高（渐进式 19 章）</td>
+<td>陡峭（概念密集，API 复杂）</td>
+<td>低（产品使用导向）</td>
+<td>中（需要前置知识）</td>
+</tr>
+<tr>
+<td>目标受众</td>
+<td>想理解 Agent 原理的开发者</td>
+<td>想快速搭建 Agent 应用的开发者</td>
+<td>Claude Code 用户</td>
+<td>想系统学习 Agent 的开发者</td>
+</tr>
+<tr>
+<td>独特价值</td>
+<td>"Bash is all you need"零抽象教学</td>
+<td>最大的 Agent 开发生态</td>
+<td>官方权威的使用指导</td>
+<td>学术级系统性讲解</td>
+</tr>
+<tr>
+<td>多语言支持</td>
+<td>中文（权威）、英文、日文</td>
+<td>英文为主</td>
+<td>英文为主</td>
+<td>英文为主</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。LearnClaudeCode Stars 来自 GitHub API 和 HelloGitHub。LangChain Stars 来自公开数据。[置信度：LearnClaudeCode 高，LangChain 中，Anthropic 文档 高，DeepLearning.AI 中]</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>想从零构建自己 Agent 系统的开发者</strong>：LearnClaudeCode 最适合那些不满足于"使用框架"，而想真正理解 Agent 底层机制并有能力构建自己 Agent 的开发者。19 章的渐进式路径从 30 行的 Agent Loop 到完整的多代理平台，提供了一条清晰的学习路线。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Claude Code 重度用户想理解工具原理</strong>：对于日常使用 Claude Code 的开发者，理解其内部工作原理——Agent Loop 如何运转、工具调用如何路由、上下文如何压缩——能显著提升使用效率和问题排查能力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>AI 应用架构师做技术选型</strong>：理解 Agent 系统的核心机制后，架构师能更好地评估不同 Agent 框架的优劣、理解框架的抽象层在替你做什么、在框架不满足需求时能自行实现定制化方案。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>计算机科学教育</strong>：LearnClaudeCode 的渐进式教学设计、完整可运行的代码示例、清晰的概念区分和多层架构图，使其非常适合作为 AI Agent 课程的教材或辅助材料。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>只想快速搭建 Agent 应用的开发者</strong>：如果目标是"用最快速度搭建一个可用的 Agent"，LangChain 或 CrewAI 的框架教程更合适。LearnClaudeCode 追求的是深度理解而非开发速度。</p>
+</li>
+<li>
+<p><strong>需要生产级 Agent 框架的项目</strong>：LearnClaudeCode 是教学项目，不是生产级框架。它省略了错误恢复的边界条件处理、性能优化、跨平台兼容等生产环境必需的细节。生产项目应使用 Claude Code、LangGraph 等成熟工具。</p>
+</li>
+<li>
+<p><strong>没有 Python 或编程基础的学习者</strong>：项目要求至少具备 Python 编程基础和对 LLM API 的基本了解。完全没有编程经验的学习者需要先补充前置知识。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>独特的零抽象教学方法</strong> - LearnClaudeCode 是目前唯一"从零手写 Agent 系统"的渐进式教学项目。LangChain 教程教你怎么用框架，Anthropic 文档教你怎么用产品，LearnClaudeCode 教你怎么造轮子——并且解释每个轮子为什么这样造。这种教学定位在 Agent 教育领域是独一无二的。[置信度：高]</p>
+</li>
+<li>
+<p><strong>精心设计的渐进式路径</strong> - 19 章分为 4 个阶段，每章恰好新增一个核心机制。教学顺序严格遵循认知递进：先建立稳定主线（Agent Loop），再逐步扩展（安全、记忆、任务、多代理）。架构概览文档（s00）提供了完整的全局地图，帮助学习者理解每章在整体中的位置。这种教学设计质量在开源项目中非常罕见。[置信度：高]</p>
+</li>
+<li>
+<p><strong>完整可运行的代码示例</strong> - 每章都有独立的 Python 实现代码，从 s01 的 30 行 Agent Loop 到 s19 的完整系统。mini-claude-code 仓库提供 5 个版本的渐进式完整实现（约 1100 行）。代码不是伪代码或省略版，而是可以实际运行的真实实现。[置信度：高]</p>
+</li>
+<li>
+<p><strong>出色的中文技术文档</strong> - 中文为权威语言，文档质量极高。架构概览（s00）包含了全局大图、章节速查表、关键状态列表、请求流描述和概念区分。配套文档包括术语表（glossary.md）、教学范围（teaching-scope.md）、数据结构（data-structures.md）和代码阅读顺序（s00f-code-reading-order.md）。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>不是生产级框架</strong> - LearnClaudeCode 是教学项目，不提供可直接用于生产的 Agent 框架。教学代码省略了边界条件处理、错误恢复的防御性编程、性能优化等生产环境必需的细节。学习者理解原理后，仍需选择 LangGraph、Claude Code 等生产工具。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Python 教学实现与 TypeScript 生产实现的差异</strong> - Claude Code 实际使用 TypeScript，但教学代码使用 Python。虽然核心逻辑一致，但语言差异可能在类型系统、异步模型、包管理等方面造成迁移成本。[置信度：中]</p>
+</li>
+<li>
+<p><strong>学习曲线在后半段陡峭</strong> - 前 6 章（Core Loop）和中间 5 章（Hardening）的渐进式设计很好，但 Stage 4（s15-s19 多代理平台）引入了大量新概念（Teammate、Team Protocol、Autonomous Agent、Worktree、MCP），概念密度显著增加。[置信度：中]</p>
+</li>
+<li>
+<p><strong>缺乏交互式练习和自动评测</strong> - 虽然每章有可运行代码，但没有配套的练习题、自动评测或项目作业。学习者需要自行设计练习来验证理解程度。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>技术快速迭代导致内容过时</strong> - Agent 技术领域在 2024-2026 年间变化极快。Claude Code 的内部架构可能在版本更新中发生变化，导致 LearnClaudeCode 的教学内容与实际实现产生偏差。最后推送日期为 2026-03-17，需要关注后续更新频率。[置信度：中]</p>
+</li>
+<li>
+<p><strong>Stars 数据不一致引发的可信度讨论</strong> - GitHub API 显示 33,787 Stars，HelloGitHub 报道约 51.3K Stars。这种显著差异（约 50%）可能反映了数据获取时间的不同，但也可能引发社区对数据准确性的质疑。[置信度：中]</p>
+</li>
+<li>
+<p><strong>中文社区为主的受众局限</strong> - 虽然提供英文和日文翻译，但权威内容是中文。这限制了项目在英文主导的全球开发者社区中的传播。HelloGitHub 10.0/10 的评分主要反映中文社区的认可度。[置信度：低-中]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>插件/扩展数量：</strong> 不是框架，不提供插件系统。但作为教学项目，相关仓库 mini-claude-code（5 个版本的渐进式实现）和 ai-cloud-station（Docker AI 开发站）提供了配套资源。在线学习平台 learn.shareai.run 提供三种视图模式（Timeline/Layers/Compare）。[置信度：高]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> 核心依赖极简：Python 3.x + LLM API（Anthropic/OpenAI）+ Bash。没有框架依赖，这是"零抽象"教学理念的体现。上游依赖本身成熟稳定。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> 定位为教学项目而非生产工具，没有企业采用案例。但其社区影响力显著——HelloGitHub 评分 10.0/10、4 天突破 20K Stars、多个中文技术社区推荐。在 AI Agent 教育领域具有较高的认知度。[置信度：中]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> 极高。架构概览文档（s00）非常详细，包含全局大图、章节速查表、请求流描述、概念区分、关键状态列表和配套文档索引。术语表、教学范围说明、数据结构文档、代码阅读顺序等辅助文档齐全。中文文档质量在开源项目中属于顶级水平。[置信度：高]</p>
+</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 不适用。LearnClaudeCode 是教学项目，不是生产工具。教学代码追求清晰而非健壮，省略了边界条件处理和防御性编程。[置信度：高]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> 不适用。教学代码不考虑性能优化。但项目教授的性能相关概念（Context Compact、输出大小管理、路径沙箱）对构建高性能 Agent 有指导意义。[置信度：高]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> 不适用。教学项目没有内置监控。但项目教授的 Hook System 和 Worktree 隔离等概念可以帮助理解生产级 Agent 的可观测性设计。[置信度：中]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> s11 章专门讲解 Error Recovery（错误恢复），教授恢复状态管理和转移原因（Transition Reason）的概念。但教学实现不是生产级的故障恢复方案。[置信度：中]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> s07 章专门讲解 Permission Pipeline（权限管道），教授四阶段安全决策管道和路径沙箱的概念。这是 Agent 安全教育的优秀材料，但不是生产级的安全方案。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>Python 编程基础（函数、类、字典、文件操作）</li>
+<li>LLM API 基本使用（知道如何调用 Anthropic 或 OpenAI API）</li>
+<li>命令行基本操作（Bash 基础命令）</li>
+<li>Git 基本概念（了解 worktree 更佳）</li>
+<li>
+<p>对 AI Agent 的基本认知（知道 Agent 是什么）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 2-4 小时。完成 s01-s06（Core Loop 阶段）即可理解 Agent 系统的核心机制，并能手写一个基本的可运行 Agent。s01 的 Agent Loop 仅 30 行 Python 代码。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 2-4 周。完成全部 19 章并理解所有核心机制需要系统学习。特别是 s15-s19（多代理平台）的概念密度较高，需要反复阅读和实践。配套的 mini-claude-code 仓库提供了完整实现供参考。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>LearnClaudeCode 在"AI Agent 原理教学"这一领域建立了独特的定位。它的核心创新在于：</p>
+<ol>
+<li>
+<p><strong>"Bash is all you need"零抽象教学</strong>：通过消除所有框架抽象层，让学习者直接触碰 Agent 系统的底层机制。这是目前唯一从零手写 Agent 系统的渐进式教学项目。</p>
+</li>
+<li>
+<p><strong>精心设计的 19 章渐进式路径</strong>：每章恰好新增一个核心机制，严格遵循认知递进。从 30 行 Agent Loop 到完整多代理平台的渐进过程，让复杂系统变得可理解。</p>
+</li>
+<li>
+<p><strong>生产级架构的教学解构</strong>：以 Claude Code 为蓝本，覆盖了完整的技术栈——从 Agent Loop 到 MCP 插件。学习者理解这些机制后，能更好地使用和评估任何 Agent 框架。</p>
+</li>
+<li>
+<p><strong>出色的中文技术文档</strong>：架构概览、术语表、数据结构文档等辅助材料质量极高。HelloGitHub 10.0/10 的评分反映了中文社区的高度认可。</p>
+</li>
+</ol>
+<p>然而，LearnClaudeCode 是教学项目而非生产工具。它不提供可直接用于生产的框架，Python 教学实现与 TypeScript 生产实现存在差异，后半段概念密度较高。</p>
+<p><strong>推荐使用：</strong> 想理解 Agent 底层原理的开发者；Claude Code 重度用户想深入理解工具原理；AI 应用架构师做技术选型前的知识储备；计算机科学教育中的 Agent 课程教材。</p>
+<p><strong>不推荐使用：</strong> 只想快速搭建 Agent 应用的开发者——建议直接使用 LangChain 或 CrewAI；需要生产级 Agent 框架的项目——建议使用 Claude Code 或 LangGraph。</p>
+<p><strong>组合建议：</strong> 建议先完成 LearnClaudeCode 的 s01-s06（建立核心认知），然后在实际项目中使用 Claude Code 或 LangGraph（应用知识），遇到问题时回到 LearnClaudeCode 对应章节深入理解（巩固知识）。这种"学习-应用-巩固"的循环是最有效的学习路径。</p>
+<p><strong>综合评分：</strong> 8.0/10。在"Agent 原理教学"维度上是最完整的开源实现，19 章渐进式路径和零抽象教学理念是真正的亮点。扣分主要来自 Python/TypeScript 差异、后半段学习曲线较陡、缺乏交互式练习。33K-51K Stars 和 HelloGitHub 满分评分反映了社区的高度认可。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> 仓库无独立版本号，分析基于截至 2026-03-17（最后推送日期）的仓库内容</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/shareAI-lab/learn-claude-code">GitHub 仓库 shareAI-lab/learn-claude-code</a> — 源码、README、19 章教学文档</li>
+<li><a href="https://api.github.com/repos/shareAI-lab/learn-claude-code">GitHub API - shareAI-lab/learn-claude-code</a>（Stars: 33,787, Forks: 5,490, Open Issues: 56, License: MIT, Created: 2025-06-29, Pushed: 2026-03-17） — 项目元数据</li>
+<li><a href="https://github.com/shareAI-lab/learn-claude-code/blob/main/docs/zh/s00-architecture-overview.md">GitHub s00-architecture-overview.md</a> — 架构概览文档，全局地图</li>
+<li><a href="https://pyshine.com/learn-claude-code-Building-AI-Agent-Harness/">PyShine - learn-claude-code: Building Production AI Agent Harness</a> — 第三方深度技术分析</li>
+<li><a href="https://learn.shareai.run">在线学习站点 learn.shareai.run</a> — 交互式学习平台</li>
+<li><a href="https://hellogithub.com/en/repository/shareAI-lab/learn-claude-code">HelloGitHub 收录页面</a> — 社区评价和推荐</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

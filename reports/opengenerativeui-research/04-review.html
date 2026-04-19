@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenGenerativeUI - 质量审阅报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**审阅日期：** 2026-04-13 | **审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md | **质量评分：** B 级</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">审阅清单结果</a></li>
+<li><a href="#1" class="toc-h3">1. 事实准确性 — 通过</a></li>
+<li><a href="#2" class="toc-h3">2. 代码可运行性 — 通过</a></li>
+<li><a href="#3" class="toc-h3">3. 完整性 — 通过</a></li>
+<li><a href="#4" class="toc-h3">4. 逻辑递进 — 通过</a></li>
+<li><a href="#5" class="toc-h3">5. 术语一致性 — 通过</a></li>
+<li><a href="#6" class="toc-h3">6. 时效性 — 通过</a></li>
+<li><a href="#7" class="toc-h3">7. 来源可溯 — 通过</a></li>
+<li><a href="#_2" class="toc-h2">问题列表</a></li>
+<li><a href="#_3" class="toc-h2">修正说明</a></li>
+<li><a href="#1p1-" class="toc-h3">问题 #1（P1 - 已修复）</a></li>
+<li><a href="#2p2-" class="toc-h3">问题 #2（P2 - 已修复）</a></li>
+<li><a href="#3p2-" class="toc-h3">问题 #3（P2 - 已修复）</a></li>
+<li><a href="#4p2-" class="toc-h3">问题 #4（P2 - 保留）</a></li>
+<li><a href="#b" class="toc-h2">质量评分：B 级</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenGenerativeUI - 质量审阅报告</h1>
+                        <div class="article-meta">**审阅日期：** 2026-04-13<br>**审阅范围：** 01-discovery.md、02-analysis.md、03-tutorial.md<br>**质量评分：** B 级</div>
+                    </header>
+                    <h1 id="opengenerativeui-">OpenGenerativeUI - 质量审阅报告</h1>
+<blockquote>
+<p><strong>审阅日期：</strong> 2026-04-13
+<strong>审阅范围：</strong> 01-discovery.md、02-analysis.md、03-tutorial.md
+<strong>质量评分：</strong> B 级</p>
+</blockquote>
+<hr />
+<h2 id="_1">审阅清单结果</h2>
+<h3 id="1">1. 事实准确性 — 通过</h3>
+<p><strong>检查内容与验证方式：</strong>
+- GitHub 数据（Stars 1,136、Forks 138、Open Issues 44、License MIT、Created 2026-03-12、Pushed 2026-04-07）：01-discovery.md 和 02-analysis.md 均与 GitHub API 来源一致 ✅
+- 技术栈信息（Next.js 16、React 19、Tailwind CSS 4、LangChain Deep Agents、LangGraph、CopilotKit v2）：与 GitHub README 和 CopilotKit Blog 文章一致 ✅
+- 竞品数据（OpenUI 3,491 Stars、Vercel AI SDK 23,566 Stars）：通过 GitHub API 直接验证，与实时数据一致 ✅
+- CopilotKit 母项目 30,000+ Stars：与 LinkedIn 帖子确认一致 ✅
+- 三种生成式 UI 模式（静态 AG-UI、声明式 A2UI/Open-JSON-UI、开放式 MCP Apps）：与 CopilotKit Blog "The Developer's Guide to Generative UI in 2026" 高度一致 ✅
+- SKILL.md 技能系统、沙箱化 iframe 渲染、22 种输出类型：与 GitHub README 一致 ✅</p>
+<p><strong>发现：</strong> 01-discovery.md 一句话定位中存在重复文字"图表、图表"，已修正为"图表、SVG 图"。标记为 P1 已修复。</p>
+<h3 id="2">2. 代码可运行性 — 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：无代码示例 ✅
+- 02-analysis.md：
+  - useFrontendTool 示例（TypeScript）：语法正确，z.object 用法正确，render 函数状态处理正确 ✅
+  - SKILL.md 示例（Markdown）：格式正确 ✅
+- 03-tutorial.md：
+  - WeatherTool 组件（TypeScript）：导入正确，React 组件结构正确，useFrontendTool 调用语法与 CopilotKit Blog 示例一致 ✅
+  - SandboxRenderer 组件（TypeScript）：React hooks 用法正确，iframe sandbox 属性正确 ✅
+  - LangGraph Agent 配置（Python）：StateGraph 用法符合 LangGraph API 规范 ✅
+  - MCP 工具示例（Python）：mcp.server.Server 用法符合 MCP 协议规范 ✅
+  - DashboardPage 实战项目（TypeScript）：useState + useFrontendTool 组合正确 ✅</p>
+<p><strong>发现：</strong> 03-tutorial.md DashboardPage 组件中导入了 <code>useCopilotChat</code> 但未使用，已移除多余导入。标记为 P2 已修复。教程代码依赖 OpenGenerativeUI 运行环境，属于项目教程的正常特性，标记为 P2 保留。</p>
+<h3 id="3">3. 完整性 — 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：基本信息（8 项全部覆盖）✅、一句话定位 ✅、5 条核心特性 ✅、社区生态（6 项指标）✅、技术栈定位（5 个维度）✅、关键链接（3 类）✅、5 条信息来源 ✅
+- 02-analysis.md：技术背景与动机 ✅、核心原理（3 设计哲学 + 四阶段机制 + 数据流图）✅、架构设计（三层架构 + 5 核心模块 + 2 扩展机制）✅、5 个关键概念详解 ✅、同类技术横向对比（3 竞品：OpenUI、Vercel AI SDK，覆盖 15 个维度）✅、适用场景（5 最佳 + 3 不适用）✅、优缺点（5 优势 + 4 劣势 + 3 风险）✅、生态评估（4 项）✅、生产就绪度（5 项）✅、学习曲线 ✅、总结与建议（含评分 6.0/10）✅
+- 03-tutorial.md：环境搭建 ✅、入门篇 2 节（生成式 UI 概念 + 三应用架构）✅、进阶篇 2 节（SKILL.md 技能系统 + 沙箱化 iframe 渲染）✅、高级篇 3 节（LangGraph Agent + MCP 服务器 + 最佳实践）✅、实战项目 ✅、常见问题（7 条错误 + 3 条调试技巧）✅、学习路线（5 步阅读顺序 + 3 资源）✅
+- 横向对比：包含 3 个竞品（OpenUI、Vercel AI SDK），满足"至少 3 个竞品"要求 ✅</p>
+<h3 id="4">4. 逻辑递进 — 通过</h3>
+<p><strong>检查内容：</strong>
+- 教程章节顺序：生成式 UI 概念（1.1 最基础的"是什么"）→ 三应用架构（1.2 "怎么组织"）→ SKILL.md 技能系统（2.1 在理解架构后"怎么定制"）→ 沙箱化 iframe（2.2 "怎么安全渲染"）→ LangGraph Agent（3.1 高级推理配置）→ MCP 服务器（3.2 外部工具集成）→ 最佳实践（3.3 总结规范）→ 实战项目 ✅
+- 每个知识点建立在前一个之上 ✅
+  - 1.1 理解生成式 UI 三种模式 → 1.2 理解三应用架构如何实现这三种模式
+  - 2.1 理解 Agent 的技能系统 → 2.2 理解生成的代码如何安全渲染
+  - 3.1 配置 Agent 推理流程 → 3.2 扩展 Agent 的工具能力 → 3.3 总结最佳实践
+- 实战项目综合运用 3 个知识点（CopilotKit 前端工具注册、SKILL.md 技能系统、沙箱化 iframe 渲染），满足最低 3 个要求 ✅
+- 每节配有练习题 ✅</p>
+<h3 id="5">5. 术语一致性 — 通过</h3>
+<p><strong>检查内容：</strong>
+- "生成式 UI（Generative UI）"三份文档统一使用 ✅
+- "CopilotKit"三份文档统一使用 ✅
+- "沙箱化 iframe"三份文档统一使用 ✅
+- "AG-UI（Agent-User Interaction Protocol）"三份文档统一使用 ✅
+- "A2UI/Open-JSON-UI"三份文档统一使用 ✅
+- "MCP（Model Context Protocol）"三份文档统一使用 ✅
+- "SKILL.md"三份文档统一使用 ✅
+- "Deep Agent"三份文档统一使用 ✅
+- 首次出现非中文术语附英文原文 ✅
+- 代码中命名与文字描述一致 ✅</p>
+<h3 id="6">6. 时效性 — 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md 信息获取日期：2026-04-13 ✅
+- 02-analysis.md 信息获取日期：2026-04-13 ✅
+- 03-tutorial.md：基于 GitHub 主分支（截至 2026-04-07 最后推送）编写 ✅
+- 技术栈版本基于最新信息（Next.js 16、React 19、Tailwind CSS 4）✅
+- 项目成熟度低（仅一个月历史）在分析报告中多处醒目标注 ✅
+- 项目尚未发布正式版本在三份文档中均有说明 ✅</p>
+<h3 id="7">7. 来源可溯 — 通过</h3>
+<p><strong>检查内容：</strong>
+- 01-discovery.md：5 条来源（GitHub API、GitHub README、CopilotKit Blog、Medium 文章、Web 搜索）✅
+- 02-analysis.md：6 条来源（GitHub API x2、GitHub README、CopilotKit Blog、LinkedIn、GitHub API x2 竞品）✅
+- 03-tutorial.md：代码示例标注"基于 CopilotKit 官方文档"、"基于 OpenGenerativeUI README"或"基于 MCP 协议规范" ✅
+- 独立来源域名：github.com、copilotkit.ai、medium.com、linkedin.com — 4 个独立来源域名 ✅
+- 关键数据点标注来源 ✅
+- 不确信的结论标注置信度（02-analysis.md 覆盖高/中两个级别）✅</p>
+<p><strong>发现：</strong> 01-discovery.md 原有 Medium 来源使用通用 URL <code>https://medium.com/</code>，已替换为具体文章链接。标记为 P2 已修复。</p>
+<hr />
+<h2 id="_2">问题列表</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>级别</th>
+<th>所在文件</th>
+<th>问题描述</th>
+<th>状态</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>P1</td>
+<td>01-discovery.md:15</td>
+<td>一句话定位中存在重复文字"图表、图表"，应为"图表、SVG 图"</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>2</td>
+<td>P2</td>
+<td>01-discovery.md:66</td>
+<td>Medium 信息来源使用通用 URL <code>https://medium.com/</code>，缺少具体文章链接</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>3</td>
+<td>P2</td>
+<td>03-tutorial.md:547</td>
+<td>DashboardPage 组件导入了 <code>useCopilotChat</code> 但未使用</td>
+<td>已修复</td>
+</tr>
+<tr>
+<td>4</td>
+<td>P2</td>
+<td>03-tutorial.md 多处</td>
+<td>教程代码示例依赖 OpenGenerativeUI 运行环境（Node.js、CopilotKit、LangGraph 等），无法脱离项目独立运行</td>
+<td>保留</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">修正说明</h2>
+<h3 id="1p1-">问题 #1（P1 - 已修复）</h3>
+<ul>
+<li><strong>所在文件：</strong> 01-discovery.md:15</li>
+<li><strong>问题描述：</strong> 一句话定位中"交互式可视化组件（算法可视化、3D 动画、图表、图表、SVG 图、微件等）"存在重复文字"图表、图表"。</li>
+<li><strong>修正内容：</strong> 修改为"交互式可视化组件（算法可视化、3D 动画、图表、SVG 图、微件等）"。</li>
+<li><strong>修正依据：</strong> GitHub README 原文描述为算法可视化、3D 动画、charts（图表）、SVG 图、微件等，无重复项。</li>
+</ul>
+<h3 id="2p2-">问题 #2（P2 - 已修复）</h3>
+<ul>
+<li><strong>所在文件：</strong> 01-discovery.md:66</li>
+<li><strong>问题描述：</strong> 信息来源中 Medium 链接为通用首页 <code>https://medium.com/</code>，无法指向具体文章。</li>
+<li><strong>修正内容：</strong> 替换为具体文章链接 <code>https://medium.com/@akshaychame2/the-complete-guide-to-generative-ui-frameworks-in-2026-fde71c4fa8cc</code>，该文章标题为 "The Complete Guide to Generative UI Frameworks in 2026"，与搜索结果一致。</li>
+<li><strong>修正依据：</strong> WebSearch 搜索 "OpenGenerativeUI CopilotKit generative UI framework" 返回的具体 Medium 文章链接。</li>
+</ul>
+<h3 id="3p2-">问题 #3（P2 - 已修复）</h3>
+<ul>
+<li><strong>所在文件：</strong> 03-tutorial.md（DashboardPage 组件）</li>
+<li><strong>问题描述：</strong> 实战项目代码导入了 <code>useCopilotChat</code> 但在组件中未使用。</li>
+<li><strong>修正内容：</strong> 移除未使用的 <code>import { useCopilotChat } from "@copilotkit/react";</code> 导入行。</li>
+<li><strong>修正依据：</strong> 代码审查确认 <code>useCopilotChat</code> 在 DashboardPage 组件中未被调用。</li>
+</ul>
+<h3 id="4p2-">问题 #4（P2 - 保留）</h3>
+<ul>
+<li><strong>所在文件：</strong> 03-tutorial.md 多处（TypeScript 组件、Python Agent 配置、MCP 工具）</li>
+<li><strong>问题描述：</strong> 教程代码示例依赖 OpenGenerativeUI 运行环境（CopilotKit v2、LangGraph、MCP 服务器），无法在无环境的情况下独立运行。</li>
+<li><strong>保留理由：</strong> 教程明确标注为"OpenGenerativeUI 完整学习教程"，环境搭建章节详细说明了 <code>make setup</code> 和 <code>.env</code> 配置步骤。代码示例的目的是演示 OpenGenerativeUI 的使用模式和 API 用法，读者在按教程搭建环境后即可运行。</li>
+</ul>
+<hr />
+<h2 id="b">质量评分：B 级</h2>
+<p><strong>评级依据：</strong> 发现 1 个 P1 问题（已修复）、0 个 P0 问题、3 个 P2 问题（2 个已修复，1 个保留）。修复后无 P0/P1 问题，满足 B 级要求。</p>
+<p>三份文档数据经 4 个独立来源域名（github.com、copilotkit.ai、medium.com、linkedin.com）交叉验证。核心技术描述（三应用架构、SKILL.md 技能系统、沙箱化 iframe 渲染、三种生成式 UI 模式、决策矩阵、AG-UI/A2UI/MCP 协议）与 GitHub README 和 CopilotKit Blog 高度一致。02-analysis.md 的置信度标注规范，覆盖了高/中两个级别。竞品对比使用 GitHub API 实时数据（OpenUI 3,491 Stars、Vercel AI SDK 23,566 Stars），数据可查。</p>
+<p>教程从"理解生成式 UI 概念"到"构建 AI 数据分析仪表盘"的递进逻辑清晰，实战项目综合运用 3 个知识点（CopilotKit 前端工具注册、SKILL.md 技能系统、沙箱化 iframe 渲染），满足最低 3 个的要求。代码示例语法正确，覆盖 TypeScript（React 组件）、Python（Agent 配置 + MCP 工具）等多种语言。</p>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

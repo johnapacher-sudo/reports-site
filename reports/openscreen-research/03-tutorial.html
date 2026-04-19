@@ -1,0 +1,1606 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenScreen - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 1.5-2 小时（安装与基础使用 15 分钟 + 进阶功能 30 分钟 + 高级用法与源码 45-60 分钟） | **前置知识：** 基本的计算机操作能力（安装应用、使用鼠标和键盘）；了解视频基本概念（宽高比、帧率）有助于进阶部分；源码贡献部分需要 TypeScript、React 和 Electron 基础</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11" class="toc-h3">1.1 基本屏幕录制</a></li>
+<li><a href="#12-auto-zoom" class="toc-h3">1.2 智能缩放（Auto Zoom）</a></li>
+<li><a href="#13" class="toc-h3">1.3 音频捕获设置</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 自定义背景设置</a></li>
+<li><a href="#22" class="toc-h3">2.2 标注与注释</a></li>
+<li><a href="#23" class="toc-h3">2.3 视频修剪与速度控制</a></li>
+<li><a href="#24" class="toc-h3">2.4 多宽高比导出</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 手动缩放与关键帧调整</a></li>
+<li><a href="#32" class="toc-h3">3.2 从源码构建与本地开发</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实施步骤</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">术语对照表</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenScreen - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 1.5-2 小时（安装与基础使用 15 分钟 + 进阶功能 30 分钟 + 高级用法与源码 45-60 分钟）<br>**前置知识：** 基本的计算机操作能力（安装应用、使用鼠标和键盘）；了解视频基本概念（宽高比、帧率）有助于进阶部分；源码贡献部分需要 TypeScript、React 和 Electron 基础</div>
+                    </header>
+                    <h1 id="openscreen-">OpenScreen - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 1.5-2 小时（安装与基础使用 15 分钟 + 进阶功能 30 分钟 + 高级用法与源码 45-60 分钟）
+<strong>前置知识：</strong> 基本的计算机操作能力（安装应用、使用鼠标和键盘）；了解视频基本概念（宽高比、帧率）有助于进阶部分；源码贡献部分需要 TypeScript、React 和 Electron 基础</p>
+</blockquote>
+<hr />
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong></li>
+<li><strong>macOS</strong> 13（Ventura）或更高版本（macOS 12 及以下仅支持麦克风，不支持系统音频捕获）</li>
+<li><strong>Windows</strong> 10/11</li>
+<li><strong>Linux</strong> — 主流发行版（Ubuntu 20.04+、Fedora 等），使用 AppImage 格式分发，需要 PipeWire 支持系统音频</li>
+<li><strong>硬件要求：</strong></li>
+<li>至少 4GB 可用内存（Electron 应用内存占用较高）</li>
+<li>足够的磁盘空间用于录制和导出视频（建议 1GB+）</li>
+<li>麦克风（可选，用于录制语音旁白）</li>
+<li><strong>权限要求：</strong></li>
+<li>屏幕录制权限（macOS 需在系统偏好设置中授权）</li>
+<li>麦克风访问权限</li>
+<li>macOS 用户需要绕过 Gatekeeper（见安装步骤）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<p><strong>方式一：下载预编译安装包（推荐普通用户）</strong></p>
+<pre><code class="language-bash"># 第一步：前往 GitHub Releases 页面下载对应平台的安装包
+# macOS: OpenScreen-x.x.x.dmg
+# Windows: OpenScreen-x.x.x.exe
+# Linux: OpenScreen-x.x.x.AppImage
+
+# 下载地址：
+# https://github.com/siddharthvaddem/openscreen/releases
+
+# 第二步（仅 macOS）：安装后需要绕过 Gatekeeper
+# 因为应用未经 Apple 公证签名，macOS 会阻止打开
+# 方法：右键点击应用 → 选择&quot;打开&quot; → 在弹出对话框中点击&quot;打开&quot;
+
+# 或者使用命令行绕过：
+xattr -rd com.apple.quarantine /Applications/OpenScreen.app
+
+# 第二步（仅 Linux）：给 AppImage 添加执行权限
+chmod +x OpenScreen-*.AppImage
+
+# 某些 Linux 发行版可能需要 --no-sandbox 标志：
+./OpenScreen-*.AppImage --no-sandbox
+</code></pre>
+<p><strong>方式二：从源码构建（适合开发者）</strong></p>
+<pre><code class="language-bash"># 第一步：确保已安装 Node.js（推荐 v18+）和 npm
+node --version   # 确认 Node.js 版本
+npm --version    # 确认 npm 版本
+
+# 第二步：克隆 GitHub 仓库
+git clone https://github.com/siddharthvaddem/openscreen.git
+cd openscreen
+
+# 第三步：安装依赖
+npm install
+
+# 第四步：启动开发模式
+npm run dev
+
+# 第五步（可选）：构建生产版本
+npm run build
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 方式一的用户：启动 OpenScreen 应用，应该看到录制控制面板界面
+# 界面中央应该显示 &quot;Select a window or screen to record&quot; 或类似提示
+
+# 方式二（源码构建）的用户：确认开发服务器已启动
+# 终端应显示 Electron 窗口已打开，React DevTools 可用
+</code></pre>
+<pre><code>预期结果：
+- 应用窗口正常显示，无白屏或错误弹窗
+- macOS 首次启动时，系统会请求屏幕录制和麦克风权限
+  → 在&quot;系统设置 → 隐私与安全性 → 屏幕录制&quot;中勾选 OpenScreen
+  → 在&quot;系统设置 → 隐私与安全性 → 麦克风&quot;中勾选 OpenScreen（如需录制语音）
+- 授权后重启应用以使权限生效
+</code></pre>
+<p><strong>注意事项：</strong>
+- macOS 用户如果跳过权限授予步骤，录制时将只能得到黑屏画面或无音频的视频。
+- Linux 用户如果遇到 <code>libgbm</code> 相关错误，需要安装 <code>libgbm1</code> 包：<code>sudo apt install libgbm1</code>（Ubuntu/Debian）。
+- Windows 用户可能需要允许应用通过 Windows Defender 防火墙。</p>
+<p><strong>练习题：</strong>
+1. 按照上述步骤安装 OpenScreen，确认应用能正常启动
+2. 检查你的操作系统是否满足系统音频捕获的要求</p>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11">1.1 基本屏幕录制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenScreen 的核心功能是屏幕录制。它基于 Electron 框架的 <code>desktopCapturer</code> API 捕获屏幕画面，支持两种录制目标：</p>
+<ul>
+<li><strong>窗口录制（Window）</strong>：录制指定应用程序的窗口，不包含其他窗口和桌面元素。适合录制单一应用的操作演示。</li>
+<li><strong>全屏录制（Full Screen）</strong>：录制整个屏幕的所有内容。适合需要展示多窗口切换的场景。</li>
+</ul>
+<p>录制过程中，OpenScreen 同时记录鼠标的位置和点击事件，这些数据会在后处理阶段用于自动缩放功能（详见 1.2 节）。</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 启动 OpenScreen 应用
+2. 在主界面选择录制目标：
+   a. 点击 &quot;Window&quot; 标签 → 从下拉列表中选择目标窗口
+   b. 或点击 &quot;Full Screen&quot; 标签 → 选择要录制的显示器
+3. 点击红色的录制按钮（或使用快捷键）开始录制
+4. 录制过程中，正常操作你的应用
+   → OpenScreen 会在后台捕获画面和鼠标事件
+5. 完成录制后，点击停止按钮
+6. 应用会自动切换到编辑界面，显示录制结果
+</code></pre>
+<pre><code>预期结果：
+- 录制过程中，OpenScreen 窗口会显示录制时长计时器
+- 停止录制后，自动进入编辑界面
+- 编辑界面左侧显示视频预览，右侧/下方显示时间轴
+- 可以在预览中回放录制内容
+</code></pre>
+<p><strong>注意事项：</strong>
+- 录制前建议关闭不必要的应用程序窗口，避免窗口切换干扰录制。
+- 如果录制目标窗口被最小化或遮挡，录制内容可能不完整。
+- 录制时 OpenScreen 自身的窗口不会被录制到画面中。</p>
+<p><strong>练习题：</strong>
+1. 打开一个浏览器窗口，使用 OpenScreen 录制 30 秒的窗口操作视频
+2. 尝试录制全屏，观察两种录制模式的区别</p>
+<hr />
+<h3 id="12-auto-zoom">1.2 智能缩放（Auto Zoom）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>智能缩放（Auto Zoom）是 OpenScreen 最核心的差异化功能，也是它被称作"Screen Studio 开源替代品"的关键原因。</p>
+<p>工作原理：在录制过程中，OpenScreen 持续追踪鼠标的点击事件。每次用户点击时，录制画面会自动缩放到点击区域附近，聚焦于用户的操作。缩放动画使用 Bézier（贝塞尔）曲线进行平滑过渡，避免生硬的画面跳转。这样生成的视频会自动引导观众的视线聚焦到操作的关键区域，无需手动添加缩放效果。</p>
+<p>用户可以调节<strong>缩放深度（Zoom Depth）</strong>来控制放大倍数。较高的缩放深度意味着更强烈的放大效果，适合细节操作（如点击小按钮）；较低的缩放深度则更温和，适合展示整体操作流程。</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在录制设置界面（开始录制前），找到 &quot;Auto Zoom&quot; 选项
+   → 默认是开启状态
+2. 调节 &quot;Zoom Depth&quot; 滑块：
+   - 低缩放深度（1x - 1.5x）：轻微放大，适合整体流程展示
+   - 中缩放深度（1.5x - 2.5x）：推荐值，平衡聚焦效果和上下文可见性
+   - 高缩放深度（2.5x - 3x+）：强烈放大，适合细节操作（如点击小按钮）
+3. 开始录制
+4. 在录制过程中，每次点击鼠标时：
+   → 画面会自动以点击位置为中心进行缩放
+   → 缩放过渡使用平滑的 Bézier 曲线动画
+   → 点击结束后画面会缓慢回退到全屏视图
+5. 停止录制后，在编辑界面可以预览自动缩放效果
+6. 如果自动缩放位置不理想，可以在编辑界面手动调整缩放关键帧
+</code></pre>
+<pre><code>预期结果：
+- 录制完成的视频中，每次鼠标点击位置会被自动放大
+- 缩放过渡动画流畅，使用 Bézier 曲线平滑效果
+- 鼠标光标移动使用平滑的曲线动画（而非原始的线性移动）
+- 点击区域周围的细节清晰可见，同时保留了全屏上下文
+</code></pre>
+<p><strong>注意事项：</strong>
+- 缩放深度设置过高可能导致放大后的画面模糊（受屏幕分辨率限制）。建议在 1.5x - 2.5x 范围内选择。
+- 如果操作节奏很快（频繁点击），自动缩放可能来不及完全展开就切换到下一个位置。建议适当放慢操作节奏。
+- 在编辑界面中可以通过拖动时间轴上的缩放关键帧来手动调整缩放位置和时长。</p>
+<p><strong>练习题：</strong>
+1. 使用中缩放深度（2x）录制一段展示浏览器中点击 3 个不同按钮的操作视频，观察自动缩放效果
+2. 分别使用低（1x）和高（3x）缩放深度录制同一段操作，对比效果差异</p>
+<hr />
+<h3 id="13">1.3 音频捕获设置</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenScreen 支持同时录制麦克风音频和系统音频（System Audio，即电脑播放的声音）。但音频捕获的能力因平台而异，这是用户最常遇到问题的环节之一。</p>
+<p>各平台音频支持情况：</p>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>麦克风</th>
+<th>系统音频</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS 13+</td>
+<td>支持</td>
+<td>支持</td>
+<td>系统音频通过 Electron desktopCapturer 原生捕获</td>
+</tr>
+<tr>
+<td>macOS 12 及以下</td>
+<td>支持</td>
+<td>不支持</td>
+<td>仅能录制麦克风，无法捕获系统播放的音频</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td>支持</td>
+<td>支持</td>
+<td>通过 desktopCapturer 原生支持</td>
+</tr>
+<tr>
+<td>Linux</td>
+<td>支持</td>
+<td>需 PipeWire</td>
+<td>需要安装并启用 PipeWire 音频服务</td>
+</tr>
+</tbody>
+</table>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在录制设置界面，找到音频设置区域
+2. 麦克风设置：
+   - 勾选 &quot;Record Microphone&quot; 启用麦克风录制
+   - 从下拉列表中选择要使用的麦克风设备
+   - 调节麦克风音量（建议测试录制几秒钟确认音量合适）
+3. 系统音频设置（如果平台支持）：
+   - 勾选 &quot;Record System Audio&quot; 启用系统音频捕获
+   - 系统音频会捕获电脑播放的所有声音（包括浏览器、音乐播放器等）
+
+4. 验证音频设置：
+   - 开始一段短录制（5-10 秒）
+   - 对着麦克风说话
+   - 播放一段音乐或视频（测试系统音频）
+   - 停止录制后回放，确认两种音频都被正确录制
+</code></pre>
+<pre><code>预期结果：
+- 麦克风音频：录制期间说的话在回放中清晰可闻
+- 系统音频：录制期间电脑播放的声音在回放中可以听到
+- 两种音频混合在最终视频中，无需手动对齐
+</code></pre>
+<p><strong>注意事项：</strong>
+- macOS 12 及以下用户：无法捕获系统音频。如果需要录制系统声音，可以使用虚拟音频驱动（如 BlackHole）将系统音频重定向到麦克风输入。
+- Linux 用户：系统音频捕获需要 PipeWire。检查 PipeWire 是否运行：<code>systemctl --user status pipewire</code>。如果未运行，安装并启动：<code>sudo apt install pipewire &amp;&amp; systemctl --user start pipewire</code>。
+- 音频不同步是常见问题：如果录制的视频中出现音频和画面不同步的现象，尝试减少同时运行的应用程序以降低系统负载。</p>
+<p><strong>练习题：</strong>
+1. 确认你的操作系统是否支持系统音频捕获
+2. 录制一段同时包含语音旁白和系统音频的短视频（10 秒），验证音频捕获效果</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 自定义背景设置</h3>
+<p><strong>概念讲解：</strong></p>
+<p>自定义背景（Custom Backgrounds）功能允许你为录制视频设置一个视觉背景。录制画面（经过自动缩放处理后）会被居中放置在这个背景之上。这类似于在专业视频制作中将主体画面叠加在背景图上。</p>
+<p>OpenScreen 支持三种类型的背景：
+- <strong>壁纸图片（Wallpaper）</strong>：使用一张图片作为背景，适合品牌化视频
+- <strong>纯色（Solid Color）</strong>：使用单一颜色填充背景，简洁大方
+- <strong>渐变色（Gradient）</strong>：使用两种颜色的渐变作为背景，更具视觉吸引力</p>
+<p>背景效果通过 PixiJS 2D 渲染引擎在 GPU 上完成合成，确保处理效率。</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在录制设置或编辑界面中，找到 &quot;Background&quot; 设置
+2. 选择背景类型：
+   a. 壁纸图片（Wallpaper）：
+      - 点击 &quot;Upload Image&quot; 上传自定义图片
+      - 推荐使用高分辨率图片（1920x1080 或更高）
+      - 图片会自动缩放以填满背景区域
+   b. 纯色（Solid Color）：
+      - 点击颜色选择器选择颜色
+      - 推荐使用品牌色或与录制内容协调的颜色
+      - 常用选择：深色背景（#1a1a2e、#16213e）更显专业
+   c. 渐变色（Gradient）：
+      - 选择两种颜色作为渐变起点和终点
+      - 选择渐变方向（线性/径向）
+      - 推荐组合：深蓝到紫色、深灰到黑色
+3. 预览效果：录制画面会显示在背景中央，四周被背景填充
+4. 调整录制画面的圆角和阴影效果（如有选项）以增强视觉层次感
+</code></pre>
+<pre><code>预期结果：
+- 录制画面居中显示在自定义背景之上
+- 缩放操作时，背景保持不变，录制画面在背景上缩放
+- 最终导出的视频中背景效果完整呈现
+- 视频整体视觉品质显著提升，看起来更加专业
+</code></pre>
+<p><strong>注意事项：</strong>
+- 背景图片如果分辨率过低，在大屏幕上导出时可能出现模糊。建议使用至少 1920x1080 分辨率的图片。
+- 纯色背景的选择应与录制内容的色调协调。避免使用过于鲜艳的颜色（如纯红、纯黄），以免分散观众注意力。
+- 自定义背景功能在缩放时效果最佳——录制画面放大时，背景作为衬托变得更加明显。</p>
+<p><strong>练习题：</strong>
+1. 分别尝试壁纸图片、纯色和渐变色三种背景类型，导出同一段录制视频的三个版本，对比视觉效果
+2. 为你的品牌或项目选择一个合适的背景风格，说明选择理由</p>
+<hr />
+<h3 id="22">2.2 标注与注释</h3>
+<p><strong>概念讲解：</strong></p>
+<p>标注（Annotations）功能允许你在录制视频上叠加文本、箭头和图片元素，用于引导观众的注意力和解释操作步骤。标注可以设置出现的时间和持续时长，实现精确的信息展示时机控制。</p>
+<p>三种标注类型：
+- <strong>文本标注（Text）</strong>：在视频画面上添加文字说明，用于解释当前操作的意图或提供上下文信息
+- <strong>箭头指示（Arrow）</strong>：用箭头指向画面中的特定元素，用于突出按钮、菜单项或其他交互元素
+- <strong>图片叠加（Image）</strong>：将图片叠加到视频画面上，用于显示 Logo、图标或其他视觉元素</p>
+<p>标注系统与时间轴编辑器集成，每个标注在时间轴上都有对应的可拖拽片段，方便精确调整出现时机。</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在编辑界面中，点击标注工具栏（通常在画面预览上方或侧边）
+2. 添加文本标注：
+   a. 选择 &quot;Text&quot; 工具
+   b. 在画面上点击要放置文本的位置
+   c. 输入文本内容（如 &quot;点击此处登录&quot;）
+   d. 在时间轴上拖拽标注片段，设置文本出现的时间段
+   e. 调整文本样式（字体大小、颜色、背景等）
+3. 添加箭头指示：
+   a. 选择 &quot;Arrow&quot; 工具
+   b. 在画面上拖拽绘制箭头（起点到终点）
+   c. 将箭头指向需要突出的元素
+   d. 在时间轴上设置箭头出现的时间段
+4. 添加图片叠加：
+   a. 选择 &quot;Image&quot; 工具
+   b. 上传图片文件（如公司 Logo）
+   c. 调整图片大小和位置
+   d. 在时间轴上设置图片显示的时间段
+5. 预览：点击播放按钮查看标注效果
+</code></pre>
+<pre><code>预期结果：
+- 文本标注在指定时间段内显示在画面上，清晰可读
+- 箭头指示准确指向目标元素，颜色和样式与视频协调
+- 图片叠加在指定位置正确显示，不遮挡重要内容
+- 标注的出现和消失时机与操作步骤精确对齐
+</code></pre>
+<p><strong>注意事项：</strong>
+- 标注不宜过多：过多的文本和箭头会让画面变得杂乱，反而分散观众注意力。建议每个关键操作步骤最多添加 1 个标注。
+- 标注持续时间不宜过短：文本标注至少显示 2-3 秒，确保观众有足够时间阅读。
+- 箭头颜色应与背景形成足够对比：在浅色背景上使用深色箭头，深色背景上使用浅色箭头。
+- 自动缩放会改变画面的聚焦区域：确保标注的位置在缩放后仍然可见。</p>
+<p><strong>练习题：</strong>
+1. 录制一段展示 Web 应用登录流程的视频，添加文本标注说明每个步骤，添加箭头指向输入框和按钮
+2. 思考在什么情况下使用图片叠加比文本标注更有效</p>
+<hr />
+<h3 id="23">2.3 视频修剪与速度控制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenScreen 提供基础的视频编辑功能，让你无需切换到其他视频编辑软件即可完成常用的后期处理操作：</p>
+<ul>
+<li><strong>修剪（Trim）</strong>：裁剪录制视频的前后不需要的部分。例如，录制开始时的准备时间、操作失误的部分、录制结束时的停顿等。</li>
+<li><strong>速度控制（Speed Control）</strong>：调整视频的播放速度。可以将冗长的操作过程加速播放（如安装过程），或将关键操作减速播放以突出细节。</li>
+</ul>
+<p>编辑界面使用 dnd-timeline（拖拽时间轴）组件，支持直观的拖拽操作来调整视频片段。</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在编辑界面的时间轴上定位视频片段
+2. 修剪视频：
+   a. 拖拽时间轴左边缘的裁剪手柄 → 去除开头的多余部分
+   b. 拖拽时间轴右边缘的裁剪手柄 → 去除结尾的多余部分
+   c. 预览修剪后的视频，确认起止点合适
+3. 调整播放速度：
+   a. 找到速度控制选项（通常在编辑工具栏中）
+   b. 选择速度倍率：
+      - 0.5x：减速播放，突出细节
+      - 1.0x：正常速度
+      - 1.5x - 2.0x：加速播放，压缩冗长操作
+   c. 预览速度调整后的效果
+4. 完成编辑后，进入导出步骤（详见 2.4 节）
+</code></pre>
+<pre><code>预期结果：
+- 修剪后的视频精确保留需要的部分，去除了开头和结尾的无效内容
+- 速度调整后的视频播放流畅，无卡顿或音调异常
+- 编辑过程中可以随时预览效果，确认满意后再导出
+</code></pre>
+<p><strong>注意事项：</strong>
+- 修剪操作会丢失裁剪掉的视频数据。建议在修剪前先导出一份原始录制作为备份。
+- 速度调整会影响视频总时长，但不影响标注的出现时机——标注会跟随视频内容的时间位移。
+- OpenScreen 的编辑功能相对基础，不支持多轨编辑、转场效果、字幕添加等高级功能。如果需要这些功能，建议将 OpenScreen 导出的视频导入 DaVinci Resolve（免费）或 Premiere Pro 进行进一步编辑。</p>
+<p><strong>练习题：</strong>
+1. 录制一段 1 分钟的操作视频，使用修剪功能去掉前后各 5 秒的内容
+2. 将修剪后的视频速度调整为 1.5x，观察加速效果</p>
+<hr />
+<h3 id="24">2.4 多宽高比导出</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenScreen 支持将录制视频按多种宽高比（Aspect Ratio）导出，适配不同社交媒体平台的视频规格要求。这是 OpenScreen 的一个实用功能——你只需录制一次，就可以导出适合不同平台的多个版本。</p>
+<p>支持的宽高比：
+- <strong>1:1</strong> — 社交媒体方形视频（Instagram Feed、LinkedIn）
+- <strong>16:9</strong> — 标准横屏视频（YouTube、Twitter/X、博客嵌入）
+- <strong>9:16</strong> — 竖屏短视频（TikTok、Instagram Reels、YouTube Shorts、小红书）
+- <strong>4:5</strong> — Instagram 竖版方形（Instagram Feed 竖版）
+- <strong>4:3</strong> — 传统屏幕比例（演示文稿、旧设备兼容）</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 完成录制和编辑后，点击 &quot;Export&quot; 或 &quot;导出&quot; 按钮
+2. 在导出设置中，选择目标宽高比：
+   a. 选择 &quot;16:9&quot; → 适合 YouTube 发布
+   b. 选择 &quot;9:16&quot; → 适合 TikTok / Reels 发布
+   c. 选择 &quot;4:5&quot; → 适合 Instagram Feed 发布
+3. OpenScreen 会自动处理画面裁剪和缩放以适配目标比例：
+   - 对于竖屏比例（9:16、4:5），会自动选取录制画面的垂直区域
+   - 自动缩放功能会在新比例下重新计算缩放区域
+4. 点击 &quot;Export&quot; 开始导出
+5. 等待导出完成（时间取决于视频长度和渲染复杂度）
+6. 导出的视频文件保存到指定位置
+</code></pre>
+<pre><code>预期结果：
+- 16:9 导出：标准横屏视频，适合 YouTube 等平台
+- 9:16 导出：竖屏视频，自动聚焦于画面的关键区域
+- 4:5 导出：Instagram 竖版方形视频
+- 所有导出的视频中，自动缩放、背景和标注效果均正确保留
+</code></pre>
+<p><strong>注意事项：</strong>
+- 不同宽高比导出时，画面边缘可能被裁剪。如果标注放置在画面边缘，导出为竖屏比例时可能被裁掉。建议将标注放在画面中心区域。
+- 每次只能导出一个宽高比。如果需要多个版本，需要分别选择不同宽高比多次导出。
+- 导出时间与视频长度和特效复杂度成正比。带有运动模糊和复杂背景的视频导出时间会更长。</p>
+<p><strong>练习题：</strong>
+1. 将同一段录制视频分别导出为 16:9 和 9:16 两个版本，对比画面差异
+2. 思考在导出 9:16 竖屏视频时，原始横屏录制中的哪些内容可能被裁剪</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 手动缩放与关键帧调整</h3>
+<p><strong>概念讲解：</strong></p>
+<p>虽然自动缩放（Auto Zoom）能处理大多数场景，但有时自动缩放的效果可能不理想——例如缩放位置偏离了关键元素、缩放速度过快或过慢、或者需要在没有点击操作的位置添加缩放效果。这时就需要手动缩放和关键帧调整。</p>
+<p>在 OpenScreen 的编辑界面中，时间轴上会显示自动缩放生成的关键帧。你可以：
+- <strong>移动关键帧</strong>：改变缩放发生的时间点
+- <strong>调整缩放区域</strong>：改变缩放的目标位置和范围
+- <strong>添加新关键帧</strong>：在需要额外缩放效果的位置手动添加
+- <strong>删除关键帧</strong>：移除不需要的自动缩放效果</p>
+<p><strong>操作示例：</strong></p>
+<pre><code>1. 在编辑界面的时间轴上，找到缩放关键帧标记（通常显示为菱形或圆形图标）
+2. 调整现有关键帧：
+   a. 拖拽关键帧在时间轴上的位置 → 改变缩放发生的时间
+   b. 选中关键帧后，在预览画面中拖拽缩放区域 → 改变缩放目标位置
+   c. 调整缩放深度滑块 → 改变放大倍数
+3. 添加新关键帧：
+   a. 在时间轴上需要添加缩放的位置双击（或使用 &quot;Add Keyframe&quot; 按钮）
+   b. 在预览画面中拖拽选择缩放区域
+   c. 设置缩放深度和过渡动画参数
+4. 删除关键帧：
+   a. 选中不需要的关键帧
+   b. 按 Delete 键或使用 &quot;Remove Keyframe&quot; 按钮
+5. 预览调整后的效果
+</code></pre>
+<pre><code>预期结果：
+- 手动调整后的缩放位置更加精确，聚焦在关键元素上
+- 缩放时机与操作步骤完美对齐
+- 添加的关键帧补足了自动缩放遗漏的场景
+- 删除不需要的关键帧后，视频节奏更流畅
+</code></pre>
+<p><strong>注意事项：</strong>
+- 手动关键帧调整是精细操作，建议先预览自动缩放效果，再有针对性地调整不理想的部分，而非全部手动调整。
+- 过多的关键帧会使视频节奏显得急促。建议每个缩放区域至少保持 1-2 秒的稳定画面。
+- 调整关键帧后，运动模糊效果会自动重新计算。</p>
+<hr />
+<h3 id="32">3.2 从源码构建与本地开发</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenScreen 基于 MIT 开源许可发布，任何人都可以 Fork 仓库进行定制开发。如果你希望修改 OpenScreen 的行为、修复 Bug 或添加新功能，需要从源码构建项目。</p>
+<p>OpenScreen 的技术栈：
+- <strong>TypeScript</strong> — 主要编程语言
+- <strong>React</strong> — 用户界面框架
+- <strong>Electron</strong> — 桌面应用框架（提供跨平台能力）
+- <strong>Vite</strong> — 构建工具（开发模式的热重载）
+- <strong>PixiJS</strong> — 2D 渲染引擎（用于缩放、背景、运动模糊等视觉效果）</p>
+<p><strong>操作示例：</strong></p>
+<pre><code class="language-bash"># 1. 确保已安装 Node.js v18+ 和 Git
+node --version
+# 预期输出: v18.x.x 或更高
+
+git --version
+# 预期输出: git version 2.x.x
+
+# 2. Fork 并克隆仓库（在 GitHub 上 Fork 后）
+git clone https://github.com/YOUR_USERNAME/openscreen.git
+cd openscreen
+
+# 3. 安装依赖
+npm install
+# 预期输出: added xxx packages in xx秒
+
+# 4. 启动开发模式（带热重载）
+npm run dev
+# 预期输出:
+# - Vite 开发服务器启动
+# - Electron 窗口自动打开
+# - 控制台显示开发日志
+
+# 5. 修改源码后，Vite 会自动热重载
+# 修改 React 组件 → 界面自动更新
+# 修改 Electron 主进程代码 → 需要重启开发服务器
+
+# 6. 运行测试（如有）
+npm test
+
+# 7. 构建生产版本
+npm run build
+# 预期输出: 构建产物在 dist/ 目录中
+</code></pre>
+<pre><code class="language-text">预期结果：
+- npm run dev 启动后，Electron 窗口正常打开
+- 修改 React 组件文件（如 src/renderer/ 下的文件）后，界面自动更新
+- 修改 Electron 主进程文件（如 src/main/ 下的文件）后，需要手动重启
+- npm run build 生成的安装包可以在目标平台上正常安装和运行
+</code></pre>
+<p><strong>注意事项：</strong>
+- OpenScreen 项目结构可能随版本更新变化。建议在开始开发前阅读仓库中的 CONTRIBUTING.md（如有）和 README.md。
+- Electron 应用有两种进程：主进程（Main Process，Node.js 环境）和渲染进程（Renderer Process，浏览器环境）。修改代码前需要理解目标文件属于哪个进程。
+- PixiJS 渲染逻辑通常在渲染进程中。如果需要修改缩放算法、背景合成或运动模糊效果，重点查看渲染进程相关的代码。</p>
+<p><strong>练习题：</strong>
+1. Fork OpenScreen 仓库，克隆到本地并成功启动开发模式
+2. 在源码中找到处理自动缩放逻辑的文件，阅读并理解其核心算法</p>
+<hr />
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li>
+<p><strong>录制前先规划操作流程。</strong> 在开始录制前，先在脑海中或纸上梳理演示的操作步骤。明确每一步要点击什么、展示什么。规划好的录制比即兴录制更流畅，自动缩放效果也更好。</p>
+</li>
+<li>
+<p><strong>操作节奏放慢，给缩放留出时间。</strong> 每次点击操作之间保持 1-2 秒的间隔，让自动缩放有足够时间完成过渡动画。过快的连续点击会导致缩放效果互相干扰，画面频繁跳动。</p>
+</li>
+<li>
+<p><strong>选择合适的缩放深度。</strong> 缩放深度不是越大越好。对于整体流程演示，使用 1.5x-2x 的低缩放深度；对于需要突出小按钮或细节操作的场景，临时切换到 2.5x-3x 的高缩放深度。</p>
+</li>
+<li>
+<p><strong>录制完成后立即导出。</strong> OpenScreen 处于 Beta 阶段，应用崩溃时未导出的录制内容可能丢失。养成录制完成后立即导出的习惯，避免数据丢失。</p>
+</li>
+<li>
+<p><strong>为不同平台准备不同版本。</strong> 利用多宽高比导出功能，为每个目标平台准备专门的视频版本。YouTube 用 16:9，TikTok/Reels 用 9:16，Instagram Feed 用 4:5。不要试图用一个版本适配所有平台。</p>
+</li>
+<li>
+<p><strong>音频录制先测试后正式录制。</strong> 音频捕获是 OpenScreen 用户的常见痛点。正式录制前先做一次 5-10 秒的测试录制，确认麦克风和系统音频都被正确捕获，避免录制完成后才发现无音频。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p><strong>项目名称：</strong> 多平台产品演示视频制作工作流</p>
+<p><strong>需求描述：</strong> 为一个开源项目制作一套完整的产品演示视频，用于 GitHub README（16:9）、Twitter/X（16:9）、TikTok（9:16）和 Instagram Feed（4:5）四个平台的发布。视频需要包含自动缩放、自定义背景、文本标注和箭头指示，展示项目从安装到使用的核心流程。</p>
+<p><strong>综合运用知识点：</strong>
+- 基本屏幕录制（1.1 节）— 录制安装和使用流程
+- 智能缩放（1.2 节）— 自动聚焦关键操作
+- 音频捕获（1.3 节）— 录制语音旁白
+- 自定义背景（2.1 节）— 统一品牌风格
+- 标注与注释（2.2 节）— 添加步骤说明
+- 视频修剪（2.3 节）— 去除多余片段
+- 多宽高比导出（2.4 节）— 适配不同平台</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>multi-platform-demo-video/
+├── planning/
+│   └── script.md           # 录制脚本：每一步操作和对应旁白
+├── recordings/
+│   └── raw-recording.mp4   # 原始录制文件（备份）
+├── exports/
+│   ├── youtube-16x9.mp4    # YouTube 版本
+│   ├── twitter-16x9.mp4    # Twitter/X 版本
+│   ├── tiktok-9x16.mp4     # TikTok 版本
+│   └── instagram-4x5.mp4   # Instagram 版本
+└── README.md               # 工作流说明文档
+</code></pre>
+<h3 id="_11">完整实施步骤</h3>
+<p><strong>步骤一：规划录制脚本</strong></p>
+<pre><code class="language-markdown"># 产品演示视频录制脚本
+
+## 准备工作
+- 打开终端，确保命令行工具已安装
+- 打开浏览器，确保项目页面可访问
+- 设置 OpenScreen 录制参数：
+  - 目标：终端窗口
+  - 自动缩放：开启，缩放深度 2x
+  - 背景：深蓝渐变（#0f0c29 → #302b63）
+  - 麦克风：开启
+
+## 操作流程（每个步骤保持 3-5 秒）
+
+步骤 1: 打开终端
+  → 标注：文本 &quot;安装 CLI 工具&quot;
+  → 操作：输入安装命令并回车
+
+步骤 2: 等待安装完成
+  → 无标注（让自动缩放追踪进度条）
+
+步骤 3: 运行初始化命令
+  → 标注：箭头指向命令提示符
+  → 操作：输入初始化命令
+
+步骤 4: 打开项目页面
+  → 切换到浏览器窗口
+  → 标注：文本 &quot;查看生成的项目&quot;
+
+步骤 5: 展示关键功能
+  → 标注：箭头指向功能入口
+  → 操作：点击关键功能按钮
+
+步骤 6: 结束
+  → 保持 2 秒静止画面
+  → 停止录制
+</code></pre>
+<p><strong>步骤二：录制原始视频</strong></p>
+<pre><code>1. 按照 OpenScreen 安装流程启动应用（1.1 节知识点）
+2. 配置录制设置：
+   - 录制目标：选择包含终端和浏览器的屏幕区域
+   - 自动缩放：开启，缩放深度 2.0x（1.2 节知识点）
+   - 麦克风：开启，录制语音旁白（1.3 节知识点）
+3. 设置背景：选择深蓝渐变（2.1 节知识点）
+4. 按照录制脚本逐步操作
+5. 录制完成后立即导出原始视频作为备份
+</code></pre>
+<p><strong>步骤三：后期编辑</strong></p>
+<pre><code>1. 在编辑界面中修剪视频（2.3 节知识点）：
+   - 去除录制开始时的 3 秒准备时间
+   - 去除安装等待期间的多余部分（可加速到 2x）
+   - 去除录制结束时的 2 秒停顿
+
+2. 添加标注（2.2 节知识点）：
+   - 步骤 1：添加文本标注 &quot;安装 CLI 工具&quot;
+   - 步骤 3：添加箭头指向命令提示符
+   - 步骤 4：添加文本标注 &quot;查看生成的项目&quot;
+   - 步骤 5：添加箭头指向功能入口
+
+3. 手动调整缩放关键帧（3.1 节知识点）：
+   - 检查每个自动缩放的位置是否准确
+   - 调整偏离的缩放区域
+   - 确保缩放区域不超出画面边界
+</code></pre>
+<p><strong>步骤四：多平台导出</strong></p>
+<pre><code>1. 导出 YouTube 版本（2.4 节知识点）：
+   - 宽高比：16:9
+   - 文件名：youtube-16x9.mp4
+   - 检查标注在横屏下的显示效果
+
+2. 导出 TikTok 版本：
+   - 宽高比：9:16
+   - 文件名：tiktok-9x16.mp4
+   - 检查标注是否在画面中心区域（竖屏会裁剪边缘）
+
+3. 导出 Instagram 版本：
+   - 宽高比：4:5
+   - 文件名：instagram-4x5.mp4
+   - 检查标注在竖版方形下的显示效果
+
+4. 导出 Twitter/X 版本：
+   - 宽高比：16:9
+   - 文件名：twitter-16x9.mp4
+   - 与 YouTube 版本相同（可选裁剪不同片段）
+</code></pre>
+<pre><code>预期结果：
+- youtube-16x9.mp4：标准横屏视频，自动缩放效果清晰
+  → 适合嵌入 GitHub README 和博客文章
+- tiktok-9x16.mp4：竖屏视频，画面聚焦于关键操作区域
+  → 自动缩放在竖屏下重新计算，保持聚焦效果
+- instagram-4x5.mp4：竖版方形视频，兼顾信息量和画面美感
+  → 标注在 4:5 比例下完整可见
+- 所有版本均包含语音旁白、自动缩放、自定义背景和标注效果
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<ol>
+<li>
+<p><strong>基本屏幕录制（1.1 节知识点）</strong>：选择录制目标和启动录制是整个工作流的基础。录制质量直接决定后续所有步骤的效果。</p>
+</li>
+<li>
+<p><strong>智能缩放（1.2 节知识点）</strong>：2x 缩放深度在产品演示视频中提供了良好的聚焦效果。录制时放慢操作节奏，确保每次点击都有完整的缩放过渡。</p>
+</li>
+<li>
+<p><strong>音频捕获（1.3 节知识点）</strong>：语音旁白让视频更加易于理解。录制前测试麦克风音量，确保旁白清晰。</p>
+</li>
+<li>
+<p><strong>自定义背景（2.1 节知识点）</strong>：深蓝渐变背景为所有平台版本提供了统一的品牌风格。渐变色在横屏和竖屏下都有良好的视觉效果。</p>
+</li>
+<li>
+<p><strong>标注与注释（2.2 节知识点）</strong>：文本标注和箭头指示配合使用，引导观众关注关键操作。标注放置在画面中心区域，确保在不同宽高比导出时都能完整显示。</p>
+</li>
+<li>
+<p><strong>视频修剪（2.3 节知识点）</strong>：去除多余片段和加速安装等待过程，使最终视频节奏紧凑、信息密度高。</p>
+</li>
+<li>
+<p><strong>多宽高比导出（2.4 节知识点）</strong>：一次录制、多次导出，最大化内容利用率。四个版本分别针对不同平台优化。</p>
+</li>
+</ol>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li>
+<p><strong>添加品牌水印。</strong> 在所有导出版本中添加统一的品牌 Logo 图片叠加。提示：使用标注功能中的图片叠加（Image）工具，将 Logo 放置在画面角落，确保在所有宽高比下都可见。</p>
+</li>
+<li>
+<p><strong>制作 60 秒精简版。</strong> 将完整的演示视频浓缩为 60 秒的精简版，适合 Twitter/X 和短视频平台。提示：利用速度控制和修剪功能压缩冗长操作，保留最核心的 3-5 个步骤。</p>
+</li>
+<li>
+<p><strong>自动化多平台导出工作流。</strong> 编写一个 shell 脚本，在 OpenScreen 导出 16:9 版本后，使用 FFmpeg 自动裁剪生成 9:16 和 4:5 版本。提示：<code>ffmpeg -i input.mp4 -vf "crop=ih*9/16:ih" output_9x16.mp4</code></p>
+</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息/现象</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS 提示 "无法打开 OpenScreen，因为 Apple 无法检查其是否包含恶意软件"</td>
+<td>应用未经 Apple 公证签名（常见于开源 Electron 应用）</td>
+<td>右键点击应用 → 选择"打开" → 点击"打开"确认；或使用命令 <code>xattr -rd com.apple.quarantine /Applications/OpenScreen.app</code></td>
+</tr>
+<tr>
+<td>macOS 录制画面为黑屏</td>
+<td>未授予屏幕录制权限</td>
+<td>系统设置 → 隐私与安全性 → 屏幕录制 → 勾选 OpenScreen → 重启应用</td>
+</tr>
+<tr>
+<td>macOS 录制无系统音频</td>
+<td>macOS 12 及以下不支持系统音频捕获</td>
+<td>升级到 macOS 13+；或使用虚拟音频驱动（如 BlackHole）将系统音频重定向到麦克风</td>
+</tr>
+<tr>
+<td>Linux AppImage 无法启动</td>
+<td>缺少执行权限或沙箱限制</td>
+<td><code>chmod +x OpenScreen-*.AppImage</code>；如仍失败，使用 <code>./OpenScreen-*.AppImage --no-sandbox</code></td>
+</tr>
+<tr>
+<td>Linux 无系统音频</td>
+<td>未安装或未启用 PipeWire</td>
+<td>安装 PipeWire：<code>sudo apt install pipewire</code>；启动服务：<code>systemctl --user start pipewire</code></td>
+</tr>
+<tr>
+<td>自动缩放位置偏移</td>
+<td>点击位置与关键元素不完全对齐</td>
+<td>在编辑界面中手动调整缩放关键帧的位置和范围</td>
+</tr>
+<tr>
+<td>导出视频画面模糊</td>
+<td>缩放深度设置过高，超出屏幕分辨率限制</td>
+<td>降低缩放深度至 2x 以内；录制时使用更高分辨率的显示器</td>
+</tr>
+<tr>
+<td>音频和画面不同步</td>
+<td>系统负载过高导致音频缓冲区延迟</td>
+<td>关闭不必要的应用程序；降低录制分辨率；确保硬盘写入速度足够</td>
+</tr>
+<tr>
+<td>应用崩溃导致录制丢失</td>
+<td>OpenScreen Beta 阶段的稳定性问题</td>
+<td>录制完成后立即导出；定期保存工作进度；关注 GitHub Issue 列表获取修复更新</td>
+</tr>
+<tr>
+<td>Windows 上安装包被杀毒软件拦截</td>
+<td>未经签名的 Electron 安装包可能被标记</td>
+<td>将 OpenScreen 添加到杀毒软件白名单；从 GitHub Releases 下载确保来源可信</td>
+</tr>
+<tr>
+<td>标注在竖屏导出时被裁剪</td>
+<td>标注放置在画面边缘区域</td>
+<td>将标注放置在画面中心区域；在不同宽高比下预览确认标注可见性</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>使用短录制快速测试。</strong> 遇到问题时，先录制一段 5-10 秒的短视频测试。短视频导出快，便于快速排查问题是否仍然存在。确认基本功能正常后再录制长视频。</p>
+</li>
+<li>
+<p><strong>检查系统权限设置。</strong> 大多数录制问题（黑屏、无音频）与系统权限有关。在 macOS 上，检查"系统设置 → 隐私与安全性"中的屏幕录制、麦克风和辅助功能权限。在 Linux 上，检查 PipeWire 服务状态和用户权限。</p>
+</li>
+<li>
+<p><strong>关注 GitHub Issue 列表。</strong> OpenScreen 有 102 个未关闭 Issue。遇到问题时，先在 <a href="https://github.com/siddharthvaddem/openscreen/issues">GitHub Issues</a> 中搜索是否有其他人报告了相同问题。如果是已知 Bug，可以关注其修复进展或临时使用社区提供的 workaround。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<table>
+<thead>
+<tr>
+<th>顺序</th>
+<th>资源</th>
+<th>重点内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><a href="https://github.com/siddharthvaddem/openscreen">GitHub README</a></td>
+<td>项目概览、功能列表、安装指引、平台限制说明</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://github.com/siddharthvaddem/openscreen/releases">GitHub Releases</a></td>
+<td>版本更新日志、新功能介绍、Bug 修复记录</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://github.com/siddharthvaddem/openscreen/issues">GitHub Issues</a></td>
+<td>已知问题列表、社区反馈、功能请求讨论</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://news.ycombinator.com/">Hacker News 讨论</a>（搜索 "OpenScreen"）</td>
+<td>作者访谈、社区评价、与 Screen Studio 的对比讨论</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://openscreen.vercel.app/">OpenScreen 官方主页</a></td>
+<td>功能演示、下载链接、最佳实践示例</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://byteiota.com/">ByteIota 评测文章</a></td>
+<td>深度评测、与其他屏幕录制工具的对比</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_19">推荐进阶资源</h3>
+<ol>
+<li>
+<p><strong>Electron 桌面应用开发</strong> — OpenScreen 基于 Electron 构建。如果希望参与源码贡献或 Fork 定制，推荐学习 <a href="https://www.electronjs.org/docs">Electron 官方文档</a>。重点关注 <code>desktopCapturer</code> API（屏幕捕获）和 <code>BrowserWindow</code> API（窗口管理）。</p>
+</li>
+<li>
+<p><strong>PixiJS 2D 渲染引擎</strong> — OpenScreen 的缩放、背景和运动模糊效果基于 PixiJS 实现。推荐学习 <a href="https://pixijs.com/">PixiJS 官方文档</a>。理解 PixiJS 的 Sprite、Container、Filter 和 Ticker 概念有助于理解 OpenScreen 的渲染管线。</p>
+</li>
+<li>
+<p><strong>视频制作与剪辑基础</strong> — 如果希望提升视频制作技能，推荐学习基本的视频剪辑原理：镜头语言、节奏控制、色彩搭配。这些知识可以帮助你制作更专业的演示视频，与 OpenScreen 的自动缩放和背景功能配合使用效果更佳。</p>
+</li>
+</ol>
+<h3 id="_20">术语对照表</h3>
+<table>
+<thead>
+<tr>
+<th>英文术语</th>
+<th>中文译名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Screen Recording</td>
+<td>屏幕录制</td>
+<td>捕获屏幕画面生成视频的过程</td>
+</tr>
+<tr>
+<td>Auto Zoom / Smart Zoom</td>
+<td>自动缩放 / 智能缩放</td>
+<td>根据鼠标点击自动聚焦画面区域的功能</td>
+</tr>
+<tr>
+<td>Zoom Depth</td>
+<td>缩放深度</td>
+<td>控制自动缩放的放大倍数</td>
+</tr>
+<tr>
+<td>Motion Blur</td>
+<td>运动模糊</td>
+<td>缩放过渡中的视觉模糊效果</td>
+</tr>
+<tr>
+<td>Custom Background</td>
+<td>自定义背景</td>
+<td>录制画面的背景设置（壁纸/纯色/渐变）</td>
+</tr>
+<tr>
+<td>Annotations</td>
+<td>标注 / 注释</td>
+<td>叠加在视频上的文本、箭头和图片元素</td>
+</tr>
+<tr>
+<td>Trim</td>
+<td>修剪</td>
+<td>裁剪视频片段的起止部分</td>
+</tr>
+<tr>
+<td>Speed Control</td>
+<td>速度控制</td>
+<td>调整视频播放速度</td>
+</tr>
+<tr>
+<td>Aspect Ratio</td>
+<td>宽高比</td>
+<td>视频画面的宽度与高度比例</td>
+</tr>
+<tr>
+<td>Keyframe</td>
+<td>关键帧</td>
+<td>时间轴上标记缩放位置和参数的节点</td>
+</tr>
+<tr>
+<td>Bézier Curve</td>
+<td>贝塞尔曲线</td>
+<td>用于缩放和光标动画的平滑过渡算法</td>
+</tr>
+<tr>
+<td>desktopCapturer</td>
+<td>桌面捕获器</td>
+<td>Electron 的屏幕画面捕获 API</td>
+</tr>
+<tr>
+<td>PipeWire</td>
+<td>PipeWire</td>
+<td>Linux 的音频/视频流框架</td>
+</tr>
+<tr>
+<td>Gatekeeper</td>
+<td>Gatekeeper</td>
+<td>macOS 的应用安全检查机制</td>
+</tr>
+<tr>
+<td>AppImage</td>
+<td>AppImage</td>
+<td>Linux 的便携应用打包格式</td>
+</tr>
+<tr>
+<td>Electron</td>
+<td>Electron</td>
+<td>基于 Chromium 和 Node.js 的桌面应用框架</td>
+</tr>
+<tr>
+<td>PixiJS</td>
+<td>PixiJS</td>
+<td>基于 WebGL 的 2D 渲染引擎</td>
+</tr>
+<tr>
+<td>dnd-timeline</td>
+<td>dnd-timeline</td>
+<td>时间轴拖拽组件库</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<blockquote>
+<p><strong>教程信息来源：</strong>
+- <a href="https://github.com/siddharthvaddem/openscreen">GitHub - siddharthvaddem/openscreen</a> — 源码、README、功能说明
+- <a href="https://api.github.com/repos/siddharthvaddem/openscreen">GitHub API - siddharthvaddem/openscreen</a> — 项目元数据
+- <a href="https://openscreen.vercel.app/">OpenScreen 官方主页</a> — 功能介绍、下载链接
+- <a href="https://emelia.io/">Emelia.io - OpenScreen Review</a> — Auto Zoom + Bézier cursor animations 详细评测
+- <a href="https://byteiota.com/">ByteIota - OpenScreen Review</a> — "Best Open Source Screen Recorder" 评测
+- <a href="https://news.ycombinator.com/">Hacker News Discussion</a> — 作者访谈、社区反馈
+- 信息获取日期：2026-04-10</p>
+</blockquote>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

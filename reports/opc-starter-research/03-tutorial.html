@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPC-Starter - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-12 小时 | **前置知识：** React（Hooks、函数组件）、TypeScript（类型系统）、HTML/CSS 基础</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11" class="toc-h3">1.1 项目结构与核心概念</a></li>
+<li><a href="#12-msw-mock" class="toc-h3">1.2 MSW Mock 模式与开发环境</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21" class="toc-h3">2.1 认证系统与路由守卫</a></li>
+<li><a href="#22-dataservice-zustand" class="toc-h3">2.2 DataService 数据访问与 Zustand 状态管理</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-agent-studio-a2ui" class="toc-h3">3.1 Agent Studio 与 A2UI 协议</a></li>
+<li><a href="#32" class="toc-h3">3.2 自定义数据实体与扩展</a></li>
+<li><a href="#33-ai-coding-bmad" class="toc-h3">3.3 AI Coding 最佳实践与 BMAD 方法论</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OPC-Starter - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-12 小时<br>**前置知识：** React（Hooks、函数组件）、TypeScript（类型系统）、HTML/CSS 基础</div>
+                    </header>
+                    <h1 id="opc-starter-">OPC-Starter - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-12 小时
+<strong>前置知识：</strong> React（Hooks、函数组件）、TypeScript（类型系统）、HTML/CSS 基础</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Windows、Linux 均可</li>
+<li><strong>Node.js：</strong> &gt;= 20.x（推荐 LTS 版本）</li>
+<li><strong>npm：</strong> &gt;= 10.x</li>
+<li><strong>Git：</strong> 任意最新版本</li>
+<li><strong>Supabase 账户：</strong> 仅真实后端模式需要（MSW Mock 模式不需要）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 步骤 1：克隆仓库
+git clone https://github.com/alibaba/opc-starter.git
+cd opc-starter
+
+# 步骤 2：安装应用依赖（在 app 子目录下）
+npm --prefix app install
+
+# 步骤 3：以 MSW Mock 模式启动（推荐，无需配置后端）
+VITE_ENABLE_MSW=true npm run dev:test
+</code></pre>
+<p>如果 <code>npm install</code> 因 ECONNRESET 错误失败（内部镜像源不可达），执行以下修复：</p>
+<pre><code class="language-bash">cd app
+rm -rf node_modules package-lock.json
+npm install --registry https://registry.npmjs.org/
+cd ..
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 启动开发服务器后，浏览器打开 http://localhost:5173
+# 应看到登录页面
+
+# 使用测试账号登录
+# 邮箱: test@example.com
+# 密码: 888888
+
+# 登录成功后应看到 OPC-Starter 仪表盘
+</code></pre>
+<pre><code>预期输出：
+- 浏览器打开 http://localhost:5173 显示登录页面
+- 输入测试账号后成功跳转到仪表盘
+- 左侧显示导航栏，顶部显示 Header
+- 右下角显示 Agent Studio 悬浮对话框按钮
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11">1.1 项目结构与核心概念</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OPC-Starter 采用模块化的目录结构，每个目录有明确的职责划分。理解项目结构是高效使用和扩展 OPC-Starter 的第一步。项目遵循"关注点分离"原则，将认证、UI 组件、数据服务、状态管理等分到不同目录，使 AI 编码工具能够快速定位和修改代码。</p>
+<p>核心概念：
+- <strong>SPA（单页应用）</strong>：OPC-Starter 基于 Vite 构建，所有页面在客户端渲染
+- <strong>模块化架构</strong>：认证、组织、Agent、数据同步各自独立
+- <strong>AGENTS.md</strong>：AI 编码工具的"使用说明书"，Cursor/Qoder 可直接解析
+- <strong>BMAD 方法论</strong>：结构化的 AI 辅助开发流程，存放在 <code>_bmad/</code> 目录</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看项目顶层结构
+ls -la
+</code></pre>
+<pre><code>预期输出：
+_bmad/           # BMAD 方法论配置（PRD 模板、架构文档）
+app/             # 应用主目录（所有源代码）
+docs/            # 项目文档（Architecture.md、DESIGN_TOKENS.md 等）
+AGENTS.md        # AI 编码规范指南
+package.json     # 根目录代理脚本（供 AI 工具从根目录执行命令）
+</code></pre>
+<pre><code class="language-bash"># 查看 app/src 核心目录结构
+ls app/src/
+</code></pre>
+<pre><code>预期输出：
+auth/            # 认证模块（AuthContext、AuthProvider、ProtectedRoute）
+components/      # React 组件
+  agent/         # Agent Studio（A2UI 渲染、对话窗口）
+  business/      # 业务组件（头像、同步状态）
+  layout/        # 布局组件（Header、Sidebar、MainLayout）
+  organization/  # 组织架构组件（OrgTree、成员管理）
+  ui/            # 基础 UI 组件（shadcn/ui 风格）
+config/          # 路由和常量配置
+hooks/           # 自定义 React Hooks
+lib/             # 工具库
+  agent/         # Agent 客户端（SSE、工具执行）
+  reactive/      # 响应式数据层
+  supabase/      # Supabase 客户端封装
+pages/           # 页面组件
+services/        # 服务层
+  data/          # DataService（核心数据访问层）
+mocks/           # MSW Mock 处理器
+stores/          # Zustand 状态管理
+types/           # TypeScript 类型定义
+utils/           # 工具函数
+</code></pre>
+<p><strong>练习题：</strong>
+1. 打开 <code>app/src/config/routes.tsx</code>，找出当前注册了哪些路由。
+2. 查看 <code>app/src/stores/</code> 目录，列出所有 Zustand Store 文件及其命名。</p>
+<hr />
+<h3 id="12-msw-mock">1.2 MSW Mock 模式与开发环境</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MSW（Mock Service Worker）是 OPC-Starter 的核心开发工具之一。它通过拦截浏览器中的网络请求，返回预定义的模拟数据，使前端开发无需依赖真实后端。这意味着你可以在没有 Supabase 账户、没有数据库的情况下运行和开发完整的 OPC-Starter 应用。</p>
+<p>MSW Mock 模式的工作原理：
+1. 当 <code>VITE_ENABLE_MSW=true</code> 时，应用在启动时初始化 MSW
+2. MSW 注册 Service Worker 拦截所有发往 Supabase 的 API 请求
+3. 返回 <code>app/src/mocks/</code> 中定义的模拟数据
+4. 测试账号来自 <code>app/cypress/fixtures/users.json</code></p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 启动 MSW Mock 模式
+VITE_ENABLE_MSW=true npm run dev:test
+</code></pre>
+<pre><code class="language-bash"># 查看 Mock 测试账号配置
+cat app/cypress/fixtures/users.json
+</code></pre>
+<pre><code>预期输出（示例）：
+[
+  {
+    &quot;email&quot;: &quot;test@example.com&quot;,
+    &quot;password&quot;: &quot;888888&quot;
+  }
+]
+</code></pre>
+<pre><code class="language-bash"># 查看环境变量配置模板
+cat app/env.local.example
+</code></pre>
+<pre><code>预期输出：
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_DASHSCOPE_API_KEY=your_dashscope_api_key  # 可选，用于 Agent LLM
+</code></pre>
+<pre><code class="language-bash"># 切换到真实 Supabase 模式（需要 Supabase 账户）
+cp app/env.local.example app/.env.local
+# 编辑 app/.env.local，填入真实的 Supabase URL 和 Key
+npm run dev
+</code></pre>
+<p><strong>练习题：</strong>
+1. 在 MSW Mock 模式下登录后，打开浏览器 DevTools 的 Network 标签，观察哪些请求被 MSW 拦截了。
+2. 查看 <code>app/src/mocks/</code> 目录，了解有哪些 Mock 处理器。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21">2.1 认证系统与路由守卫</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OPC-Starter 的认证系统基于 Supabase Auth，提供了完整的用户认证功能，包括邮箱/密码登录和 OAuth 社交登录。认证状态通过 AuthContext 在组件树中共享，ProtectedRoute 组件确保未登录用户被重定向到登录页。</p>
+<p>认证流程：
+1. 用户在登录页输入凭据
+2. AuthProvider 调用 Supabase Auth 的 <code>signInWithPassword</code> 或 <code>signInWithOAuth</code>
+3. Supabase 返回 JWT Token
+4. AuthContext 更新认证状态，触发路由重定向
+5. ProtectedRoute 检查认证状态，未认证则重定向到 <code>/login</code></p>
+<p><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</p>
+<pre><code class="language-typescript">// app/src/auth/AuthProvider.tsx
+// 认证提供者 - 监听 Supabase 认证状态变化并同步到 AuthContext
+
+import { createContext, useContext, useEffect, useState } from 'react';
+import type { Session, User } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase/client';
+
+// 定义认证上下文类型
+interface AuthContextType {
+  session: Session | null;   // 当前会话
+  user: User | null;         // 当前用户
+  loading: boolean;          // 加载状态
+  signIn: (email: string, password: string) =&gt; Promise&lt;void&gt;;
+  signOut: () =&gt; Promise&lt;void&gt;;
+}
+
+// 创建认证上下文
+const AuthContext = createContext&lt;AuthContextType | undefined&gt;(undefined);
+
+// 认证提供者组件 - 包裹整个应用
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState&lt;Session | null&gt;(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() =&gt; {
+    // 获取当前会话（Supabase 会自动从 localStorage 恢复）
+    supabase.auth.getSession().then(({ data: { session } }) =&gt; {
+      setSession(session);
+      setLoading(false);
+    });
+
+    // 监听认证状态变化（登录、登出、Token 刷新）
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) =&gt; {
+        setSession(session);
+      }
+    );
+
+    // 清理订阅
+    return () =&gt; subscription.unsubscribe();
+  }, []);
+
+  // 登录方法
+  const signIn = async (email: string, password: string) =&gt; {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  };
+
+  // 登出方法
+  const signOut = async () =&gt; {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  };
+
+  return (
+    &lt;AuthContext.Provider value={{ session, user: session?.user ?? null, loading, signIn, signOut }}&gt;
+      {children}
+    &lt;/AuthContext.Provider&gt;
+  );
+}
+
+// 自定义 Hook - 在组件中获取认证状态
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth 必须在 AuthProvider 内部使用');
+  }
+  return context;
+}
+</code></pre>
+<pre><code class="language-typescript">// app/src/auth/ProtectedRoute.tsx
+// 路由守卫 - 保护需要认证的页面
+
+import { Navigate } from 'react-router-dom';
+import { useAuth } from './AuthProvider';
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+export function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const { session, loading } = useAuth();
+
+  // 加载中显示空白或加载动画
+  if (loading) {
+    return &lt;div className=&quot;flex items-center justify-center h-screen&quot;&gt;加载中...&lt;/div&gt;;
+  }
+
+  // 未认证则重定向到登录页
+  if (!session) {
+    return &lt;Navigate to=&quot;/login&quot; replace /&gt;;
+  }
+
+  // 已认证则渲染子组件
+  return &lt;&gt;{children}&lt;/&gt;;
+}
+</code></pre>
+<pre><code class="language-typescript">// app/src/config/routes.tsx
+// 路由配置示例 - 使用 ProtectedRoute 包裹需要认证的页面
+
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute } from '@/auth/ProtectedRoute';
+import { LoginPage } from '@/pages/LoginPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { SettingsPage } from '@/pages/SettingsPage';
+
+export function AppRoutes() {
+  return (
+    &lt;Routes&gt;
+      {/* 公开路由 - 无需认证 */}
+      &lt;Route path=&quot;/login&quot; element={&lt;LoginPage /&gt;} /&gt;
+
+      {/* 受保护路由 - 需要认证 */}
+      &lt;Route
+        path=&quot;/&quot;
+        element={
+          &lt;ProtectedRoute&gt;
+            &lt;DashboardPage /&gt;
+          &lt;/ProtectedRoute&gt;
+        }
+      /&gt;
+      &lt;Route
+        path=&quot;/settings&quot;
+        element={
+          &lt;ProtectedRoute&gt;
+            &lt;SettingsPage /&gt;
+          &lt;/ProtectedRoute&gt;
+        }
+      /&gt;
+    &lt;/Routes&gt;
+  );
+}
+</code></pre>
+<p><strong>注意事项：</strong>
+- 在 MSW Mock 模式下，Supabase Auth 的登录请求会被 MSW 拦截并返回模拟的 JWT Token
+- 浏览器白屏时，可能是 localStorage 中残留了过期的 Token，需清除站点数据
+- ProtectedRoute 应包裹所有需要认证的页面路由，不要遗漏</p>
+<p><strong>练习题：</strong>
+1. 尝试在 MSW Mock 模式下，不使用测试账号而是输入错误的密码，观察错误处理行为。
+2. 在 <code>routes.tsx</code> 中添加一个新的公开路由 <code>/about</code>，指向一个简单的 AboutPage 组件。</p>
+<hr />
+<h3 id="22-dataservice-zustand">2.2 DataService 数据访问与 Zustand 状态管理</h3>
+<p><strong>概念讲解：</strong></p>
+<p>DataService 是 OPC-Starter 的数据访问核心，采用"本地优先"架构。所有数据操作（读取和写入）都通过 DataService 进行，它封装了 IndexedDB 本地缓存和 Supabase 远程 API 的交互逻辑。</p>
+<p>数据流路径：
+- <strong>读取</strong>：UI → Zustand Store → DataService → IndexedDB（100% 本地）
+- <strong>写入</strong>：UI → Zustand Store → DataService → IndexedDB（乐观更新）→ Supabase（异步）
+- <strong>同步</strong>：Supabase Realtime → DataService → IndexedDB → Zustand Store → UI</p>
+<p>Zustand Store 作为 UI 和 DataService 之间的桥梁，负责管理组件级别的状态，并通过 DataService 进行持久化。</p>
+<p><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</p>
+<pre><code class="language-typescript">// app/src/stores/useProfileStore.ts
+// 用户信息状态管理 - 演示 DataService + Zustand 的协作方式
+
+import { create } from 'zustand';
+import type { Profile } from '@/types/profile';
+
+// 定义 Store 的状态和操作
+interface ProfileState {
+  profile: Profile | null;                    // 当前用户信息
+  loading: boolean;                           // 加载状态
+  error: string | null;                       // 错误信息
+
+  // 操作方法
+  fetchProfile: (userId: string) =&gt; Promise&lt;void&gt;;  // 获取用户信息
+  updateProfile: (updates: Partial&lt;Profile&gt;) =&gt; Promise&lt;void&gt;;  // 更新用户信息
+}
+
+export const useProfileStore = create&lt;ProfileState&gt;((set) =&gt; ({
+  profile: null,
+  loading: false,
+  error: null,
+
+  // 获取用户信息 - 通过 DataService 从 IndexedDB 读取
+  fetchProfile: async (userId: string) =&gt; {
+    set({ loading: true, error: null });
+    try {
+      // DataService 会先从 IndexedDB 本地缓存读取
+      // 如果缓存不存在，则从 Supabase 获取并缓存到 IndexedDB
+      const profile = await DataService.profiles.getById(userId);
+      set({ profile, loading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false });
+    }
+  },
+
+  // 更新用户信息 - 乐观更新策略
+  updateProfile: async (updates: Partial&lt;Profile&gt;) =&gt; {
+    if (!useProfileStore.getState().profile) return;
+
+    // 1. 乐观更新：先更新本地状态，用户立即看到变化
+    const previousProfile = useProfileStore.getState().profile;
+    const optimisticProfile = { ...previousProfile, ...updates };
+    set({ profile: optimisticProfile });
+
+    try {
+      // 2. 通过 DataService 写入 IndexedDB 并异步同步到 Supabase
+      await DataService.profiles.update(optimisticProfile);
+    } catch (error) {
+      // 3. 失败时回滚到之前的状态
+      set({ profile: previousProfile, error: (error as Error).message });
+    }
+  },
+}));
+</code></pre>
+<pre><code class="language-typescript">// app/src/pages/DashboardPage.tsx
+// 在页面组件中使用 Zustand Store 的示例
+
+import { useEffect } from 'react';
+import { useAuth } from '@/auth/AuthProvider';
+import { useProfileStore } from '@/stores/useProfileStore';
+
+export function DashboardPage() {
+  const { user } = useAuth();
+  const { profile, loading, fetchProfile } = useProfileStore();
+
+  // 页面加载时获取用户信息
+  useEffect(() =&gt; {
+    if (user) {
+      fetchProfile(user.id);
+    }
+  }, [user, fetchProfile]);
+
+  if (loading) return &lt;div&gt;加载用户信息...&lt;/div&gt;;
+  if (!profile) return &lt;div&gt;未找到用户信息&lt;/div&gt;;
+
+  return (
+    &lt;div className=&quot;p-6&quot;&gt;
+      &lt;h1 className=&quot;text-2xl font-bold&quot;&gt;欢迎, {profile.full_name}&lt;/h1&gt;
+      &lt;p className=&quot;text-gray-500 mt-2&quot;&gt;这是你的仪表盘&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>禁止直接操作 IndexedDB 或 Supabase</strong>：所有数据操作必须通过 DataService，否则会破坏缓存一致性和离线同步功能
+- <strong>乐观更新需考虑回滚</strong>：写入失败时需要回滚 Zustand Store 的状态到更新前的值
+- <strong>避免在 useEffect 中创建订阅泄漏</strong>：使用 Supabase Realtime 时确保在组件卸载时取消订阅</p>
+<p><strong>练习题：</strong>
+1. 在 DashboardPage 中添加一个"更新昵称"按钮，点击后调用 <code>updateProfile</code> 修改用户的 <code>full_name</code>。
+2. 查看 DataService 的适配器目录 <code>app/src/services/data/adapters/</code>，了解适配器模式如何处理数据序列化。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-agent-studio-a2ui">3.1 Agent Studio 与 A2UI 协议</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Agent Studio 是 OPC-Starter 最具创新性的功能，它实现了 A2UI（Agent to UI）协议——一种让 AI Agent 通过自然语言描述动态生成 UI 组件的标准协议。在 2026 年的 AI Agent 协议栈（A2A → MCP → AG-UI → A2UI）中，A2UI 负责最上层的前端渲染环节。</p>
+<p>工作流程：
+1. 用户在悬浮对话框（AgentWindow）中输入自然语言指令
+2. SSE 客户端将请求流式发送到 Supabase Edge Function（<code>ai-assistant</code>）
+3. Edge Function 调用百炼 API（Qwen-Plus 模型），使用 OpenAI 兼容格式
+4. AI 返回两种内容：A2UI 指令（描述要渲染的 UI 组件）和工具调用（导航、上下文获取）
+5. A2UI Renderer 从组件注册表（Registry）查找对应组件并动态渲染
+6. Tool Executor 执行工具调用</p>
+<p><strong>代码示例：</strong> 基于官方架构文档 v1.1.0</p>
+<pre><code class="language-typescript">// app/src/lib/agent/sseClient.ts
+// SSE 流客户端 - 与 AI Assistant Edge Function 通信
+
+import type { AgentMessage, A2UIInstruction, ToolCall } from '@/types/agent';
+
+interface SSEClientOptions {
+  onMessage: (message: AgentMessage) =&gt; void;       // 接收到消息回调
+  onA2UI: (instruction: A2UIInstruction) =&gt; void;    // 接收到 A2UI 指令回调
+  onToolCall: (toolCall: ToolCall) =&gt; void;          // 工具调用回调
+  onError: (error: Error) =&gt; void;                   // 错误回调
+  onComplete: () =&gt; void;                             // 流结束回调
+}
+
+// 创建 SSE 连接，发送用户消息并流式接收 AI 响应
+export async function createSSEConnection(
+  message: string,       // 用户输入的自然语言消息
+  options: SSEClientOptions
+): Promise&lt;void&gt; {
+  // 获取当前用户的认证 Token
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('未登录');
+
+  // 调用 Supabase Edge Function，建立 SSE 连接
+  const response = await fetch(`${supabaseUrl}/functions/v1/ai-assistant`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session.access_token}`,  // JWT Token 认证
+    },
+    body: JSON.stringify({ message }),  // 用户消息
+  });
+
+  if (!response.ok) throw new Error(`请求失败: ${response.status}`);
+
+  // 读取 SSE 流
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+
+  if (!reader) throw new Error('无法读取响应流');
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    // 解析 SSE 数据行（格式: data: {...}\n\n）
+    const lines = chunk.split('\n').filter(line =&gt; line.startsWith('data: '));
+
+    for (const line of lines) {
+      const data = JSON.parse(line.slice(6));
+
+      // 根据数据类型分发到不同的回调
+      if (data.type === 'message') {
+        options.onMessage(data);
+      } else if (data.type === 'a2ui') {
+        options.onA2UI(data);
+      } else if (data.type === 'tool_call') {
+        options.onToolCall(data);
+      }
+    }
+  }
+
+  options.onComplete();
+}
+</code></pre>
+<pre><code class="language-typescript">// app/src/components/agent/a2ui/A2UIRenderer.tsx
+// A2UI 渲染器 - 根据 A2UI 指令动态渲染对应的 UI 组件
+
+import type { A2UIInstruction } from '@/types/agent';
+import { a2uiRegistry } from './registry';
+
+interface A2UIRendererProps {
+  instructions: A2UIInstruction[];  // AI 返回的 A2UI 指令列表
+}
+
+export function A2UIRenderer({ instructions }: A2UIRendererProps) {
+  return (
+    &lt;div className=&quot;a2ui-container space-y-4&quot;&gt;
+      {instructions.map((instruction, index) =&gt; {
+        // 从注册表中查找对应的 React 组件
+        const Component = a2uiRegistry[instruction.componentType];
+
+        if (!Component) {
+          console.warn(`未注册的 A2UI 组件类型: ${instruction.componentType}`);
+          return null;
+        }
+
+        // 动态渲染组件，传入 AI 生成的 props
+        return (
+          &lt;Component
+            key={index}
+            {...instruction.props}
+          /&gt;
+        );
+      })}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>A2UI 协议版本</strong>：当前使用 v0.8 版本，API 可能发生不兼容变更，建议封装渲染层隔离变更
+- <strong>禁止使用未注册的组件</strong>：A2UI 指令中的 <code>componentType</code> 必须在 Registry 中注册，否则会静默跳过
+- <strong>禁止直接调用 LLM API</strong>：必须通过 <code>ai-assistant</code> Edge Function 中转，不要在前端直接暴露 API Key
+- <strong>SSE 连接断开处理</strong>：网络不稳定时 SSE 连接可能断开，需要实现自动重连机制</p>
+<p><strong>练习题：</strong>
+1. 在 Agent Studio 悬浮对话框中输入"帮我导航到设置页面"，观察 Agent 如何调用导航工具。
+2. 查看 <code>app/src/components/agent/a2ui/registry.ts</code>，了解当前注册了哪些 A2UI 组件类型。</p>
+<hr />
+<h3 id="32">3.2 自定义数据实体与扩展</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OPC-Starter 提供了明确的扩展指南来添加新的数据实体。每个数据实体需要四个部分：TypeScript 类型定义、数据适配器、Zustand Store 和数据库 Schema。这种"类型 → 适配器 → Store → SQL"的扩展路径保证了新实体与 DataService 的本地优先架构完全兼容。</p>
+<p><strong>代码示例：</strong> 基于官方架构文档 v1.1.0 的扩展指南</p>
+<pre><code class="language-typescript">// 步骤 1：定义 TypeScript 类型
+// app/src/types/task.ts
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'done';
+  assignee_id: string | null;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+}
+</code></pre>
+<pre><code class="language-typescript">// 步骤 2：创建数据适配器
+// app/src/services/data/adapters/taskAdapter.ts
+
+import type { Task } from '@/types/task';
+
+// 适配器负责数据库行数据与 TypeScript 类型之间的转换
+export const taskAdapter = {
+  // 将数据库行转换为 TypeScript 对象
+  fromDB(row: Record&lt;string, unknown&gt;): Task {
+    return {
+      id: row.id as string,
+      title: row.title as string,
+      description: row.description as string,
+      status: row.status as Task['status'],
+      assignee_id: row.assignee_id as string | null,
+      organization_id: row.organization_id as string,
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string,
+    };
+  },
+
+  // 将 TypeScript 对象转换为数据库行
+  toDB(task: Partial&lt;Task&gt;): Record&lt;string, unknown&gt; {
+    const row: Record&lt;string, unknown&gt; = {};
+    if (task.title !== undefined) row.title = task.title;
+    if (task.description !== undefined) row.description = task.description;
+    if (task.status !== undefined) row.status = task.status;
+    if (task.assignee_id !== undefined) row.assignee_id = task.assignee_id;
+    if (task.organization_id !== undefined) row.organization_id = task.organization_id;
+    return row;
+  },
+};
+</code></pre>
+<pre><code class="language-typescript">// 步骤 3：创建 Zustand Store
+// app/src/stores/useTaskStore.ts
+
+import { create } from 'zustand';
+import type { Task } from '@/types/task';
+
+interface TaskState {
+  tasks: Task[];
+  loading: boolean;
+  error: string | null;
+  fetchTasks: (organizationId: string) =&gt; Promise&lt;void&gt;;
+  addTask: (task: Omit&lt;Task, 'id' | 'created_at' | 'updated_at'&gt;) =&gt; Promise&lt;void&gt;;
+  updateTaskStatus: (taskId: string, status: Task['status']) =&gt; Promise&lt;void&gt;;
+}
+
+export const useTaskStore = create&lt;TaskState&gt;((set, get) =&gt; ({
+  tasks: [],
+  loading: false,
+  error: null,
+
+  fetchTasks: async (organizationId: string) =&gt; {
+    set({ loading: true, error: null });
+    try {
+      // 通过 DataService 获取任务列表（从 IndexedDB 本地缓存读取）
+      const tasks = await DataService.tasks.getByOrganization(organizationId);
+      set({ tasks, loading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false });
+    }
+  },
+
+  addTask: async (task) =&gt; {
+    const previousTasks = get().tasks;
+    // 乐观更新：先添加到本地状态
+    const tempId = `temp_${Date.now()}`;
+    const optimisticTask: Task = {
+      ...task,
+      id: tempId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    set({ tasks: [...previousTasks, optimisticTask] });
+
+    try {
+      // 通过 DataService 持久化
+      await DataService.tasks.create(task);
+    } catch (error) {
+      // 失败时回滚
+      set({ tasks: previousTasks, error: (error as Error).message });
+    }
+  },
+
+  updateTaskStatus: async (taskId, status) =&gt; {
+    const previousTasks = get().tasks;
+    // 乐观更新
+    set({
+      tasks: previousTasks.map(t =&gt;
+        t.id === taskId ? { ...t, status, updated_at: new Date().toISOString() } : t
+      ),
+    });
+
+    try {
+      await DataService.tasks.update(taskId, { status });
+    } catch (error) {
+      set({ tasks: previousTasks, error: (error as Error).message });
+    }
+  },
+}));
+</code></pre>
+<pre><code class="language-sql">-- 步骤 4：更新数据库 Schema
+-- 在 app/supabase/setup.sql 中添加
+
+-- 任务表
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  status TEXT CHECK (status IN ('todo', 'in_progress', 'done')) DEFAULT 'todo',
+  assignee_id UUID REFERENCES profiles(id),
+  organization_id UUID REFERENCES organizations(id) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- RLS 策略：用户只能访问自己所属组织的任务
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY &quot;用户可访问所属组织的任务&quot;
+  ON tasks FOR SELECT
+  USING (
+    organization_id IN (
+      SELECT organization_id FROM organization_memberships
+      WHERE user_id = auth.uid()
+    )
+  );
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>SQL 变更集中管理</strong>：所有 SQL 必须写在 <code>app/supabase/setup.sql</code> 中，禁止创建独立的 SQL 文件
+- <strong>RLS 策略必须启用</strong>：每个新表都必须启用 Row Level Security，避免数据泄漏
+- <strong>乐观更新的 ID 处理</strong>：乐观更新时使用临时 ID（如 <code>temp_</code> 前缀），同步完成后替换为真实 ID</p>
+<p><strong>练习题：</strong>
+1. 为 Task 实体添加一个 <code>priority</code> 字段（low/medium/high），完成从类型定义到 SQL Schema 的完整扩展。
+2. 在 <code>app/src/pages/</code> 创建一个 TaskListPage 页面组件，展示任务列表并支持状态切换。</p>
+<hr />
+<h3 id="33-ai-coding-bmad">3.3 AI Coding 最佳实践与 BMAD 方法论</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OPC-Starter 的核心设计理念之一是 AI-First。通过 AGENTS.md、Cursor Rules 和 BMAD 方法论，让 AI 编码工具（Cursor、Qoder）能够高效理解和修改项目代码。</p>
+<p>最佳实践：
+1. <strong>让 AI 先读 AGENTS.md</strong>：AGENTS.md 包含技术栈、编码规范、质量门禁和常见问题
+2. <strong>使用 AI 迭代地图</strong>：README 中提供了"想做什么 → 从哪里开始 → 下一步改哪里"的清晰指引
+3. <strong>执行质量检查</strong>：每次 AI 修改代码后运行 <code>npm run ai:check</code></p>
+<p><strong>代码示例：</strong> 基于官方 AGENTS.md v2.0</p>
+<pre><code class="language-bash"># AI Coding 工作流程
+
+# 1. 让 Cursor 读取 AGENTS.md（自动触发）
+# Cursor 打开项目时会自动解析 AGENTS.md 和 .cursor/rules/
+
+# 2. 使用 AI 迭代地图定位修改位置
+# 例如：想新增一个页面
+# 从哪里开始: app/src/config/routes.tsx
+# 下一步: app/src/pages/ 创建页面组件
+# 然后: app/src/components/layout/MainLayout/ 添加导航
+# 验证: npm run type-check
+
+# 3. 核心质量检查命令
+npm run ai:check
+# 等同于: lint:check + format:check + type-check + coverage + build
+
+# 4. 完整质量检查（包含 E2E 测试）
+./scripts/quality_check.sh
+</code></pre>
+<pre><code class="language-bash"># 查看质量门禁配置
+# 覆盖率阈值: lines 25%, branches 18%
+npm run coverage
+</code></pre>
+<pre><code>预期输出：
+&gt; 运行单元测试并生成覆盖率报告
+&gt; 如果覆盖率低于阈值，构建失败
+&gt; 显示各模块的覆盖率详情
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>不要使用 Tailwind CSS v2/v3 语法</strong>：OPC-Starter 使用 Tailwind CSS v4，如 <code>bg-opacity-*</code>、<code>bg-gradient-to-*</code> 等旧语法已废弃
+- <strong>不要创建新文档文件</strong>：优先更新现有文档（AGENTS.md、Architecture.md），不创建新文档
+- <strong>Husky Git Hooks</strong>：<code>npm install</code> 时会自动安装 Git Hooks（<code>cd .. &amp;&amp; husky app/.husky</code>），这是预期行为</p>
+<p><strong>练习题：</strong>
+1. 使用 Cursor 的 <code>@file</code> 功能引用 <code>AGENTS.md</code> 和 <code>app/src/config/routes.tsx</code>，让 AI 帮你添加一个新的 <code>/tasks</code> 路由。
+2. 运行 <code>npm run ai:check</code>，确认当前代码通过所有质量门禁。</p>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个<strong>任务管理看板应用</strong>，支持在组织内创建和管理任务。项目综合运用以下知识点：
+1. 自定义数据实体扩展（Task 类型、适配器、Store、SQL）
+2. 认证系统与路由守卫（ProtectedRoute 保护看板页面）
+3. DataService 数据访问与状态管理（Zustand Store + 乐观更新）</p>
+<h3 id="_10">项目设计</h3>
+<ul>
+<li><strong>技术架构</strong>：基于 OPC-Starter 的 DataService + Zustand + React 组件模式</li>
+<li><strong>功能特性</strong>：三栏看板（待办/进行中/已完成）、拖拽状态切换、新建任务</li>
+<li><strong>数据隔离</strong>：通过组织管理模块实现多租户任务隔离</li>
+</ul>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-typescript">// app/src/types/task.ts
+// 知识点：自定义数据实体 - 类型定义
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'done';
+  assignee_id: string | null;
+  organization_id: string;
+  created_at: string;
+  updated_at: string;
+}
+</code></pre>
+<pre><code class="language-typescript">// app/src/services/data/adapters/taskAdapter.ts
+// 知识点：自定义数据实体 - 数据适配器
+
+import type { Task } from '@/types/task';
+
+export const taskAdapter = {
+  fromDB(row: Record&lt;string, unknown&gt;): Task {
+    return {
+      id: row.id as string,
+      title: row.title as string,
+      description: row.description as string,
+      status: row.status as Task['status'],
+      assignee_id: row.assignee_id as string | null,
+      organization_id: row.organization_id as string,
+      created_at: row.created_at as string,
+      updated_at: row.updated_at as string,
+    };
+  },
+
+  toDB(task: Partial&lt;Task&gt;): Record&lt;string, unknown&gt; {
+    const row: Record&lt;string, unknown&gt; = {};
+    if (task.title !== undefined) row.title = task.title;
+    if (task.description !== undefined) row.description = task.description;
+    if (task.status !== undefined) row.status = task.status;
+    if (task.assignee_id !== undefined) row.assignee_id = task.assignee_id;
+    if (task.organization_id !== undefined) row.organization_id = task.organization_id;
+    return row;
+  },
+};
+</code></pre>
+<pre><code class="language-typescript">// app/src/stores/useTaskStore.ts
+// 知识点：DataService 数据访问与 Zustand 状态管理
+
+import { create } from 'zustand';
+import type { Task } from '@/types/task';
+
+interface TaskState {
+  tasks: Task[];
+  loading: boolean;
+  error: string | null;
+  fetchTasks: (organizationId: string) =&gt; Promise&lt;void&gt;;
+  addTask: (task: Omit&lt;Task, 'id' | 'created_at' | 'updated_at'&gt;) =&gt; Promise&lt;void&gt;;
+  updateTaskStatus: (taskId: string, status: Task['status']) =&gt; Promise&lt;void&gt;;
+}
+
+export const useTaskStore = create&lt;TaskState&gt;((set, get) =&gt; ({
+  tasks: [],
+  loading: false,
+  error: null,
+
+  fetchTasks: async (organizationId: string) =&gt; {
+    set({ loading: true, error: null });
+    try {
+      const tasks = await DataService.tasks.getByOrganization(organizationId);
+      set({ tasks, loading: false });
+    } catch (error) {
+      set({ error: (error as Error).message, loading: false });
+    }
+  },
+
+  addTask: async (task) =&gt; {
+    const previousTasks = get().tasks;
+    const tempId = `temp_${Date.now()}`;
+    const optimisticTask: Task = {
+      ...task,
+      id: tempId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    set({ tasks: [...previousTasks, optimisticTask] });
+
+    try {
+      await DataService.tasks.create(task);
+    } catch (error) {
+      set({ tasks: previousTasks, error: (error as Error).message });
+    }
+  },
+
+  updateTaskStatus: async (taskId, status) =&gt; {
+    const previousTasks = get().tasks;
+    set({
+      tasks: previousTasks.map(t =&gt;
+        t.id === taskId ? { ...t, status, updated_at: new Date().toISOString() } : t
+      ),
+    });
+
+    try {
+      await DataService.tasks.update(taskId, { status });
+    } catch (error) {
+      set({ tasks: previousTasks, error: (error as Error).message });
+    }
+  },
+}));
+</code></pre>
+<pre><code class="language-typescript">// app/src/pages/KanbanPage.tsx
+// 知识点：综合运用 - 认证系统 + DataService + Zustand + 路由
+
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/auth/AuthProvider';
+import { useTaskStore } from '@/stores/useTaskStore';
+import type { Task } from '@/types/task';
+
+// 看板列配置
+const COLUMNS: { status: Task['status']; title: string }[] = [
+  { status: 'todo', title: '待办' },
+  { status: 'in_progress', title: '进行中' },
+  { status: 'done', title: '已完成' },
+];
+
+export function KanbanPage() {
+  // 知识点：认证系统 - 获取当前用户信息
+  const { user } = useAuth();
+
+  // 知识点：Zustand 状态管理 - 使用 Task Store
+  const { tasks, loading, fetchTasks, addTask, updateTaskStatus } = useTaskStore();
+
+  // 新建任务的表单状态
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDesc, setNewTaskDesc] = useState('');
+
+  // 页面加载时获取任务数据
+  useEffect(() =&gt; {
+    // 使用默认组织 ID（实际应用中应从组织选择器获取）
+    if (user) {
+      fetchTasks('default-org-id');
+    }
+  }, [user, fetchTasks]);
+
+  // 处理新建任务
+  const handleAddTask = async () =&gt; {
+    if (!newTaskTitle.trim()) return;
+
+    await addTask({
+      title: newTaskTitle.trim(),
+      description: newTaskDesc.trim(),
+      status: 'todo',
+      assignee_id: user?.id ?? null,
+      organization_id: 'default-org-id',
+    });
+
+    // 清空表单
+    setNewTaskTitle('');
+    setNewTaskDesc('');
+  };
+
+  // 处理拖拽状态变更
+  const handleStatusChange = async (taskId: string, newStatus: Task['status']) =&gt; {
+    await updateTaskStatus(taskId, newStatus);
+  };
+
+  if (loading) return &lt;div className=&quot;p-6&quot;&gt;加载任务...&lt;/div&gt;;
+
+  return (
+    &lt;div className=&quot;p-6 h-full&quot;&gt;
+      &lt;h1 className=&quot;text-2xl font-bold mb-6&quot;&gt;任务看板&lt;/h1&gt;
+
+      {/* 新建任务表单 */}
+      &lt;div className=&quot;mb-6 flex gap-3 items-end&quot;&gt;
+        &lt;div className=&quot;flex-1&quot;&gt;
+          &lt;input
+            type=&quot;text&quot;
+            placeholder=&quot;任务标题&quot;
+            value={newTaskTitle}
+            onChange={(e) =&gt; setNewTaskTitle(e.target.value)}
+            className=&quot;w-full border rounded px-3 py-2 text-sm&quot;
+          /&gt;
+        &lt;/div&gt;
+        &lt;div className=&quot;flex-1&quot;&gt;
+          &lt;input
+            type=&quot;text&quot;
+            placeholder=&quot;任务描述（可选）&quot;
+            value={newTaskDesc}
+            onChange={(e) =&gt; setNewTaskDesc(e.target.value)}
+            className=&quot;w-full border rounded px-3 py-2 text-sm&quot;
+          /&gt;
+        &lt;/div&gt;
+        &lt;button
+          onClick={handleAddTask}
+          className=&quot;bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700&quot;
+        &gt;
+          添加任务
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      {/* 三栏看板 */}
+      &lt;div className=&quot;grid grid-cols-3 gap-4 h-[calc(100%-120px)]&quot;&gt;
+        {COLUMNS.map(({ status, title }) =&gt; (
+          &lt;div key={status} className=&quot;bg-gray-100 rounded-lg p-4&quot;&gt;
+            &lt;h2 className=&quot;font-semibold mb-3&quot;&gt;{title} ({tasks.filter(t =&gt; t.status === status).length})&lt;/h2&gt;
+            &lt;div className=&quot;space-y-2 overflow-y-auto h-[calc(100%-40px)]&quot;&gt;
+              {tasks
+                .filter(task =&gt; task.status === status)
+                .map(task =&gt; (
+                  &lt;div key={task.id} className=&quot;bg-white rounded p-3 shadow-sm border&quot;&gt;
+                    &lt;h3 className=&quot;font-medium text-sm&quot;&gt;{task.title}&lt;/h3&gt;
+                    {task.description &amp;&amp; (
+                      &lt;p className=&quot;text-xs text-gray-500 mt-1&quot;&gt;{task.description}&lt;/p&gt;
+                    )}
+                    {/* 状态切换按钮 */}
+                    &lt;div className=&quot;mt-2 flex gap-1&quot;&gt;
+                      {COLUMNS.filter(c =&gt; c.status !== status).map(col =&gt; (
+                        &lt;button
+                          key={col.status}
+                          onClick={() =&gt; handleStatusChange(task.id, col.status)}
+                          className=&quot;text-xs px-2 py-1 rounded bg-gray-200 hover:bg-gray-300&quot;
+                        &gt;
+                          → {col.title}
+                        &lt;/button&gt;
+                      ))}
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+                ))}
+            &lt;/div&gt;
+          &lt;/div&gt;
+        ))}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<pre><code class="language-typescript">// app/src/config/routes.tsx（添加看板路由）
+// 知识点：认证系统 - 使用 ProtectedRoute 保护新页面
+
+import { Routes, Route } from 'react-router-dom';
+import { ProtectedRoute } from '@/auth/ProtectedRoute';
+import { LoginPage } from '@/pages/LoginPage';
+import { DashboardPage } from '@/pages/DashboardPage';
+import { SettingsPage } from '@/pages/SettingsPage';
+import { KanbanPage } from '@/pages/KanbanPage';  // 新增
+
+export function AppRoutes() {
+  return (
+    &lt;Routes&gt;
+      &lt;Route path=&quot;/login&quot; element={&lt;LoginPage /&gt;} /&gt;
+      &lt;Route path=&quot;/&quot; element={&lt;ProtectedRoute&gt;&lt;DashboardPage /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+      &lt;Route path=&quot;/settings&quot; element={&lt;ProtectedRoute&gt;&lt;SettingsPage /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+      {/* 新增看板路由 */}
+      &lt;Route path=&quot;/kanban&quot; element={&lt;ProtectedRoute&gt;&lt;KanbanPage /&gt;&lt;/ProtectedRoute&gt;} /&gt;
+    &lt;/Routes&gt;
+  );
+}
+</code></pre>
+<pre><code class="language-sql">-- app/supabase/setup.sql（添加任务表）
+-- 知识点：自定义数据实体 - 数据库 Schema
+
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  status TEXT CHECK (status IN ('todo', 'in_progress', 'done')) DEFAULT 'todo',
+  assignee_id UUID REFERENCES profiles(id),
+  organization_id UUID REFERENCES organizations(id) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY &quot;用户可访问所属组织的任务&quot;
+  ON tasks FOR SELECT
+  USING (
+    organization_id IN (
+      SELECT organization_id FROM organization_memberships
+      WHERE user_id = auth.uid()
+    )
+  );
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<ul>
+<li><strong>Task 类型定义</strong>（知识点：自定义数据实体）：定义了任务的完整数据结构，包含状态枚举和组织归属</li>
+<li><strong>taskAdapter</strong>（知识点：自定义数据实体）：负责数据库行与 TypeScript 对象的双向转换，是 DataService 的关键组件</li>
+<li><strong>useTaskStore</strong>（知识点：DataService + Zustand）：使用乐观更新策略，先更新本地状态再异步同步，失败时自动回滚</li>
+<li><strong>KanbanPage</strong>（知识点：认证系统 + Zustand）：使用 <code>useAuth</code> 获取当前用户，<code>useTaskStore</code> 管理任务状态，实现三栏看板</li>
+<li><strong>路由配置</strong>（知识点：认证系统）：KanbanPage 被 ProtectedRoute 包裹，未登录用户无法访问</li>
+<li><strong>SQL Schema</strong>（知识点：自定义数据实体）：包含 RLS 策略确保数据隔离</li>
+</ul>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>拖拽排序</strong>：引入 <code>@dnd-kit/core</code> 库，实现任务卡片在列之间的拖拽移动，替代当前的按钮切换。</li>
+<li><strong>Agent Studio 集成</strong>：让用户通过自然语言创建任务（如"帮我创建一个'修复登录 Bug'的任务"），利用 A2UI 协议动态生成任务创建表单。</li>
+<li><strong>实时协作</strong>：利用 Supabase Realtime，实现多用户同时查看和编辑任务时的实时更新。</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>npm install</code> 失败 (ECONNRESET)</td>
+<td><code>package-lock.json</code> 引用了阿里巴巴内部 npm 镜像源，外部无法访问</td>
+<td>删除 <code>app/package-lock.json</code> 和 <code>app/node_modules</code>，执行 <code>npm install --registry https://registry.npmjs.org/</code></td>
+</tr>
+<tr>
+<td>浏览器白屏 / <code>ERR_NAME_NOT_RESOLVED</code></td>
+<td>浏览器 localStorage 中残留了上次会话的过期 Token，Supabase 客户端尝试向 <code>placeholder.supabase.co</code> 发起请求</td>
+<td>清除浏览器站点数据：Chrome → F12 → Application → Storage → Clear site data</td>
+</tr>
+<tr>
+<td>控制台出现 WebSocket 连接警告</td>
+<td>MSW 模式下，Supabase Realtime 的 WebSocket 连接没有对应的 Mock Handler</td>
+<td>预期行为，不影响功能。可忽略</td>
+</tr>
+<tr>
+<td><code>npm run ai:check</code> 覆盖率不达标</td>
+<td>单元测试覆盖率低于阈值（lines 25%, branches 18%）</td>
+<td>为新添加的代码补充单元测试</td>
+</tr>
+<tr>
+<td>Husky 安装错误 <code>cd .. &amp;&amp; husky app/.husky</code></td>
+<td>从 <code>app/</code> 目录执行 <code>npm install</code> 时 Husky 尝试从仓库根目录安装</td>
+<td>预期行为，Husky 需要从根目录管理 Git Hooks</td>
+</tr>
+<tr>
+<td>TypeScript 类型错误</td>
+<td>使用了旧版 Tailwind CSS 语法或不兼容的 API</td>
+<td>检查 <code>.cursor/rules/</code> 中的规范，确保使用 Tailwind CSS v4 语法</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>利用 MSW Mock 模式隔离问题</strong>：遇到前后端交互问题时，切换到 MSW Mock 模式。如果 Mock 模式正常，说明问题在后端或 Supabase 配置；如果 Mock 模式也有问题，说明是前端代码问题。</p>
+</li>
+<li>
+<p><strong>查看 DataService 数据流</strong>：在 <code>DataService.ts</code> 中添加 <code>console.log</code> 跟踪数据流向。关键检查点：读取是否从 IndexedDB 获取、写入是否触发乐观更新、同步是否成功完成。</p>
+</li>
+<li>
+<p><strong>使用 <code>npm run type-check</code> 快速定位类型错误</strong>：TypeScript 的严格类型检查可以帮助快速定位代码问题。运行 <code>npm run type-check</code> 比完整构建更快，适合开发过程中频繁使用。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>README.md</strong> — 快速入门、技术栈总览、项目结构。重点理解"AI 迭代地图"表格，它告诉你在修改不同功能时应该从哪个文件开始。</li>
+<li><strong>AGENTS.md</strong> — AI 编码规范、技术栈详情、质量门禁。重点理解"禁止事项"和 Cursor Rules 自动触发机制。</li>
+<li><strong>docs/Architecture.md</strong> — 系统架构、核心模块详解、数据流图。重点理解 DataService 的"Cache + Realtime"架构和 Agent Studio 的工作流程。</li>
+<li><strong>app/supabase/setup.sql</strong> — 数据库 Schema 和 RLS 策略。重点理解组织管理的表结构和权限隔离策略。</li>
+<li><strong>.cursor/rules/</strong> — 按文件类型分类的编码规范。在实际开发中参考，确保代码符合项目标准。</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong>Supabase 官方文档</strong>（<a href="https://supabase.com/docs">supabase.com/docs</a>）— 深入学习 Auth、Realtime、Edge Functions、RLS 等核心功能，OPC-Starter 深度依赖 Supabase 生态</li>
+<li><strong>Zustand 官方仓库</strong>（<a href="https://github.com/pmndrs/zustand">github.com/pmndrs/zustand</a>）— 理解轻量状态管理的最佳实践，OPC-Starter 的所有 Store 都基于 Zustand</li>
+<li><strong>A2UI 协议规范</strong>（搜索"A2UI Agent to UI protocol 2026"）— 了解 2026 年 AI Agent 协议栈中 A2UI 的定位和标准实现</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

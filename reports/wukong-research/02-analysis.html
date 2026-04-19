@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>悟空（Wukong）- 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#_8" class="toc-h2">架构设计</a></li>
+<li><a href="#_9" class="toc-h3">整体架构</a></li>
+<li><a href="#_10" class="toc-h3">核心模块</a></li>
+<li><a href="#_11" class="toc-h2">关键概念详解</a></li>
+<li><a href="#1" class="toc-h3">概念 1：企业级权限继承</a></li>
+<li><a href="#2" class="toc-h3">概念 2：执行证据层</a></li>
+<li><a href="#3ai" class="toc-h3">概念 3：AI 成本核算</a></li>
+<li><a href="#_12" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_13" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_14" class="toc-h3">最佳场景</a></li>
+<li><a href="#_15" class="toc-h3">不适用场景</a></li>
+<li><a href="#_16" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_17" class="toc-h3">优势</a></li>
+<li><a href="#_18" class="toc-h3">劣势</a></li>
+<li><a href="#_19" class="toc-h3">风险点</a></li>
+<li><a href="#_20" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_21" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_22" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_23" class="toc-h2">总结与建议</a></li>
+<li><a href="#_24" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>悟空（Wukong）- 深度分析报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="wukong-">悟空（Wukong）- 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2025-2026 年，AI Agent 从概念验证进入企业级部署阶段。但企业在实际部署 AI Agent 时面临三大核心痛点：权限不可控（AI 操作缺乏企业级权限管理）、操作不可审计（执行过程不透明，无法追溯）、成本不可核算（Token 消耗难以按团队/项目追踪）。</p>
+<p>这些痛点导致企业级 AI Agent 部署"能 demo 但不能上线"——技术上可行但管控上不可接受。</p>
+<h3 id="_3">创立动机</h3>
+<p>阿里巴巴于 2026 年 3 月成立 ATH（Alibaba Token Hub）事业群，推出悟空平台。核心动机：</p>
+<ol>
+<li><strong>补齐 AI Agent 企业管控缺口</strong>：解决权限、审计、成本三大企业必需能力。</li>
+<li><strong>构建 AI 原生工作平台</strong>：不是"AI 辅助工具"，而是以 AI Agent 为核心的工作平台。</li>
+<li><strong>战略级投入</strong>：ATH 事业群与通义实验室、千问事业部并列，由 CEO 直接负责。</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-16</strong>：阿里巴巴宣布成立 ATH（Alibaba Token Hub）事业群</li>
+<li><strong>2026-03-17</strong>：悟空平台在杭州阿里巴巴总部发布</li>
+<li><strong>当前</strong>：邀测阶段，快速迭代中</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<ol>
+<li><strong>企业管控优先（Enterprise Governance-First）</strong>：AI Agent 的权限、审计、成本管控是第一优先级，而非 Agent 能力本身。</li>
+<li><strong>Agent 军团模式（Agent Legion）</strong>：不是单个智能助手，而是多 Agent 协同工作，形成可管理的"军团"。</li>
+<li><strong>成本可视（Cost Transparency）</strong>：像管理预算一样管理 AI 开支，每笔 Token 消耗可追踪到团队/项目。</li>
+</ol>
+<h3 id="_7">核心机制</h3>
+<pre><code>企业需求 → Agent 军团部署 → 权限继承 → 任务执行 → 审计日志 → 成本核算
+</code></pre>
+<h2 id="_8">架构设计</h2>
+<h3 id="_9">整体架构</h3>
+<p>基于旧调研报告，悟空的架构包含：</p>
+<ol>
+<li><strong>Agent 编排层</strong>：多 Agent 协同调度和任务分配</li>
+<li><strong>权限管理层</strong>：自动继承企业权限规则，细粒度访问控制</li>
+<li><strong>审计追踪层</strong>：提供可独立验证的执行证据层</li>
+<li><strong>成本核算层</strong>：Token 级别的消耗追踪和预算管理</li>
+<li><strong>模型层</strong>：基于通义千问模型</li>
+</ol>
+<h3 id="_10">核心模块</h3>
+<ul>
+<li><strong>Agent 军团管理器</strong>：部署和管理多个 AI Agent</li>
+<li><strong>权限引擎</strong>：与企业现有权限系统集成</li>
+<li><strong>审计系统</strong>：记录和验证所有 Agent 操作</li>
+<li><strong>成本追踪器</strong>：实时追踪和分配 AI 计算成本</li>
+</ul>
+<h2 id="_11">关键概念详解</h2>
+<h3 id="1">概念 1：企业级权限继承</h3>
+<ul>
+<li><strong>定义：</strong> AI Agent 自动继承企业现有的权限规则（如部门权限、数据访问权限、操作审批流程），而非独立的权限体系。</li>
+<li><strong>作用：</strong> 确保 AI Agent 的操作在企业安全策略范围内，不会越权访问敏感数据或执行未授权操作。</li>
+<li><strong>使用场景：</strong> 企业内部的 AI Agent 部署，需要遵循现有的 IT 安全策略。[置信度：中] — 具体实现细节未公开。</li>
+</ul>
+<h3 id="2">概念 2：执行证据层</h3>
+<ul>
+<li><strong>定义：</strong> 每次Agent操作都生成可独立验证的执行记录，包含操作内容、时间、结果和审批链。</li>
+<li><strong>作用：</strong> 解决"AI 做了什么不知道"的审计问题，满足企业合规要求。</li>
+<li><strong>使用场景：</strong> 金融、医疗等高合规行业的 AI 部署。[置信度：中]</li>
+</ul>
+<h3 id="3ai">概念 3：AI 成本核算</h3>
+<ul>
+<li><strong>定义：</strong> 像管理部门预算一样管理 AI 开支，按团队、项目、Agent 维度追踪 Token 消耗。</li>
+<li><strong>作用：</strong> 解决"AI 成本算不清"的问题，使企业能精确控制 AI 投入产出比。</li>
+<li><strong>使用场景：</strong> 大规模 AI Agent 部署的成本管理。[置信度：中]</li>
+</ul>
+<h2 id="_12">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>悟空</th>
+<th>Microsoft Copilot Studio</th>
+<th>Salesforce AgentForce</th>
+<th>Coze（字节）</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>企业级 AI Agent 军团平台</td>
+<td>企业 AI 助手定制平台</td>
+<td>企业 AI Agent 平台</td>
+<td>AI Bot 构建平台</td>
+</tr>
+<tr>
+<td><strong>开放性</strong></td>
+<td>闭源，邀测</td>
+<td>闭源，公开可用</td>
+<td>闭源，公开可用</td>
+<td>闭源，公开可用</td>
+</tr>
+<tr>
+<td><strong>权限管理</strong></td>
+<td>自动继承企业权限</td>
+<td>Azure AD 集成</td>
+<td>Salesforce 权限</td>
+<td>基础</td>
+</tr>
+<tr>
+<td><strong>审计追踪</strong></td>
+<td>执行证据层</td>
+<td>Microsoft Purview</td>
+<td>Salesforce Shield</td>
+<td>有限</td>
+</tr>
+<tr>
+<td><strong>成本追踪</strong></td>
+<td>Token 级核算</td>
+<td>Azure Cost Management</td>
+<td>Salesforce 信用制</td>
+<td>基础</td>
+</tr>
+<tr>
+<td><strong>LLM</strong></td>
+<td>通义千问</td>
+<td>GPT-4/Copilot</td>
+<td>GPT/Claude/自研</td>
+<td>豆包等</td>
+</tr>
+<tr>
+<td><strong>成熟度</strong></td>
+<td>邀测阶段</td>
+<td>成熟</td>
+<td>成熟</td>
+<td>成熟</td>
+</tr>
+<tr>
+<td><strong>目标市场</strong></td>
+<td>中国企业</td>
+<td>全球企业</td>
+<td>全球企业</td>
+<td>开发者+C端</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_13">适用场景分析</h2>
+<h3 id="_14">最佳场景</h3>
+<ol>
+<li><strong>大型企业 AI Agent 部署</strong>：需要严格权限管控和成本核算的企业级 AI Agent 场景。</li>
+<li><strong>高合规行业</strong>：金融、医疗、政府等需要完整审计追踪的行业。</li>
+<li><strong>阿里云生态企业</strong>：已在阿里云生态中的企业，集成成本最低。</li>
+</ol>
+<h3 id="_15">不适用场景</h3>
+<ol>
+<li><strong>中小团队</strong>：悟空的企业级管控能力对小型团队可能过于复杂。</li>
+<li><strong>非阿里云环境</strong>：如果企业不在阿里云生态中，集成成本可能较高。</li>
+<li><strong>需要开源/定制</strong>：悟空是闭源产品，无法自行修改底层代码。</li>
+</ol>
+<h2 id="_16">优缺点深度分析</h2>
+<h3 id="_17">优势</h3>
+<ol>
+<li><strong>企业级管控最全面</strong> - 权限继承、审计追踪、成本核算三位一体，在竞品中管控能力最全面。</li>
+<li><strong>阿里生态整合</strong> - 与通义千问、阿里云深度整合，对阿里生态企业有天然优势。</li>
+<li><strong>战略级投入</strong> - CEO 直接负责的 ATH 事业群，资源投入和长期承诺有保障。</li>
+</ol>
+<h3 id="_18">劣势</h3>
+<ol>
+<li><strong>闭源且处于邀测阶段</strong> - 无法公开评估技术细节，实际能力有待市场验证。</li>
+<li><strong>生态锁定风险</strong> - 深度绑定阿里云和通义千问，存在厂商锁定风险。</li>
+<li><strong>信息不透明</strong> - 产品细节、定价、API 等关键信息尚未公开。</li>
+</ol>
+<h3 id="_19">风险点</h3>
+<ol>
+<li><strong>产品成熟度风险</strong> - 邀测阶段产品，功能和稳定性有待验证。</li>
+<li><strong>市场竞争风险</strong> - Microsoft Copilot Studio、Salesforce AgentForce 等竞品已成熟运营。</li>
+<li><strong>技术细节不透明</strong> - 无法评估实际的技术深度和实现质量。</li>
+</ol>
+<h2 id="_20">生态成熟度评估</h2>
+<ul>
+<li><strong>开放程度：</strong> 闭源企业产品，仅邀测用户可访问。</li>
+<li><strong>第三方集成：</strong> 预期与阿里云生态深度集成，具体范围未公开。</li>
+<li><strong>企业采用案例：</strong> 发布阶段，尚无公开的企业采用案例。</li>
+<li><strong>文档质量：</strong> 外部无法访问产品文档。</li>
+</ul>
+<h2 id="_21">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 邀测阶段，不建议直接用于生产环境。[置信度：高]</li>
+<li><strong>性能表现：</strong> 信息未公开。[置信度：低]</li>
+<li><strong>监控/可观测性：</strong> 审计追踪是核心功能，预期较强。[置信度：中]</li>
+<li><strong>安全合规：</strong> 权限管理和审计追踪是企业级设计的核心，预期较强。[置信度：中]</li>
+</ul>
+<h2 id="_22">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong> 企业 IT 架构、AI Agent 概念、阿里云基础（可选）。</li>
+<li><strong>入门时间估计：</strong> 无法评估（闭源邀测阶段）。</li>
+<li><strong>精通时间估计：</strong> 无法评估。</li>
+</ul>
+<h2 id="_23">总结与建议</h2>
+<p>悟空是阿里巴巴在企业级 AI Agent 领域的战略级产品，权限继承、审计追踪、成本核算三位一体的管控理念切中了企业部署 AI Agent 的核心痛点。作为 ATH 事业群的核心产品，资源投入有保障。</p>
+<p>但由于产品处于闭源邀测阶段，技术细节和实际能力无法独立验证，建议保持关注但暂不作技术选型决策。</p>
+<p><strong>综合评分：6.0/10（基于有限信息）</strong></p>
+<table>
+<thead>
+<tr>
+<th>评估维度</th>
+<th>得分</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>功能完整性</td>
+<td>7/10</td>
+<td>管控理念全面，但实现细节未公开</td>
+</tr>
+<tr>
+<td>易用性</td>
+<td>N/A</td>
+<td>无法评估</td>
+</tr>
+<tr>
+<td>社区活跃度</td>
+<td>N/A</td>
+<td>闭源产品，无公开社区</td>
+</tr>
+<tr>
+<td>技术深度</td>
+<td>6/10</td>
+<td>基于公开信息评估，实际可能更高</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>4/10</td>
+<td>邀测阶段</td>
+</tr>
+</tbody>
+</table>
+<p><strong>使用建议：</strong>
+- 关注产品正式发布后的技术细节和定价。
+- 如果在阿里云生态中，建议申请邀测资格试用。
+- 与 Microsoft Copilot Studio 等竞品对比后再做技术选型。</p>
+<h2 id="_24">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> 邀测阶段（2026-03-17 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-17</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="./悟空调研报告.md">旧调研报告 - 悟空调研报告.md</a>（2026-03-27，详细的组织架构和产品定位分析）</li>
+<li>Web 搜索结果</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

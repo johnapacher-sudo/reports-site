@@ -1,0 +1,1527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GSD2 - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 GSD2 GitHub README、docs/auto-mode.md 和社区分析文章</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心机制</a></li>
+<li><a href="#step-mode-auto-mode" class="toc-h4">双模式执行架构（Step Mode + Auto Mode）</a></li>
+<li><a href="#context-injection" class="toc-h4">上下文注入策略（Context Injection）</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#spec-driven-development-sdd" class="toc-h3">规格驱动开发（Spec-Driven Development, SDD）</a></li>
+<li><a href="#milestone-slice-task-hierarchy" class="toc-h3">三级分解（Milestone → Slice → Task Hierarchy）</a></li>
+<li><a href="#fresh-context-per-task" class="toc-h3">每任务独立上下文（Fresh Context per Task）</a></li>
+<li><a href="#crash-recovery" class="toc-h3">崩溃恢复（Crash Recovery）</a></li>
+<li><a href="#git-worktree-git-worktree-isolation" class="toc-h3">Git Worktree 隔离（Git Worktree Isolation）</a></li>
+<li><a href="#per-phase-model-selection" class="toc-h3">每阶段模型选择（Per-Phase Model Selection）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>GSD2 - 深度分析报告</h1>
+                        <div class="article-meta">基于 GSD2 GitHub README、docs/auto-mode.md 和社区分析文章</div>
+                    </header>
+                    <h1 id="gsd2-">GSD2 - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>2024-2026 年间，AI 编码代理能力突飞猛进，Claude Code、Cursor、GitHub Copilot 等工具已能在单文件或小范围代码修改上表现出色。然而，当面对大型、长时间、多文件的复杂项目时，这些工具暴露出一个核心问题：<strong>上下文腐烂（Context Rot）</strong>。</p>
+<p>LLM 的质量随上下文填充比例急剧下降——超过 50% 使用率后质量开始下降，超过 70% 后幻觉率飙升。在长时间的编码会话中，对话历史不断积累，早期决策的细节被压缩或遗忘，代理逐渐失去对全局的理解。结果是：代码片段看起来正确，但整体项目变得不一致、矛盾和不可维护。</p>
+<p>行业面临的具体痛点包括：</p>
+<ol>
+<li>
+<p><strong>上下文窗口的有限性与项目复杂度的矛盾</strong>：即使 200K token 的上下文窗口，对于一个涉及 50+ 文件的项目也远远不够。对话历史、规划文档、代码变更记录等不断消耗上下文空间，留给实际编码的空间越来越小。</p>
+</li>
+<li>
+<p><strong>缺乏持久化的状态管理</strong>：传统 AI 编码工具的状态存在于对话历史中。会话结束或崩溃后，所有状态丢失。开发者无法从断点恢复，必须从头开始或手动重建上下文。</p>
+</li>
+<li>
+<p><strong>缺少结构化的项目分解</strong>：AI 代理面对大型项目时，缺乏将项目分解为可管理单元的系统化方法。没有明确的任务边界、依赖关系和验证标准，代理容易在复杂项目中迷失方向。</p>
+</li>
+<li>
+<p><strong>模型成本的不可控性</strong>：长时间自主运行意味着大量的 API 调用和 token 消耗。缺乏精细的成本控制和模型选择机制，简单任务和复杂任务使用同一模型，造成资源浪费。</p>
+</li>
+</ol>
+<h3 id="_3">创立动机</h3>
+<p>GSD2 由 Lex Christopherson（glittercowboy）创建，核心动机是：</p>
+<ol>
+<li>
+<p><strong>根治上下文腐烂</strong>：从架构层面解决 LLM 质量随上下文积累而下降的问题。核心洞察是"拥抱重置（Embrace the Reset）"——每个任务获得全新的 200K token 上下文窗口，状态不积累在对话历史中，而是持久化到磁盘文件。一个干净的、预加载精选工件的上下文，永远优于充满累积垃圾的长对话。[置信度：高]</p>
+</li>
+<li>
+<p><strong>从提示模板到完整应用</strong>：GSD v1 是纯 Markdown 提示模板，用户需要手动管理上下文和工作流。v2 演进为完整的 TypeScript 应用（基于 Pi SDK），拥有精细的上下文控制、状态机、崩溃恢复和成本追踪能力。这不是渐进改进，而是架构级别的跃迁。[置信度：高]</p>
+</li>
+<li>
+<p><strong>规格驱动而非对话驱动</strong>：将规格文档（Spec）作为事实来源，代码不是对话的产物，而是规格的产物。规划阶段产出规格，执行阶段消费规格。两个阶段之间没有对话传递，只有文件接口。这使整个工作流可审计、可复现、可恢复。[置信度：高]</p>
+</li>
+<li>
+<p><strong>反仪式（Anti-Ceremony）哲学</strong>：反对过度的流程和角色扮演。GSD2 只生成足够的规格来启用执行，然后让开。Richard Hightower 在分析中总结："GSD prefers doing over planning."（GSD 偏好执行而非规划。）[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-11</strong>：GitHub 仓库创建，初始版本发布</li>
+<li><strong>2026-03 月中旬</strong>：社区开始关注，Discord 社区建立</li>
+<li><strong>2026-03-25</strong>：引入 Auto 模式状态机（planning → executing → verifying → merging → replanning）</li>
+<li><strong>2026-04 月初</strong>：Tiered Context Injection（M005 里程碑），实现 65%+ token 减少</li>
+<li><strong>2026-04 月中旬</strong>：Reactive Task Execution（基于依赖图的并行任务调度）</li>
+<li><strong>2026-04-12</strong>：GitHub 最后推送日期（截至 2026-04-13），项目高度活跃</li>
+<li><strong>2026-04-13</strong>：当前版本 v2.71，GitHub Stars 5,505，Forks 577，Open Issues 416</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>GSD2 的设计围绕五个核心理念：</p>
+<ol>
+<li>
+<p><strong>拥抱重置（Embrace the Reset）</strong>：每个任务获得全新的 200K token 上下文窗口。不在对话历史中积累状态，而是将状态外部化为磁盘上的持久文件（<code>.gsd/</code> 目录）。没有内存态跨会话存活。这是 GSD2 最根本的架构赌注：干净的上下文 + 预加载的精选工件，永远优于充满累积垃圾的长对话。[置信度：高]</p>
+</li>
+<li>
+<p><strong>规格驱动开发（Spec-Driven Development, SDD）</strong>：规格文档是事实来源。代码不是对话的产物，而是规格的产物。规划阶段产出 <code>PROJECT.md</code>、<code>REQUIREMENTS.md</code>、<code>ROADMAP.md</code>、<code>STATE.md</code> 等规格文件，执行阶段消费这些文件。规划者写入，执行者读取，两者之间没有对话传递。[置信度：高]</p>
+</li>
+<li>
+<p><strong>铁律：每个任务适配一个上下文窗口</strong>：项目 &gt; 里程碑（Milestone） &gt; 切片（Slice） &gt; 任务（Task）。铁律是每个任务必须适配单个上下文窗口。如果任务太大，必须进一步分解。这个约束驱动整个规划阶段。[置信度：高]</p>
+</li>
+<li>
+<p><strong>反仪式（Anti-Ceremony）</strong>：GSD2 反对 BMAD（12 个专门化代理角色）或 Superpowers（7 阶段强制管道）这类重度流程框架。只生成足够的规格来启用执行，最小化仪式开销。开发者社区的反馈称这种"轻仪式"方式在实际项目中更高效。[置信度：高]</p>
+</li>
+<li>
+<p><strong>上下文压力监控（Context Pressure Monitor）</strong>：在 70% 上下文利用率时，系统发出收尾信号，确保代理在质量下降前完成当前工作。这是对 LLM 质量随上下文填充而下降这一经验观察的直接应对。[置信度：高]</p>
+</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>每任务全新上下文 vs 长对话</strong>：获得零上下文腐烂和一致的质量，代价是每次重新加载上下文的开销。[置信度：高]
+- <strong>文件状态 vs 内存状态</strong>：获得持久性、可审查性和崩溃可恢复性，代价是磁盘 I/O 依赖和无法进行内存态优化。[置信度：高]
+- <strong>规格驱动 vs 对话驱动</strong>：获得可复现性和审计追踪，代价是前置的规格创建工作量。[置信度：高]
+- <strong>Git Worktree 隔离 vs 单分支</strong>：获得干净的并行里程碑执行和回滚能力，代价是 Git 复杂性和磁盘空间使用。[置信度：高]</p>
+<h3 id="_7">核心机制</h3>
+<h4 id="step-mode-auto-mode">双模式执行架构（Step Mode + Auto Mode）</h4>
+<pre><code>用户项目描述（文本）
+  │
+  ├─ Step 模式（逐步执行）
+  │     → 一次执行一个单元（任务/切片）
+  │     → 每步完成后暂停等待人工审查
+  │     → 适合需要精细控制的场景
+  │
+  └─ Auto 模式（全自动状态机）
+        → 完整的自主执行管道
+        → 状态持久化在 .gsd/STATE.md
+        │
+        ├─ [Planning] 分析项目，生成里程碑/切片/任务分解
+        │     → 输出：PROJECT.md, REQUIREMENTS.md, ROADMAP.md
+        │
+        ├─ [Ready] 等待执行调度
+        │     → 选择下一个任务
+        │     → 加载上下文工件
+        │
+        ├─ [Executing] 执行当前任务
+        │     → 全新 200K token 上下文
+        │     → 注入：任务计划 + 切片上下文 + 前序任务摘要 + 依赖输出
+        │     → 24 个扩展 + 5 个子代理可用
+        │
+        ├─ [Verifying] 验证任务输出
+        │     → 验证强制执行
+        │     → 未通过 → 重新执行或重新规划
+        │
+        ├─ [Merging] 合并到主分支
+        │     → Git worktree squash merge
+        │     → 清理 worktree
+        │
+        ├─ [Replanning] 自适应重新规划
+        │     → 基于执行结果调整后续计划
+        │     → 卡住检测触发重新规划
+        │
+        └─ [Validate Milestone] 里程碑完成验证
+              → 所有切片和任务完成
+              → 整体验证
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README、docs/auto-mode.md 和社区分析文章</p>
+</blockquote>
+<p><strong>关键设计决策：</strong> 状态存活在磁盘上的 <code>.gsd/STATE.md</code> 文件中。系统在会话启动时读取此文件决定下一步操作。这意味着编排器可以崩溃、机器可以重启，执行精确地从断点恢复。</p>
+<h4 id="context-injection">上下文注入策略（Context Injection）</h4>
+<pre><code>任务调度时的上下文构建
+  │
+  ├─ 核心工件（始终注入）
+  │     ├─ 当前任务计划（Task Plan）
+  │     ├─ 包含切片上下文（Slice Plan）
+  │     ├─ 项目路线图摘录（Roadmap Excerpt）
+  │     └─ 决策登记册（Decisions Register）
+  │
+  ├─ 增量工件（按需注入）
+  │     ├─ 前序任务摘要（Prior Task Summaries）
+  │     ├─ 依赖任务输出（Dependency Summaries）
+  │     └─ 研究报告（Research Report）
+  │
+  ├─ 分层注入（M005 里程碑引入）
+  │     → 相关性范围过滤（Relevance-Scoped）
+  │     → 仅加载与当前任务直接相关的工件
+  │     → 65%+ token 减少
+  │
+  └─ 压力监控
+        → 70% 利用率：收尾信号
+        → 确保在质量下降前完成
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README 和 Menon Lab 分析文章</p>
+</blockquote>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>用户输入项目描述（文本）
+  │
+  ├─ 1. 项目初始化
+  │     → npm install -g gsd-pi@latest
+  │     → gsd init（创建 .gsd/ 目录和配置文件）
+  │     → 配置模型提供商（20+ 可选）
+  │     → 选择 token 优化配置（budget/balanced/quality）
+  │
+  ├─ 2. 规划阶段（Planning Phase）
+  │     → 分析项目描述，识别核心需求
+  │     → 生成 PROJECT.md（项目概述）
+  │     → 生成 REQUIREMENTS.md（需求规格）
+  │     → 生成 ROADMAP.md（里程碑路线图）
+  │     → 按铁律分解：Milestone → Slice → Task
+  │     → 每个任务设计确保适配一个上下文窗口
+  │     → 为每阶段选择最优模型
+  │
+  ├─ 3. 执行阶段（Execution Phase）
+  │     ├─ 任务调度
+  │     │     → 从 STATE.md 读取当前状态
+  │     │     → 选择下一个就绪的任务
+  │     │     → 构建上下文工件包
+  │     │     → 创建全新 200K token 上下文
+  │     │
+  │     ├─ 任务执行
+  │     │     → 注入精选上下文工件
+  │     │     → 加载扩展（24 个内置）
+  │     │     → 按需调度子代理（5 个专业子代理）
+  │     │     → 实现代码变更
+  │     │
+  │     ├─ 验证强制
+  │     │     → 每个任务必须通过验证
+  │     │     → 未通过 → 重新执行或重新规划
+  │     │
+  │     └─ 卡住检测
+  │           → 滑动窗口分析调度模式
+  │           → 检测循环（A→B→A→B）
+  │           → 自动干预打破循环
+  │
+  ├─ 4. 合并阶段（Merge Phase）
+  │     → Git worktree squash merge 回主分支
+  │     → 清理 worktree
+  │     → 更新 STATE.md
+  │
+  ├─ 5. 重新规划阶段（Replanning Phase）
+  │     → 基于执行结果调整后续计划
+  │     → 更新 ROADMAP.md
+  │     → 重新评估任务优先级和依赖
+  │
+  ├─ 6. 里程碑验证（Milestone Validation）
+  │     → 所有切片和任务完成
+  │     → 整体验证
+  │     → 更新项目状态
+  │
+  └─ 7. 输出完整项目
+        → 代码变更已合并到主分支
+        → 规格文档更新
+        → 成本报告生成
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README、docs/auto-mode.md 和 docs/commands.md</p>
+</blockquote>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                   用户交互层（User Interaction Layer）          │
+│   项目描述 → GSD CLI（Step 模式 / Auto 模式）                  │
+│   Headless 模式（CI/CD）/ MCP Server 模式（外部集成）           │
+├─────────────────────────────────────────────────────────────┤
+│                   编排器层（Orchestrator Layer）                │
+│   状态机（Auto Mode State Machine）                           │
+│   ├─ 规划器（Milestone → Slice → Task 分解）                  │
+│   ├─ 调度器（上下文工件构建和任务分发）                        │
+│   ├─ 验证器（验证强制执行）                                    │
+│   ├─ 合并器（Git worktree squash merge）                      │
+│   └─ 监控器（卡住检测 + 超时监督 + 压力监控）                  │
+├─────────────────────────────────────────────────────────────┤
+│                   上下文管理层（Context Management Layer）      │
+│   ├─ 上下文注入引擎（分层工件注入）                            │
+│   ├─ 相关性范围过滤（M005 Tiered Context Injection）          │
+│   ├─ 上下文压力监控器（70% 收尾信号）                         │
+│   └─ Token 优化配置（budget/balanced/quality）                │
+├─────────────────────────────────────────────────────────────┤
+│                   模型路由层（Model Routing Layer）             │
+│   ├─ 每阶段模型选择（research/planning/execution/completion）  │
+│   ├─ 回退链（Fallback Chain）                                 │
+│   ├─ 20+ 模型提供商适配                                       │
+│   └─ 成本追踪和预算控制                                       │
+├─────────────────────────────────────────────────────────────┤
+│                   能力层（Capability Layer）                   │
+│   ┌──────────────────┐   ┌──────────────────┐              │
+│   │ 24 个内置扩展     │   │ 5 个专业子代理    │              │
+│   │ ├─ Browser Tools  │   │ ├─ Scout         │              │
+│   │ ├─ Search         │   │ ├─ Researcher    │              │
+│   │ ├─ GitHub         │   │ ├─ Worker        │              │
+│   │ ├─ MCP Client     │   │ ├─ JavaScript Pro│              │
+│   │ └─ ... (20 more)  │   │ └─ TypeScript Pro│              │
+│   └──────────────────┘   └──────────────────┘              │
+├─────────────────────────────────────────────────────────────┤
+│                   状态持久层（State Persistence Layer）         │
+│   .gsd/ 目录（磁盘文件系统）                                  │
+│   ├─ STATE.md（全局状态）                                    │
+│   ├─ PROJECT.md（项目规格）                                  │
+│   ├─ REQUIREMENTS.md（需求规格）                             │
+│   ├─ ROADMAP.md（路线图）                                    │
+│   ├─ 里程碑和切片文件（每个任务的状态和输出）                  │
+│   └─ 决策登记册                                              │
+├─────────────────────────────────────────────────────────────┤
+│                   隔离层（Isolation Layer）                    │
+│   Git Worktree 隔离                                          │
+│   ├─ 每个里程碑独立 worktree                                 │
+│   ├─ milestone/&lt;MID&gt; 分支                                    │
+│   └─ Squash merge 回主分支                                   │
+├─────────────────────────────────────────────────────────────┤
+│                   运行时层（Runtime Layer）                    │
+│   Pi SDK（TypeScript 应用运行时）                            │
+│   Node.js / npm（包管理）                                    │
+│   Git（版本控制）                                             │
+│   AI 模型 API（20+ 提供商）                                   │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README、docs/auto-mode.md 和 Medium 技术分析文章</p>
+</blockquote>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li>
+<p><strong>状态机编排器（Auto Mode State Machine）</strong> - Auto 模式的核心引擎，管理 planning → ready → executing → verifying → merging → replanning 的完整生命周期。状态持久化在 <code>.gsd/STATE.md</code>，支持崩溃后精确恢复。包含 Pre-Dispatch → Dispatch → Post-Unit → Verification → Stuck Detection 的执行管道。</p>
+</li>
+<li>
+<p><strong>上下文注入引擎（Context Injection Engine）</strong> - 负责为每个任务构建精选的上下文工件包。核心工件（任务计划、切片上下文、路线图摘录、决策登记册）始终注入；增量工件（前序任务摘要、依赖输出、研究报告）按需注入。M005 里程碑引入的相关性范围过滤实现了 65%+ token 减少。</p>
+</li>
+<li>
+<p><strong>模型路由器（Model Router）</strong> - 支持为规划、研究、执行、完成等不同阶段选择不同的 AI 模型。提供回退链机制确保主模型不可用时自动切换。支持 OpenAI、Anthropic、Google、xAI、Mistral、DeepSeek 等 20+ 模型提供商。</p>
+</li>
+<li>
+<p><strong>扩展系统（Extension System）</strong> - 24 个内置扩展提供浏览器工具、搜索、GitHub 集成、MCP 客户端等能力。5 个专业子代理（Scout 侦察、Researcher 研究、Worker 执行、JavaScript Pro、TypeScript Pro）覆盖从信息收集到代码实现的完整工作流。</p>
+</li>
+<li>
+<p><strong>崩溃恢复系统（Crash Recovery System）</strong> - 使用锁文件追踪记录会话所有权，通过会话取证分析不完整工作确定安全恢复点。支持无头模式自动重启（指数退避：5s → 10s → 30s 上限），提供商错误恢复（速率限制 60s 后自动恢复，服务器错误 30s，永久错误暂停等待人工干预）。</p>
+</li>
+<li>
+<p><strong>Git Worktree 管理器（Worktree Manager）</strong> - 每个里程碑在独立 Git worktree 的 <code>milestone/&lt;MID&gt;</code> 分支上运行。完成后 squash merge 回主分支。支持并行里程碑执行、失败时干净回滚和隔离实验。</p>
+</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p>GSD2 的扩展方式主要体现在以下方面：</p>
+<ol>
+<li>
+<p><strong>模型提供商扩展</strong>：支持 20+ 模型提供商，通过配置文件添加新的 API 端点和认证信息。支持自定义模型选择策略和回退链。</p>
+</li>
+<li>
+<p><strong>内置扩展系统</strong>：24 个内置扩展提供浏览器工具、搜索引擎、GitHub 操作、MCP 客户端等能力。扩展通过标准接口集成，代理在任务执行时按需调用。</p>
+</li>
+<li>
+<p><strong>子代理调度</strong>：5 个专业子代理可通过编排器调度。Scout 负责快速信息收集，Researcher 负责深度研究，Worker 负责代码实现，JavaScript Pro 和 TypeScript Pro 提供语言专业技能。</p>
+</li>
+<li>
+<p><strong>Token 优化配置</strong>：三种预置配置（budget/balanced/quality）控制研究的深度和验证的严格程度。budget 配置可跳过研究阶段和最小化验证，实现 40-60% token 节省。</p>
+</li>
+<li>
+<p><strong>Reactive Execution</strong>：当配置 <code>reactive_execution: true</code> 时，系统从任务的 IO 注解推导依赖图，无依赖的任务并行调度，将顺序执行升级为 DAG 调度。</p>
+</li>
+<li>
+<p><strong>Headless 和 MCP 模式</strong>：Headless 模式支持非交互式运行（返回 JSON 含状态、下一步操作和成本明细），用于 CI/CD 集成。MCP Server 模式通过 <code>gsd --mode mcp</code> 暴露工具接口，供外部 AI 客户端调用。</p>
+</li>
+</ol>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="spec-driven-development-sdd">规格驱动开发（Spec-Driven Development, SDD）</h3>
+<ul>
+<li><strong>定义：</strong> 一种开发方法论，将规格文档（而非对话历史）作为项目的事实来源。代码不是对话的产物，而是规格的产物。</li>
+<li><strong>作用：</strong> 解决对话驱动开发中上下文腐烂、不可复现和不可审计的问题。规格文件是规划阶段和执行阶段之间的唯一接口，消除了对话传递带来的信息损失。</li>
+<li><strong>使用场景：</strong> 大型项目的自动化开发；需要审计追踪的合规环境；崩溃后需要精确恢复的长时间任务。</li>
+<li><strong>架构说明：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 GSD2 GitHub README 的规格文件层次结构
+// 规格驱动的文件层次
+
+// 项目级规格（全局可见）
+// PROJECT.md     - 项目概述、技术栈、架构决策
+// REQUIREMENTS.md - 功能性和非功能性需求
+// ROADMAP.md     - 里程碑和路线图
+// STATE.md       - 全局状态（当前进度、活跃里程碑）
+
+// 阶段级规格（每阶段生成）
+// CONTEXT.md     - 上下文收集结果
+// RESEARCH.md    - 研究发现
+// PLAN.md        - 阶段执行计划
+// SUMMARY.md     - 阶段完成摘要
+
+// 任务级规格（每任务生成）
+// 每个任务在全新上下文中获得：
+//   - 任务计划（来自 PLAN.md）
+//   - 前序任务摘要
+//   - 依赖输出
+//   - 相关的决策记录
+
+// 规划者写入规格 → 执行者读取规格
+// 两者之间没有对话传递，只有文件接口
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README 和 Richard Hightower 分析文章</p>
+</blockquote>
+<h3 id="milestone-slice-task-hierarchy">三级分解（Milestone → Slice → Task Hierarchy）</h3>
+<ul>
+<li><strong>定义：</strong> 将大型项目分解为里程碑（Milestone）、切片（Slice）和任务（Task）三级结构的系统化方法，每个任务的设计保证适配单个上下文窗口。</li>
+<li><strong>作用：</strong> 在有限的上下文窗口内实现大型项目的有序开发。铁律确保每个任务不会因为过大而超出上下文窗口限制，从架构层面杜绝上下文腐烂。</li>
+<li><strong>使用场景：</strong> 任何需要多步骤、多文件变更的软件项目开发。</li>
+<li><strong>策略说明：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 GSD2 GitHub README 的三级分解策略
+
+// 项目（Project）
+//   → 用户的整体目标描述
+//   → 例如：&quot;构建一个全栈电商平台&quot;
+
+// 里程碑（Milestone）
+//   → 项目的重大阶段，可独立验证
+//   → 例如：&quot;用户认证系统&quot;、&quot;商品管理系统&quot;、&quot;订单处理系统&quot;
+//   → 每个里程碑运行在独立的 Git worktree
+
+// 切片（Slice）
+//   → 里程碑内的功能分组，有明确边界
+//   → 例如：&quot;用户注册流程&quot;、&quot;OAuth 集成&quot;
+//   → 切片提供上下文边界
+
+// 任务（Task）
+//   → 最小可执行单元
+//   → 铁律：每个任务必须适配一个 200K token 上下文窗口
+//   → 例如：&quot;创建 User 模型和迁移&quot;、&quot;实现 JWT 生成和验证&quot;
+//   → 每个任务获得全新上下文 + 精选工件注入
+
+// 分解示例：
+Project: 电商平台
+  ├─ Milestone 1: 用户认证
+  │    ├─ Slice 1.1: 用户注册
+  │    │    ├─ Task 1.1.1: User 模型和数据库迁移
+  │    │    ├─ Task 1.1.2: 注册 API 端点
+  │    │    └─ Task 1.1.3: 注册表单和验证
+  │    └─ Slice 1.2: OAuth 集成
+  │         ├─ Task 1.2.1: Google OAuth 配置
+  │         └─ Task 1.2.2: OAuth 回调处理
+  └─ Milestone 2: 商品管理
+       └─ ...
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README</p>
+</blockquote>
+<h3 id="fresh-context-per-task">每任务独立上下文（Fresh Context per Task）</h3>
+<ul>
+<li><strong>定义：</strong> 每个任务启动时创建全新的 200K token 上下文窗口，不继承前序任务的对话历史，而是通过精心设计的工件注入获得全局视图。</li>
+<li><strong>作用：</strong> 从架构层面消除上下文腐烂。传统长对话中 30-40% 的上下文被累积历史、元数据和规划产物消耗，GSD2 的方法将 200K token 几乎全部用于实际实现——"200K tokens purely for implementation, zero accumulated garbage."</li>
+<li><strong>使用场景：</strong> 所有任务的执行；确保每个任务从同等的上下文质量开始工作。</li>
+<li><strong>工作流程：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 GSD2 GitHub README 和 Menon Lab 分析
+// 上下文注入流程
+
+// Step 1: 任务调度
+//   → 从 STATE.md 读取当前状态
+//   → 选择下一个就绪的任务
+//   → 构建上下文工件包
+
+// Step 2: 相关性过滤（M005 Tiered Context Injection）
+//   → 分析当前任务的依赖和范围
+//   → 仅加载直接相关的工件
+//   → 跳过不相关的项目文件和决策
+//   → 实现 65%+ token 减少
+
+// Step 3: 上下文构建
+//   核心工件（始终注入）:
+//     - 当前任务计划
+//     - 包含切片上下文
+//     - 项目路线图摘录
+//     - 决策登记册
+//
+//   增量工件（按需注入）:
+//     - 前序任务摘要
+//     - 依赖任务输出
+//     - 研究报告
+
+// Step 4: 代理执行
+//   → 200K token 全新上下文
+//   → 精选工件预加载
+//   → 执行代码变更
+
+// Step 5: 压力监控
+//   → 70% 上下文利用率 → 收尾信号
+//   → 确保在质量下降前完成
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README 和 Menon Lab 分析文章</p>
+</blockquote>
+<h3 id="crash-recovery">崩溃恢复（Crash Recovery）</h3>
+<ul>
+<li><strong>定义：</strong> 系统在崩溃或中断后能从上一个检查点精确恢复继续执行的能力，通过磁盘持久化状态和会话取证实现。</li>
+<li><strong>作用：</strong> 解决长时间自主运行中的可靠性问题。AI 代理执行数小时的任务时，崩溃是常态而非例外。没有崩溃恢复，每次崩溃都意味着数小时工作的丢失和从零开始的重建。</li>
+<li><strong>使用场景：</strong> Auto 模式的长时间自主运行；不可靠网络环境下的 API 调用；资源受限环境的意外中断。</li>
+<li><strong>恢复机制：</strong></li>
+</ul>
+<pre><code class="language-typescript">// 基于 GSD2 GitHub README docs/auto-mode.md
+// 崩溃恢复的多层机制
+
+// Layer 1: 状态持久化
+//   → 所有状态写入 .gsd/STATE.md
+//   → 编排器崩溃、机器重启后可从断点恢复
+//   → 没有内存态跨会话存活
+
+// Layer 2: 锁文件追踪
+//   → 记录哪个会话拥有哪个任务
+//   → 防止多实例冲突
+
+// Layer 3: 会话取证（Session Forensics）
+//   → 分析不完整的工作
+//   → 确定安全的恢复点
+//   → 避免从已损坏的状态继续
+
+// Layer 4: 无头模式自动重启
+//   → 指数退避策略：5s → 10s → 30s 上限
+//   → 自动重启失败的会话
+
+// Layer 5: 提供商错误恢复
+//   → 速率限制：60s 后自动恢复
+//   → 服务器错误：30s 后重试
+//   → 永久错误：暂停，等待人工干预
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README docs/auto-mode.md</p>
+</blockquote>
+<h3 id="git-worktree-git-worktree-isolation">Git Worktree 隔离（Git Worktree Isolation）</h3>
+<ul>
+<li><strong>定义：</strong> 每个里程碑在独立的 Git worktree 和 <code>milestone/&lt;MID&gt;</code> 分支上运行，完成后通过 squash merge 合并回主分支的隔离策略。</li>
+<li><strong>作用：</strong> 实现里程碑级别的并行执行和隔离。不同里程碑可以同时进行而不产生合并冲突；失败时可以干净地回滚而不影响主分支；支持隔离实验。</li>
+<li><strong>使用场景：</strong> 多里程碑并行开发；需要回滚能力的实验性功能；团队协作中不同成员负责不同里程碑。</li>
+<li><strong>工作流程：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 GSD2 GitHub README
+# Git Worktree 隔离的工作流程
+
+# 1. 里程碑开始时
+#    → 创建新的 Git worktree
+#    → 切换到 milestone/&lt;MID&gt; 分支
+#    → 在隔离环境中工作
+
+# 2. 里程碑执行中
+#    → 所有代码变更在 worktree 中进行
+#    → 不影响主分支和其他里程碑
+
+# 3. 里程碑完成后
+#    → Squash merge 回主分支
+#    → 所有任务变更合并为一个提交
+#    → 清理 worktree
+#    → 更新 STATE.md
+
+# 4. 失败时
+#    → 丢弃 worktree 中的变更
+#    → 主分支不受影响
+#    → 可重新开始该里程碑
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README</p>
+</blockquote>
+<h3 id="per-phase-model-selection">每阶段模型选择（Per-Phase Model Selection）</h3>
+<ul>
+<li><strong>定义：</strong> 支持为规划、研究、执行、完成等不同阶段选择不同的 AI 模型的配置机制，配合回退链确保可用性。</li>
+<li><strong>作用：</strong> 不同任务阶段对模型能力的需求不同。研究阶段可以用较便宜的模型收集信息，执行阶段需要最强的模型编写高质量代码。通过精细化模型选择，在成本和质量之间取得最优平衡。</li>
+<li><strong>使用场景：</strong> 成本敏感的项目开发；需要混合使用多个模型提供商的场景；主模型不可用时的自动回退。</li>
+<li><strong>配置示例：</strong></li>
+</ul>
+<pre><code class="language-yaml"># 基于 GSD2 GitHub README
+# 每阶段模型选择配置
+
+models:
+  # 研究阶段：使用较便宜的模型
+  research:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;gpt-4o&quot;
+
+  # 规划阶段：使用中等能力的模型
+  planning:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    fallback: &quot;claude-3.5-sonnet&quot;
+
+  # 执行阶段：使用最强的模型
+  execution:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+    # 无回退，确保最高质量
+
+  # 完成阶段：使用中等能力的模型
+  completion:
+    primary: &quot;claude-sonnet-4-20250514&quot;
+
+# Token 优化配置
+token_profile: &quot;balanced&quot;  # budget / balanced / quality
+
+# 预算配置：budget 配置可跳过研究阶段，实现 40-60% 节省
+# quality 配置：完整研究 + 完整验证，0% 节省
+</code></pre>
+<blockquote>
+<p>基于 GSD2 GitHub README 和社区配置示例</p>
+</blockquote>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>GSD2</th>
+<th>BMAD</th>
+<th>Superpowers</th>
+<th>Taskmaster</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>拥抱重置——每任务全新上下文，规格驱动</td>
+<td>12 个专门化代理角色，企业级 SDLC</td>
+<td>Skills + 守卫栏，强制 TDD</td>
+<td>PRD 优先，MCP Server</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>5,505（2026-04-13）</td>
+<td>N/A（独立框架）</td>
+<td>~94,000（2026-03）</td>
+<td>N/A（Cursor 生态）</td>
+</tr>
+<tr>
+<td>License</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>主要语言</td>
+<td>TypeScript（Pi SDK）</td>
+<td>Markdown + 多语言</td>
+<td>Markdown + 多语言</td>
+<td>TypeScript（MCP）</td>
+</tr>
+<tr>
+<td>范式</td>
+<td>规格驱动 + 状态机自主</td>
+<td>角色扮演 + 多代理协作</td>
+<td>技能管道 + 流程约束</td>
+<td>PRD 驱动 + 工具选择</td>
+</tr>
+<tr>
+<td>上下文策略</td>
+<td>每任务全新 200K + 分层注入</td>
+<td>多代理分治</td>
+<td>对话内管理</td>
+<td>选择性工具加载（~16%）</td>
+</tr>
+<tr>
+<td>崩溃恢复</td>
+<td>是（锁文件 + 会话取证 + 自动重启）</td>
+<td>有限</td>
+<td>无</td>
+<td>有限</td>
+</tr>
+<tr>
+<td>资产生成</td>
+<td>N/A（专注代码）</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>并行执行</td>
+<td>是（多 worktree 并行里程碑）</td>
+<td>Party Mode 多代理辩论</td>
+<td>单会话</td>
+<td>单会话</td>
+</tr>
+<tr>
+<td>成本控制</td>
+<td>每阶段模型选择 + token 优化配置</td>
+<td>手动配置</td>
+<td>手动配置</td>
+<td>选择性工具加载</td>
+</tr>
+<tr>
+<td>输出物</td>
+<td>合并到主分支的代码变更</td>
+<td>代码 + 文档</td>
+<td>代码 + 测试</td>
+<td>代码 + 任务跟踪</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>中-高（三级分解、状态机、worktree）</td>
+<td>高（12 个角色、重度流程）</td>
+<td>中（7 阶段管道）</td>
+<td>低-中（PRD 优先）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>中-高（崩溃恢复、headless、MCP）</td>
+<td>中（侧重团队治理）</td>
+<td>中（侧重代码质量）</td>
+<td>中-低（Cursor 聚焦）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>大型项目长时间自主开发</td>
+<td>团队协作、合规环境</td>
+<td>代码质量优先的个人/小团队</td>
+<td>清晰需求的离散任务</td>
+</tr>
+<tr>
+<td>SWE-AF 评分</td>
+<td>95/100</td>
+<td>未公开</td>
+<td>未公开</td>
+<td>未公开</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。GSD2 Stars 来自 GitHub API 实时查询。Superpowers Stars 来自搜索结果。[置信度：GSD2 高，BMAD 中，Superpowers 中，Taskmaster 中]</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>大型项目的长时间自主开发</strong>：GSD2 最适合需要多文件、多步骤变更的复杂项目。当一个项目涉及 50+ 文件、需要数小时甚至数天的开发工作时，GSD2 的上下文隔离和三级分解优势最为明显。社区反馈表明，8 小时的工作可压缩 2-3 天的手动工作量。[置信度：高]</p>
+</li>
+<li>
+<p><strong>不可靠环境下的自主执行</strong>：Auto 模式的崩溃恢复、超时监督和卡住检测使 GSD2 适合在网络不稳定、API 限流或资源受限的环境中长时间运行。系统在这些条件下仍能保持进度并最终完成。[置信度：高]</p>
+</li>
+<li>
+<p><strong>成本敏感的模型优化</strong>：对于需要控制 API 成本的团队，GSD2 的每阶段模型选择和 token 优化配置（budget/balanced/quality）提供了精细的成本控制能力。在预算配置下可实现 40-60% token 节省。[置信度：高]</p>
+</li>
+<li>
+<p><strong>CI/CD 集成的自动化开发</strong>：Headless 模式和 MCP Server 模式使 GSD2 可以集成到持续集成流水线中，实现自动化代码生成和验证。返回 JSON 格式的状态、下一步操作和成本明细，便于程序化监控。[置信度：中-高]</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>小型快速修改</strong>：对于单文件或少量代码变更，GSD2 的三级分解和上下文管理机制显得过于繁重。直接使用 Claude Code 或 Cursor 更简单高效。</p>
+</li>
+<li>
+<p><strong>需要深度对话交互的场景</strong>：GSD2 的规格驱动方法限制了用户与代理之间的实时对话。如果开发过程需要频繁的人工指导和方向调整，Step 模式虽然可以满足，但不如原生 Claude Code 的交互体验流畅。</p>
+</li>
+<li>
+<p><strong>团队治理要求高的企业环境</strong>：GSD2 的反仪式哲学意味着较少的治理和审计能力。BMAD 的 12 个专门化角色和重度流程更适合需要在团队中建立明确角色和审批流程的企业。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>从架构层面消除上下文腐烂</strong> - GSD2 最核心的优势不是在长对话中管理上下文，而是从根本上避免上下文腐烂。每个任务的全新 200K token 上下文窗口 + 分层工件注入的组合，确保代理始终从最优上下文质量开始工作。Richard Hightower 评价："200k tokens purely for implementation, zero accumulated garbage."这是对 LLM 质量随上下文积累而下降这一根本问题的架构级解决方案。[置信度：高]</p>
+</li>
+<li>
+<p><strong>生产级的可靠性设计</strong> - 崩溃恢复（锁文件 + 会话取证 + 自动重启）、超时监督（三层超时：软 20 分钟/空闲 10 分钟/硬 30 分钟）、卡住检测（滑动窗口分析）和提供商错误恢复（速率限制 60s/服务器错误 30s）构成了完整的可靠性保障。这在同类工具中是最全面的。[置信度：高]</p>
+</li>
+<li>
+<p><strong>精细的成本控制</strong> - 每阶段模型选择 + token 优化配置 + 相关性范围过滤 + 成本追踪和预算控制，提供了同类工具中最精细的成本管理能力。budget 配置可实现 40-60% token 节省，quality 配置确保最高质量。[置信度：高]</p>
+</li>
+<li>
+<p><strong>规格驱动带来的可审计性</strong> - 所有决策和状态持久化在磁盘文件中（<code>.gsd/</code> 目录），提供完整的审计追踪。代码变更是规格的产物，可以从规格追溯到代码，也可以从代码回溯到规格。这对于合规要求高的环境特别有价值。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>显著的学习曲线</strong> - 尽管反仪式哲学减少了流程开销，但 GSD2 本身有大量概念需要理解：里程碑、切片、任务、worktree、状态文件、token 配置、模型选择、Auto 模式管道等。dev.to 入门指南列出的常见陷阱包括：token 消耗大（4:1 开销比）、Pro 计划不够、模糊描述导致问题。入门门槛明显高于直接使用 Claude Code。[置信度：高]</p>
+</li>
+<li>
+<p><strong>Token 开销比高</strong> - 社区反馈指出 GSD2 的 token 消耗是直接使用 Claude Code 的约 4 倍。虽然每任务全新上下文带来了质量优势，但重复加载上下文工件的成本不可忽视。对于小型项目，这种开销可能不值得。[置信度：中]</p>
+</li>
+<li>
+<p><strong>对规格质量的强依赖</strong> - 整个系统假设规格文档是高质量的。低质量的规格会产生低质量的代码，而反仪式哲学意味着较少的早期保护来捕获糟糕的规格。用户需要在项目描述上投入足够的精力。[置信度：中]</p>
+</li>
+<li>
+<p><strong>项目年龄短，成熟度待验证</strong> - GitHub 仓库创建于 2026-03-11，截至 2026-04-13 仅约 1 个月。416 个 Open Issues 数量较多（相对于 5,505 Stars），可能反映快速迭代中的稳定性问题。虽然功能迭代迅速（v2.71），但长期稳定性有待观察。[置信度：中]</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>Pi SDK 单一依赖</strong> - GSD2 完全基于 Pi SDK 构建，与该 SDK 的能力和发布周期紧密耦合。如果 Pi SDK 出现重大变更或停止维护，GSD2 将受到直接影响。[置信度：中]</p>
+</li>
+<li>
+<p><strong>独立验证数据的缺乏</strong> - 所有性能声明（包括 SWE-AF 95/100）来自 GSD2 项目本身或关联作者。未找到第三方的 A/B 测试或独立基准测试。虽然数据看起来令人印象深刻，但缺乏独立验证。[置信度：中]</p>
+</li>
+<li>
+<p><strong>社区负面反馈的缺失可能反映选择偏差</strong> - 未找到独立的负面评论或批判性分析。这种缺失可能反映真实的用户满意度，也可能反映早期采用者（通常是爱好者）的选择偏差。随着用户基数扩大，可能出现更多问题报告。[置信度：低-中]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>插件/扩展数量：</strong> 24 个内置扩展 + 5 个专业子代理。扩展覆盖浏览器工具、搜索引擎、GitHub 操作、MCP 客户端等常见需求。暂不支持第三方自定义扩展的标准化接口。[置信度：高]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> 核心依赖 Pi SDK（运行时框架）、Node.js/npm（包管理）、Git（版本控制）。支持 20+ AI 模型提供商 API。上游依赖本身成熟稳定。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> 有报告称 Amazon、Google、Shopify、Webflow 等公司的员工个人使用，但缺乏官方的企业采用案例或大规模部署报告。GSD2 的定位更偏向独立开发者和小团队。GSD 组织下多个仓库总 Stars 超 31,000，表明社区关注度较高。[置信度：低-中]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> 中-高。GitHub README 提供了完整的架构说明、命令参考和配置指南。dev.to 有独立第三方教程。但部分文档文件（如 docs/architecture.md）在抓取时不可访问，表明文档覆盖可能不完整。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 中。416 个 Open Issues 数量较多，但项目年龄仅约 1 个月，处于快速迭代中。v2.71 版本更新频繁，功能迭代迅速。崩溃恢复和超时监督机制为长时间运行提供了可靠性保障。Git worktree 隔离确保单个里程碑失败不影响主分支。[置信度：中]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> 中-高。每任务全新 200K token 上下文确保一致的质量输出。分层上下文注入实现 65%+ token 减少。但 token 开销比约 4:1（相对直接使用 Claude Code），对于成本敏感的场景需要谨慎。Headless 模式支持 CI/CD 集成。[置信度：中]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> 中。Headless 模式返回 JSON 格式的状态、下一步操作和成本明细。Token 使用追踪和成本报告是内置功能。但缺乏专门的监控仪表板或可视化工具。[置信度：中]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> 高。这是 GSD2 的核心优势之一。多层崩溃恢复机制（状态持久化 + 锁文件追踪 + 会话取证 + 自动重启 + 提供商错误恢复）在同类工具中最为完善。Git worktree 隔离提供代码级别的回滚能力。[置信度：高]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> 中。代码变更通过 Git worktree 管理，具有完整的版本控制和审计追踪。但 API 密钥需要在本地配置，AI 模型调用涉及向外部 API 发送项目信息。对于涉及机密代码的项目，需要考虑 API 调用的数据安全。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>命令行操作（npm install、git 操作）</li>
+<li>Git 基础（分支、合并、worktree 概念）</li>
+<li>AI 模型 API 的基本使用（API 密钥、模型选择）</li>
+<li>软件项目结构的基本理解（模块划分、依赖关系）</li>
+<li>
+<p>TypeScript/JavaScript 基础（理解配置文件和扩展机制）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 2-4 小时。安装 GSD CLI、配置模型提供商、初始化项目、运行第一个 Auto 模式任务。dev.to 入门指南提供了完整的分步教程。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 1-2 周。需要理解三级分解的设计原理、Auto 模式状态机的完整生命周期、上下文注入策略的配置、每阶段模型选择的最优策略、token 优化配置的适用场景、崩溃恢复机制的工作方式。对于想要自定义扩展或优化成本的用户，还需要深入理解 Pi SDK 和模型提供商的 API。</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>GSD2 在"AI 代理长时间自主开发"这一细分领域建立了一个技术上引人注目的参考实现。它的核心创新在于：</p>
+<ol>
+<li>
+<p><strong>从架构层面消除上下文腐烂</strong>：每任务全新 200K token 上下文 + 分层工件注入，从根本上避免了 LLM 质量随上下文积累而下降的问题。这是对长对话中"上下文腐烂"这一根本挑战的架构级解决方案。</p>
+</li>
+<li>
+<p><strong>生产级的可靠性设计</strong>：多层崩溃恢复、超时监督、卡住检测和提供商错误恢复，使 AI 代理能在不可靠环境中长时间自主运行。这为 AI 代理的"无人值守"运行提供了基础设施。</p>
+</li>
+<li>
+<p><strong>精细的成本控制</strong>：每阶段模型选择 + token 优化配置 + 相关性范围过滤，提供了同类工具中最精细的成本管理能力。budget 配置的 40-60% token 节省使成本敏感的项目也能受益。</p>
+</li>
+</ol>
+<p>然而，GSD2 的学习曲线较高，token 开销比约 4:1，且项目年龄仅约 1 个月，长期稳定性有待验证。性能声明缺乏独立第三方验证。</p>
+<p><strong>推荐使用：</strong> 想要自动化大型项目开发的独立开发者和小团队；需要在不可靠环境中长时间运行 AI 代理的场景；对成本控制有精细需求的团队；需要 CI/CD 集成的自动化开发流程。</p>
+<p><strong>谨慎使用：</strong> 小型快速修改——GSD2 的机制过于繁重；需要深度对话交互的场景——规格驱动限制了实时调整；对成熟度要求极高的生产环境——项目年龄短，稳定性待验证。</p>
+<p><strong>综合评分：</strong> 7.0/10。在"规格驱动 + 长时间自主开发"细分领域是最完整的开源实现，崩溃恢复和成本控制是真正的技术亮点。扣分主要来自项目年龄短（约 1 个月）、416 个 Open Issues 较多、缺乏独立第三方验证、token 开销比较高。核心架构设计优秀，但需要更多时间和用户来验证其长期价值。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> GSD2 v2.71（npm 包 gsd-pi）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/gsd-build/gsd-2">GitHub 仓库 gsd-build/gsd-2</a> — 源码、README、架构文档、命令参考</li>
+<li><a href="https://api.github.com/repos/gsd-build/gsd-2">GitHub API - gsd-build/gsd-2</a>（Stars: 5,505, Forks: 577, Open Issues: 416, License: MIT, Language: TypeScript） — 项目元数据</li>
+<li><a href="https://dev.to/nikolay_bailey/gsd2-a-beginners-guide-to-spec-driven-ai-coding-4h5k">dev.to - GSD2 A Beginner's Guide to Spec-Driven AI Coding</a> — 完整教程、常见陷阱、工作流程</li>
+<li><a href="https://medium.com/">Medium - Superpowers, GSD, and gstack: What Each Claude Code Framework Actually Constrains</a> — 框架对比分析</li>
+<li><a href="https://menon.pro/">Menon Lab - Solving Context Rot: GSD vs BMAD vs Taskmaster</a> — 三框架深度对比、SWE-AF 基准</li>
+<li><a href="https://medium.com/">Medium - Richard Hightower: What Is GSD? Spec-Driven Development Without the Ceremony</a> — 哲学分析、工件层次、编排器模式</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

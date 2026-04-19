@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 长任务最佳实践 - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">AI 长任务最佳实践是一套面向需要跨多个上下文窗口（Context Window）持续工作数小时甚至数天的 AI Agent 系统的工程方法论，核心解决 Agent 在离散会话间保持进度一致性、从故障中恢复、以及在大规模部署中保证可靠性的问题，关键机制包括初始化代理（Initializer Agent）、增量进度追踪、检查点/恢复（Checkpoint/Restore）、有状态与无状态恢复策略的权衡，以及多 Agent 协调的一致性快照。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">核心参考资源</a></li>
+<li><a href="#_8" class="toc-h3">深度分析资源</a></li>
+<li><a href="#_9" class="toc-h3">学术与框架</a></li>
+<li><a href="#_10" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI 长任务最佳实践 - 技术发现报告</h1>
+                        <div class="article-meta">AI 长任务最佳实践是一套面向需要跨多个上下文窗口（Context Window）持续工作数小时甚至数天的 AI Agent 系统的工程方法论，核心解决 Agent 在离散会话间保持进度一致性、从故障中恢复、以及在大规模部署中保证可靠性的问题，关键机制包括初始化代理（Initializer Agent）、增量进度追踪、检查点/恢复（Checkpoint/Restore）、有状态与无状态恢复策略的权衡，以及多 Agent 协调的一致性快照。</div>
+                    </header>
+                    <h1 id="ai-">AI 长任务最佳实践 - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> AI 长任务最佳实践（Long-Running AI Agent Best Practices）</li>
+<li><strong>研究领域：</strong> AI Agent 工程实践 / 自主智能体可靠性 / 多上下文窗口工作流</li>
+<li><strong>核心来源：</strong> Anthropic 官方工程博客、Eunomia.dev C/R 系统综述、AWS/腾讯云实践文章</li>
+<li><strong>当前状态：</strong> 快速发展中的实践领域，尚无标准化框架，各厂商和框架各自演进</li>
+<li><strong>关键时间节点：</strong> 2025-2026 年成为 AI Agent 工程的核心挑战</li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>AI 长任务最佳实践是一套面向需要跨多个上下文窗口（Context Window）持续工作数小时甚至数天的 AI Agent 系统的工程方法论，核心解决 Agent 在离散会话间保持进度一致性、从故障中恢复、以及在大规模部署中保证可靠性的问题，关键机制包括初始化代理（Initializer Agent）、增量进度追踪、检查点/恢复（Checkpoint/Restore）、有状态与无状态恢复策略的权衡，以及多 Agent 协调的一致性快照。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>跨上下文窗口的进度保持——初始化代理 + 编码代理双阶段架构</strong> - Anthropic 提出的核心模式：第一个上下文窗口由初始化代理（Initializer Agent）设置项目环境、创建功能清单和进度文件；后续每个窗口由编码代理（Coding Agent）增量推进单个功能，完成后提交 Git 并更新进度文件。这种"换班工程师"模型让每个新 Agent 会话能快速理解项目状态并继续工作。[来源：Anthropic 工程博客]</p>
+</li>
+<li>
+<p><strong>检查点/恢复（Checkpoint/Restore）多层机制</strong> - 从操作系统级（CRIU、BLCR）、容器级（Docker/Podman + CRIU）、虚拟机级（VMware vMotion、KVM Live Migration）到应用级（LangGraph 检查点、PyTorch 模型保存），检查点机制覆盖了整个技术栈。AI Agent 场景引入了新的需求：GPU 状态检查点（CRIUgpu）、多 Agent 一致性快照、以及有状态与无状态恢复的权衡选择。[来源：Eunomia.dev C/R 系统综述]</p>
+</li>
+<li>
+<p><strong>增量进度与功能清单驱动开发</strong> - Anthropic 的实验表明，Agent 的两个主要失败模式是"试图一次性完成所有工作"和"过早宣布任务完成"。解决方案是创建结构化的功能清单文件（JSON 格式，每个功能有 passes/fails 状态），强制 Agent 每次只处理一个功能，并通过端到端测试验证后再标记为通过。[来源：Anthropic 工程博客]</p>
+</li>
+<li>
+<p><strong>异步编排与进度反馈</strong> - 腾讯云和人人都是产品经理的分析指出，AI Agent 系统应采用异步思维设计——用户不需要等待长时间运行的任务完成。关键实践包括：操作级和任务级的进度管理、即时反馈机制、超时重试策略，以及将长流程拆解为阶段性子任务并支持异常时仅重跑相关阶段。[来源：腾讯云、CloudWeGo Eino ADK]</p>
+</li>
+<li>
+<p><strong>生产级多 Agent 编排的故障恢复</strong> - 实践中多 Agent 系统的三大失败模式：无限循环、虚幻共识、资源死锁。恢复策略包括检查点回滚（Checkpoint Rollback）、补偿模式（Compensation Pattern）、以及 99.2% 任务完成率的生产验证方案。[来源：Medium 多 Agent 编排文章、cheesecat.net]</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>关注热度：</strong> 极高。AI Agent 长任务可靠性是 2025-2026 年行业核心挑战。Anthropic、LangChain、AWS、Google 等主要厂商都在投入。</li>
+<li><strong>学术研究活跃度：</strong> 高。NeurIPS 2025 收录了 LLM-Agent 工作流依赖可信度的研究；ResearchGate 发表了检查点式 LLM Agent 架构的成本-性能权衡论文。</li>
+<li><strong>框架支持：</strong> LangGraph（LangChain 扩展）提供内置检查点机制；Claude Agent SDK 支持上下文压缩和跨窗口工作；Eino ADK（字节跳动）提供长流程阶段性管理。</li>
+<li><strong>工程实践文章：</strong> Anthropic 工程博客（"Effective Harnesses for Long-Running Agents"）、AWS Agentic AI 基础设施实践系列、腾讯云 AI Skill 长耗时处理方案、博客园 OpenClaw 实战分享。</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> AI Agent 工程 / 自主系统可靠性 / 分布式系统容错 / 软件工程自动化</li>
+<li><strong>解决的核心问题：</strong> 当前 LLM 的上下文窗口有限（即使 200K tokens，也难以完成大型项目），Agent 必须跨多个上下文窗口持续工作。每个新窗口的 Agent 实例没有之前的记忆，如何让它在"空白"状态下快速恢复进度、继续推进任务，并避免重复工作或遗漏关键步骤，是长任务 Agent 系统的核心挑战。</li>
+<li><strong>相关技术：</strong> LangGraph（状态图 + 检查点）、Claude Agent SDK（上下文压缩 + Harness）、Ray（分布式 Actor 框架）、CRIU（容器检查点）、DMTCP（分布式检查点）</li>
+<li><strong>依赖的基础技术：</strong> LLM API（Anthropic/OpenAI）、Git（版本控制和状态回滚）、容器化（Docker/Kubernetes）、消息队列（异步编排）</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">核心参考资源</h3>
+<ul>
+<li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic - Effective Harnesses for Long-Running Agents</a> — 初始化代理 + 编码代理架构、功能清单、增量进度最佳实践</li>
+<li><a href="https://eunomia.dev/blog/2025/05/11/checkpointrestore-systems-evolution-techniques-and-applications-in-ai-agents/">Eunomia.dev - Checkpoint/Restore Systems in AI Agents</a> — C/R 系统全景综述，从 HPC 到 AI Agent 的演进</li>
+<li><a href="https://aws.amazon.com/cn/blogs/china/agentive-ai-infrastructure-practice-series-1/">AWS - Agentic AI 基础设施实践经验</a> — 编排模块设计、存储架构、任务流管理</li>
+</ul>
+<h3 id="_8">深度分析资源</h3>
+<ul>
+<li><a href="https://www.cloudwego.io/zh/docs/eino/overview/eino_adk0_1/">CloudWeGo - Eino ADK 设计模式</a> — 长流程阶段性管理、上下文隔离、异常恢复</li>
+<li><a href="https://cloud.tencent.com/developer/article/2639040">腾讯云 - AI Skill 长耗时执行的优雅处理</a> — 异步交互、进度反馈、超时重试</li>
+<li><a href="https://medium.com/@luis.f.s.m.dias/invisible-state-exploding-tokens-and-catastrophic-restarts-fixing-multi-agent-orchestration-8800ba45cfa6">Medium - Fixing Multi-Agent Orchestration</a> — 99.2% 任务完成率的生产方案</li>
+</ul>
+<h3 id="_9">学术与框架</h3>
+<ul>
+<li><a href="https://www.researchgate.net/publication/399575870_Cost-Performance_Trade-offs_in_Checkpoint-Based_LLM_Agent_Architectures">ResearchGate - Cost-Performance Trade-offs in Checkpoint-Based LLM Agent Architectures</a> — 检查点成本分析</li>
+<li><a href="https://langchain.com/state-of-agent-engineering">LangChain - State of Agent Engineering</a> — 2026 年行业调查报告</li>
+<li><a href="https://cheesecat.net/blog/multi-agent-orchestration-patterns-recovery-strategies-2026-zh-tw/">cheesecat.net - Multi-Agent Orchestration Patterns &amp; Recovery Strategies 2026</a> — 三大失败模式和恢复策略</li>
+</ul>
+<h2 id="_10">信息来源</h2>
+<ul>
+<li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic Engineering Blog - Effective Harnesses for Long-Running Agents</a> - 获取日期：2026-04-13</li>
+<li><a href="https://eunomia.dev/blog/2025/05/11/checkpointrestore-systems-evolution-techniques-and-applications-in-ai-agents/">Eunomia.dev - Checkpoint/Restore Systems: Evolution, Techniques, and Applications in AI Agents</a> - 获取日期：2026-04-13</li>
+<li><a href="https://www.google.com/search?q=AI+long+running+agents+best+practices+2025+2026">Web 搜索 "AI long running agents best practices 2025 2026" 多来源结果</a> - 获取日期：2026-04-13</li>
+<li><a href="https://www.google.com/search?q=AI+agent%E9%95%BF%E6%97%B6%E9%97%B4%E8%BF%90%E8%A1%8C+%E4%BB%BB%E5%8A%A1%E7%AE%A1%E7%90%86+%E5%BC%82%E6%AD%A5%E7%BC%96%E6%8E%92">Web 搜索 "AI agent长时间运行 任务管理 异步编排 最佳实践" 多来源结果</a> - 获取日期：2026-04-13</li>
+<li><a href="https://www.google.com/search?q=LLM+agent+task+orchestration+checkpoint+recovery+2025">Web 搜索 "LLM agent task orchestration checkpoint recovery 2025" 多来源结果</a> - 获取日期：2026-04-13</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

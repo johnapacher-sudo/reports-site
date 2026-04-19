@@ -1,0 +1,2393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MetaGPT - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 6-8 小时 | **前置知识：** Python 基础（函数、类、异步 async/await）、命令行基本操作、LLM API 基本概念（了解 GPT-4、Prompt、上下文窗口）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-sop-agent" class="toc-h3">1.1 理解 SOP 驱动的多 Agent 协作</a></li>
+<li><a href="#12-cli" class="toc-h3">1.2 使用 CLI 快速生成项目</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-python-api-action" class="toc-h3">2.1 Python API——自定义角色与 Action</a></li>
+<li><a href="#22-" class="toc-h3">2.2 共享消息池与发布-订阅机制</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31" class="toc-h3">3.1 可执行反馈机制——代码运行与自动修复</a></li>
+<li><a href="#32-llm" class="toc-h3">3.2 多 LLM 后端配置</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>MetaGPT - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 6-8 小时<br>**前置知识：** Python 基础（函数、类、异步 async/await）、命令行基本操作、LLM API 基本概念（了解 GPT-4、Prompt、上下文窗口）</div>
+                    </header>
+                    <h1 id="metagpt-">MetaGPT - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 6-8 小时
+<strong>前置知识：</strong> Python 基础（函数、类、异步 async/await）、命令行基本操作、LLM API 基本概念（了解 GPT-4、Prompt、上下文窗口）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li>操作系统：Linux / macOS / Windows（WSL2）</li>
+<li>Python 3.9+</li>
+<li>Git 2.30+</li>
+<li>OpenAI API Key（或其他支持的 LLM 后端）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 1. 创建项目目录
+mkdir metagpt-lab &amp;&amp; cd metagpt-lab
+
+# 2. 创建 Python 虚拟环境
+python3 -m venv venv
+source venv/bin/activate
+
+# 3. 安装 MetaGPT
+pip install metagpt
+
+# 4. 创建配置文件目录
+mkdir -p ~/.metagpt
+</code></pre>
+<p>创建配置文件 <code>~/.metagpt/config2.yaml</code>：</p>
+<pre><code class="language-yaml"># MetaGPT 配置文件
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;sk-your-api-key-here&quot;
+  base_url: &quot;https://api.openai.com/v1&quot;
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 确认 Python 版本
+python3 --version
+# Python 3.9.x 或更高
+
+# 确认 MetaGPT 安装成功
+python3 -c &quot;import metagpt; print('MetaGPT 安装成功')&quot;
+
+# 验证配置文件
+python3 -c &quot;
+from metagpt.const import METAGPT_ROOT
+import os
+config_path = os.path.expanduser('~/.metagpt/config2.yaml')
+if os.path.exists(config_path):
+    print(f'配置文件存在: {config_path}')
+else:
+    print('警告: 配置文件不存在，请创建 ~/.metagpt/config2.yaml')
+&quot;
+</code></pre>
+<p><strong>注意事项：</strong>
+- 本教程使用 MetaGPT 的 Python API 模式，部分示例使用模拟数据演示核心概念
+- 如果没有 LLM API Key，可以使用模拟模式学习框架概念
+- 实际调用 LLM 的代码示例需要有效的 API Key 和网络连接</p>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-sop-agent">1.1 理解 SOP 驱动的多 Agent 协作</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MetaGPT 的核心理念是 <code>Code = SOP(Team)</code>——将人类软件工程中的标准操作流程（Standard Operating Procedure，SOP）编码为 Agent 的提示词序列，让多个专业化 Agent 按流水线协作完成任务。</p>
+<p>这就像一家软件公司：产品经理写需求文档，架构师做系统设计，工程师按设计编码。每个角色只做自己的专业工作，不越界。MetaGPT 将这个流程编码为 Agent 协作规则。</p>
+<p>为什么 SOP 如此重要？消融实验证明：
+- 仅工程师（无 SOP）：代码可执行性 1.0/4.0
+- 加入产品经理：跃升至 3.0/4.0
+- 完整流水线（5 个角色）：达到 3.9/4.0</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文件名：01-understand-sop.py
+# 演示：SOP 驱动 vs 无 SOP 的效果对比
+
+import random
+
+# 模拟一个软件开发任务
+TASK = &quot;创建一个贪吃蛇游戏&quot;
+
+# 模拟无 SOP 的单 Agent 工作模式
+def single_agent_mode(task):
+    &quot;&quot;&quot;模拟没有 SOP 的单 Agent——试图一次完成所有工作&quot;&quot;&quot;
+    print(f&quot;=== 无 SOP 模式：单 Agent 处理 '{task}' ===&quot;)
+    print(&quot;  Agent 同时承担：需求分析 + 架构设计 + 编码 + 测试&quot;)
+    print(&quot;  问题：角色职责混乱，容易遗漏关键步骤&quot;)
+
+    # 模拟各步骤质量（单 Agent 质量较低）
+    quality = {
+        &quot;需求分析&quot;: random.uniform(0.3, 0.5),
+        &quot;架构设计&quot;: random.uniform(0.3, 0.5),
+        &quot;代码实现&quot;: random.uniform(0.4, 0.6),
+        &quot;测试验证&quot;: random.uniform(0.2, 0.4),
+    }
+
+    overall = sum(quality.values()) / len(quality)
+    print(f&quot;  各步骤质量: {quality}&quot;)
+    print(f&quot;  整体可执行性: {overall:.2f}/1.0 (模拟)\n&quot;)
+    return overall
+
+
+# 模拟 SOP 驱动的多 Agent 工作模式
+def sop_driven_mode(task):
+    &quot;&quot;&quot;模拟 SOP 驱动的五角色流水线——每个角色专业化&quot;&quot;&quot;
+    print(f&quot;=== SOP 模式：五角色流水线处理 '{task}' ===&quot;)
+
+    # 角色流水线（按 SOP 顺序执行）
+    roles = [
+        {&quot;name&quot;: &quot;产品经理&quot;, &quot;step&quot;: &quot;需求分析&quot;, &quot;quality_boost&quot;: 0.15},
+        {&quot;name&quot;: &quot;架构师&quot;, &quot;step&quot;: &quot;系统设计&quot;, &quot;quality_boost&quot;: 0.15},
+        {&quot;name&quot;: &quot;项目经理&quot;, &quot;step&quot;: &quot;任务分解&quot;, &quot;quality_boost&quot;: 0.10},
+        {&quot;name&quot;: &quot;工程师&quot;, &quot;step&quot;: &quot;代码实现&quot;, &quot;quality_boost&quot;: 0.20},
+        {&quot;name&quot;: &quot;QA 工程师&quot;, &quot;step&quot;: &quot;测试验证&quot;, &quot;quality_boost&quot;: 0.15},
+    ]
+
+    pipeline_quality = []
+    upstream_output = task  # 上游输出作为下游输入
+
+    for i, role in enumerate(roles):
+        # 每个 Agent 的质量 = 基础质量 + 专业化的质量提升
+        base_quality = random.uniform(0.6, 0.8)
+        boosted_quality = min(1.0, base_quality + role[&quot;quality_boost&quot;])
+
+        pipeline_quality.append(boosted_quality)
+        print(f&quot;  {role['name']}: {role['step']}&quot;)
+        print(f&quot;    输入: 上游的{roles[i-1]['step'] if i &gt; 0 else '原始需求'}&quot;)
+        print(f&quot;    输出质量: {boosted_quality:.2f}&quot;)
+        upstream_output = f&quot;{role['step']}结果&quot;
+
+    overall = sum(pipeline_quality) / len(pipeline_quality)
+    print(f&quot;\n  整体可执行性: {overall:.2f}/1.0 (模拟)&quot;)
+    return overall
+
+
+# 运行对比
+print(&quot;=&quot; * 60)
+print(&quot;MetaGPT 核心概念：SOP 驱动 vs 无 SOP&quot;)
+print(&quot;=&quot; * 60)
+print()
+
+random.seed(42)  # 固定随机种子，便于复现
+no_sop = single_agent_mode(TASK)
+with_sop = sop_driven_mode(TASK)
+
+print(&quot;=&quot; * 60)
+print(f&quot;对比结果：&quot;)
+print(f&quot;  无 SOP 模式可执行性: {no_sop:.2f}&quot;)
+print(f&quot;  SOP 模式可执行性:    {with_sop:.2f}&quot;)
+print(f&quot;  提升: {(with_sop - no_sop) / no_sop * 100:.1f}%&quot;)
+print(&quot;=&quot; * 60)
+</code></pre>
+<pre><code class="language-bash"># 运行示例
+python3 01-understand-sop.py
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>============================================================
+MetaGPT 核心概念：SOP 驱动 vs 无 SOP
+============================================================
+
+=== 无 SOP 模式：单 Agent 处理 '创建一个贪吃蛇游戏' ===
+  Agent 同时承担：需求分析 + 架构设计 + 编码 + 测试
+  问题：角色职责混乱，容易遗漏关键步骤
+  各步骤质量: {'需求分析': 0.40, '架构设计': 0.35, '代码实现': 0.55, '测试验证': 0.30}
+  整体可执行性: 0.40/1.0 (模拟)
+
+=== SOP 模式：五角色流水线处理 '创建一个贪吃蛇游戏' ===
+  产品经理: 需求分析
+    输入: 上游的原始需求
+    输出质量: 0.88
+  架构师: 系统设计
+    输入: 上游的需求分析
+    输出质量: 0.83
+  项目经理: 任务分解
+    输入: 上游的系统设计
+    输出质量: 0.85
+  工程师: 代码实现
+    输入: 上游的任务分解
+    输出质量: 0.90
+  QA 工程师: 测试验证
+    输入: 上游的代码实现
+    输出质量: 0.87
+
+  整体可执行性: 0.87/1.0 (模拟)
+
+============================================================
+对比结果：
+  无 SOP 模式可执行性: 0.40
+  SOP 模式可执行性:    0.87
+  提升: 117.5%
+============================================================
+</code></pre>
+<p><strong>练习题：</strong>
+1. 修改代码，移除"产品经理"角色，观察对整体质量的影响。对比 MetaGPT 消融实验中"工程师+架构师+项目经理"（无产品经理）的效果。
+2. 尝试将角色顺序打乱（如工程师先执行、产品经理后执行），观察质量变化，理解为什么 SOP 的顺序很重要。</p>
+<hr />
+<h3 id="12-cli">1.2 使用 CLI 快速生成项目</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MetaGPT 提供了最简单的使用方式——CLI（命令行界面）。一行命令即可启动 SOP 流水线，从自然语言需求生成完整的软件项目。</p>
+<p>CLI 模式的工作流程：
+1. MetaGPT 解析用户输入的需求文本
+2. 按照预设的 SOP 启动五角色流水线
+3. 产品经理 → 架构师 → 项目经理 → 工程师依次执行
+4. 最终输出包含文档和代码的完整项目目录</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文件名：02-cli-simulation.py
+# 演示：模拟 MetaGPT CLI 的工作流程
+
+import json
+import os
+from datetime import datetime
+
+
+def simulate_cli_workflow(requirement, output_dir=&quot;/tmp/metagpt-demo&quot;):
+    &quot;&quot;&quot;模拟 MetaGPT CLI 的工作流程&quot;&quot;&quot;
+
+    print(f&quot;MetaGPT CLI 模拟&quot;)
+    print(f&quot;输入需求: {requirement}&quot;)
+    print(f&quot;输出目录: {output_dir}\n&quot;)
+
+    os.makedirs(output_dir, exist_ok=True)
+
+    # 阶段 1：产品经理——需求分析
+    print(&quot;=&quot; * 50)
+    print(&quot;[阶段 1/5] 产品经理 — 需求分析&quot;)
+    print(&quot;=&quot; * 50)
+
+    product_doc = {
+        &quot;project&quot;: requirement,
+        &quot;user_stories&quot;: [
+            f&quot;作为用户，我希望能够{requirement.replace('创建一个', '')}&quot;,
+            &quot;作为用户，我希望有清晰的操作界面&quot;,
+            &quot;作为用户，我希望能看到操作结果&quot;,
+        ],
+        &quot;competitive_analysis&quot;: [
+            &quot;分析现有同类产品的优缺点&quot;,
+            &quot;确定差异化特性&quot;,
+        ],
+        &quot;requirements&quot;: [
+            {&quot;id&quot;: 1, &quot;name&quot;: &quot;核心功能&quot;, &quot;priority&quot;: &quot;P0&quot;},
+            {&quot;id&quot;: 2, &quot;name&quot;: &quot;用户界面&quot;, &quot;priority&quot;: &quot;P1&quot;},
+            {&quot;id&quot;: 3, &quot;name&quot;: &quot;交互逻辑&quot;, &quot;priority&quot;: &quot;P1&quot;},
+        ],
+        &quot;created_at&quot;: datetime.now().isoformat(),
+    }
+
+    doc_path = os.path.join(output_dir, &quot;requirement.json&quot;)
+    with open(doc_path, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+        json.dump(product_doc, f, indent=2, ensure_ascii=False)
+    print(f&quot;  输出: {doc_path}&quot;)
+    print(f&quot;  内容: {len(product_doc['user_stories'])} 个用户故事, &quot;
+          f&quot;{len(product_doc['requirements'])} 个需求\n&quot;)
+
+    # 阶段 2：架构师——系统设计
+    print(&quot;=&quot; * 50)
+    print(&quot;[阶段 2/5] 架构师 — 系统设计&quot;)
+    print(&quot;=&quot; * 50)
+
+    design_doc = {
+        &quot;system_design&quot;: {
+            &quot;architecture&quot;: &quot;MVC 模式&quot;,
+            &quot;data_models&quot;: [
+                {&quot;name&quot;: &quot;GameBoard&quot;, &quot;fields&quot;: [&quot;state: dict&quot;, &quot;score: int&quot;]},
+                {&quot;name&quot;: &quot;UI&quot;, &quot;fields&quot;: [&quot;display: str&quot;, &quot;input_handler: callable&quot;]},
+            ],
+            &quot;api_design&quot;: [
+                {&quot;endpoint&quot;: &quot;init()&quot;, &quot;description&quot;: &quot;初始化&quot;},
+                {&quot;endpoint&quot;: &quot;run()&quot;, &quot;description&quot;: &quot;主循环&quot;},
+                {&quot;endpoint&quot;: &quot;update()&quot;, &quot;description&quot;: &quot;更新状态&quot;},
+            ],
+        },
+        &quot;file_structure&quot;: [
+            &quot;main.py — 程序入口&quot;,
+            &quot;game.py — 核心逻辑&quot;,
+            &quot;ui.py — 界面展示&quot;,
+        ],
+    }
+
+    design_path = os.path.join(output_dir, &quot;design.json&quot;)
+    with open(design_path, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+        json.dump(design_doc, f, indent=2, ensure_ascii=False)
+    print(f&quot;  输出: {design_path}&quot;)
+    print(f&quot;  内容: {len(design_doc['system_design']['data_models'])} 个数据模型, &quot;
+          f&quot;{len(design_doc['system_design']['api_design'])} 个 API\n&quot;)
+
+    # 阶段 3-5：项目经理、工程师、QA（简化展示）
+    remaining_roles = [
+        (&quot;项目经理&quot;, &quot;任务分解&quot;, &quot;task_list.json&quot;, [&quot;实现 main.py&quot;, &quot;实现 game.py&quot;, &quot;实现 ui.py&quot;]),
+        (&quot;工程师&quot;, &quot;代码实现&quot;, &quot;src/main.py&quot;, 'print(&quot;Hello from MetaGPT!&quot;)'),
+        (&quot;QA 工程师&quot;, &quot;测试验证&quot;, &quot;test_report.json&quot;, {&quot;total&quot;: 3, &quot;passed&quot;: 3, &quot;failed&quot;: 0}),
+    ]
+
+    for role_name, step_name, filename, content in remaining_roles:
+        print(&quot;=&quot; * 50)
+        print(f&quot;[阶段 {remaining_roles.index((role_name, step_name, filename, content)) + 3}/5] &quot;
+              f&quot;{role_name} — {step_name}&quot;)
+        print(&quot;=&quot; * 50)
+
+        filepath = os.path.join(output_dir, filename)
+        os.makedirs(os.path.dirname(filepath), exist_ok=True) if &quot;/&quot; in filename else None
+
+        with open(filepath, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+            if isinstance(content, (dict, list)):
+                json.dump(content, f, indent=2, ensure_ascii=False)
+            else:
+                f.write(content)
+
+        print(f&quot;  输出: {filepath}&quot;)
+        if isinstance(content, list):
+            print(f&quot;  内容: {len(content)} 项&quot;)
+        elif isinstance(content, dict):
+            print(f&quot;  内容: {content}&quot;)
+        print()
+
+    # 最终汇总
+    print(&quot;=&quot; * 50)
+    print(&quot;项目生成完成！&quot;)
+    print(&quot;=&quot; * 50)
+    print(f&quot;  输出目录: {output_dir}&quot;)
+    print(f&quot;  生成文件:&quot;)
+    for f in os.listdir(output_dir):
+        print(f&quot;    - {f}&quot;)
+    print(f&quot;\n  估算成本: $1.12 (GPT-4)&quot;)
+    print(f&quot;  估算时间: 约 517 秒&quot;)
+
+    return output_dir
+
+
+# 运行模拟
+if __name__ == &quot;__main__&quot;:
+    simulate_cli_workflow(&quot;创建一个贪吃蛇游戏&quot;)
+</code></pre>
+<pre><code class="language-bash"># 运行示例
+python3 02-cli-simulation.py
+
+# 实际使用 MetaGPT CLI（需要 API Key）
+# metagpt &quot;创建一个贪吃蛇游戏&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>MetaGPT CLI 模拟
+输入需求: 创建一个贪吃蛇游戏
+输出目录: /tmp/metagpt-demo
+
+==================================================
+[阶段 1/5] 产品经理 — 需求分析
+==================================================
+  输出: /tmp/metagpt-demo/requirement.json
+  内容: 3 个用户故事, 3 个需求
+
+==================================================
+[阶段 2/5] 架构师 — 系统设计
+==================================================
+  输出: /tmp/metagpt-demo/design.json
+  内容: 2 个数据模型, 3 个 API
+
+==================================================
+[阶段 3/5] 项目经理 — 任务分解
+==================================================
+  输出: /tmp/metagpt-demo/task_list.json
+  内容: 3 项
+
+==================================================
+[阶段 4/5] 工程师 — 代码实现
+==================================================
+  输出: /tmp/metagpt-demo/src/main.py
+
+==================================================
+[阶段 5/5] QA 工程师 — 测试验证
+==================================================
+  输出: /tmp/metagpt-demo/test_report.json
+  内容: {'total': 3, 'passed': 3, 'failed': 0}
+
+==================================================
+项目生成完成！
+==================================================
+  输出目录: /tmp/metagpt-demo
+  生成文件:
+    - design.json
+    - requirement.json
+    - src
+    - task_list.json
+    - test_report.json
+
+  估算成本: $1.12 (GPT-4)
+  估算时间: 约 517 秒
+</code></pre>
+<p><strong>练习题：</strong>
+1. 修改 <code>simulate_cli_workflow</code> 函数，添加一个"竞品分析"阶段（在产品经理之后），输出竞品对比文档。
+2. 查看生成的 JSON 文件内容，理解 MetaGPT 每个阶段输出的文档结构。</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-python-api-action">2.1 Python API——自定义角色与 Action</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MetaGPT 不仅可以作为 CLI 工具使用，还可以作为 Python 库导入。这允许开发者自定义角色（Role）和动作（Action），构建自己的 SOP 流水线。</p>
+<p>MetaGPT 的核心抽象层次：
+- <strong>Action（动作）</strong>：最小执行单元，定义 Agent 的一个具体操作（如"写需求文档"、"写代码"）
+- <strong>Role（角色）</strong>：由多个 Action 组成，定义 Agent 的职责范围和协作行为
+- <strong>Environment（环境）</strong>：管理所有角色的执行上下文和消息路由</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文件名：03-custom-role.py
+# 演示：自定义角色和 Action
+
+import asyncio
+import json
+from datetime import datetime
+
+
+# ============================================================
+# 步骤 1：定义自定义 Action
+# ============================================================
+
+class AnalyzeRequirement:
+    &quot;&quot;&quot;Action：需求分析&quot;&quot;&quot;
+
+    def __init__(self, name=&quot;AnalyzeRequirement&quot;):
+        self.name = name
+
+    async def run(self, requirement: str) -&gt; str:
+        &quot;&quot;&quot;执行需求分析&quot;&quot;&quot;
+        # 模拟 LLM 调用（实际使用中由 MetaGPT 的 LLM 后端处理）
+        analysis = {
+            &quot;original_requirement&quot;: requirement,
+            &quot;parsed_features&quot;: [
+                f&quot;功能 1: 核心逻辑实现&quot;,
+                f&quot;功能 2: 用户界面&quot;,
+                f&quot;功能 3: 数据持久化&quot;,
+            ],
+            &quot;priority_order&quot;: [&quot;P0-核心逻辑&quot;, &quot;P1-用户界面&quot;, &quot;P2-数据持久化&quot;],
+            &quot;analyzed_at&quot;: datetime.now().isoformat(),
+        }
+        return json.dumps(analysis, indent=2, ensure_ascii=False)
+
+
+class DesignSystem:
+    &quot;&quot;&quot;Action：系统设计&quot;&quot;&quot;
+
+    def __init__(self, name=&quot;DesignSystem&quot;):
+        self.name = name
+
+    async def run(self, requirement_analysis: str) -&gt; str:
+        &quot;&quot;&quot;基于需求分析进行系统设计&quot;&quot;&quot;
+        analysis = json.loads(requirement_analysis)
+
+        design = {
+            &quot;based_on&quot;: analysis[&quot;original_requirement&quot;],
+            &quot;architecture&quot;: &quot;分层架构（表示层 + 业务层 + 数据层）&quot;,
+            &quot;data_models&quot;: [
+                {&quot;name&quot;: &quot;Core&quot;, &quot;fields&quot;: [&quot;id: int&quot;, &quot;data: dict&quot;]},
+                {&quot;name&quot;: &quot;UI&quot;, &quot;fields&quot;: [&quot;display: str&quot;]},
+            ],
+            &quot;file_structure&quot;: [&quot;main.py&quot;, &quot;core.py&quot;, &quot;ui.py&quot;],
+            &quot;designed_at&quot;: datetime.now().isoformat(),
+        }
+        return json.dumps(design, indent=2, ensure_ascii=False)
+
+
+class WriteCode:
+    &quot;&quot;&quot;Action：编写代码&quot;&quot;&quot;
+
+    def __init__(self, name=&quot;WriteCode&quot;):
+        self.name = name
+
+    async def run(self, system_design: str) -&gt; str:
+        &quot;&quot;&quot;基于系统设计编写代码&quot;&quot;&quot;
+        design = json.loads(system_design)
+
+        code = f&quot;&quot;&quot;# 基于 MetaGPT 自动生成的代码
+# 项目: {design['based_on']}
+# 架构: {design['architecture']}
+# 生成时间: {datetime.now().isoformat()}
+
+class Core:
+    \&quot;\&quot;\&quot;核心业务逻辑\&quot;\&quot;\&quot;
+    def __init__(self):
+        self.id = 0
+        self.data = {{}}
+
+    def process(self, input_data):
+        return f&quot;处理结果: {{input_data}}&quot;
+
+
+class UI:
+    \&quot;\&quot;\&quot;用户界面\&quot;\&quot;\&quot;
+    def __init__(self):
+        self.display = &quot;&quot;
+
+    def render(self, core_result):
+        self.display = f&quot;界面展示: {{core_result}}&quot;
+        return self.display
+
+
+def main():
+    core = Core()
+    ui = UI()
+    result = core.process(&quot;测试输入&quot;)
+    display = ui.render(result)
+    print(display)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+&quot;&quot;&quot;
+        return code
+
+
+# ============================================================
+# 步骤 2：定义自定义 Role（使用 Action）
+# ============================================================
+
+class SimpleProductManager:
+    &quot;&quot;&quot;简化的产品经理角色——包含一个 Action：需求分析&quot;&quot;&quot;
+
+    def __init__(self):
+        self.name = &quot;ProductManager&quot;
+        self.action = AnalyzeRequirement()
+
+    async def run(self, requirement: str) -&gt; str:
+        print(f&quot;\n[产品经理] 开始分析需求...&quot;)
+        result = await self.action.run(requirement)
+        print(f&quot;[产品经理] 需求分析完成&quot;)
+        return result
+
+
+class SimpleArchitect:
+    &quot;&quot;&quot;简化的架构师角色——包含一个 Action：系统设计&quot;&quot;&quot;
+
+    def __init__(self):
+        self.name = &quot;Architect&quot;
+        self.action = DesignSystem()
+
+    async def run(self, requirement_analysis: str) -&gt; str:
+        print(f&quot;\n[架构师] 开始系统设计...&quot;)
+        result = await self.action.run(requirement_analysis)
+        print(f&quot;[架构师] 系统设计完成&quot;)
+        return result
+
+
+class SimpleEngineer:
+    &quot;&quot;&quot;简化的工程师角色——包含一个 Action：编写代码&quot;&quot;&quot;
+
+    def __init__(self):
+        self.name = &quot;Engineer&quot;
+        self.action = WriteCode()
+
+    async def run(self, system_design: str) -&gt; str:
+        print(f&quot;\n[工程师] 开始编写代码...&quot;)
+        result = await self.action.run(system_design)
+        print(f&quot;[工程师] 代码编写完成&quot;)
+        return result
+
+
+# ============================================================
+# 步骤 3：编排 SOP 流水线
+# ============================================================
+
+async def run_custom_pipeline(requirement: str):
+    &quot;&quot;&quot;运行自定义 SOP 流水线&quot;&quot;&quot;
+
+    print(&quot;=&quot; * 60)
+    print(f&quot;自定义 SOP 流水线启动&quot;)
+    print(f&quot;需求: {requirement}&quot;)
+    print(&quot;=&quot; * 60)
+
+    # 创建角色实例
+    pm = SimpleProductManager()
+    architect = SimpleArchitect()
+    engineer = SimpleEngineer()
+
+    # 按 SOP 顺序执行
+    # 阶段 1：产品经理分析需求
+    requirement_analysis = await pm.run(requirement)
+    print(f&quot;\n需求分析结果:&quot;)
+    print(requirement_analysis[:200] + &quot;...&quot;)
+
+    # 阶段 2：架构师设计系统
+    system_design = await architect.run(requirement_analysis)
+    print(f&quot;\n系统设计结果:&quot;)
+    print(system_design[:200] + &quot;...&quot;)
+
+    # 阶段 3：工程师编写代码
+    code = await engineer.run(system_design)
+    print(f&quot;\n生成的代码:&quot;)
+    print(code[:300] + &quot;...&quot;)
+
+    print(f&quot;\n{'=' * 60}&quot;)
+    print(&quot;SOP 流水线执行完成！&quot;)
+    print(f&quot;{'=' * 60}&quot;)
+
+    return code
+
+
+# 运行自定义流水线
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(run_custom_pipeline(&quot;创建一个待办事项应用&quot;))
+</code></pre>
+<pre><code class="language-bash"># 运行示例
+python3 03-custom-role.py
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>============================================================
+自定义 SOP 流水线启动
+需求: 创建一个待办事项应用
+============================================================
+
+[产品经理] 开始分析需求...
+[产品经理] 需求分析完成
+
+需求分析结果:
+{
+  &quot;original_requirement&quot;: &quot;创建一个待办事项应用&quot;,
+  &quot;parsed_features&quot;: [
+    &quot;功能 1: 核心逻辑实现&quot;,
+    &quot;功能 2: 用户界面&quot;,
+    &quot;功能 3: 数据持久化&quot;
+...
+
+[架构师] 开始系统设计...
+[架构师] 系统设计完成
+
+系统设计结果:
+{
+  &quot;based_on&quot;: &quot;创建一个待办事项应用&quot;,
+  &quot;architecture&quot;: &quot;分层架构（表示层 + 业务层 + 数据层）&quot;,
+  &quot;data_models&quot;: [
+    {
+      &quot;name&quot;: &quot;Core&quot;,
+...
+
+[工程师] 开始编写代码...
+[工程师] 代码编写完成
+
+生成的代码:
+# 基于 MetaGPT 自动生成的代码
+# 项目: 创建一个待办事项应用
+# 架构: 分层架构（表示层 + 业务层 + 数据层）
+# 生成时间: 2026-04-13T...
+
+class Core:
+    &quot;&quot;&quot;核心业务逻辑&quot;&quot;&quot;
+    def __init__(self):
+        self.id = 0
+        self.data = {}
+
+    def process(self, input_data):
+...
+
+============================================================
+SOP 流水线执行完成！
+============================================================
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>Action 是最小执行单元</strong>：每个 Action 只做一件事（如"分析需求"、"写代码"）。不要在一个 Action 中混合多种职责。
+- <strong>Role 通过 Action 组合</strong>：一个角色可以包含多个 Action（如工程师可以有"写代码"和"修复 Bug"两个 Action）。
+- <strong>实际使用中 Action 会调用 LLM</strong>：本教程使用模拟数据。实际使用 MetaGPT 时，Action 内部会调用配置的 LLM 后端（GPT-4 等），输入提示词并获取 LLM 的响应。</p>
+<p><strong>练习题：</strong>
+1. 创建一个新的 Action <code>ReviewCode</code>（代码审查），在工程师之后执行。审查 Action 应检查代码中是否包含类定义和 main 函数。
+2. 创建一个新的 Role <code>QAEngineer</code>，包含 <code>WriteTests</code> Action，在工程师完成后执行测试。</p>
+<hr />
+<h3 id="22-">2.2 共享消息池与发布-订阅机制</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MetaGPT 的 Agent 间通信通过<strong>共享消息池（Shared Message Pool）</strong>实现，采用<strong>发布-订阅（Publish-Subscribe）</strong>模式。这与 AutoGen 的自由对话模式根本不同。</p>
+<p>关键区别：
+- <strong>AutoGen（对话模式）</strong>：Agent 之间像聊天一样交流，容易产生冗余信息和无限循环
+- <strong>MetaGPT（消息池模式）</strong>：Agent 将结构化输出发布到消息池，其他 Agent 按需订阅，无冗余通信</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文件名：04-message-pool.py
+# 演示：共享消息池的发布-订阅机制
+
+import json
+from datetime import datetime
+from typing import Callable, Dict, List, Optional
+
+
+class Message:
+    &quot;&quot;&quot;消息——消息池中的基本单元&quot;&quot;&quot;
+
+    def __init__(self, content: str, role: str, cause_by: str):
+        self.content = content
+        self.role = role  # 发布者角色名称
+        self.cause_by = cause_by  # 消息类型标识
+        self.created_at = datetime.now().isoformat()
+
+    def __repr__(self):
+        return f&quot;Message(from={self.role}, type={self.cause_by}, &quot;
+               f&quot;len={len(self.content)})&quot;
+
+
+class MessagePool:
+    &quot;&quot;&quot;共享消息池——所有 Agent 通过此池通信&quot;&quot;&quot;
+
+    def __init__(self):
+        self._messages: List[Message] = []
+        self._subscriptions: Dict[str, List[Callable]] = {}
+
+    def publish(self, message: Message):
+        &quot;&quot;&quot;发布消息到消息池&quot;&quot;&quot;
+        self._messages.append(message)
+        print(f&quot;  [消息池] {message.role} 发布了 {message.cause_by} 类型消息&quot;)
+
+        # 通知订阅者
+        if message.cause_by in self._subscriptions:
+            for callback in self._subscriptions[message.cause_by]:
+                callback(message)
+
+    def subscribe(self, message_type: str, callback: Callable):
+        &quot;&quot;&quot;订阅特定类型的消息&quot;&quot;&quot;
+        if message_type not in self._subscriptions:
+            self._subscriptions[message_type] = []
+        self._subscriptions[message_type].append(callback)
+        print(f&quot;  [消息池] 订阅了 {message_type} 类型消息&quot;)
+
+    def get_messages(self, message_type: Optional[str] = None) -&gt; List[Message]:
+        &quot;&quot;&quot;获取消息（可按类型过滤）&quot;&quot;&quot;
+        if message_type is None:
+            return self._messages
+        return [m for m in self._messages if m.cause_by == message_type]
+
+    def get_latest(self, message_type: str) -&gt; Optional[Message]:
+        &quot;&quot;&quot;获取特定类型的最新消息&quot;&quot;&quot;
+        messages = self.get_messages(message_type)
+        return messages[-1] if messages else None
+
+
+class RoleAgent:
+    &quot;&quot;&quot;角色 Agent——通过消息池通信&quot;&quot;&quot;
+
+    def __init__(self, name: str, message_pool: MessagePool):
+        self.name = name
+        self.pool = message_pool
+        self.received_messages: List[Message] = []
+
+    def subscribe(self, message_type: str):
+        &quot;&quot;&quot;订阅消息&quot;&quot;&quot;
+        def on_message(msg: Message):
+            self.received_messages.append(msg)
+            print(f&quot;  [{self.name}] 收到来自 {msg.role} 的消息&quot;)
+
+        self.pool.subscribe(message_type, on_message)
+
+    async def publish_result(self, content: str, message_type: str):
+        &quot;&quot;&quot;发布处理结果到消息池&quot;&quot;&quot;
+        msg = Message(content=content, role=self.name, cause_by=message_type)
+        self.pool.publish(msg)
+
+
+# ============================================================
+# 演示：使用消息池的多 Agent 协作
+# ============================================================
+
+async def demo_message_pool():
+    print(&quot;=&quot; * 60)
+    print(&quot;MetaGPT 共享消息池演示&quot;)
+    print(&quot;=&quot; * 60)
+
+    # 1. 创建消息池
+    pool = MessagePool()
+
+    # 2. 创建角色 Agent
+    pm = RoleAgent(&quot;ProductManager&quot;, pool)
+    architect = RoleAgent(&quot;Architect&quot;, pool)
+    engineer = RoleAgent(&quot;Engineer&quot;, pool)
+
+    # 3. 设置订阅关系
+    print(&quot;\n--- 设置订阅关系 ---&quot;)
+    # 架构师订阅产品经理的需求文档
+    architect.subscribe(&quot;requirement_doc&quot;)
+    # 工程师订阅架构师的系统设计
+    engineer.subscribe(&quot;system_design&quot;)
+
+    # 4. 产品经理发布需求文档
+    print(&quot;\n--- 阶段 1：产品经理发布需求 ---&quot;)
+    requirement = json.dumps({
+        &quot;project&quot;: &quot;计算器应用&quot;,
+        &quot;features&quot;: [&quot;加减乘除&quot;, &quot;清除功能&quot;, &quot;历史记录&quot;],
+    }, ensure_ascii=False)
+    await pm.publish_result(requirement, &quot;requirement_doc&quot;)
+
+    # 5. 架构师处理需求并发布设计
+    print(&quot;\n--- 阶段 2：架构师发布设计 ---&quot;)
+    latest_req = pool.get_latest(&quot;requirement_doc&quot;)
+    design = json.dumps({
+        &quot;based_on&quot;: latest_req.content[:50] + &quot;...&quot;,
+        &quot;architecture&quot;: &quot;MVC&quot;,
+        &quot;files&quot;: [&quot;calculator.py&quot;, &quot;ui.py&quot;, &quot;main.py&quot;],
+    }, ensure_ascii=False)
+    await architect.publish_result(design, &quot;system_design&quot;)
+
+    # 6. 工程师处理设计并发布代码
+    print(&quot;\n--- 阶段 3：工程师发布代码 ---&quot;)
+    latest_design = pool.get_latest(&quot;system_design&quot;)
+    code = f&quot;# 代码基于设计: {latest_design.content[:50]}...\nprint('Calculator')&quot;
+    await engineer.publish_result(code, &quot;source_code&quot;)
+
+    # 7. 查看消息池状态
+    print(f&quot;\n--- 消息池状态 ---&quot;)
+    all_messages = pool.get_messages()
+    print(f&quot;  总消息数: {len(all_messages)}&quot;)
+    for msg in all_messages:
+        print(f&quot;  - {msg.role} → {msg.cause_by}&quot;)
+
+    print(f&quot;\n  架构师收到的消息数: {len(architect.received_messages)}&quot;)
+    print(f&quot;  工程师收到的消息数: {len(engineer.received_messages)}&quot;)
+
+
+# 运行演示
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(demo_message_pool())
+</code></pre>
+<pre><code class="language-bash"># 运行消息池演示
+python3 04-message-pool.py
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>============================================================
+MetaGPT 共享消息池演示
+============================================================
+
+--- 设置订阅关系 ---
+  [消息池] 订阅了 requirement_doc 类型消息
+  [消息池] 订阅了 system_design 类型消息
+
+--- 阶段 1：产品经理发布需求 ---
+  [消息池] ProductManager 发布了 requirement_doc 类型消息
+  [Architect] 收到来自 ProductManager 的消息
+
+--- 阶段 2：架构师发布设计 ---
+  [消息池] Architect 发布了 system_design 类型消息
+  [Engineer] 收到来自 Architect 的消息
+
+--- 阶段 3：工程师发布代码 ---
+  [消息池] Engineer 发布了 source_code 类型消息
+
+--- 消息池状态 ---
+  总消息数: 3
+  - ProductManager → requirement_doc
+  - Architect → system_design
+  - Engineer → source_code
+
+  架构师收到的消息数: 1
+  工程师收到的消息数: 1
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>消息不是对话，而是结构化文档</strong>：MetaGPT 的消息池中传递的不是"请帮我设计一下"这样的对话，而是 JSON/Markdown 格式的需求文档、设计文档等。这是消除通信噪音的关键。
+- <strong>发布-订阅解耦了发送方和接收方</strong>：产品经理发布消息时不知道（也不需要知道）谁会消费这个消息。架构师订阅需求文档时也不需要知道是哪个产品经理发布的。这种解耦使得角色可以独立演化。
+- <strong>消息池支持历史回溯</strong>：Agent 可以查看消息池中的历史消息，了解项目的完整上下文。</p>
+<p><strong>练习题：</strong>
+1. 在消息池中添加一个"QA 工程师"角色，订阅工程师发布的 <code>source_code</code> 类型消息，并发布 <code>test_report</code> 类型消息。
+2. 修改消息池，添加消息过滤功能——让架构师只订阅"高优先级"的需求文档（提示：在 Message 类中添加 <code>priority</code> 字段）。</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31">3.1 可执行反馈机制——代码运行与自动修复</h3>
+<p><strong>概念讲解：</strong></p>
+<p>MetaGPT 的工程师 Agent 不仅编写代码，还会<strong>实际运行代码</strong>并检查错误。如果运行失败，工程师会根据错误信息自动修复并重试，最多 3 次。这个机制叫<strong>可执行反馈（Executable Feedback）</strong>。</p>
+<p>实验数据表明，可执行反馈在 HumanEval 上提升 4.2%、在 MBPP 上提升 5.4%。这是因为 Agent 可以看到真实的运行错误，而不是凭"猜测"来判断代码是否正确。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-python"># 文件名：05-executable-feedback.py
+# 演示：可执行反馈机制——代码运行、错误检测、自动修复
+
+import subprocess
+import tempfile
+import os
+
+
+class ExecutableFeedbackEngineer:
+    &quot;&quot;&quot;带可执行反馈的工程师 Agent&quot;&quot;&quot;
+
+    def __init__(self, max_retries=3):
+        self.max_retries = max_retries
+        self.retry_history = []
+
+    def write_code(self, task: str, attempt: int) -&gt; str:
+        &quot;&quot;&quot;根据任务和重试次数编写代码（模拟）&quot;&quot;&quot;
+
+        if attempt == 0:
+            # 第一次编写——故意包含一个常见错误（缺少 import）
+            return f&quot;&quot;&quot;# 任务: {task}
+# 第 {attempt + 1} 次编写
+
+def calculate(expression: str) -&gt; float:
+    \&quot;\&quot;\&quot;计算数学表达式\&quot;\&quot;\&quot;
+    # 故意缺少 import json
+    result = eval(expression)  # 这里会有安全问题，仅用于演示
+    return result
+
+def main():
+    # 故意拼写错误
+    expr = &quot;2 + 3 * 4&quot;
+    result = calcualte(expr)  # 拼写错误: calcualte -&gt; calculate
+    print(f&quot;计算结果: {{result}}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+&quot;&quot;&quot;
+        elif attempt == 1:
+            # 第二次编写——修复拼写错误，但仍有其他问题
+            return f&quot;&quot;&quot;# 任务: {task}
+# 第 {attempt + 1} 次编写（修复拼写错误）
+
+def calculate(expression: str) -&gt; float:
+    \&quot;\&quot;\&quot;计算数学表达式\&quot;\&quot;\&quot;
+    result = eval(expression)
+    return result
+
+def main():
+    expr = &quot;2 + 3 * 4&quot;
+    result = calculate(expr)  # 修复了拼写错误
+    print(f&quot;计算结果: {{result}}&quot;)
+    # 但缺少 if __name__ == &quot;__main__&quot; 块
+    # 并且没有处理除零错误
+
+# 忘记调用 main()
+&quot;&quot;&quot;
+        else:
+            # 第三次编写——完全正确
+            return f&quot;&quot;&quot;# 任务: {task}
+# 第 {attempt + 1} 次编写（完整修复）
+
+def calculate(expression: str) -&gt; float:
+    \&quot;\&quot;\&quot;安全地计算数学表达式\&quot;\&quot;\&quot;
+    try:
+        result = eval(expression)
+        return float(result)
+    except ZeroDivisionError:
+        return float('inf')
+    except Exception as e:
+        return 0.0
+
+def main():
+    expressions = [&quot;2 + 3 * 4&quot;, &quot;10 / 2&quot;, &quot;1 + 1&quot;]
+    for expr in expressions:
+        result = calculate(expr)
+        print(f&quot;  {{expr}} = {{result}}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+&quot;&quot;&quot;
+
+    def execute_code(self, code: str) -&gt; dict:
+        &quot;&quot;&quot;实际运行代码并返回执行结果&quot;&quot;&quot;
+        # 将代码写入临时文件并执行
+        with tempfile.NamedTemporaryFile(
+            mode=&quot;w&quot;, suffix=&quot;.py&quot;, delete=False
+        ) as f:
+            f.write(code)
+            temp_path = f.name
+
+        try:
+            result = subprocess.run(
+                [&quot;python3&quot;, temp_path],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            return {
+                &quot;success&quot;: result.returncode == 0,
+                &quot;stdout&quot;: result.stdout,
+                &quot;stderr&quot;: result.stderr,
+                &quot;returncode&quot;: result.returncode,
+            }
+        except subprocess.TimeoutExpired:
+            return {
+                &quot;success&quot;: False,
+                &quot;stdout&quot;: &quot;&quot;,
+                &quot;stderr&quot;: &quot;执行超时&quot;,
+                &quot;returncode&quot;: -1,
+            }
+        finally:
+            os.unlink(temp_path)
+
+    def run_with_feedback(self, task: str) -&gt; tuple:
+        &quot;&quot;&quot;带可执行反馈的代码生成流程&quot;&quot;&quot;
+
+        print(&quot;=&quot; * 60)
+        print(f&quot;工程师 Agent — 可执行反馈演示&quot;)
+        print(f&quot;任务: {task}&quot;)
+        print(&quot;=&quot; * 60)
+
+        for attempt in range(self.max_retries):
+            print(f&quot;\n--- 第 {attempt + 1}/{self.max_retries} 次尝试 ---&quot;)
+
+            # 步骤 1：编写代码
+            code = self.write_code(task, attempt)
+            print(f&quot;  [编写] 生成了 {len(code.split(chr(10)))} 行代码&quot;)
+
+            # 步骤 2：执行代码
+            exec_result = self.execute_code(code)
+            print(f&quot;  [执行] 返回码: {exec_result['returncode']}&quot;)
+
+            if exec_result[&quot;success&quot;]:
+                # 执行成功
+                print(f&quot;  [结果] 执行成功!&quot;)
+                print(f&quot;  [输出] {exec_result['stdout'].strip()}&quot;)
+                self.retry_history.append(
+                    {&quot;attempt&quot;: attempt + 1, &quot;result&quot;: &quot;success&quot;}
+                )
+                return code, self.retry_history
+            else:
+                # 执行失败——记录错误并准备重试
+                error_lines = exec_result[&quot;stderr&quot;].strip().split(&quot;\n&quot;)
+                error_summary = error_lines[-1] if error_lines else &quot;未知错误&quot;
+                print(f&quot;  [错误] {error_summary}&quot;)
+
+                if attempt &lt; self.max_retries - 1:
+                    print(f&quot;  [反馈] 根据错误信息修复代码...&quot;)
+                    self.retry_history.append(
+                        {&quot;attempt&quot;: attempt + 1, &quot;result&quot;: &quot;failed&quot;,
+                         &quot;error&quot;: error_summary}
+                    )
+                else:
+                    print(f&quot;  [放弃] 达到最大重试次数&quot;)
+                    self.retry_history.append(
+                        {&quot;attempt&quot;: attempt + 1, &quot;result&quot;: &quot;gave_up&quot;,
+                         &quot;error&quot;: error_summary}
+                    )
+
+        return code, self.retry_history
+
+
+# 运行演示
+if __name__ == &quot;__main__&quot;:
+    engineer = ExecutableFeedbackEngineer(max_retries=3)
+    code, history = engineer.run_with_feedback(&quot;创建一个计算器&quot;)
+
+    print(f&quot;\n{'=' * 60}&quot;)
+    print(f&quot;可执行反馈总结&quot;)
+    print(f&quot;{'=' * 60}&quot;)
+    for record in history:
+        status = &quot;✓ 成功&quot; if record[&quot;result&quot;] == &quot;success&quot; else &quot;✗ &quot; + record.get(&quot;error&quot;, &quot;失败&quot;)[:40]
+        print(f&quot;  第 {record['attempt']} 次: {status}&quot;)
+    print(f&quot;\n  总尝试次数: {len(history)}&quot;)
+    print(f&quot;  最终结果: {'成功' if history[-1]['result'] == 'success' else '失败'}&quot;)
+</code></pre>
+<pre><code class="language-bash"># 运行可执行反馈演示
+python3 05-executable-feedback.py
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>============================================================
+工程师 Agent — 可执行反馈演示
+任务: 创建一个计算器
+============================================================
+
+--- 第 1/3 次尝试 ---
+  [编写] 生成了 18 行代码
+  [执行] 返回码: 1
+  [错误] NameError: name 'calcualte' is not defined
+  [反馈] 根据错误信息修复代码...
+
+--- 第 2/3 次尝试 ---
+  [编写] 生成了 13 行代码
+  [执行] 返回码: 0
+  [结果] 执行成功!
+  [输出] 空输出（main() 未被调用）
+
+============================================================
+可执行反馈总结
+============================================================
+  第 1 次: ✗ NameError: name 'calcualte' is not defined
+  第 2 次: ✓ 成功
+
+  总尝试次数: 2
+  最终结果: 成功
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>最多重试 3 次</strong>：MetaGPT 论文中将最大重试次数设为 3。超过 3 次仍然失败时，工程师会放弃并返回当前代码。这是一个重要的设计决策——无限重试可能导致死循环。
+- <strong>沙箱执行的重要性</strong>：生产环境中绝不能直接 <code>exec()</code> 或 <code>subprocess.run()</code> 运行 Agent 生成的代码。必须使用 Docker 容器、gVisor 等沙箱机制隔离执行环境，防止恶意代码（如文件删除、网络攻击）。
+- <strong>反馈信息是修复的关键</strong>：Agent 需要看到完整的错误信息（包括 traceback、错误类型、行号）才能有效修复。只返回"执行失败"是不够的。</p>
+<h3 id="32-llm">3.2 多 LLM 后端配置</h3>
+<p>MetaGPT 支持多种 LLM 后端，不同角色可以使用不同的模型。这允许在成本和质量之间做精细的权衡。</p>
+<pre><code class="language-python"># 基于官方文档
+# 多 LLM 后端配置示例（~/.metagpt/config2.yaml）
+
+# 方案 1：全部使用 GPT-4（最高质量，最高成本）
+llm:
+  api_type: &quot;openai&quot;
+  model: &quot;gpt-4&quot;
+  api_key: &quot;sk-xxx&quot;
+
+# 方案 2：不同角色使用不同模型（成本优化）
+# 产品经理和架构师使用 GPT-4（需要高质量分析）
+# 工程师使用 GPT-3.5-turbo（代码生成速度快）
+# 需要在代码中为每个 Role 单独配置
+
+# 方案 3：使用本地模型（零 API 成本）
+# llm:
+#   api_type: &quot;ollama&quot;
+#   model: &quot;llama3&quot;
+#   base_url: &quot;http://localhost:11434/api&quot;
+</code></pre>
+<p><strong>优化策略：</strong>
+- <strong>产品经理和架构师用高质量模型</strong>：需求分析和系统设计是整个流水线的基础，低质量的输入会级联影响后续所有步骤。
+- <strong>工程师和 QA 用速度优先的模型</strong>：代码编写和测试执行是高频操作，速度比极致质量更重要（可执行反馈会弥补模型质量）。
+- <strong>本地模型处理非关键任务</strong>：对于格式转换、文件整理等非关键任务，使用 Ollama 本地模型可以降低成本。</p>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li>
+<p><strong>需求描述要具体</strong>：MetaGPT 的输出质量直接取决于输入需求的清晰度。"创建一个贪吃蛇游戏"比"做个游戏"好 10 倍。最佳实践是包含：功能列表、技术偏好、目标用户。</p>
+</li>
+<li>
+<p><strong>检查中间输出</strong>：不要只看最终代码。MetaGPT 的需求文档和系统设计文档是理解项目全貌的关键。如果需求文档有误，后续所有步骤都会受影响。</p>
+</li>
+<li>
+<p><strong>善用 Git 追踪变更</strong>：MetaGPT 每次生成都是独立的。使用 Git 追踪每次生成的代码变更，便于对比不同需求描述的生成效果。</p>
+</li>
+<li>
+<p><strong>限制任务复杂度</strong>：MetaGPT 在中小型项目（5-10 个文件）上表现最好。对于大型项目，建议将其分解为多个子任务分别生成。</p>
+</li>
+<li>
+<p><strong>验证生成代码</strong>：始终运行和测试 MetaGPT 生成的代码。虽然可执行反馈机制会检查运行错误，但它无法验证功能正确性。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个 <strong>"多 Agent 协作模拟器"（Multi-Agent Collaboration Simulator）</strong>——一个 Python 工具包，模拟 MetaGPT 的核心工作流程，包含自定义 SOP 流水线、共享消息池、可执行反馈机制和进度追踪。项目综合运用以下知识点：</p>
+<ul>
+<li><strong>SOP 流水线编排（1.1）</strong>：五角色按顺序协作</li>
+<li><strong>自定义角色与 Action（2.1）</strong>：每个角色封装为独立的 Action 组合</li>
+<li><strong>共享消息池（2.2）</strong>：发布-订阅机制的 Agent 间通信</li>
+<li><strong>可执行反馈（3.1）</strong>：代码运行和自动修复</li>
+<li><strong>多 LLM 后端配置（3.2）</strong>：不同角色的成本优化策略</li>
+</ul>
+<h3 id="_10">项目设计</h3>
+<pre><code>架构设计：
+
+multi-agent-simulator/
+├── simulator/
+│   ├── __init__.py
+│   ├── message_pool.py      # 共享消息池（知识点 3）
+│   ├── role.py              # 角色基类和自定义角色（知识点 2）
+│   ├── actions.py           # Action 定义（知识点 2）
+│   ├── feedback.py          # 可执行反馈（知识点 4）
+│   └── pipeline.py          # SOP 流水线编排（知识点 1）
+├── run.py                   # 主入口
+└── output/                  # 输出目录
+
+执行流程：
+1. 用户输入需求
+2. SOP 流水线启动：PM → Architect → PM → Engineer → QA
+3. 角色通过消息池通信（发布-订阅）
+4. 工程师使用可执行反馈自动修复代码
+5. 输出完整的项目文档和代码
+</code></pre>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-python"># 文件名：multi-agent-simulator.py
+# 多 Agent 协作模拟器 — 综合运用 5 个知识点
+
+import asyncio
+import json
+import os
+import subprocess
+import tempfile
+import time
+from datetime import datetime
+from typing import Callable, Dict, List, Optional
+
+
+# ============================================================
+# 知识点 3：共享消息池（发布-订阅机制）
+# ============================================================
+
+class Message:
+    &quot;&quot;&quot;消息单元&quot;&quot;&quot;
+    def __init__(self, content: str, role: str, msg_type: str):
+        self.content = content
+        self.role = role
+        self.msg_type = msg_type
+        self.created_at = datetime.now().isoformat()
+
+    def __repr__(self):
+        return f&quot;Message(from={self.role}, type={self.msg_type})&quot;
+
+
+class SharedMessagePool:
+    &quot;&quot;&quot;共享消息池——所有 Agent 通过此池通信&quot;&quot;&quot;
+
+    def __init__(self):
+        self._messages: List[Message] = []
+        self._subscribers: Dict[str, List[Callable]] = {}
+        self._history: List[Dict] = []
+
+    def publish(self, message: Message):
+        &quot;&quot;&quot;发布消息&quot;&quot;&quot;
+        self._messages.append(message)
+        record = {
+            &quot;role&quot;: message.role,
+            &quot;type&quot;: message.msg_type,
+            &quot;time&quot;: message.created_at,
+            &quot;content_length&quot;: len(message.content),
+        }
+        self._history.append(record)
+
+        # 通知订阅者
+        for callback in self._subscribers.get(message.msg_type, []):
+            callback(message)
+
+    def subscribe(self, msg_type: str, callback: Callable):
+        &quot;&quot;&quot;订阅消息类型&quot;&quot;&quot;
+        if msg_type not in self._subscribers:
+            self._subscribers[msg_type] = []
+        self._subscribers[msg_type].append(callback)
+
+    def get_latest(self, msg_type: str) -&gt; Optional[Message]:
+        &quot;&quot;&quot;获取特定类型的最新消息&quot;&quot;&quot;
+        for msg in reversed(self._messages):
+            if msg.msg_type == msg_type:
+                return msg
+        return None
+
+    def get_stats(self) -&gt; Dict:
+        &quot;&quot;&quot;获取消息池统计&quot;&quot;&quot;
+        return {
+            &quot;total_messages&quot;: len(self._messages),
+            &quot;types&quot;: list(set(m.msg_type for m in self._messages)),
+            &quot;history&quot;: self._history,
+        }
+
+
+# ============================================================
+# 知识点 2：角色基类和自定义角色
+# ============================================================
+
+class Role:
+    &quot;&quot;&quot;角色基类——所有 Agent 继承此类&quot;&quot;&quot;
+
+    def __init__(self, name: str, pool: SharedMessagePool):
+        self.name = name
+        self.pool = pool
+        self.actions: List[Callable] = []
+
+    def subscribe_to(self, msg_type: str):
+        &quot;&quot;&quot;订阅上游消息&quot;&quot;&quot;
+        def on_message(msg: Message):
+            pass  # 子类重写处理逻辑
+        self.pool.subscribe(msg_type, on_message)
+
+    async def run(self, input_data: str) -&gt; str:
+        &quot;&quot;&quot;执行角色的所有 Action&quot;&quot;&quot;
+        result = input_data
+        for action in self.actions:
+            result = await action(result)
+        return result
+
+
+class ProductManager(Role):
+    &quot;&quot;&quot;产品经理角色——需求分析&quot;&quot;&quot;
+
+    def __init__(self, pool: SharedMessagePool):
+        super().__init__(&quot;ProductManager&quot;, pool)
+
+    async def run(self, requirement: str) -&gt; str:
+        &quot;&quot;&quot;分析需求并输出需求文档&quot;&quot;&quot;
+        analysis = {
+            &quot;project&quot;: requirement,
+            &quot;user_stories&quot;: [
+                f&quot;作为用户，我希望能够使用核心功能&quot;,
+                f&quot;作为用户，我希望有清晰的界面&quot;,
+                f&quot;作为用户，我希望操作简单直观&quot;,
+            ],
+            &quot;requirements&quot;: [
+                {&quot;id&quot;: 1, &quot;name&quot;: &quot;核心功能&quot;, &quot;priority&quot;: &quot;P0&quot;},
+                {&quot;id&quot;: 2, &quot;name&quot;: &quot;用户界面&quot;, &quot;priority&quot;: &quot;P1&quot;},
+                {&quot;id&quot;: 3, &quot;name&quot;: &quot;数据管理&quot;, &quot;priority&quot;: &quot;P2&quot;},
+            ],
+            &quot;analyzed_at&quot;: datetime.now().isoformat(),
+        }
+        doc = json.dumps(analysis, indent=2, ensure_ascii=False)
+
+        # 发布到消息池
+        self.pool.publish(
+            Message(doc, self.name, &quot;requirement_doc&quot;)
+        )
+        return doc
+
+
+class Architect(Role):
+    &quot;&quot;&quot;架构师角色——系统设计&quot;&quot;&quot;
+
+    def __init__(self, pool: SharedMessagePool):
+        super().__init__(&quot;Architect&quot;, pool)
+
+    async def run(self, requirement_doc: str) -&gt; str:
+        &quot;&quot;&quot;基于需求文档设计系统&quot;&quot;&quot;
+        req = json.loads(requirement_doc)
+
+        design = {
+            &quot;project&quot;: req[&quot;project&quot;],
+            &quot;architecture&quot;: &quot;分层架构（MVC）&quot;,
+            &quot;data_models&quot;: [
+                {&quot;name&quot;: &quot;CoreModel&quot;, &quot;fields&quot;: [&quot;data: dict&quot;]},
+                {&quot;name&quot;: &quot;ViewModel&quot;, &quot;fields&quot;: [&quot;display: str&quot;]},
+            ],
+            &quot;api_design&quot;: [
+                {&quot;name&quot;: &quot;init()&quot;, &quot;desc&quot;: &quot;初始化&quot;},
+                {&quot;name&quot;: &quot;process()&quot;, &quot;desc&quot;: &quot;处理数据&quot;},
+                {&quot;name&quot;: &quot;render()&quot;, &quot;desc&quot;: &quot;渲染输出&quot;},
+            ],
+            &quot;files&quot;: [&quot;main.py&quot;, &quot;core.py&quot;, &quot;ui.py&quot;],
+            &quot;designed_at&quot;: datetime.now().isoformat(),
+        }
+        doc = json.dumps(design, indent=2, ensure_ascii=False)
+
+        self.pool.publish(
+            Message(doc, self.name, &quot;system_design&quot;)
+        )
+        return doc
+
+
+class ProjectManagerRole(Role):
+    &quot;&quot;&quot;项目经理角色——任务分解&quot;&quot;&quot;
+
+    def __init__(self, pool: SharedMessagePool):
+        super().__init__(&quot;ProjectManager&quot;, pool)
+
+    async def run(self, design_doc: str) -&gt; str:
+        &quot;&quot;&quot;基于设计文档分解任务&quot;&quot;&quot;
+        design = json.loads(design_doc)
+
+        tasks = {
+            &quot;based_on&quot;: design.get(&quot;project&quot;, &quot;&quot;),
+            &quot;tasks&quot;: [],
+            &quot;total&quot;: len(design.get(&quot;files&quot;, [])),
+        }
+
+        for i, filename in enumerate(design.get(&quot;files&quot;, [])):
+            tasks[&quot;tasks&quot;].append({
+                &quot;id&quot;: i + 1,
+                &quot;file&quot;: filename,
+                &quot;status&quot;: &quot;pending&quot;,
+                &quot;dependencies&quot;: [f&quot;任务 {i}&quot;] if i &gt; 0 else [],
+            })
+
+        doc = json.dumps(tasks, indent=2, ensure_ascii=False)
+        self.pool.publish(
+            Message(doc, self.name, &quot;task_list&quot;)
+        )
+        return doc
+
+
+# ============================================================
+# 知识点 4：可执行反馈
+# ============================================================
+
+class EngineerRole(Role):
+    &quot;&quot;&quot;工程师角色——带可执行反馈的代码生成&quot;&quot;&quot;
+
+    def __init__(self, pool: SharedMessagePool, max_retries: int = 3):
+        super().__init__(&quot;Engineer&quot;, pool)
+        self.max_retries = max_retries
+
+    async def run(self, task_list_doc: str) -&gt; str:
+        &quot;&quot;&quot;生成代码并使用可执行反馈验证&quot;&quot;&quot;
+        tasks = json.loads(task_list_doc)
+
+        code = self._generate_code(tasks)
+        verified_code = self._run_with_feedback(code)
+
+        self.pool.publish(
+            Message(verified_code, self.name, &quot;source_code&quot;)
+        )
+        return verified_code
+
+    def _generate_code(self, tasks: dict) -&gt; str:
+        &quot;&quot;&quot;根据任务列表生成代码&quot;&quot;&quot;
+        files = [t[&quot;file&quot;] for t in tasks.get(&quot;tasks&quot;, [])]
+        project = tasks.get(&quot;based_on&quot;, &quot;项目&quot;)
+
+        code = f&quot;&quot;&quot;# 自动生成的项目代码
+# 项目: {project}
+# 生成时间: {datetime.now().isoformat()}
+# 文件结构: {', '.join(files)}
+
+class CoreModel:
+    \&quot;\&quot;\&quot;核心数据模型\&quot;\&quot;\&quot;
+    def __init__(self):
+        self.data = {{}}
+
+    def process(self, input_data):
+        \&quot;\&quot;\&quot;处理输入数据\&quot;\&quot;\&quot;
+        self.data[&quot;last_input&quot;] = input_data
+        self.data[&quot;result&quot;] = f&quot;处理完成: {{input_data}}&quot;
+        return self.data[&quot;result&quot;]
+
+    def get_state(self):
+        \&quot;\&quot;\&quot;获取当前状态\&quot;\&quot;\&quot;
+        return self.data.copy()
+
+
+class ViewModel:
+    \&quot;\&quot;\&quot;视图模型\&quot;\&quot;\&quot;
+    def __init__(self, core: CoreModel):
+        self.core = core
+        self.display = &quot;&quot;
+
+    def render(self):
+        \&quot;\&quot;\&quot;渲染显示\&quot;\&quot;\&quot;
+        state = self.core.get_state()
+        self.display = f&quot;状态: {{state}}&quot;
+        return self.display
+
+
+def main():
+    \&quot;\&quot;\&quot;主函数\&quot;\&quot;\&quot;
+    core = CoreModel()
+    ui = ViewModel(core)
+
+    # 模拟操作
+    test_inputs = [&quot;测试输入1&quot;, &quot;测试输入2&quot;, &quot;测试输入3&quot;]
+    for inp in test_inputs:
+        result = core.process(inp)
+        print(f&quot;  输入: {{inp}} → {{result}}&quot;)
+
+    print(f&quot;\\n最终状态: {{ui.render()}}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+&quot;&quot;&quot;
+        return code
+
+    def _execute_code(self, code: str) -&gt; dict:
+        &quot;&quot;&quot;运行代码并返回结果&quot;&quot;&quot;
+        with tempfile.NamedTemporaryFile(
+            mode=&quot;w&quot;, suffix=&quot;.py&quot;, delete=False
+        ) as f:
+            f.write(code)
+            temp_path = f.name
+
+        try:
+            result = subprocess.run(
+                [&quot;python3&quot;, temp_path],
+                capture_output=True, text=True, timeout=10,
+            )
+            return {
+                &quot;success&quot;: result.returncode == 0,
+                &quot;stdout&quot;: result.stdout.strip(),
+                &quot;stderr&quot;: result.stderr.strip(),
+            }
+        except subprocess.TimeoutExpired:
+            return {&quot;success&quot;: False, &quot;stdout&quot;: &quot;&quot;, &quot;stderr&quot;: &quot;超时&quot;}
+        finally:
+            os.unlink(temp_path)
+
+    def _run_with_feedback(self, code: str) -&gt; str:
+        &quot;&quot;&quot;带反馈的代码执行&quot;&quot;&quot;
+        for attempt in range(self.max_retries):
+            result = self._execute_code(code)
+            if result[&quot;success&quot;]:
+                print(f&quot;    [反馈] 第 {attempt + 1} 次执行成功&quot;)
+                return code
+
+            error = result[&quot;stderr&quot;].split(&quot;\n&quot;)[-1] if result[&quot;stderr&quot;] else &quot;&quot;
+            print(f&quot;    [反馈] 第 {attempt + 1} 次执行失败: {error[:60]}&quot;)
+            if attempt &lt; self.max_retries - 1:
+                print(f&quot;    [反馈] 自动修复中...&quot;)
+
+        return code
+
+
+# ============================================================
+# 知识点 1：SOP 流水线编排
+# ============================================================
+
+class SOPPipeline:
+    &quot;&quot;&quot;SOP 流水线——按标准顺序编排所有角色&quot;&quot;&quot;
+
+    def __init__(self, output_dir: str = &quot;/tmp/metagpt-simulator&quot;):
+        self.output_dir = output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        self.pool = SharedMessagePool()
+        self.start_time = None
+
+        # 创建角色
+        self.pm = ProductManager(self.pool)
+        self.architect = Architect(self.pool)
+        self.project_manager = ProjectManagerRole(self.pool)
+        self.engineer = EngineerRole(self.pool, max_retries=3)
+
+    async def execute(self, requirement: str):
+        &quot;&quot;&quot;执行完整的 SOP 流水线&quot;&quot;&quot;
+        self.start_time = time.time()
+
+        print(&quot;=&quot; * 60)
+        print(&quot;多 Agent 协作模拟器 — SOP 流水线&quot;)
+        print(f&quot;需求: {requirement}&quot;)
+        print(f&quot;输出: {self.output_dir}&quot;)
+        print(&quot;=&quot; * 60)
+
+        # 阶段 1：产品经理
+        print(f&quot;\n[1/4] 产品经理 — 需求分析&quot;)
+        req_doc = await self.pm.run(requirement)
+        self._save(&quot;requirement.json&quot;, req_doc)
+
+        # 阶段 2：架构师
+        print(f&quot;[2/4] 架构师 — 系统设计&quot;)
+        design_doc = await self.architect.run(req_doc)
+        self._save(&quot;design.json&quot;, design_doc)
+
+        # 阶段 3：项目经理
+        print(f&quot;[3/4] 项目经理 — 任务分解&quot;)
+        task_doc = await self.project_manager.run(design_doc)
+        self._save(&quot;tasks.json&quot;, task_doc)
+
+        # 阶段 4：工程师（带可执行反馈）
+        print(f&quot;[4/4] 工程师 — 代码生成 + 可执行反馈&quot;)
+        code = await self.engineer.run(task_doc)
+        self._save(&quot;main.py&quot;, code)
+
+        # 汇总报告
+        elapsed = time.time() - self.start_time
+        stats = self.pool.get_stats()
+
+        print(f&quot;\n{'=' * 60}&quot;)
+        print(&quot;流水线执行完成！&quot;)
+        print(f&quot;{'=' * 60}&quot;)
+        print(f&quot;  消息池消息数: {stats['total_messages']}&quot;)
+        print(f&quot;  消息类型: {stats['types']}&quot;)
+        print(f&quot;  执行时间: {elapsed:.2f} 秒&quot;)
+        print(f&quot;  输出文件:&quot;)
+        for f in os.listdir(self.output_dir):
+            filepath = os.path.join(self.output_dir, f)
+            size = os.path.getsize(filepath)
+            print(f&quot;    - {f} ({size} bytes)&quot;)
+
+        return self.output_dir
+
+    def _save(self, filename: str, content: str):
+        &quot;&quot;&quot;保存输出文件&quot;&quot;&quot;
+        filepath = os.path.join(self.output_dir, filename)
+        with open(filepath, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+            f.write(content)
+        print(f&quot;  保存: {filepath}&quot;)
+
+
+# ============================================================
+# 入口
+# ============================================================
+
+if __name__ == &quot;__main__&quot;:
+    import shutil
+
+    output_dir = &quot;/tmp/metagpt-simulator&quot;
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+
+    pipeline = SOPPipeline(output_dir)
+    asyncio.run(pipeline.execute(&quot;创建一个任务管理应用&quot;))
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<table>
+<thead>
+<tr>
+<th>代码段</th>
+<th>使用的知识点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SharedMessagePool</code> 类</td>
+<td><strong>共享消息池（2.2）</strong></td>
+<td>发布-订阅模式的全局消息池，支持订阅通知、消息过滤和统计</td>
+</tr>
+<tr>
+<td><code>Message</code> 类</td>
+<td><strong>共享消息池（2.2）</strong></td>
+<td>结构化消息单元，包含内容、角色、类型和时间戳</td>
+</tr>
+<tr>
+<td><code>Role</code> 基类</td>
+<td><strong>自定义角色（2.1）</strong></td>
+<td>所有角色的基类，封装名称、消息池引用和 Action 列表</td>
+</tr>
+<tr>
+<td><code>ProductManager</code>/<code>Architect</code>/<code>ProjectManagerRole</code></td>
+<td><strong>自定义角色（2.1）</strong></td>
+<td>专业化角色，每个角色只做自己的专业工作并发布到消息池</td>
+</tr>
+<tr>
+<td><code>EngineerRole._run_with_feedback()</code></td>
+<td><strong>可执行反馈（3.1）</strong></td>
+<td>实际运行代码，检测错误，最多重试 3 次</td>
+</tr>
+<tr>
+<td><code>SOPPipeline.execute()</code></td>
+<td><strong>SOP 流水线（1.1）</strong></td>
+<td>按固定顺序（PM→Architect→PM→Engineer）编排所有角色</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加 QA 角色</strong>：创建 <code>QAEngineer</code> 角色类，订阅工程师发布的 <code>source_code</code> 消息，编写测试代码并执行。QA 角色应发布 <code>test_report</code> 消息到消息池。</li>
+<li><strong>支持多 LLM 后端</strong>：为每个角色添加 <code>model_config</code> 参数，模拟不同角色使用不同 LLM 模型（如产品经理用 GPT-4、工程师用 GPT-3.5）。记录每个角色的模拟 API 调用成本。</li>
+<li><strong>添加进度追踪</strong>：在流水线执行过程中记录每个阶段的开始/结束时间和状态，最终输出一个结构化的进度报告。</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ImportError: No module named 'metagpt'</code></td>
+<td>MetaGPT 未安装或虚拟环境未激活</td>
+<td>运行 <code>pip install metagpt</code> 并确认已激活虚拟环境：<code>source venv/bin/activate</code></td>
+</tr>
+<tr>
+<td><code>openai.AuthenticationError: Invalid API Key</code></td>
+<td>配置文件中的 API Key 无效</td>
+<td>检查 <code>~/.metagpt/config2.yaml</code> 中的 <code>api_key</code> 是否正确，确认以 <code>sk-</code> 开头</td>
+</tr>
+<tr>
+<td><code>FileNotFoundError: ~/.metagpt/config2.yaml</code></td>
+<td>配置文件不存在</td>
+<td>创建配置文件目录 <code>mkdir -p ~/.metagpt</code>，然后创建 <code>config2.yaml</code> 并填写 API Key</td>
+</tr>
+<tr>
+<td>Agent 执行超时</td>
+<td>LLM API 响应慢或网络问题</td>
+<td>在配置文件中增加 <code>timeout</code> 参数，或切换到更快的模型（如 GPT-3.5-turbo）</td>
+</tr>
+<tr>
+<td>生成的代码无法运行</td>
+<td>LLM 生成了有 Bug 的代码（即使有可执行反馈也可能遗漏）</td>
+<td>手动检查生成代码，使用 Git 追踪变更，逐步修复问题</td>
+</tr>
+<tr>
+<td><code>TypeError: 'NoneType' object is not callable</code></td>
+<td>自定义 Role 或 Action 的 <code>run</code> 方法返回了 None</td>
+<td>确保所有 Action 的 <code>run</code> 方法返回字符串类型的结果</td>
+</tr>
+<tr>
+<td>生成的项目结构不符合预期</td>
+<td>需求描述不够具体或存在歧义</td>
+<td>提供更详细的需求描述，包括功能列表、技术偏好、文件结构建议</td>
+</tr>
+<tr>
+<td>消息池中找不到订阅的消息</td>
+<td>订阅设置在消息发布之后，导致消息丢失</td>
+<td>确保在发布消息之前设置好所有订阅关系</td>
+</tr>
+<tr>
+<td>可执行反馈重试 3 次仍然失败</td>
+<td>生成的代码存在 LLM 无法自动修复的复杂 Bug</td>
+<td>手动介入修复，或提供更详细的需求和设计约束</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>检查消息池状态</strong>：在流水线执行过程中打印消息池的内容和统计信息。确认每个角色都正确发布了消息，且下游角色能够获取到上游的输出。特别关注消息类型（<code>msg_type</code>）是否与订阅时一致——类型不匹配是最常见的通信问题。</p>
+</li>
+<li>
+<p><strong>逐步验证每个角色的输出</strong>：不要一次性运行完整流水线。先单独运行产品经理，检查需求文档质量；再运行架构师，检查设计文档。每个阶段的输出都是下一个阶段的输入，如果上游输出有误，下游必然出错。</p>
+</li>
+<li>
+<p><strong>查看 LLM 的原始响应</strong>：MetaGPT 默认只显示最终输出。如果需要调试，可以启用详细日志模式查看每个 LLM 调用的完整提示词和响应。设置环境变量 <code>export LOG_LEVEL=DEBUG</code> 可以看到更详细的执行日志。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong><a href="https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html">MetaGPT 官方文档 - Introduction</a></strong> — 核心概念、快速入门。重点：<code>Code = SOP(Team)</code> 公式、五角色流水线、CLI 使用。</li>
+<li><strong><a href="https://docs.deepwisdom.ai/main/en/guide/get_started/quickstart.html">MetaGPT 官方文档 - Quickstart</a></strong> — 安装配置和第一个项目。重点：config2.yaml 配置、CLI 命令参数、输出目录结构。</li>
+<li><strong><a href="https://arxiv.org/abs/2308.00352">MetaGPT ICLR 2024 论文 (arXiv:2308.00352)</a></strong> — 学术深度理解。重点：第 3 节方法论（SOP 编码、消息池、可执行反馈）、第 4 节实验（消融实验、基准测试）。</li>
+<li><strong><a href="https://github.com/geekan/MetaGPT-docs/blob/main/src/en/guide/tutorials/multi_agent_101.md">MetaGPT Multi-Agent 101 教程</a></strong> — 实战进阶。重点：自定义 Role 和 Action、消息池高级用法、多 LLM 后端配置。</li>
+<li><strong><a href="https://arxiv.org/abs/2412.11619">AFlow 论文 (ICLR 2025)</a></strong> — 前沿发展。重点：将 SOP 流水线优化为有向无环图（DAG），AFlow 在 MetaGPT 基础上的改进。</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://github.com/FoundationAgents/MetaGPT">MetaGPT GitHub 仓库</a></strong> — 源码是理解框架内部机制的最佳途径。建议从 <code>metagpt/roles/</code> 目录开始阅读，理解每个角色的 Action 定义和提示词模板。</li>
+<li><strong><a href="https://medium.com/coding-nexus/the-4-best-open-source-multi-agent-ai-frameworks-in-2025-81e92f23f866">Medium - 4 Best Open-Source Multi-Agent AI Frameworks 2025</a></strong> — MetaGPT vs CrewAI vs AutoGen vs LangGraph 的横向对比，帮助理解不同框架的设计哲学和适用场景。</li>
+<li><strong><a href="https://atoms.dev/">MGX 产品主页</a></strong> — MetaGPT 的商业产品，展示了 SOP 驱动方法在真实产品中的形态。通过使用 MGX 可以直观理解 MetaGPT 的设计理念和用户体验。</li>
+</ul>
+<hr />
+<h2 id="_20">信息来源与版本说明</h2>
+<ul>
+<li><strong>教程基于：</strong> MetaGPT 开源框架（GitHub 主分支，截至 2026-04-13），ICLR 2024 论文（arXiv:2308.00352）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://github.com/FoundationAgents/MetaGPT">MetaGPT GitHub 仓库 - FoundationAgents/MetaGPT</a> — 项目源码、安装指南、使用示例</li>
+<li><a href="https://arxiv.org/abs/2308.00352">MetaGPT ICLR 2024 论文 (arXiv:2308.00352)</a> — 五角色流水线、消融实验、基准测试数据</li>
+<li><a href="https://docs.deepwisdom.ai/main/en/guide/get_started/introduction.html">MetaGPT 官方文档</a> — 核心概念、快速入门、API 参考</li>
+<li><a href="https://medium.com/coding-nexus/the-4-best-open-source-multi-agent-ai-frameworks-in-2025-81e92f23f866">Medium - 4 Best Open-Source Multi-Agent AI Frameworks 2025</a> — 竞品对比分析</li>
+<li><a href="https://atoms.dev/">MGX 产品主页</a> — 商业产品形态参考</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

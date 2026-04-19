@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreTeXt - 技术发现报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">PreTeXt 是一个基于 XML 的学术文档创作与发布系统，专为教科书、研究论文和学术专著设计，尤其适用于 STEM（科学、技术、工程、数学）领域，核心理念是"一次编写，处处发布"（Write once, read anywhere）——从单一 XML 源文件可生成 HTML、PDF（LaTeX）、EPUB、Braille（盲文）、Jupyter Notebook、RevealJS 幻灯片等多种输出格式。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">基本信息</a></li>
+<li><a href="#_2" class="toc-h2">一句话定位</a></li>
+<li><a href="#_3" class="toc-h2">核心特性</a></li>
+<li><a href="#_4" class="toc-h2">社区生态</a></li>
+<li><a href="#_5" class="toc-h2">技术栈定位</a></li>
+<li><a href="#_6" class="toc-h2">关键链接汇总</a></li>
+<li><a href="#_7" class="toc-h3">宇方资源</a></li>
+<li><a href="#_8" class="toc-h3">教程资源</a></li>
+<li><a href="#_9" class="toc-h3">社区资源</a></li>
+<li><a href="#_10" class="toc-h2">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>PreTeXt - 技术发现报告</h1>
+                        <div class="article-meta">PreTeXt 是一个基于 XML 的学术文档创作与发布系统，专为教科书、研究论文和学术专著设计，尤其适用于 STEM（科学、技术、工程、数学）领域，核心理念是"一次编写，处处发布"（Write once, read anywhere）——从单一 XML 源文件可生成 HTML、PDF（LaTeX）、EPUB、Braille（盲文）、Jupyter Notebook、RevealJS 幻灯片等多种输出格式。</div>
+                    </header>
+                    <h1 id="pretext-">PreTeXt - 技术发现报告</h1>
+<h2 id="_1">基本信息</h2>
+<ul>
+<li><strong>名称：</strong> PreTeXt</li>
+<li><strong>官方地址：</strong> https://pretextbook.org</li>
+<li><strong>GitHub 仓库：</strong> https://github.com/PreTeXtBook/pretext</li>
+<li><strong>当前版本：</strong> CLI v2.38.2（PreTeXt-CLI，PyPI 包名 <code>pretext</code>）；核心标记语言持续迭代中，无独立版本号</li>
+<li><strong>License：</strong> GPL（GPL-3.0-or-later）</li>
+<li><strong>主要编程语言：</strong> XSLT（75.5%）、JavaScript（7.4%）、Python（7.2%）、CSS（5.1%）、SCSS（4.6%）</li>
+<li><strong>首次发布日期：</strong> 2013-09-21（GitHub 仓库创建日期）；项目构思始于更早期，创始人 Rob Beezer 自 2013 年起持续开发</li>
+<li><strong>创建者/维护团队：</strong> Rob Beezer（@rbeezer，University of Puget Sound 数学系教授）创建并领衔维护，75 位贡献者参与 <!-- reviewed: 修正机构名称，原为"华盛顿大学"有误，正确为"University of Puget Sound"（普吉特湾大学），与 Rob Beezer 演讲及 Balisage 论文一致 --></li>
+</ul>
+<h2 id="_2">一句话定位</h2>
+<blockquote>
+<p>PreTeXt 是一个基于 XML 的学术文档创作与发布系统，专为教科书、研究论文和学术专著设计，尤其适用于 STEM（科学、技术、工程、数学）领域，核心理念是"一次编写，处处发布"（Write once, read anywhere）——从单一 XML 源文件可生成 HTML、PDF（LaTeX）、EPUB、Braille（盲文）、Jupyter Notebook、RevealJS 幻灯片等多种输出格式。</p>
+</blockquote>
+<h2 id="_3">核心特性</h2>
+<ol>
+<li>
+<p><strong>单一来源多格式输出（Single Source, Multiple Outputs）</strong> - PreTeXt 的核心理念：作者只需编写一份 XML 源文件，即可自动转换为 HTML（含交互式 3D 图形、GeoGebra 小程序等）、PDF（通过 LaTeX 排版）、EPUB（电子书）、Braille（盲文触觉图形）、Jupyter Notebook、RevealJS 幻灯片等格式。这彻底解决了学术作者需要维护多个格式版本的问题。[来源：pretextbook.org、GitHub README]</p>
+</li>
+<li>
+<p><strong>高质量数学排版与无障碍访问（Accessibility-First Design）</strong> - PreTeXt 对数学公式的支持达到专业排版水准，HTML 输出使用 MathJax 渲染 LaTeX 数学公式，PDF 输出通过原生 LaTeX 实现出版级质量。更重要的是，PreTeXt 将无障碍访问（Accessibility）作为核心设计原则——屏幕阅读器可以朗读数学内容，Braille 输出支持 Nemeth 盲文编码，使视觉障碍者也能阅读 STEM 教材。这在学术出版工具中极为罕见。[来源：pretextbook.org、GitHub README 原则 #11]</p>
+</li>
+<li>
+<p><strong>结构化标记语言（Structured Markup Language）</strong> - PreTeXt 定义了一套完整的 XML 标记语言，精确捕捉学术文档的语义结构（章节、定理、证明、示例、练习、注解等），而非仅描述视觉呈现。这种语义化方法使得文档可以被程序化处理、验证和转换。标记语言同时保持人类可读和人类可写。[来源：GitHub README 原则 #1-2]</p>
+</li>
+<li>
+<p><strong>学术生态集成（Academic Ecosystem Integration）</strong> - PreTeXt 与多个学术工具深度集成：WeBWorK（在线作业系统）可以在 PreTeXt 文档中嵌入交互式习题；STACK（计算机辅助评估系统）支持自动评分的数学问题；GeoGebra 和 D3.js 等工具支持交互式可视化。这些集成使 PreTeXt 特别适合构建交互式教学材料。[来源：pretextbook.org、社区文章]</p>
+</li>
+<li>
+<p><strong>开放与免费（Open and Free）</strong> - PreTeXt 完全开源（GPL 许可），软件免费使用，且使用 PreTeXt 创作的文档不受任何约束（文档版权归作者所有）。项目不依赖任何商业服务，核心转换基于 XSLT 样式表实现。社区通过 Google Groups 邮件列表（pretext-support）和 GitHub Issues 提供支持。[来源：GitHub README 原则 #8-9]</p>
+</li>
+</ol>
+<h2 id="_4">社区生态</h2>
+<ul>
+<li><strong>GitHub Stars：</strong> 436（截至 2026-04-13，PreTeXtBook/pretext 仓库，通过 GitHub API 获取）</li>
+<li><strong>Forks：</strong> 232</li>
+<li><strong>Open Issues：</strong> 590</li>
+<li><strong>Contributors：</strong> 75 位贡献者，以 Rob Beezer（@rbeezer）为核心，David Farmer、Alex Jordan、Oscar Levin 等数学教育者为重要贡献者</li>
+<li><strong>最近更新日期：</strong> 2026-04-13（GitHub 最后推送日期），项目保持活跃开发</li>
+<li><strong>社区讨论热度：</strong> 专注于学术数学教育社区。支持邮件列表 pretext-support 和公告列表 pretext-announce 为主要交流渠道。项目已被美国数学学会（MAA）、数十所大学采用，在 OER（开放教育资源）运动中扮演重要角色。PreTeXtBook 组织下共有 15 个仓库（包括 pretext-cli、pretext-book 等）。</li>
+<li><strong>PyPI 下载量：</strong> <code>pretext</code> 包（CLI 工具）通过 <code>pip install pretext</code> 安装，当前版本 v2.38.2</li>
+</ul>
+<h2 id="_5">技术栈定位</h2>
+<ul>
+<li><strong>所属领域：</strong> 学术出版 / 文档标记语言 / STEM 教育 / 开放教育资源（OER）/ 无障碍出版 / 教材创作工具</li>
+<li><strong>解决的核心问题：</strong> STEM 领域的学术文档（特别是教科书）需要同时满足多种需求：高质量数学排版（印刷级）、在线交互性（Web 特性）、无障碍访问（盲文、屏幕阅读器）、多格式发布（PDF、HTML、EPUB）。传统工具（如纯 LaTeX 或 Word）无法同时满足这些需求。PreTeXt 通过语义化 XML 标记作为单一来源，配合 XSLT 转换引擎，实现一次编写、多格式发布，同时保证每种输出格式的质量。</li>
+<li><strong>替代/竞品技术：</strong> LaTeX（传统排版系统）、AsciiDoc（轻量级标记语言）、DocBook（技术文档标记）、Sphinx（Python 文档生成）、Quarto（Posit 推出的科学出版工具）、R Markdown（可重现研究）、Bookdown（R 生态书籍工具）、Typst（新一代排版系统）、Markdown + MathJax（简易数学文档）</li>
+<li><strong>依赖的上游技术：</strong> XML（标记语言基础）、XSLT（核心转换引擎）、LaTeX（PDF 输出后端）、MathJax（HTML 数学渲染）、Python（CLI 工具，pretext 包）、Node.js（部分构建工具）</li>
+<li><strong>下游使用者/集成方：</strong> 大学数学系（教材编写）、开放教育资源（OER）项目、学术出版社、K-12 STEM 教育、需要无障碍学术文档的机构。知名采用案例包括：Oscar Levin 的《Discrete Mathematics: An Open Introduction》、美国数学学会（MAA）的多个出版物、AIM（American Institute of Mathematics）的 OER 项目</li>
+</ul>
+<h2 id="_6">关键链接汇总</h2>
+<h3 id="_7">宇方资源</h3>
+<ul>
+<li><a href="https://pretextbook.org">PreTeXt 官网</a> — 项目介绍、特性说明、快速入门</li>
+<li><a href="https://pretextbook.org/doc/author-guide/">PreTeXt 指南</a> — 作者指南，完整的标记语言参考</li>
+<li><a href="https://github.com/PreTeXtBook/pretext">PreTeXt GitHub 仓库</a> — 核心源代码（XSLT 样式表、schema）</li>
+<li><a href="https://github.com/PreTeXtBook/pretext-cli">PreTeXt CLI GitHub 仓库</a> — 命令行工具源代码</li>
+<li><a href="https://pypi.org/project/pretext/">PreTeXt CLI PyPI</a> — pip 安装包（当前版本 v2.38.2）</li>
+<li><a href="https://github.com/PreTeXtBook/pretext/blob/master/release-notes.md">更新日志</a> — 版本更新记录</li>
+</ul>
+<h3 id="_8">教程资源</h3>
+<ul>
+<li><a href="https://pretextbook.org/doc/author-guide/quickstart/">PreTeXt 快速入门</a> — 官方快速入门指南</li>
+<li><a href="https://pretextbook.org/doc/author-guide/">PreTeXt 作者指南</a> — 完整的标记语言和发布教程</li>
+<li><a href="https://math.oscarlevin.com/pretext/">Oscar Levin 的 PreTeXt 教程</a> — 社区贡献的实践教程</li>
+<li><a href="https://mathtech.org/">MathTech.org PreTeXt 教程</a> — 交互式学习资源</li>
+</ul>
+<h3 id="_9">社区资源</h3>
+<ul>
+<li><a href="https://groups.google.com/g/pretext-support">pretext-support 邮件列表</a> — 社区支持论坛</li>
+<li><a href="https://groups.google.com/g/pretext-announce">pretext-announce 邮件列表</a> — 项目公告（低频）</li>
+<li><a href="https://github.com/PreTeXtBook/pretext/issues">GitHub Issues</a> — 问题反馈和功能建议（590 个 Open Issues）</li>
+<li><a href="https://pretext.plus">pretext.plus</a> — PreTeXt 在线编辑和托管平台</li>
+</ul>
+<h2 id="_10">信息来源</h2>
+<ul>
+<li><a href="https://api.github.com/repos/PreTeXtBook/pretext">GitHub API - PreTeXtBook/pretext</a>（Stars: 436, Forks: 232, Open Issues: 590, Created: 2013-09-21, Pushed: 2026-04-13, Contributors: 75, Language: XSLT） — 获取日期：2026-04-13</li>
+<li><a href="https://github.com/PreTeXtBook/pretext/blob/master/README.md">GitHub README - PreTeXtBook/pretext</a>（项目描述、11 条设计原则、支持论坛、公告列表） — 获取日期：2026-04-13</li>
+<li><a href="https://pretextbook.org">PreTeXt 官网</a>（产品定位、核心特性、快速入门、作者指南链接） — 获取日期：2026-04-13</li>
+<li><a href="https://pypi.org/project/pretext/">PyPI - pretext</a>（CLI 工具，当前版本 v2.38.2，包名变迁说明） — 获取日期：2026-04-13</li>
+<li><a href="https://github.com/PreTeXtBook/pretext-cli/releases">GitHub Releases - PreTeXtBook/pretext-cli</a>（版本历史，v2.38.2 为最新） — 获取日期：2026-04-13</li>
+<li><a href="https://www.google.com/search?q=PreTeXt+authoring+publishing+system+STEM+textbooks">Web 搜索 "PreTeXt authoring publishing system STEM textbooks" 多来源结果</a> — 获取日期：2026-04-13</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

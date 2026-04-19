@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 长任务最佳实践 - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">基于 Anthropic 工程博客 "Effective Harnesses for Long-Running Agents"</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#_8" class="toc-h4">初始化代理 + 编码代理双阶段架构</a></li>
+<li><a href="#cr" class="toc-h4">检查点/恢复（C/R）多层机制</a></li>
+<li><a href="#criugpugpu" class="toc-h4">CRIUgpu——GPU 状态检查点</a></li>
+<li><a href="#agent" class="toc-h4">多 Agent 一致性快照</a></li>
+<li><a href="#_9" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_10" class="toc-h2">架构设计</a></li>
+<li><a href="#_11" class="toc-h3">整体架构</a></li>
+<li><a href="#_12" class="toc-h3">核心模块</a></li>
+<li><a href="#_13" class="toc-h3">扩展机制</a></li>
+<li><a href="#_14" class="toc-h2">关键概念详解</a></li>
+<li><a href="#initializer-agent" class="toc-h3">初始化代理（Initializer Agent）</a></li>
+<li><a href="#checkpointrestore-cr" class="toc-h3">检查点/恢复（Checkpoint/Restore, C/R）</a></li>
+<li><a href="#feature-list-driven-development" class="toc-h3">功能清单驱动开发（Feature List Driven Development）</a></li>
+<li><a href="#asynchronous-orchestration" class="toc-h3">异步编排（Asynchronous Orchestration）</a></li>
+<li><a href="#agent-multi-agent-orchestration-patterns" class="toc-h3">多 Agent 编排模式（Multi-Agent Orchestration Patterns）</a></li>
+<li><a href="#_15" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_16" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_17" class="toc-h3">最佳场景</a></li>
+<li><a href="#_18" class="toc-h3">不适用场景</a></li>
+<li><a href="#_19" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_20" class="toc-h3">优势</a></li>
+<li><a href="#_21" class="toc-h3">劣势</a></li>
+<li><a href="#_22" class="toc-h3">风险点</a></li>
+<li><a href="#_23" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_24" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_25" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_26" class="toc-h2">总结与建议</a></li>
+<li><a href="#_27" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AI 长任务最佳实践 - 深度分析报告</h1>
+                        <div class="article-meta">基于 Anthropic 工程博客 "Effective Harnesses for Long-Running Agents"</div>
+                    </header>
+                    <h1 id="ai-">AI 长任务最佳实践 - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>AI Agent 技术在 2025-2026 年进入大规模工程化阶段，但一个根本性挑战浮现：大语言模型（LLM）的上下文窗口（Context Window）有限，即使是 200K tokens 的窗口也难以完成复杂的工程项目。Agent 必须跨多个上下文窗口持续工作，每个新窗口的 Agent 实例没有之前的记忆——如同一个"失忆的工程师"接手一个进行中的项目。</p>
+<p>这种限制催生了三重工程挑战：</p>
+<ol>
+<li>
+<p><strong>进度连续性断裂</strong>：Agent 在窗口 A 完成的工作，窗口 B 的 Agent 完全不知道。如果不做显式交接，新 Agent 可能重复已完成的工作、遗漏关键步骤，甚至覆盖正确的代码。[置信度：高]</p>
+</li>
+<li>
+<p><strong>故障恢复脆弱</strong>：Agent 在长时间运行中可能因 API 超时、模型幻觉、资源耗尽等原因失败。缺乏检查点和回滚机制的 Agent 系统，一次故障可能浪费数小时的进度。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多 Agent 协调失序</strong>：当多个 Agent 协作完成大型任务时，缺乏一致性快照和协调恢复机制会导致无限循环、虚幻共识（Agent 之间以为达成了共识但实际没有）、资源死锁等系统性故障。[置信度：高]</p>
+</li>
+</ol>
+<p>行业规模的验证来自 Meta 的训练数据：LLaMA 3.1（405B 参数）在 16,000 个 GPU 上训练 54 天，经历了 <strong>419 次意外中断</strong>，其中 78% 由硬件故障导致。每次中断可能损失高达数百万美元。这凸显了长任务可靠性不仅是 AI Agent 的挑战，也是整个 AI 工程的基础设施级问题。[置信度：高]</p>
+<h3 id="_3">创立动机</h3>
+<p>AI 长任务最佳实践的核心理念并非来自单一发明，而是由 Anthropic、LangChain、AWS、字节跳动等厂商从各自的生产实践中逐步总结的方法论。动机包括：</p>
+<ol>
+<li>
+<p><strong>Anthropic 的"换班工程师"模型</strong>：受现实世界中工程师交接班的启发，将 AI Agent 的跨窗口工作建模为多个"班次"。每个班次结束时，当前 Agent 留下详细的交接文档（进度文件、功能清单、Git 提交），下一班次的 Agent 通过阅读这些文档快速恢复上下文。[置信度：高]</p>
+</li>
+<li>
+<p><strong>LangChain 的状态图持久化</strong>：LangGraph 将 Agent 工作流建模为状态图（State Graph），在每个"超级步骤"（Super-step）边界自动保存检查点。这种设计让 Agent 可以在任何步骤暂停和恢复，支持"时间旅行"（回放到历史状态）和分叉探索。[置信度：高]</p>
+</li>
+<li>
+<p><strong>HPC/AI 训练的检查点传统</strong>：高性能计算（HPC）领域长期以来使用检查点/恢复（C/R）机制应对长时间运行的作业失败。从操作系统级（CRIU）到 GPU 级（CRIUgpu）的 C/R 技术，为 AI Agent 系统提供了成熟的状态持久化基础设施。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2023 年</strong>：早期 AI Agent 框架（AutoGPT、BabyAGI）暴露长任务可靠性问题——Agent 经常陷入循环、遗忘上下文、重复工作</li>
+<li><strong>2024 年</strong>：LangGraph 推出内置检查点机制，将状态持久化引入 Agent 编排；Claude Agent SDK 支持上下文压缩</li>
+<li><strong>2025 年初</strong>：CRIUgpu 论文发表，首次实现透明的 CPU-GPU 联合快照；DMTCP 应用于分布式 AI 工作负载</li>
+<li><strong>2025 年 5 月</strong>：Eunomia.dev 发布 C/R 系统全景综述，系统化梳理从 HPC 到 AI Agent 的检查点技术演进</li>
+<li><strong>2025-2026 年</strong>：Anthropic 发布"Effective Harnesses for Long-Running Agents"工程博客，提出初始化代理 + 编码代理架构</li>
+<li><strong>2026 年 1 月</strong>：Kubernetes 成立 Checkpoint/Restore 工作组，推动容器级 C/R 标准化</li>
+<li><strong>2026 年</strong>：AWS、腾讯云、字节跳动等厂商发布生产级 AI Agent 长任务实践；Azure 架构中心发布 AI Agent 编排模式指南</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>AI 长任务最佳实践围绕三个核心理念：</p>
+<ol>
+<li><strong>增量可验证的进度推进</strong>：无论是 Anthropic 的"每次只做一个功能"、LangGraph 的"超级步骤"粒度，还是腾讯云的"阶段性子任务"，所有实践都遵循同一原则——将大任务拆分为小的、可独立验证的增量单元。每个增量完成后必须通过测试验证，只有验证通过才进入下一步。这种设计将 Agent 的失败爆炸半径限制在单个增量内。[置信度：高]</li>
+</ol>
+<p><strong>设计取舍：</strong>
+- <strong>获得：</strong> 精确的进度追踪、有限的回滚范围、清晰的质量门控
+- <strong>代价：</strong> 增量粒度选择需要经验——过细导致过多上下文切换开销，过粗导致失败时损失过大</p>
+<ol>
+<li>
+<p><strong>显式状态交接优先于隐式记忆</strong>：与其期望 Agent"记住"之前的工作（通过上下文压缩等技术），不如要求 Agent 在每个阶段结束时显式写出状态文件。Anthropic 使用 <code>claude-progress.txt</code> 和 <code>feature_list.json</code>；LangGraph 使用结构化的检查点快照；Git 提交历史本身就是一种状态交接机制。核心洞察是：<strong>不依赖于记忆，而依赖于可读的文档</strong>。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多层容错的纵深防御</strong>：单一容错机制不足以覆盖所有失败模式。最佳实践采用多层防御——应用层（功能清单 + 测试验证）→ 框架层（LangGraph 检查点）→ 基础设施层（CRIU 容器快照）→ 编排层（多 Agent 一致性快照）。每一层覆盖不同类型的故障，形成纵深防御。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_7">核心算法/机制</h3>
+<h4 id="_8">初始化代理 + 编码代理双阶段架构</h4>
+<p>Anthropic 提出的核心模式，将 Agent 工作流分为两个明确的阶段。</p>
+<pre><code>初始化代理 + 编码代理工作流：
+
+阶段 1：初始化代理（Initializer Agent）— 仅在第一个上下文窗口运行
+│
+├── 1. 执行 init.sh 脚本
+│   └── 安装依赖、配置环境、启动开发服务器
+│
+├── 2. 创建 feature_list.json
+│   └── 列出所有功能需求（如 200+ 功能）
+│   └── 每个功能包含：name, description, passes: false, fails: []
+│   └── 使用 JSON 而非 Markdown（模型更不容易意外修改 JSON）
+│
+├── 3. 创建 claude-progress.txt
+│   └── 进度日志文件，记录跨会话的工作状态
+│
+├── 4. 初始 Git 提交
+│   └── 记录初始文件结构，作为回滚基准
+│
+└── 5. 会话结束，进度文件留给下一个 Agent
+
+阶段 2：编码代理（Coding Agent）— 每个后续上下文窗口运行一个
+│
+├── 1. 读取 Git 日志和进度文件，理解当前状态
+├── 2. 读取 feature_list.json，选择最高优先级未完成功能
+├── 3. 只处理一个功能（增量推进）
+├── 4. 实现功能后，通过端到端测试验证
+│   └── 使用 Puppeteer MCP 进行浏览器自动化测试
+├── 5. 验证通过 → 更新 feature_list.json (passes: true)
+├── 6. Git 提交（描述性提交消息）
+├── 7. 更新 claude-progress.txt
+│   └── 记录：完成了什么、下一步该做什么、已知问题
+│
+└── 8. 会话结束，下一个编码代理继续
+</code></pre>
+<p>关键设计决策：
+- <strong>JSON 格式的功能清单</strong>：模型对 JSON 的修改行为更可预测，不容易像 Markdown 那样被意外重写或丢失结构
+- <strong>强措辞指令</strong>：如"不可接受删除或编辑测试，因为这可能导致遗漏或错误功能"
+- <strong>Git 作为安全网</strong>：Agent 使用 Git 回滚错误的代码变更，恢复到已知良好状态</p>
+<blockquote>
+<p>基于 Anthropic 工程博客 "Effective Harnesses for Long-Running Agents"</p>
+</blockquote>
+<h4 id="cr">检查点/恢复（C/R）多层机制</h4>
+<p>检查点/恢复是分布式系统中成熟的容错技术，在 AI Agent 场景中获得了新的应用维度。</p>
+<pre><code>C/R 五层架构模型：
+
+┌─────────────────────────────────────────────────────────────┐
+│ 第 5 层：应用级（Application-Level）                          │
+│  LangGraph 检查点、PyTorch 模型保存、Anthropic Harness        │
+│  特点：需要应用配合，高效可移植                                 │
+│  适用：Agent 工作流状态持久化                                   │
+├─────────────────────────────────────────────────────────────┤
+│ 第 4 层：库级（Library-Level）                                │
+│  DMTCP（分布式多线程检查点）                                   │
+│  特点：通过注入实现透明性                                       │
+│  适用：分布式 AI 应用、ROS 机器人系统                          │
+├─────────────────────────────────────────────────────────────┤
+│ 第 3 层：容器级（Container-Level）                            │
+│  Docker/Podman + CRIU、Kubernetes C/R Working Group          │
+│  特点：全透明，支持有状态微服务迁移                              │
+│  适用：容器化 AI Agent 部署                                    │
+├─────────────────────────────────────────────────────────────┤
+│ 第 2 层：虚拟机级（VM-Level）                                 │
+│  VMware vMotion、KVM Live Migration                          │
+│  特点：全透明，硬件无关恢复                                     │
+│  适用：AI 训练集群的虚拟化部署                                  │
+├─────────────────────────────────────────────────────────────┤
+│ 第 1 层：操作系统级（OS-Level）                                │
+│  CRIU、BLCR、CRIUgpu（GPU 扩展）                              │
+│  特点：最底层，捕获进程/线程/GPU 完整状态                       │
+│  适用：进程级快照和迁移                                         │
+└─────────────────────────────────────────────────────────────┘
+</code></pre>
+<p><strong>有状态 vs 无状态恢复的权衡：</strong></p>
+<pre><code>                    有状态恢复                          无状态恢复
+                 （Stateful）                        （Stateless）
+
+恢复方式     从快照恢复完整进程状态            从持久化数据重新启动
+
+优势         - 恢复速度极快                      - 实现简单
+             - 保留完整运行时状态                 - 跨版本兼容
+             - 无需重新初始化                    - 调试友好
+
+劣势         - 快照体积大                        - 恢复时间与状态复杂度成正比
+             - 版本耦合（快照格式与代码版本绑定）    - 可能丢失运行时上下文
+             - 跨平台兼容性差                    - 重新初始化可能有副作用
+
+代表技术     CRIU、CRIUgpu、DMTCP               LangGraph、Anthropic Harness
+
+推荐策略     底层（基础设施）使用有状态恢复       高层（应用逻辑）使用无状态恢复
+             快速故障切换                        灵活的状态管理和版本迁移
+</code></pre>
+<blockquote>
+<p>基于 Eunomia.dev C/R 系统综述</p>
+</blockquote>
+<h4 id="criugpugpu">CRIUgpu——GPU 状态检查点</h4>
+<p>CRIUgpu 是首个实现透明 CPU-GPU 联合快照的机制，解决了 AI 工作负载中 GPU 状态持久化的难题。</p>
+<pre><code>CRIUgpu 工作流程：
+
+1. 锁定阶段（Lock）
+   ├── 锁定所有 CUDA API（默认 10 秒超时）
+   └── 阻止新的 GPU 操作启动
+
+2. GPU 检查点阶段（Checkpoint）
+   ├── 将 GPU 状态传输到主机内存
+   ├── 捕获 CUDA 对象（流、上下文、内存分配）
+   └── AMD GPU 使用 KFD ioctl 操作
+
+3. CPU 检查点阶段
+   ├── 使用 Linux ptrace seize+interrupt
+   └── 捕获 CPU 寄存器、内存映射、文件描述符
+
+4. 快照写入
+   └── 统一快照包含 CPU + GPU 完整状态
+
+5. 恢复阶段（Restore）
+   ├── 从主机内存恢复 GPU 状态
+   ├── 重建 CUDA 对象（流、上下文）
+   └── 解锁 CUDA API
+
+性能数据（H100 GPU）：
+┌────────────────────┬───────────────┬────────────────┐
+│ 模型               │ 检查点时间     │ 恢复时间        │
+├────────────────────┼───────────────┼────────────────┤
+│ GPT-2 Small (124M) │ ~4.9 秒       │ ~2.5 秒        │
+│ GPT-2 XL (1.5B)    │ ~28 秒        │ ~11 秒         │
+│ 4× A100 (GPT-2)    │ ~40GB 快照    │ 近线性扩展      │
+└────────────────────┴───────────────┴────────────────┘
+
+关键特性：
+- 零稳态性能开销（不同于 API 拦截方案）
+- GPU 内存占快照体积的 80-90% 以上
+- 多 GPU 检查点时间近线性扩展
+</code></pre>
+<blockquote>
+<p>基于 CRIUgpu 论文 (arXiv 2502.16631)</p>
+</blockquote>
+<h4 id="agent">多 Agent 一致性快照</h4>
+<p>多 Agent 系统的检查点面临经典分布式系统的"快照一致性"问题。</p>
+<pre><code>多 Agent 一致性快照的挑战：
+
+Agent A: ───[处理任务1]──────●─────────[处理任务3]──→
+                              │
+Agent B: ──────[处理任务2]────●─────[等待A完成]────→
+                              │
+Agent C: ──[等待资源]─────────●─────[获取资源]───[处理]→
+                              │
+                         时间点 T
+                     （需要一致性快照）
+
+问题：如果在时间点 T 做快照：
+- Agent A 正在处理任务1（中间状态）
+- Agent B 正在处理任务2（中间状态）
+- Agent C 正在等待资源（依赖状态）
+
+恢复时需要保证：
+1. 没有快照前的消息在快照后到达（因果一致性）
+2. 每个 Agent 看到一致的共享状态视图
+3. 恢复后的 Agent 行为与快照时一致
+
+解决方案——Chandy-Lamport 算法适配：
+├── 1. 每个 Agent 独立记录自身状态
+├── 2. 通过标记消息（Marker）协调快照时间点
+├── 3. 记录通道中的在途消息
+└── 4. 恢复时重放在途消息，保证因果一致性
+</code></pre>
+<blockquote>
+<p>基于 Eunomia.dev C/R 系统综述和 Azure 架构中心 AI Agent 设计模式</p>
+</blockquote>
+<h3 id="_9">数据流/执行流程</h3>
+<pre><code>AI 长任务系统的典型执行流程（以 Anthropic Harness + LangGraph 为例）：
+
+1. 任务定义
+   │
+   ├─ 输入：高层任务描述（如&quot;构建一个 claude.ai 克隆&quot;）
+   └─ 输出：结构化任务清单（feature_list.json）
+   │
+2. 初始化阶段（Initializer Agent）
+   │
+   ├─ 创建项目环境（init.sh）
+   ├─ 生成功能清单（200+ 功能，JSON 格式）
+   ├─ 创建进度追踪文件（claude-progress.txt）
+   ├─ 初始 Git 提交
+   └─ 创建 LangGraph 检查点（如果使用框架层）
+   │
+3. 增量执行阶段（循环：每个上下文窗口一次）
+   │
+   ├─ 编码代理启动
+   │   ├─ 读取 Git 日志 + 进度文件（应用层恢复）
+   │   ├─ 读取功能清单，选择下一个未完成功能
+   │   └─ 可选：从 LangGraph 检查点恢复（框架层恢复）
+   │
+   ├─ 单功能实现
+   │   ├─ 编写代码
+   │   ├─ 运行单元测试
+   │   └─ 运行端到端测试（Puppeteer MCP）
+   │
+   ├─ 验证与提交
+   │   ├─ 测试通过 → 更新功能清单（passes: true）
+   │   ├─ 测试失败 → 记录失败原因（fails 数组）
+   │   ├─ Git 提交（描述性消息）
+   │   └─ 更新进度文件
+   │
+   ├─ 框架层检查点
+   │   └─ LangGraph 在超级步骤边界保存状态快照
+   │
+   └─ 上下文窗口耗尽 → 下一个编码代理接替
+   │
+4. 完成阶段
+   │
+   ├─ 所有功能 passes: true
+   ├─ 所有端到端测试通过
+   └─ 最终报告生成
+   │
+5. 故障恢复路径（任意阶段可能触发）
+   │
+   ├─ 应用层恢复：从进度文件 + Git 历史恢复
+   ├─ 框架层恢复：从 LangGraph 检查点恢复
+   ├─ 容器层恢复：从 CRIU 快照恢复容器状态
+   └─ 虚拟机层恢复：从 VM 快照恢复完整运行环境
+</code></pre>
+<h2 id="_10">架构设计</h2>
+<h3 id="_11">整体架构</h3>
+<pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                  编排与协调层（Orchestration Layer）               │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│   │   Sequential  │  │  Concurrent  │  │   Handoff    │         │
+│   │   Pipeline    │  │  Agents      │  │   Pattern    │         │
+│   │   线性流水线   │  │  并行执行     │  │  动态委托     │         │
+│   └──────────────┘  └──────────────┘  └──────────────┘         │
+├─────────────────────────────────────────────────────────────────┤
+│                  状态管理层（State Management Layer）              │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│   │   Harness     │  │  LangGraph   │  │  Progress    │         │
+│   │   Pattern     │  │  Checkpoint  │  │  Files       │         │
+│   │  初始化/编码   │  │  超级步骤     │  │  进度文件     │         │
+│   │  双阶段架构   │  │  状态快照     │  │  功能清单     │         │
+│   └──────────────┘  └──────────────┘  └──────────────┘         │
+├─────────────────────────────────────────────────────────────────┤
+│                  容错与恢复层（Fault Tolerance Layer）             │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│   │  Checkpoint   │  │  Compensation│  │  Circuit     │         │
+│   │  Rollback     │  │  Pattern     │  │  Breaker     │         │
+│   │  检查点回滚   │  │  补偿模式     │  │  熔断器       │         │
+│   └──────────────┘  └──────────────┘  └──────────────┘         │
+├─────────────────────────────────────────────────────────────────┤
+│                  基础设施层（Infrastructure Layer）                │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐         │
+│   │  Git + CI/CD  │  │  Container   │  │  GPU C/R     │         │
+│   │  版本控制     │  │  C/R (CRIU)  │  │  (CRIUgpu)   │         │
+│   │  自动化测试   │  │  容器快照     │  │  GPU 快照     │         │
+│   └──────────────┘  └──────────────┘  └──────────────┘         │
+│   Docker/K8s  |  消息队列  |  对象存储  |  LLM API               │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="_12">核心模块</h3>
+<ul>
+<li>
+<p><strong>Harness（束具）模块</strong> — Anthropic 提出的双阶段架构核心。初始化代理负责环境搭建和任务分解，编码代理负责增量实现。通过 Git 提交和进度文件实现跨会话的状态交接。"Harness"一词形象地描述了为 Agent 配备的结构化约束框架——如同为赛马配备的束具，引导 Agent 沿正确路径前进。</p>
+</li>
+<li>
+<p><strong>Checkpoint（检查点）模块</strong> — 负责在执行过程中定期保存状态快照。应用级检查点（LangGraph）保存工作流状态图；容器级检查点（CRIU）保存进程完整状态；GPU 级检查点（CRIUgpu）保存 GPU 内存和 CUDA 对象。多层检查点提供不同粒度的恢复能力。</p>
+</li>
+<li>
+<p><strong>Progress Tracking（进度追踪）模块</strong> — 负责记录和可视化任务执行进度。通过结构化文件（JSON 功能清单、进度日志）或框架内置机制（LangGraph 的 StateSnapshot）追踪每个子任务的完成状态。关键功能包括：未完成任务的优先级排序、失败任务的根因记录、跨会话的累计进度统计。</p>
+</li>
+<li>
+<p><strong>Orchestration（编排）模块</strong> — 负责多 Agent 的协调和调度。支持五种编排模式：顺序流水线（Sequential）、并行执行（Concurrent）、群聊（Group Chat）、动态委托（Handoff）、管理式（Magentic）。每种模式有不同的失败风险和恢复策略。</p>
+</li>
+<li>
+<p><strong>Recovery（恢复）模块</strong> — 负责从故障中恢复。包括检查点回滚（恢复到上一个已知良好状态）、补偿模式（执行反向操作撤销失败的操作）、熔断器（在连续失败时暂停请求防止级联故障）。恢复策略根据故障类型和严重程度自动选择。</p>
+</li>
+</ul>
+<h3 id="_13">扩展机制</h3>
+<ol>
+<li>
+<p><strong>自定义 Harness 模板</strong>：可以为不同类型的任务创建定制化的初始化脚本和功能清单模板。例如，Web 应用开发使用 Puppeteer MCP 做端到端测试；数据分析任务使用自定义验证脚本。</p>
+</li>
+<li>
+<p><strong>检查点后端插件</strong>：LangGraph 支持多种检查点后端（InMemorySaver、SqliteSaver、PostgresSaver、CosmosDBSaver），可根据部署环境选择。新的后端可以通过实现 Checkpointer 接口接入。</p>
+</li>
+<li>
+<p><strong>Agent 隔离边界</strong>：多 Agent 系统通过业务能力分组实现隔离——每组 Agent 拥有独立的资源访问权限和数据范围。跨组协作通过事件驱动或消息传递实现，避免共享故障域。</p>
+</li>
+<li>
+<p><strong>状态序列化扩展</strong>：CRIU 通过插件机制支持新的硬件状态（如 CRIUgpu 通过共享库插件扩展 GPU 支持）。应用级检查点可以通过自定义序列化器处理特定类型的状态数据。</p>
+</li>
+</ol>
+<h2 id="_14">关键概念详解</h2>
+<h3 id="initializer-agent">初始化代理（Initializer Agent）</h3>
+<ul>
+<li><strong>定义：</strong> 在长任务工作流的第一个上下文窗口运行的专用 Agent，负责环境搭建、任务分解和状态初始化。它不执行实际的编码工作，而是为后续的编码代理创建结构化的工作环境。</li>
+<li><strong>作用：</strong> 是"换班工程师"模型中的"第一个班次工程师"。它创建的 <code>feature_list.json</code> 和 <code>claude-progress.txt</code> 是后续所有 Agent 会话的"交接文档"。没有初始化代理的准备工作，编码代理会面临"不知道从哪里开始"和"不知道做什么"的困境。</li>
+<li><strong>使用场景：</strong> 需要跨多个上下文窗口完成的大型项目（如构建完整 Web 应用、重构大型代码库、生成复杂文档体系）。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 Anthropic 工程博客 &quot;Effective Harnesses for Long-Running Agents&quot;
+# init.sh — 初始化代理执行的脚本
+
+#!/bin/bash
+# 1. 安装项目依赖
+npm install
+
+# 2. 启动开发服务器（后台运行）
+npm run dev &amp;
+
+# 3. 等待服务器启动
+sleep 5
+
+# 4. 验证环境就绪
+curl -s http://localhost:3000 &gt; /dev/null &amp;&amp; echo &quot;环境就绪&quot; || echo &quot;环境异常&quot;
+</code></pre>
+<pre><code class="language-json">// 基于 Anthropic 工程博客
+// feature_list.json — 功能清单文件（JSON 格式，模型更不容易意外修改）
+
+{
+  &quot;features&quot;: [
+    {
+      &quot;id&quot;: 1,
+      &quot;name&quot;: &quot;用户登录页面&quot;,
+      &quot;description&quot;: &quot;实现带有邮箱和密码输入框的登录页面，支持表单验证&quot;,
+      &quot;priority&quot;: 1,
+      &quot;passes&quot;: false,
+      &quot;fails&quot;: []
+    },
+    {
+      &quot;id&quot;: 2,
+      &quot;name&quot;: &quot;用户注册页面&quot;,
+      &quot;description&quot;: &quot;实现注册页面，支持邮箱验证和密码强度检查&quot;,
+      &quot;priority&quot;: 2,
+      &quot;passes&quot;: false,
+      &quot;fails&quot;: []
+    }
+  ],
+  &quot;total&quot;: 2,
+  &quot;completed&quot;: 0
+}
+</code></pre>
+<blockquote>
+<p>基于 Anthropic 工程博客 "Effective Harnesses for Long-Running Agents"</p>
+</blockquote>
+<h3 id="checkpointrestore-cr">检查点/恢复（Checkpoint/Restore, C/R）</h3>
+<ul>
+<li><strong>定义：</strong> 在系统执行过程中保存状态快照（检查点），在故障发生后从最近的检查点恢复执行的容错机制。在 AI Agent 场景中，C/R 覆盖五个层次：操作系统级、容器级、虚拟机级、应用级和库级。</li>
+<li><strong>作用：</strong> 是长任务系统容错的基础设施。没有 C/R 机制，每次故障意味着从头开始；有 C/R 机制，故障恢复只需回到最近的检查点，损失最小化。在 AI 训练场景中，C/R 机制可以避免因硬件故障导致的数百万美元损失。</li>
+<li><strong>使用场景：</strong> 所有需要长时间运行且不允许从头重来的 AI 工作负载——Agent 工作流、模型训练、分布式推理、自主机器人控制。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-python"># 基于 LangGraph 官方文档
+# LangGraph 检查点使用示例
+
+from langgraph.graph import StateGraph
+from langgraph.checkpoint.memory import MemorySaver
+
+# 定义图状态
+class AgentState(dict):
+    messages: list
+    current_task: str
+    completed_tasks: list
+
+# 创建带检查点的图
+graph = StateGraph(AgentState)
+
+# 添加节点（Agent 工作步骤）
+graph.add_node(&quot;analyze&quot;, analyze_task)
+graph.add_node(&quot;execute&quot;, execute_task)
+graph.add_node(&quot;verify&quot;, verify_result)
+
+# 设置边（工作流）
+graph.add_edge(&quot;analyze&quot;, &quot;execute&quot;)
+graph.add_edge(&quot;execute&quot;, &quot;verify&quot;)
+
+# 使用内存检查点（生产环境使用 PostgresSaver）
+checkpointer = MemorySaver()
+app = graph.compile(checkpointer=checkpointer)
+
+# 执行并自动保存检查点
+config = {&quot;configurable&quot;: {&quot;thread_id&quot;: &quot;task-001&quot;}}
+result = app.invoke({&quot;messages&quot;: [], &quot;current_task&quot;: &quot;实现登录功能&quot;}, config)
+
+# 故障后从检查点恢复（使用相同 thread_id 即可自动恢复）
+result = app.invoke({&quot;messages&quot;: [&quot;继续执行&quot;]}, config)
+</code></pre>
+<blockquote>
+<p>基于 LangGraph 官方文档</p>
+</blockquote>
+<h3 id="feature-list-driven-development">功能清单驱动开发（Feature List Driven Development）</h3>
+<ul>
+<li><strong>定义：</strong> 将大型任务分解为结构化的功能清单（JSON 格式），每个功能有明确的通过/失败状态和验证标准。Agent 每次只处理一个功能，通过端到端测试验证后才标记为完成。</li>
+<li><strong>作用：</strong> 解决 Agent 的两个主要失败模式：一是"试图一次性完成所有工作"（one-shotting），导致上下文溢出和质量下降；二是"过早宣布任务完成"（premature completion），导致功能遗漏或未验证。功能清单通过强制增量推进和测试门控，显著提高任务完成率。</li>
+<li><strong>使用场景：</strong> 所有需要 Agent 跨多个会话完成的复杂项目。</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 基于 Anthropic 工程博客
+# 编码代理的会话启动流程
+
+# 1. 读取 Git 日志，了解之前的工作
+git log --oneline -20
+
+# 2. 读取进度文件
+cat claude-progress.txt
+
+# 3. 读取功能清单，找到下一个未完成功能
+# 假设功能 #5 是下一个未完成功能
+cat feature_list.json | python3 -c &quot;
+import json, sys
+data = json.load(sys.stdin)
+for f in data['features']:
+    if not f['passes']:
+        print(f\&quot;下一个任务: #{f['id']} {f['name']}\&quot;)
+        print(f\&quot;描述: {f['description']}\&quot;)
+        break
+&quot;
+
+# 4. 实现功能 #5
+# ... 编码工作 ...
+
+# 5. 运行端到端测试验证
+npm run test:e2e -- --grep &quot;功能5&quot;
+
+# 6. 测试通过 → 更新功能清单
+# 7. Git 提交
+git add -A &amp;&amp; git commit -m &quot;feat: 实现功能 #5 - 用户登录页面&quot;
+</code></pre>
+<blockquote>
+<p>基于 Anthropic 工程博客 "Effective Harnesses for Long-Running Agents"</p>
+</blockquote>
+<h3 id="asynchronous-orchestration">异步编排（Asynchronous Orchestration）</h3>
+<ul>
+<li><strong>定义：</strong> AI Agent 系统采用异步设计——用户提交任务后不需要阻塞等待完成，系统在后台执行，通过进度反馈、阶段通知和回调机制与用户交互。</li>
+<li><strong>作用：</strong> 解决长任务的用户体验问题。如果用户需要等待数小时才能看到结果，系统的实用性将大打折扣。异步编排让用户可以随时查看进度、在关键节点介入决策（Human-in-the-loop），并在任务失败时只重跑失败阶段而非整个流程。</li>
+<li><strong>使用场景：</strong> 所有执行时间超过用户可接受等待时间的 AI Agent 任务——大规模数据处理、多步骤报告生成、复杂代码生成和测试。</li>
+</ul>
+<blockquote>
+<p>基于腾讯云 AI Skill 长耗时处理方案和 CloudWeGo Eino ADK</p>
+</blockquote>
+<h3 id="agent-multi-agent-orchestration-patterns">多 Agent 编排模式（Multi-Agent Orchestration Patterns）</h3>
+<ul>
+<li><strong>定义：</strong> 多个 Agent 协作完成复杂任务的协调方式。Azure 架构中心定义了五种编排模式：顺序流水线、并行执行、群聊、动态委托和管理式。</li>
+<li><strong>作用：</strong> 不同编排模式适用于不同场景，也面临不同的失败风险。选择正确的编排模式是系统可靠性的关键决策。例如，群聊模式不建议超过 3 个 Agent（容易陷入对话循环），而顺序流水线的早期阶段失败会传播到所有后续阶段。</li>
+<li><strong>使用场景：</strong> 需要 Agent 角色分工的复杂任务——如一个 Agent 负责研究、一个 Agent 负责编码、一个 Agent 负责测试。</li>
+</ul>
+<blockquote>
+<p>基于 Azure 架构中心 AI Agent 设计模式</p>
+</blockquote>
+<h2 id="_15">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Anthropic Harness</th>
+<th>LangGraph Checkpoint</th>
+<th>CRIU/CRIUgpu</th>
+<th>DMTCP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>应用层"换班工程师"模型，通过结构化文档实现跨会话交接</td>
+<td>框架层状态图持久化，在超级步骤边界自动保存快照</td>
+<td>操作系统/容器级透明检查点，捕获进程和 GPU 完整状态</td>
+<td>库级透明分布式检查点，通过注入实现跨进程协调</td>
+</tr>
+<tr>
+<td>恢复方式</td>
+<td>无状态恢复：从 Git 历史 + 进度文件 + 功能清单重新构建上下文</td>
+<td>无状态恢复：从结构化检查点快照恢复工作流状态图</td>
+<td>有状态恢复：从完整进程/GPU 快照恢复运行时</td>
+<td>有状态恢复：从分布式快照恢复多进程状态</td>
+</tr>
+<tr>
+<td>性能开销</td>
+<td>极低（仅文件 I/O + Git 操作）</td>
+<td>低（每个超级步骤一次快照 I/O）</td>
+<td>中等（检查点时需暂停进程，GPT-2 XL ~28 秒）</td>
+<td>低-中等（注入式，对应用透明）</td>
+</tr>
+<tr>
+<td>透明性</td>
+<td>不透明（需要应用配合，使用特定的文件格式和流程）</td>
+<td>不透明（需要使用 LangGraph 框架，Agent 需适配状态图模型）</td>
+<td>全透明（进程无感知，操作系统级操作）</td>
+<td>半透明（通过库注入实现，无需修改应用代码）</td>
+</tr>
+<tr>
+<td>恢复粒度</td>
+<td>功能级（每次恢复一个功能的工作上下文）</td>
+<td>步骤级（恢复到工作流中任意超级步骤）</td>
+<td>进程/容器级（恢复完整运行时状态）</td>
+<td>分布式应用级（跨多进程一致性恢复）</td>
+</tr>
+<tr>
+<td>GPU 支持</td>
+<td>不涉及</td>
+<td>不涉及</td>
+<td>原生支持（CRIUgpu 扩展，CUDA + AMD GPU）</td>
+<td>有限支持（需要额外配置）</td>
+</tr>
+<tr>
+<td>多 Agent</td>
+<td>通过 Git 和共享文件协调，无内置一致性保证</td>
+<td>通过线程（Thread）和命名空间支持多会话隔离</td>
+<td>通过 Chandy-Lamport 算法变体实现一致性快照</td>
+<td>原生支持分布式多进程一致性检查点</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低（概念简单，只需理解文件交接和 Git 工作流）</td>
+<td>中等（需要学习状态图、超级步骤、检查点等框架概念）</td>
+<td>高（需要理解 Linux 内核、容器运行时、CUDA API）</td>
+<td>中-高（需要理解分布式检查点协议和库注入机制）</td>
+</tr>
+<tr>
+<td>生产就绪度</td>
+<td>高（Anthropic 内部验证，公开文档详细）</td>
+<td>高（LangChain 生态核心组件，PostgresSaver 生产级）</td>
+<td>中-高（Kubernetes C/R 工作组推动标准化，但 GPU 支持仍为新）</td>
+<td>中（学术起源，生产验证较少）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>AI Agent 跨会话编程、大型项目增量实现</td>
+<td>Agent 工作流状态持久化、Human-in-the-loop、时间旅行调试</td>
+<td>AI 训练容错、容器迁移、GPU 工作负载快照</td>
+<td>分布式 AI 应用、机器人系统（ROS）</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>数据获取日期：2026-04-13。[置信度：Anthropic Harness 和 LangGraph 数据 高，CRIU/CRIUgpu 性能数据 高（来自 arXiv 论文），DMTCP 数据 中]</p>
+</blockquote>
+<h2 id="_16">适用场景分析</h2>
+<h3 id="_17">最佳场景</h3>
+<ol>
+<li>
+<p><strong>AI Agent 驱动的大型软件开发</strong>：当需要 AI Agent 构建包含数十个功能的项目时，Anthropic Harness 模式提供最佳实践。功能清单确保不遗漏，增量推进确保质量，Git 回滚提供安全网。适用于任何需要跨多个上下文窗口完成的编程任务。[置信度：高]</p>
+</li>
+<li>
+<p><strong>AI 模型训练的容错保障</strong>：大规模模型训练（如 LLaMA 3.1）投资巨大且中断频繁。CRIUgpu 提供透明的 GPU 状态检查点，在硬件故障时快速恢复训练进度，避免从头重新训练的巨大浪费。适用于所有需要长时间 GPU 训练的 AI 工作负载。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多 Agent 协作的复杂任务</strong>：需要多个专业 Agent 协作的复杂任务（如研究 + 编码 + 测试），通过选择合适的编排模式（顺序/并行/委托）并配备熔断器和隔离边界，可以在 Agent 故障时保持系统整体运行。适用于企业级 AI Agent 工作流。[置信度：高]</p>
+</li>
+<li>
+<p><strong>需要 Human-in-the-loop 的长流程</strong>：LangGraph 的检查点机制天然支持"暂停-审批-继续"模式。Agent 执行到关键节点时暂停，等待人类审批后再继续。适用于需要人类监督的高风险 AI 操作。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_18">不适用场景</h3>
+<ol>
+<li>
+<p><strong>短任务/单会话可完成的工作</strong>：如果任务可以在一个上下文窗口内完成，Harness 模式的初始化开销和功能清单管理反而增加了不必要的复杂性。建议直接使用单次 Agent 调用。</p>
+</li>
+<li>
+<p><strong>需要严格实时性的场景</strong>：检查点/恢复机制引入了不可避免的开销（CRIUgpu 对 GPT-2 XL 的检查点需要约 28 秒）。如果系统对延迟极度敏感（如实时对话、高频交易），C/R 机制的暂停时间可能不可接受。</p>
+</li>
+<li>
+<p><strong>完全无状态的工作负载</strong>：如果每个请求完全独立、不需要保留任何状态（如无状态 API 调用），C/R 机制和进度追踪都是不必要的开销。</p>
+</li>
+</ol>
+<h2 id="_19">优缺点深度分析</h2>
+<h3 id="_20">优势</h3>
+<ol>
+<li>
+<p><strong>显著提高长任务完成率</strong> - Anthropic 的实验表明，使用 Harness 模式后，Agent 的任务完成率从"几乎不可能完成大型项目"提升到"可以可靠地交付 200+ 功能的完整应用"。功能清单和端到端测试的组合有效解决了 Agent 的两大失败模式。99.2% 的多 Agent 编排任务完成率也验证了这些实践的有效性。[置信度：高]</p>
+</li>
+<li>
+<p><strong>多层容错提供纵深防御</strong> - 应用层（Harness）+ 框架层（LangGraph）+ 基础设施层（CRIU）的多层检查点架构，使得单一层次的故障不会导致整个系统崩溃。即使 LangGraph 检查点损坏，仍然可以从 Git 历史恢复；即使容器级 C/R 失败，仍然可以从应用级状态恢复。[置信度：高]</p>
+</li>
+<li>
+<p><strong>技术栈成熟，可供选择丰富</strong> - 从 CRIU（2011 年开始）到 LangGraph（2024 年），C/R 技术在不同层次都有成熟实现。开发者可以根据任务特点选择合适的层次——简单的用 Harness，复杂的加 LangGraph，需要 GPU 的用 CRIUgpu。[置信度：高]</p>
+</li>
+<li>
+<p><strong>与现有工程实践无缝集成</strong> - Anthropic Harness 基于 Git（几乎所有项目都在用）和 JSON 文件（无需特殊工具）。LangGraph 检查点使用标准数据库（Postgres、SQLite）。这种"不引入新工具"的设计理念极大地降低了采纳门槛。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_21">劣势</h3>
+<ol>
+<li>
+<p><strong>缺乏标准化框架，实践分散</strong> - 截至目前，AI 长任务最佳实践仍处于"各厂商各做各的"阶段。Anthropic 的 Harness、LangGraph 的检查点、AWS 的编排方案互不兼容。没有一个统一的标准将不同层次的 C/R 机制整合到一起。开发者需要自行组合和适配。[置信度：高]</p>
+</li>
+<li>
+<p><strong>初始化开销和复杂度增加</strong> - Harness 模式需要额外的初始化阶段（创建功能清单、配置环境、设置进度追踪），这增加了项目的启动成本。对于中小型任务，这种开销可能不划算。初始化质量也直接影响后续所有 Agent 会话的效果。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>有状态恢复的版本耦合问题</strong> - CRIU 和 CRIUgpu 的检查点与代码版本紧密耦合。如果代码在检查点之后更新，旧的检查点可能无法恢复。这在快速迭代的开发环境中是一个实际问题——每次代码变更都可能使之前的检查点失效。[置信度：中]</p>
+</li>
+<li>
+<p><strong>GPU 检查点体积巨大</strong> - CRIUgpu 的检查点中 GPU 内存占 80-90% 以上。对于使用多个 GPU 的大模型（如 4×A100），检查点体积可达 40GB。存储和传输如此大的检查点本身就是一项基础设施挑战。[置信度：高]</p>
+</li>
+</ol>
+<h3 id="_22">风险点</h3>
+<ol>
+<li>
+<p><strong>过度依赖检查点可能掩盖根因问题</strong> - 如果 Agent 频繁触发检查点恢复，可能掩盖了更深层的问题（如 Agent 提示词设计不佳、任务分解不合理）。缓解措施：设置恢复频率监控，当恢复频率超过阈值时触发根因分析。[置信度：中]</p>
+</li>
+<li>
+<p><strong>多 Agent 一致性快照在规模化时的性能瓶颈</strong> - Chandy-Lamport 算法在 Agent 数量增多时，快照协调的开销显著增加。大规模部署（数十个 Agent）可能面临快照时间过长的问题。缓解措施：将 Agent 分组，组内做一致性快照，组间通过消息传递协调。[置信度：中]</p>
+</li>
+<li>
+<p><strong>安全合规风险</strong> - 检查点中可能包含敏感信息（API 密钥、用户数据、模型权重）。如果检查点存储和传输不加密，可能导致数据泄露。缓解措施：使用加密检查点（如 LangGraph 的 EncryptedSerializer），对检查点存储实施访问控制。[置信度：中]</p>
+</li>
+</ol>
+<h2 id="_23">生态成熟度评估</h2>
+<ul>
+<li>
+<p><strong>框架/工具数量：</strong> 主流框架和工具覆盖了不同层次的需求。应用层有 Anthropic Harness（概念模式，无代码库）和 Claude Agent SDK；框架层有 LangGraph（内置检查点）、Eino ADK（字节跳动）；基础设施层有 CRIU/CRIUgpu、DMTCP、Kubernetes C/R。选择丰富但互操作性不足。[置信度：高]</p>
+</li>
+<li>
+<p><strong>第三方库支持：</strong> LangGraph 生态最成熟，提供多种检查点后端（Memory、SQLite、Postgres、CosmosDB）和丰富的 Agent 工具集成。CRIU 在 Linux 容器生态中有广泛支持（Docker、Podman、Kubernetes）。Claude Agent SDK 与 Anthropic 的模型深度集成。[置信度：高]</p>
+</li>
+<li>
+<p><strong>企业采用案例：</strong> Anthropic 内部使用 Harness 模式构建 claude.ai 前端（200+ 功能）；LangGraph 被 LangChain 生态中的大量企业用户采用；CRIUgpu 在 Meta 等大规模 AI 训练场景中验证。字节跳动的 Eino ADK 在内部生产环境使用。[置信度：中-高]</p>
+</li>
+<li>
+<p><strong>文档质量：</strong> Anthropic 的工程博客文章非常详细，包含完整的 init.sh、feature_list.json 和失败模式分析表。LangGraph 的持久化文档结构清晰，包含代码示例和 API 参考。Eunomia.dev 的 C/R 综述提供了学术级的技术全景。总体文档质量较高。[置信度：高]</p>
+</li>
+</ul>
+<h2 id="_24">生产环境就绪度评估</h2>
+<ul>
+<li>
+<p><strong>稳定性：</strong> 应用层模式（Harness）已通过 Anthropic 内部验证。框架层（LangGraph + PostgresSaver）已在生产环境中广泛使用。基础设施层（CRIU）在 Linux 容器场景中经过多年验证，但 GPU 检查点（CRIUgpu）仍处于研究论文阶段，生产验证有限。总体评估：应用层和框架层生产就绪，基础设施层部分就绪。[置信度：高]</p>
+</li>
+<li>
+<p><strong>性能表现：</strong> Harness 模式开销极低（文件 I/O + Git 操作）。LangGraph 检查点开销取决于后端（PostgresSaver 约 10-100ms/步骤）。CRIU 检查点开销取决于进程大小和 GPU 状态（GPT-2 XL 约 28 秒）。性能特征明确，可根据场景选择合适的层次。[置信度：高]</p>
+</li>
+<li>
+<p><strong>监控/可观测性：</strong> LangGraph 提供内置的状态检查和"时间旅行"调试功能。Anthropic Harness 通过 Git 日志和进度文件提供可追溯性。基础设施层（CRIU）的监控需要额外的工具（如 Prometheus + 自定义指标）。总体可观测性中等偏上。[置信度：中]</p>
+</li>
+<li>
+<p><strong>故障恢复：</strong> 多层检查点提供不同粒度的恢复能力。应用层恢复（Git 回滚）快速但粒度粗；框架层恢复（LangGraph 检查点）粒度细但依赖后端可用性；基础设施层恢复（CRIU）最完整但开销最大。恢复策略应根据故障严重程度自动选择。[置信度：高]</p>
+</li>
+<li>
+<p><strong>安全合规：</strong> LangGraph 支持 AES 加密检查点。CRIU 快照包含完整进程状态（可能含敏感数据），需要存储加密和访问控制。Anthropic Harness 的进度文件如果包含业务数据，也需要适当的访问管理。建议对所有持久化状态实施加密和访问控制。[置信度：中]</p>
+</li>
+</ul>
+<h2 id="_25">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>基础：Git 版本控制、JSON 数据格式、命令行操作</li>
+<li>进阶：Agent 工作流概念（状态图、超级步骤）、分布式系统基础（检查点、一致性）</li>
+<li>
+<p>高级：Linux 内核（CRIU）、CUDA 编程（CRIUgpu）、分布式一致性算法（Chandy-Lamport）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 2-4 小时。理解 Harness 模式的核心概念（初始化代理、编码代理、功能清单）和基本使用方式。对于有 Agent 开发经验的工程师，可以直接套用 Anthropic 的 Harness 模板。</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 2-4 周。深入理解多层 C/R 机制的权衡、多 Agent 编排模式的选择、故障恢复策略的设计。能够在生产环境中设计和实现完整的长任务容错方案。</p>
+</li>
+</ul>
+<h2 id="_26">总结与建议</h2>
+<p>AI 长任务最佳实践是 2025-2026 年 AI Agent 工程化的核心议题。它的核心价值在于：</p>
+<ol>
+<li>
+<p><strong>实用性强</strong>：Anthropic 的 Harness 模式不需要任何特殊工具，只需 Git 和 JSON 文件，就能显著提高 Agent 的长任务完成率。这种"低技术门槛、高效果回报"的特点使其成为最易采纳的实践。</p>
+</li>
+<li>
+<p><strong>纵深防御理念</strong>：应用层 + 框架层 + 基础设施层的多层容错架构，使得任何单点故障都有对应的恢复机制。这种架构理念来自成熟的分布式系统实践，经过了几十年的验证。</p>
+</li>
+<li>
+<p><strong>从 HPC 到 AI 的技术迁移</strong>：C/R 技术从高性能计算到 AI Agent 的迁移，展示了经典分布式系统技术在新场景中的持续价值。CRIUgpu 的 GPU 状态检查点填补了 AI 训练容错的关键空白。</p>
+</li>
+<li>
+<p><strong>快速演进的生态</strong>：LangGraph、Claude Agent SDK、Eino ADK 等框架的快速发展，加上 Kubernetes C/R 工作组的成立，表明行业正在向标准化方向前进。</p>
+</li>
+</ol>
+<p><strong>推荐使用：</strong>
+- <strong>入门</strong>：从 Anthropic Harness 模式开始——为你的 Agent 项目添加 <code>feature_list.json</code>、<code>claude-progress.txt</code> 和 <code>init.sh</code>，立即获得跨会话进度追踪能力。
+- <strong>进阶</strong>：在 Harness 基础上引入 LangGraph 检查点，获得框架级的"时间旅行"调试和 Human-in-the-loop 支持。
+- <strong>生产级</strong>：在容器化部署中加入 CRIU 检查点，实现基础设施层的透明容错；GPU 工作负载考虑 CRIUgpu。</p>
+<p><strong>不推荐使用：</strong>
+- 短任务场景（增加不必要的复杂性）
+- 严格实时性要求的场景（检查点开销不可接受）
+- 完全无状态的工作负载（不需要状态持久化）</p>
+<p><strong>组合建议：</strong> 在同一个 AI Agent 系统中，可以组合使用多种机制：应用层使用 Harness 模式做任务管理，框架层使用 LangGraph 做状态持久化，基础设施层使用 CRIU 做容器容错。这种"各司其职"的组合策略既保持了每层的简洁性，又获得了纵深的容错能力。</p>
+<p><strong>综合评分：</strong> 8.0/10。这是当前 AI Agent 工程中实用性最强、生态支持最好的实践领域之一。Anthropic Harness 模式的简洁性和 LangGraph 检查点的完整性是最大亮点。扣分主要来自缺乏统一标准、GPU 检查点仍处早期阶段、多 Agent 一致性快照的性能瓶颈。随着 Kubernetes C/R 工作组和各框架的持续投入，预计在未来 1-2 年内会看到更成熟的标准化方案。</p>
+<h2 id="_27">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于：</strong> 多源实践方法论（非单一软件版本），内容基于截至 2026-04-13 的公开资料</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic Engineering Blog - Effective Harnesses for Long-Running Agents</a> — 初始化代理 + 编码代理架构、功能清单设计、失败模式分析</li>
+<li><a href="https://eunomia.dev/blog/2025/05/11/checkpointrestore-systems-evolution-techniques-and-applications-in-ai-agents/">Eunomia.dev - Checkpoint/Restore Systems: Evolution, Techniques, and Applications in AI Agents</a> — C/R 五层架构、有状态/无状态恢复权衡、GPU 检查点</li>
+<li><a href="https://arxiv.org/html/2502.16631v1">CRIUgpu: Transparent Checkpointing of GPU-Accelerated Workloads - arXiv</a> — CRIUgpu 架构、CUDA/AMD GPU 插件、性能基准测试数据</li>
+<li><a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph Persistence Documentation</a> — 检查点机制、StateSnapshot 结构、后端实现、时间旅行</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/ai-ml/guide/ai-agent-design-patterns">Azure Architecture Center - AI Agent Design Patterns</a> — 五种编排模式、恢复策略、可靠性最佳实践</li>
+<li><a href="https://galileo.ai/blog/multi-agent-ai-system-failure-recovery">Galileo AI - Multi-Agent AI System Failure Recovery</a> — 故障恢复架构、熔断器、隔离边界</li>
+<li><a href="https://kubernetes.io/blog/2026/01/21/introducing-checkpoint-restore-wg/">Kubernetes Blog - Introducing Checkpoint/Restore Working Group</a> — 容器级 C/R 标准化进展</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

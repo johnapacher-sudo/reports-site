@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenCLI - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta"></div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#adapter" class="toc-h3">适配器（Adapter）</a></li>
+<li><a href="#browser-bridge-extension" class="toc-h3">Browser Bridge Extension</a></li>
+<li><a href="#cli-hub" class="toc-h3">CLI Hub</a></li>
+<li><a href="#ai-agent-skills" class="toc-h3">AI Agent Skills</a></li>
+<li><a href="#yaml-typescript" class="toc-h3">双引擎架构（YAML + TypeScript）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenCLI - 深度分析报告</h1>
+                        <div class="article-meta"></div>
+                    </header>
+                    <h1 id="opencli-">OpenCLI - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>AI Agent 时代，智能体（Agent）需要与 Web 进行交互来获取数据、执行操作。主流方案（Browser Use、Stagehand 等）采用"实时 LLM 分析"模式：每次执行时让 LLM 分析 DOM 或截图，然后决定如何操作。这种模式存在两个根本性问题：</p>
+<ol>
+<li><strong>运行时成本高昂</strong> — 每次执行都消耗大量 Token，100 次执行 = 100 次 LLM 调用</li>
+<li><strong>输出不稳定</strong> — 同一操作可能因页面微调或模型版本更新而得到不同结果，今天成功的操作明天可能失败</li>
+</ol>
+<p>此外，传统自动化工具（Puppeteer、Selenium）需要单独管理浏览器实例和凭据，存在安全隐患且脚本脆弱。</p>
+<h3 id="_3">创立动机</h3>
+<p>OpenCLI 的创立者 jackwener（Apache Arrow/DataFusion PMC 成员）将数据库查询优化的核心思想移植到 Web 自动化领域：<strong>在编译时消耗计算资源做最优决策，在运行时按计划高效执行</strong>。具体体现为：</p>
+<ul>
+<li><strong>编译时智能</strong>：使用 AI（LLM）一次性生成确定性适配器（Adapter），写入 .js 文件</li>
+<li><strong>运行时零成本</strong>：后续每次执行适配器无需 LLM 调用，纯确定性 JavaScript 执行</li>
+<li><strong>凭据安全</strong>：通过 Browser Bridge Extension 连接用户已登录的 Chrome 浏览器，凭据永远不离开浏览器</li>
+</ul>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2026-03-14</strong>：GitHub 仓库创建，发布初始版本</li>
+<li><strong>2026-03-29</strong>：社区文章开始出现详细介绍，Stars 突破 8,300</li>
+<li><strong>2026-04-11</strong>：发布 v1.7.0，引入 Self-Repair Protocol（自修复协议）和从 YAML 迁移到 TypeScript 的适配器格式</li>
+<li><strong>2026-04-13</strong>：Stars 达到 15,600+，Forks 1,500+，内置适配器扩展至 91 个</li>
+<li><strong>2026-04-17</strong>：GitHub 最后推送日期，项目持续活跃开发中</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>OpenCLI 的核心设计哲学源自数据库工程的<strong>查询优化</strong>理念：</p>
+<ol>
+<li><strong>编译时 vs 运行时智能</strong>：AI 只参与适配器生成阶段（编译时），执行阶段（运行时）零 LLM 消耗。这是数据库查询优化思想在 Web 自动化领域的跨领域移植。</li>
+<li><strong>确定性优先</strong>：适配器执行结果完全可预测，同样的命令始终返回同样结构的数据，不受 LLM 随机性影响。</li>
+<li><strong>凭据隔离</strong>：用户登录凭据永远不接触 Node.js 进程，Browser Bridge Extension 通过 Chrome Extension native messaging API 连接用户正在运行的 Chrome 实例。</li>
+<li><strong>自我修复</strong>：当适配器因页面结构变化而失败时，Self-Repair Protocol 自动触发修复，将 LLM 使用约束在"必要时刻"。</li>
+</ol>
+<h3 id="_7">核心算法/机制</h3>
+<p><strong>适配器（Adapter）机制</strong>是 OpenCLI 的核心。每个适配器是一个标准 JavaScript 模块，定义了"如何从特定网站提取结构化数据"：</p>
+<pre><code class="language-javascript">// 基于官方 README 适配器示例结构简化
+module.exports = {
+  name: 'hacker-news',
+  description: 'Fetch Hacker News stories',
+  commands: {
+    top: {
+      description: 'Get top stories',
+      options: [
+        { flag: '--limit &lt;n&gt;', description: 'Number of stories', default: 30 }
+      ],
+      execute: async (options, browser) =&gt; {
+        // 1. 导航到目标页面
+        await browser.goto('https://news.ycombinator.com/');
+        // 2. 使用确定性 CSS 选择器提取数据
+        const stories = await browser.eval(`
+          Array.from(document.querySelectorAll('.athing'))
+            .slice(0, ${options.limit})
+            .map(el =&gt; ({
+              rank: el.querySelector('.rank')?.innerText,
+              title: el.querySelector('.titleline &gt; a')?.innerText,
+              url: el.querySelector('.titleline &gt; a')?.href,
+              points: el.nextElementSibling?.querySelector('.score')?.innerText
+            }))
+        `);
+        // 3. 返回结构化数据（CLI 层负责格式化）
+        return stories;
+      }
+    }
+  }
+};
+</code></pre>
+<p>关键点：<code>execute</code> 函数是<strong>纯确定性</strong>的——给定相同页面，始终返回相同结构。运行时无 LLM 参与。</p>
+<h3 id="_8">数据流/执行流程</h3>
+<p><strong>四层架构执行流程</strong>：</p>
+<pre><code>┌─────────────────────────────────────────┐
+│           AI Agent / 人类用户            │
+└──────────────┬──────────────────────────┘
+               │ opencli &lt;command&gt; [--format json]
+┌──────────────▼──────────────────────────┐
+│           OpenCLI CLI 层                 │
+│   Commander.js + 插件注册表              │
+│   execution.ts / commanderAdapter.ts    │
+└──────────────┬──────────────────────────┘
+               │ CDP 协议（WebSocket）
+┌──────────────▼──────────────────────────┐
+│       Browser Bridge Extension           │
+│  （Chrome 扩展，本地 WebSocket 服务）     │
+└──────────────┬──────────────────────────┘
+               │ 复用真实用户会话
+┌──────────────▼──────────────────────────┐
+│         Chrome / Chromium                │
+│  （用户实际运行的浏览器）                  │
+└─────────────────────────────────────────┘
+</code></pre>
+<p><strong>适配器生成四步流程</strong>：</p>
+<ol>
+<li><strong>explore</strong> — 记录用户在真实浏览器中的交互行为，分析页面结构和认证策略</li>
+<li><strong>synthesize</strong> — 将记录的交互转化为适配器结构草稿</li>
+<li><strong>generate</strong> — AI 辅助将草稿转为完整可执行适配器代码，附带自动测试验证</li>
+<li><strong>cascade</strong> — 验证认证策略（OAuth、Cookie、2FA），确保适配器在生产环境中可用</li>
+</ol>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>OpenCLI 采用<strong>四层架构</strong>设计：</p>
+<table>
+<thead>
+<tr>
+<th>层级</th>
+<th>组件</th>
+<th>职责</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>用户层</strong></td>
+<td>AI Agent / 人类用户</td>
+<td>通过 CLI 命令发起请求</td>
+</tr>
+<tr>
+<td><strong>CLI 层</strong></td>
+<td>Commander.js + Plugin Registry</td>
+<td>命令解析、适配器路由、输出格式化</td>
+</tr>
+<tr>
+<td><strong>桥接层</strong></td>
+<td>Browser Bridge Extension</td>
+<td>Chrome Extension + WebSocket，连接用户浏览器</td>
+</tr>
+<tr>
+<td><strong>浏览器层</strong></td>
+<td>Chrome/Chromium</td>
+<td>用户实际运行的浏览器，复用已登录会话</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li><strong>CLI 入口（cli.ts / main.ts）</strong> — 程序入口，处理全局命令和选项</li>
+<li><strong>命令解析（commanderAdapter.ts）</strong> — 基于 Commander.js 的命令解析，将 CLI 参数映射到适配器命令</li>
+<li><strong>执行引擎（execution.ts）</strong> — 命令执行引擎，协调适配器加载和浏览器通信</li>
+<li><strong>插件系统（plugin.ts / registry.ts）</strong> — 插件注册与发现机制，管理内置和社区适配器</li>
+<li><strong>适配器生成器（generate.ts / generate-verified.ts）</strong> — AI 辅助适配器生成，含自动验证</li>
+<li><strong>浏览器控制层（browser/）</strong> — CDP 协议通信，提供 goto、eval、click、type 等浏览器操作原语</li>
+<li><strong>执行管线（pipeline/）</strong> — 数据提取和格式化管线</li>
+<li><strong>Browser Bridge Extension（extension/）</strong> — Chrome 扩展，通过 native messaging API 连接 Chrome</li>
+<li><strong>内置适配器（clis/）</strong> — 91 个内置适配器，每个为独立 .js 文件</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p><strong>适配器插件系统</strong>：
+- 社区适配器通过 <code>opencli plugin install github-user/opencli-adapter-name</code> 安装
+- 适配器自动发现机制，社区适配器与内置适配器并列使用
+- v1.6.10 起所有适配器从 YAML 迁移到 TypeScript 格式
+- 五级认证策略覆盖大部分网站登录方式：PUBLIC（无认证）、COOKIE（浏览器 Cookie）、HEADER（自定义请求头）、BEARER（Token 认证）、ADVANCED（复杂多步认证）</p>
+<p><strong>Self-Repair Protocol（v1.7.0 新增）</strong>：
+当适配器因页面结构变化而失败时：
+1. 启用结构化诊断（捕获错误类型、DOM 快照、执行上下文）
+2. 发送诊断信息到 LLM 分析
+3. LLM 生成修复后的适配器代码
+4. 自动替换并重试（最多 3 次）
+5. 成功则保存修复后的适配器，失败则上报用户手动干预</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="adapter">适配器（Adapter）</h3>
+<ul>
+<li><strong>定义：</strong> 一个标准 JavaScript/TypeScript 模块，定义了如何从特定网站或应用提取结构化数据的确定性规则</li>
+<li><strong>作用：</strong> 将网站操作转化为可重复、零 LLM 成本的 CLI 命令</li>
+<li><strong>使用场景：</strong> 数据采集、内容监控、批量操作、AI Agent 工具层</li>
+<li><strong>代码示例：</strong> 见上文"核心算法/机制"中的 hackernews 适配器示例</li>
+</ul>
+<h3 id="browser-bridge-extension">Browser Bridge Extension</h3>
+<ul>
+<li><strong>定义：</strong> 一个 Chrome 浏览器扩展，通过 native messaging API 连接 OpenCLI CLI 层和用户正在运行的 Chrome 实例</li>
+<li><strong>作用：</strong> 实现零配置浏览器连接，复用用户已登录的所有会话，凭据不离开浏览器</li>
+<li><strong>使用场景：</strong> 需要登录态的网站操作、避免凭据暴露的安全敏感场景</li>
+<li><strong>安装步骤：</strong></li>
+</ul>
+<pre><code class="language-bash"># 加载 Browser Bridge Chrome 扩展
+git clone https://github.com/jackwener/opencli.git
+# 打开 chrome://extensions
+# 启用&quot;开发者模式&quot;
+# 点击&quot;加载已解压的扩展程序&quot; → 选择 extension/ 目录
+# 验证连接
+opencli doctor
+</code></pre>
+<h3 id="cli-hub">CLI Hub</h3>
+<ul>
+<li><strong>定义：</strong> OpenCLI 的本地工具统一注册和管理机制</li>
+<li><strong>作用：</strong> 将任何本地 CLI 工具（gh、docker、obsidian 等）注册到统一入口，供 AI Agent 发现和调用</li>
+<li><strong>使用场景：</strong> AI Agent 工具链统一管理、多 CLI 工具集成</li>
+<li><strong>代码示例：</strong></li>
+</ul>
+<pre><code class="language-bash"># 注册自定义 CLI 工具
+opencli register mycli --path /usr/local/bin/mycli
+# AI Agent 可发现所有已注册工具
+opencli list --all
+# 自动生成工具描述供 Agent 使用
+opencli describe mycli
+</code></pre>
+<h3 id="ai-agent-skills">AI Agent Skills</h3>
+<ul>
+<li><strong>定义：</strong> OpenCLI 为 Claude Code 等 AI 工具提供的原生 Skill 集成</li>
+<li><strong>作用：</strong> 让 AI Agent 能自动发现和调用 OpenCLI 的适配器命令</li>
+<li><strong>使用场景：</strong> Claude Code、Codex 等 AI 编码工具扩展 Web 操作能力</li>
+<li><strong>四个内置 Skill：</strong></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>opencli-explorer</code></td>
+<td>引导 AI 完成 explore + generate 适配器工作流</td>
+</tr>
+<tr>
+<td><code>opencli-browser</code></td>
+<td>底层浏览器控制（click、type、screenshot、eval、network）</td>
+</tr>
+<tr>
+<td><code>opencli-usage</code></td>
+<td>帮助 AI 发现可用的适配器</td>
+</tr>
+<tr>
+<td><code>opencli-oneshot</code></td>
+<td>单次执行特定操作，快速实验</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-bash"># 安装所有 Skills
+npx skills add jackwener/opencli
+</code></pre>
+<h3 id="yaml-typescript">双引擎架构（YAML + TypeScript）</h3>
+<ul>
+<li><strong>定义：</strong> OpenCLI 支持两种适配器定义方式——YAML 声明式和 TypeScript 运行时注入</li>
+<li><strong>作用：</strong> YAML 适合标准数据抓取（简单直观），TypeScript 适合复杂浏览器自动化（灵活强大）</li>
+<li><strong>代码示例（YAML 声明式）：</strong></li>
+</ul>
+<pre><code class="language-yaml">name: hackernews-top
+source:
+  url: &quot;https://news.ycombinator.com&quot;
+  type: html
+extract:
+  selector: &quot;.titleline &gt; a&quot;
+  fields:
+    - name: title
+      attr: text
+    - name: url
+      attr: href
+</code></pre>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>OpenCLI</th>
+<th>Browser Use</th>
+<th>Stagehand</th>
+<th>Playwright</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>核心理念</td>
+<td>编译时智能，运行时零 LLM</td>
+<td>运行时 LLM 实时分析</td>
+<td>AI 辅助浏览器自动化</td>
+<td>底层浏览器自动化框架</td>
+</tr>
+<tr>
+<td>运行时 LLM 成本</td>
+<td>零</td>
+<td>每次调用消耗</td>
+<td>部分消耗</td>
+<td>零（但无智能）</td>
+</tr>
+<tr>
+<td>账户安全</td>
+<td>复用已登录 Chrome，凭据不暴露</td>
+<td>需凭据注入</td>
+<td>需凭据注入</td>
+<td>需手动管理 Cookie</td>
+</tr>
+<tr>
+<td>AI Agent 友好度</td>
+<td>原生 Skill 集成</td>
+<td>直接可用</td>
+<td>直接可用</td>
+<td>需封装</td>
+</tr>
+<tr>
+<td>执行稳定性</td>
+<td>确定性 100%</td>
+<td>受 LLM 随机性影响</td>
+<td>中等</td>
+<td>高</td>
+</tr>
+<tr>
+<td>自修复能力</td>
+<td>Self-Repair Protocol</td>
+<td>依赖 LLM 重试</td>
+<td>无</td>
+<td>无</td>
+</tr>
+<tr>
+<td>内置适配器</td>
+<td>91+</td>
+<td>无（通用方案）</td>
+<td>无（通用方案）</td>
+<td>无</td>
+</tr>
+<tr>
+<td>学习曲线</td>
+<td>低（直接 CLI）</td>
+<td>中（Python API）</td>
+<td>中（TypeScript API）</td>
+<td>高（需编写脚本）</td>
+</tr>
+<tr>
+<td>输出格式</td>
+<td>table/json/yaml/md/csv</td>
+<td>非结构化</td>
+<td>半结构化</td>
+<td>需自行处理</td>
+</tr>
+<tr>
+<td>新网站支持</td>
+<td>需编写/生成适配器</td>
+<td>即时支持</td>
+<td>即时支持</td>
+<td>需编写脚本</td>
+</tr>
+<tr>
+<td>GitHub Stars</td>
+<td>16,183</td>
+<td>~55,000 [置信度：中]</td>
+<td>~15,000 [置信度：中]</td>
+<td>~70,000</td>
+</tr>
+<tr>
+<td>License</td>
+<td>Apache-2.0</td>
+<td>MIT</td>
+<td>MIT</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>高频结构化数据采集、AI Agent 工具层</td>
+<td>通用浏览器自动化</td>
+<td>TypeScript 生态浏览器自动化</td>
+<td>底层浏览器测试和自动化</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li><strong>AI Agent 数据采集层</strong> — 为 Claude Code、Codex 等 AI 工具提供稳定的 Web 操作接口，替代不稳定的"截图 + LLM 分析"模式</li>
+<li><strong>高频结构化数据采集</strong> — 需要反复从同一批网站提取数据（如竞品监控、趋势追踪），"编译一次，执行多次"的成本优势明显</li>
+<li><strong>安全敏感场景</strong> — 不希望将账户凭据暴露给自动化脚本或 AI 工具的场景，Browser Bridge 的凭据隔离机制是核心优势</li>
+<li><strong>日常命令行生产力</strong> — 开发者希望通过命令行快速获取网站信息（如 <code>opencli bilibili trending</code>、<code>opencli hackernews top</code>）</li>
+<li><strong>CI/CD 数据收集</strong> — 标准 Unix 退出码体系使 OpenCLI 可无缝集成到 CI/CD 管线中</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li><strong>一次性非结构化 Web 操作</strong> — 如果只需要偶尔访问一个陌生网站且不需要重复操作，Browser Use 等通用方案更灵活</li>
+<li><strong>复杂动态交互场景</strong> — 需要复杂的拖拽、多步骤表单填写等动态交互，适配器的确定性模型可能不够灵活</li>
+<li><strong>大规模分布式爬虫</strong> — OpenCLI 依赖用户本地的 Chrome 浏览器实例，不适合需要大规模并行抓取的分布式爬虫场景</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li><strong>零运行时 LLM 成本</strong> — 适配器一旦生成，后续所有执行均为纯确定性 JavaScript，不消耗任何 LLM Token。对于高频使用场景，成本节省极为显著。[置信度：高]</li>
+<li><strong>凭据安全隔离</strong> — Browser Bridge Extension 复用用户已登录的 Chrome 会话，凭据永远不离开浏览器。这是与传统自动化工具最根本的区别。[置信度：高]</li>
+<li><strong>确定性输出</strong> — 同一命令始终返回相同结构的数据，不受 LLM 随机性影响。对 AI Agent 工具链的稳定性至关重要。[置信度：高]</li>
+<li><strong>Self-Repair Protocol</strong> — v1.7.0 引入的自修复协议在适配器失败时自动修复，将 LLM 使用约束在"必要时刻"，优雅地平衡了稳定性和成本。[置信度：高]</li>
+<li><strong>91+ 内置适配器</strong> — 覆盖主流平台（Bilibili、Twitter、Reddit、HackerNews、GitHub 等），开箱即用。[置信度：高]</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li><strong>适配器维护负担</strong> — 91+ 适配器需要持续维护以应对目标网站的改版。虽然 Self-Repair Protocol 可以自动修复，但仍可能导致临时性故障。[置信度：高]</li>
+<li><strong>依赖用户浏览器</strong> — 必须有运行中的 Chrome/Chromium 实例，不适合无头服务器环境（除非配置 CDP 远程端点）。[置信度：高]</li>
+<li><strong>新网站支持滞后</strong> — 新网站需要先生成适配器，无法像 Browser Use 那样即时支持。虽然四步生成流程降低了门槛，但仍需额外步骤。[置信度：高]</li>
+<li><strong>项目成熟度低</strong> — 2026 年 3 月创建，仅一个月历史，虽 Stars 增长迅猛但长期维护能力有待验证。[置信度：高]</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li><strong>项目可持续性</strong> — 作为个人开发者项目（jackwener），核心维护者单一。如果维护者停止更新，91+ 适配器的维护将成为巨大负担。缓解措施：社区贡献模式 + Self-Repair Protocol 自动修复。</li>
+<li><strong>法律合规风险</strong> — 自动化访问某些网站可能违反其服务条款。缓解措施：复用用户已登录会话（行为与正常用户一致），但法律风险仍需用户自行评估。</li>
+<li><strong>Chrome 扩展政策变化</strong> — Browser Bridge Extension 依赖 Chrome Extension native messaging API，如果 Google 修改相关政策可能影响功能。缓解措施：保持对 Chrome 扩展 API 变化的关注。</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 91+ 内置适配器，覆盖视频（Bilibili、YouTube）、社交（Twitter/X、GitHub）、搜索（Bing、DuckDuckGo）、新闻（HackerNews、Product Hunt）、学术（arXiv、Stack Overflow）、金融（Yahoo Finance）等主要领域。社区插件机制已就绪。</li>
+<li><strong>第三方库支持：</strong> npm 包 @jackwener/opencli 可用。支持 Claude Code Skill 集成。AI Agent 工具链层（APIYI 等平台）已出现集成教程。</li>
+<li><strong>企业采用案例：</strong> 项目仅一个月历史，暂未发现知名企业采用案例。[置信度：中]</li>
+<li><strong>文档质量：</strong> GitHub README 详尽，包含适配器列表、配置变量、输出格式、退出码。docs/guide/ 目录有入门指南和插件开发文档。dev.to 有社区深度文章。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> Self-Repair Protocol 提供自动修复能力。标准退出码体系（0/66/69/77/78）便于错误处理。但项目仅一个月历史，长期稳定性待验证。[置信度：中]</li>
+<li><strong>性能表现：</strong> 基于真实浏览器操作，性能受目标网站响应速度制约。确定性执行避免了 LLM 延迟。Daemon 模式可减少启动开销。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 支持 OPENCLI_VERBOSE 环境变量开启详细日志。OPENCLI_DIAGNOSTIC=1 提供结构化诊断信息。无内置监控仪表板。[置信度：高]</li>
+<li><strong>故障恢复：</strong> Self-Repair Protocol 最多重试 3 次。标准退出码便于上层系统判断故障类型。无内置断路器或降级策略。[置信度：高]</li>
+<li><strong>安全合规：</strong> Browser Bridge 凭据隔离是核心安全优势。Chrome 扩展通过 Chrome Web Store 审核机制。但项目未发布安全审计报告。[置信度：中]</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong> 基本命令行使用经验、Node.js 环境配置能力、Chrome 扩展安装经验。适配器开发需 TypeScript/JavaScript 基础。</li>
+<li><strong>入门时间估计：</strong> 30 分钟（安装 + Browser Bridge 配置 + 使用内置适配器）</li>
+<li><strong>精通时间估计：</strong> 2-3 天（理解适配器机制 + 编写自定义适配器 + AI Agent 集成）</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p>OpenCLI 是一个理念先进、设计精巧的 AI Agent 基础设施项目。其核心价值在于将"编译时智能 vs 运行时智能"的数据库优化思想移植到 Web 自动化领域，通过确定性适配器实现零 LLM 成本的数据采集，同时通过 Browser Bridge Extension 解决了长期困扰自动化领域的凭据安全问题。</p>
+<p><strong>评分：7.5/10</strong></p>
+<ul>
+<li><strong>加分项</strong>：设计理念先进（+2）、凭据安全创新（+1.5）、91+ 适配器覆盖广泛（+1）、Self-Repair Protocol（+1）、社区增长迅猛（+1）</li>
+<li><strong>扣分项</strong>：项目仅一个月历史（-1.5）、核心维护者单一（-1）、无企业采用案例（-0.5）、依赖用户浏览器（-0.5）</li>
+</ul>
+<p><strong>适用建议</strong>：
+- AI Agent 开发者可作为工具层的候选方案进行评估
+- 需要高频结构化数据采集的团队建议试用
+- 安全敏感场景下的 Web 自动化值得重点关注
+- 生产环境使用需关注项目的长期维护可持续性</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> v1.7.0（最新版本，2026-04-11 发布）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://api.github.com/repos/jackwener/opencli">GitHub API - jackwener/opencli</a> — Stars、Forks、Issues、License、创建/更新日期</li>
+<li><a href="https://github.com/jackwener/opencli/blob/main/README.md">GitHub README - jackwener/opencli</a> — 功能特性、适配器列表、架构设计、配置说明</li>
+<li><a href="https://dev.to/wonderlab/one-open-source-project-a-day-no39-opencli-turning-any-website-into-a-zero-cost-cli-tool-for-cg8">dev.to - OpenCLI 深度分析文章</a> — 架构详解、适配器生命周期、Self-Repair Protocol、项目目录结构</li>
+<li><a href="https://help.apiyi.com/en/opencli-ai-agent-cli-tool-website-command-line-apiyi-guide-en.html">Apiyi.com - OpenCLI 5 大核心能力详解</a> — 双引擎架构、AI Agent 集成、认证策略、使用场景</li>
+<li><a href="https://opencli.info/">OpenCLI 官方网站</a> — 产品定位</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

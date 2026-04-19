@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PreTeXt - 深度分析报告</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**注：** GitHub Stars 数据通过 GitHub API 于 2026-04-13 获取。LaTeX 无单一 GitHub 仓库（原始 TeX 由 Donald Knuth 创建，各类发行版由不同组织维护）。</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">技术背景与动机</a></li>
+<li><a href="#_2" class="toc-h3">行业背景</a></li>
+<li><a href="#_3" class="toc-h3">创立动机</a></li>
+<li><a href="#_4" class="toc-h3">发展历程</a></li>
+<li><a href="#_5" class="toc-h2">核心原理</a></li>
+<li><a href="#_6" class="toc-h3">设计哲学</a></li>
+<li><a href="#_7" class="toc-h3">核心算法/机制</a></li>
+<li><a href="#_8" class="toc-h3">数据流/执行流程</a></li>
+<li><a href="#_9" class="toc-h2">架构设计</a></li>
+<li><a href="#_10" class="toc-h3">整体架构</a></li>
+<li><a href="#_11" class="toc-h3">核心模块</a></li>
+<li><a href="#_12" class="toc-h3">扩展机制</a></li>
+<li><a href="#_13" class="toc-h2">关键概念详解</a></li>
+<li><a href="#1-pretext-pretext-xml-vocabulary" class="toc-h3">1. PreTeXt 标记语言（PreTeXt XML Vocabulary）</a></li>
+<li><a href="#2-knowl" class="toc-h3">2. Knowl（知识节点）</a></li>
+<li><a href="#3-webwork" class="toc-h3">3. WeBWorK 集成</a></li>
+<li><a href="#4-multi-format-build" class="toc-h3">4. 多格式构建（Multi-Format Build）</a></li>
+<li><a href="#5-schema-schema-validation" class="toc-h3">5. Schema 验证（Schema Validation）</a></li>
+<li><a href="#_14" class="toc-h2">同类技术横向对比</a></li>
+<li><a href="#_15" class="toc-h2">适用场景分析</a></li>
+<li><a href="#_16" class="toc-h3">最佳场景</a></li>
+<li><a href="#_17" class="toc-h3">不适用场景</a></li>
+<li><a href="#_18" class="toc-h2">优缺点深度分析</a></li>
+<li><a href="#_19" class="toc-h3">优势</a></li>
+<li><a href="#_20" class="toc-h3">劣势</a></li>
+<li><a href="#_21" class="toc-h3">风险点</a></li>
+<li><a href="#_22" class="toc-h2">生态成熟度评估</a></li>
+<li><a href="#_23" class="toc-h2">生产环境就绪度评估</a></li>
+<li><a href="#_24" class="toc-h2">学习曲线评估</a></li>
+<li><a href="#_25" class="toc-h2">总结与建议</a></li>
+<li><a href="#_26" class="toc-h2">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>PreTeXt - 深度分析报告</h1>
+                        <div class="article-meta">**注：** GitHub Stars 数据通过 GitHub API 于 2026-04-13 获取。LaTeX 无单一 GitHub 仓库（原始 TeX 由 Donald Knuth 创建，各类发行版由不同组织维护）。</div>
+                    </header>
+                    <h1 id="pretext-">PreTeXt - 深度分析报告</h1>
+<h2 id="_1">技术背景与动机</h2>
+<h3 id="_2">行业背景</h3>
+<p>STEM（科学、技术、工程、数学）领域的学术文档创作长期面临一个核心矛盾：LaTeX 提供了出版级的数学排版质量，但其输出仅限于 PDF/印刷品，无法满足在线交互、无障碍访问和多平台发布的需求。与此同时，HTML/Web 技术虽然支持在线阅读和交互，但数学排版质量远不及 LaTeX。学术作者往往需要维护同一内容的多个版本——一个 LaTeX 版本用于印刷，一个 HTML 版本用于网页，一个 Word 版本用于提交——这不仅效率低下，而且版本之间容易产生不一致。</p>
+<p>此外，视觉障碍者阅读 STEM 内容的困难长期被忽视。传统的数学教材几乎无法被屏幕阅读器朗读，盲文转换也缺乏标准化工具。无障碍访问（Accessibility）在学术出版领域一直是事后补充而非设计时的核心考量。</p>
+<h3 id="_3">创立动机</h3>
+<p>Rob Beezer（华盛顿大学 Puget Sound 分校数学系教授）在 2004 年开始撰写开放教材《A First Course in Linear Algebra》（FCLA）。他用 LaTeX 编写，但很快发现：LaTeX 的结构化标记实际上已经包含了丰富的语义信息（定理、证明、示例、练习等），只是 LaTeX 只关注排版输出，忽略了这些语义。2010 年，Beezer 开始实验用 XML 捕捉文档的语义结构，通过 XSLT（eXtensible Stylesheet Language Transformations）转换为多种输出格式。2013 年，获得 Shuttleworth Flash Grant 后，正式以 "MathBook XML"（MBX）命名立项。项目后于 2016 年更名为 "PreTeXt"（取 "Pre" + "TeX" 之意）。[来源：Rob Beezer "The State of PreTeXt" 演讲，2023]</p>
+<p>PreTeXt 的核心动机是：
+1. <strong>一次编写，处处发布</strong> — 从单一 XML 源文件生成 HTML、PDF、EPUB、Braille 等所有格式
+2. <strong>无障碍优先</strong> — 让盲人和视觉障碍者能够阅读数学内容
+3. <strong>开放教育资源（OER）</strong> — 降低高质量 STEM 教材的创作门槛</p>
+<h3 id="_4">发展历程</h3>
+<ul>
+<li><strong>2004 年</strong>：Rob Beezer 开始撰写开放教材 FCLA（LaTeX 格式）</li>
+<li><strong>2006 年</strong>：FCLA v1.0 发布</li>
+<li><strong>2008 年</strong>：使用 <code>tex4ht</code> 将 FCLA 转换为 HTML，配合 jsMath 渲染数学</li>
+<li><strong>2010 年</strong>：开始实验 XML + XSLT 方案</li>
+<li><strong>2011 年</strong>：David Farmer 为 FCLA 创建 HTML 版本，引入 "knowl"（可展开的交叉引用组件）</li>
+<li><strong>2013-05-20</strong>：获得 Shuttleworth Flash Grant，项目正式命名为 "MathBook XML"（MBX） <!-- reviewed: 修正拼写错误，原为"Shuttleville"，正确为"Shuttleworth"，与 Rob Beezer 演讲原文一致 --></li>
+<li><strong>2013-09-21</strong>：GitHub 仓库创建（PreTeXtBook/pretext）</li>
+<li><strong>2014 年</strong>：Rob Beezer 在 TUGboat 发表论文介绍 MathBook XML</li>
+<li><strong>~2016 年</strong>：项目从 "MathBook XML" 更名为 "PreTeXt"</li>
+<li><strong>~2018-2020 年</strong>：PreTeXt-CLI（Python）发布，提供 <code>pretext build</code>、<code>pretext view</code>、<code>pretext deploy</code> 等命令</li>
+<li><strong>2020 年后</strong>：Runestone Academy 集成，WeBWorK/STACK 集成，Braille 输出重写</li>
+<li><strong>2025-2026 年</strong>：CLI 持续迭代至 v2.38.2，STACK 集成完善，FIE 2025 工作坊，活跃开发至今</li>
+</ul>
+<h2 id="_5">核心原理</h2>
+<h3 id="_6">设计哲学</h3>
+<p>PreTeXt 在 GitHub README 中明确列出了 11 条指导原则（Guiding Principles），可归纳为三大设计哲学：</p>
+<p><strong>1. 语义化标记优于排版指令（Semantic Over Presentational）</strong></p>
+<p>PreTeXt 是一种标记语言（Markup Language），捕捉的是学术文档的<strong>语义结构</strong>（如定理、证明、示例、练习），而非视觉呈现。作者描述"这是什么"（一个定理），而非"这看起来什么样"（粗体、缩进）。这使得同一份源文件可以被程序化地转换为任意输出格式，每种格式都能以最合适的方式呈现语义。[来源：GitHub README 原则 #1-2]</p>
+<p><strong>2. 单一来源，多格式发布（Single Source, Multi-Output）</strong></p>
+<p>PreTeXt 文档是"一次编写，处处发布"的单一来源（Single Source）。作者只需维护一份 XML 文件，PreTeXt 的 XSLT 转换引擎负责将其转换为 HTML、PDF（LaTeX）、EPUB、Braille、Jupyter Notebook、RevealJS 幻灯片等格式。每种输出格式都经过专门优化，而非简单地从一种格式"降级"转换。[来源：GitHub README 原则 #3]</p>
+<p><strong>3. 无障碍不是事后补充（Accessibility by Design）</strong></p>
+<p>原则 #11 明确指出："PreTeXt recognizes the inherent value in producing material that is accessible to everyone." 无障碍访问不是可选功能，而是设计时的核心考量。这体现在：HTML 输出配合 MathJax 和 Speech Rule Engine 使屏幕阅读器可以朗读数学公式；Braille 输出支持 Nemeth 盲文编码；触觉图形（Tactile Graphics）支持为视觉障碍者提供可触摸的图形。[来源：GitHub README 原则 #11、pretextbook.org/accessibility]</p>
+<p><strong>设计取舍（Trade-offs）：</strong>
+- <strong>XML 的冗长性 vs. 语义严谨性</strong>：XML 标记比 Markdown 更冗长，但提供了严格的语义结构，可通过 RELAX-NG Schema 验证。PreTeXt 选择牺牲写作者的便利性，换取输出的可靠性和多格式一致性。
+- <strong>XSLT 1.0 vs. 现代转换工具</strong>：PreTeXt 使用 XSLT 1.0（通过 <code>xsltproc</code>），而非 XSLT 2.0/3.0 或其他现代转换引擎。这是因为 XSLT 1.0 在所有主流操作系统上都有成熟、稳定的实现（Linux/Mac 预装，Windows 也可轻松安装），保证了最大兼容性。
+- <strong>学术文档特化 vs. 通用文档</strong>：PreTeXt 专注于学术文档（教科书、论文、专著），不追求成为通用文档工具。这意味着它有 <code>&lt;theorem&gt;</code>、<code>&lt;proof&gt;</code>、<code>&lt;exercise&gt;</code> 等学术专用标记，但可能不适合写博客或商业文档。</p>
+<h3 id="_7">核心算法/机制</h3>
+<p>PreTeXt 的核心转换机制基于 <strong>XSLT（eXtensible Stylesheet Language Transformations）</strong>：</p>
+<ol>
+<li><strong>XML 源文件解析</strong>：作者编写的 PreTeXt XML 文件首先通过 RELAX-NG Schema 验证，确保结构正确。</li>
+<li><strong>XSLT 样式表匹配</strong>：每种输出格式对应一个 XSLT 样式表（如 <code>pretext-html.xsl</code>、<code>pretext-latex.xsl</code>、<code>pretext-epub.xsl</code>）。<code>xsltproc</code> 读取样式表和源文件，对 XML 树进行模式匹配和模板应用。</li>
+<li><strong>递归树遍历</strong>：XSLT 声明式地定义了如何处理每种 XML 元素。对于每个元素，样式表描述"在处理子元素之前和之后分别输出什么"。这是一个递归过程：处理 <code>&lt;book&gt;</code> → 处理 <code>&lt;chapter&gt;</code> → 处理 <code>&lt;section&gt;</code> → 处理 <code>&lt;p&gt;</code> → 处理文本内容。</li>
+<li><strong>格式特定转换</strong>：不同样式表将同一元素转换为不同格式。例如 <code>&lt;m&gt;</code>（数学）元素在 HTML 输出中被转换为 MathJax 可渲染的 LaTeX 片段，在 LaTeX 输出中保持为原生 LaTeX 代码，在 Braille 输出中被转换为 Nemeth 盲文编码。</li>
+<li><strong>后处理</strong>：某些输出需要额外步骤——LaTeX 输出需要调用 <code>pdflatex</code> 或 <code>xelatex</code> 编译为 PDF；图像可能需要通过 Asymptote、Sage 或 TikZ 预先生成。</li>
+</ol>
+<h3 id="_8">数据流/执行流程</h3>
+<pre><code>PreTeXt XML 源文件
+        │
+        ▼
+   Schema 验证 (RELAX-NG)
+        │
+        ▼
+   ┌─────────────┐
+   │  XSLT 转换   │ ◄── 选择目标格式的 XSL 样式表
+   │  (xsltproc)  │
+   └─────┬───────┘
+         │
+    ┌────┼────────────────┬──────────────┐
+    ▼    ▼                ▼              ▼
+  HTML  LaTeX           EPUB         Braille
+    │    │                │              │
+    │    ▼                │              │
+    │  pdflatex/          │              │
+    │  xelatex            │              │
+    │    │                │              │
+    ▼    ▼                ▼              ▼
+  Web   PDF            电子书          盲文
+ (含MathJax)                       (Nemeth编码)
+    │
+    ├── RevealJS 幻灯片
+    ├── Jupyter Notebook
+    └── Runestone 交互式课程
+</code></pre>
+<h2 id="_9">架构设计</h2>
+<h3 id="_10">整体架构</h3>
+<p>PreTeXt 的架构可分为四层：</p>
+<p><strong>1. 标记语言层（PreTeXt XML Vocabulary）</strong>
+- 定义了完整的 XML 词汇表，涵盖学术文档的所有语义元素
+- 由 RELAX-NG Compact Syntax Schema 严格定义
+- 人类可读、人类可写，同时支持 Schema 验证</p>
+<p><strong>2. 转换引擎层（XSLT Stylesheets）</strong>
+- 仓库中的 <code>xsl/</code> 目录包含所有转换样式表
+- 每种输出格式一个主样式表（如 <code>pretext-html.xsl</code>、<code>pretext-latex.xsl</code>）
+- 共享模板库处理通用逻辑（交叉引用、编号、索引等）</p>
+<p><strong>3. 构建工具层（PreTeXt-CLI）</strong>
+- Python 实现的命令行工具（PyPI 包名 <code>pretext</code>，当前版本 v2.38.2）
+- 管理依赖（xsltproc、LaTeX 发行版、ImageMagick 等）
+- 提供 <code>pretext new</code>、<code>pretext build</code>、<code>pretext view</code>、<code>pretext deploy</code> 等命令
+- 处理图像生成（Asymptote、Sage、TikZ）、资源管理等辅助任务</p>
+<p><strong>4. 发布与托管层（可选）</strong>
+- <code>pretext deploy</code> 可一键部署到 GitHub Pages
+- <a href="https://pretext.plus">pretext.plus</a> 提供在线编辑和托管
+- Runestone Academy 集成用于交互式在线课程</p>
+<h3 id="_11">核心模块</h3>
+<ul>
+<li><strong>Schema 模块</strong>（<code>schema/</code>）— RELAX-NG Schema 定义 PreTeXt 标记语言的完整语法，是整个系统的"宪法"。新增元素、修改规则都通过修改 Schema 实现。</li>
+<li><strong>XSL 转换模块</strong>（<code>xsl/</code>）— 核心转换引擎。包含多个子模块：</li>
+<li><code>pretext-html.xsl</code>：HTML 输出（含 MathJax、knowls、交互元素）</li>
+<li><code>pretext-latex.xsl</code>：LaTeX 输出（用于 PDF 生成）</li>
+<li><code>pretext-epub.xsl</code>：EPUB 电子书输出</li>
+<li><code>pretext-braille.xsl</code>：Braille 盲文输出</li>
+<li><code>pretext-slides.xsl</code>：RevealJS 幻灯片输出</li>
+<li><code>pretext-jupyter.xsl</code>：Jupyter Notebook 输出</li>
+<li>公用模板库：交叉引用、编号、索引等通用逻辑</li>
+<li><strong>CSS/SCSS 样式模块</strong>（<code>css/</code>）— HTML 输出的视觉样式，支持多种主题</li>
+<li><strong>JavaScript 交互模块</strong>（<code>js/</code>）— HTML 输出的交互功能：knowls（可展开引用）、搜索、代码执行（ActiveCode、Sage Cell）等</li>
+<li><strong>CLI 工具</strong>（<a href="https://github.com/PreTeXtBook/pretext-cli">PreTeXtBook/pretext-cli</a>）— Python 包，构建系统</li>
+<li><strong>示例与文档</strong>（<code>examples/</code>、<code>doc/</code>）— 示例文档和指南</li>
+</ul>
+<h3 id="_12">扩展机制</h3>
+<p><strong>1. 自定义 XSL 样式表</strong>：作者可以创建自定义 XSL 文件，导入核心 PreTeXt 样式表并覆盖特定模板。这是最强大的扩展方式，允许完全控制输出格式。[来源：PreTeXt Guide 第 5.5 节]</p>
+<p><strong>2. Publication File</strong>：通过 XML 格式的 Publication File 配置输出参数（如页面尺寸、字体大小、HTML 主题、Braille 编码方式等），无需修改源文件或样式表。[来源：PreTeXt Guide 第 26.1 节]</p>
+<p><strong>3. 字符串参数（String Parameters）</strong>：通过命令行参数或 Publication File 传递配置值，控制转换行为（如 <code>debug</code> 模式、<code>watermark</code> 水印等）。</p>
+<p><strong>4. 新转换格式</strong>：任何开发者都可以基于 PreTeXt Schema 编写新的 XSLT 样式表，创建新的输出格式转换器。PreTeXt 鼓励社区贡献新的转换器。</p>
+<p><strong>5. 学科扩展</strong>：Schema 被设计为可扩展的，新学科（如化学 <code>&lt;laboratory&gt;</code>、<code>&lt;molecule&gt;</code>）可以通过新增元素来支持。[来源：Rob Beezer "The State of PreTeXt" 演讲]</p>
+<h2 id="_13">关键概念详解</h2>
+<h3 id="1-pretext-pretext-xml-vocabulary">1. PreTeXt 标记语言（PreTeXt XML Vocabulary）</h3>
+<ul>
+<li><strong>定义：</strong> 一套专门为学术文档设计的 XML 词汇表，用语义化标签描述文档结构。不是通用 XML，而是 STEM 学术文档领域的领域特定语言（DSL）。</li>
+<li><strong>作用：</strong> 作为整个系统的"单一来源"。所有输出都从这份 XML 文件生成，确保各格式版本内容一致。</li>
+<li><strong>使用场景：</strong> 编写教科书、研究论文、学术专著、讲义等。</li>
+<li><strong>代码示例</strong>（基于官方文档）：</li>
+</ul>
+<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;pretext&gt;
+  &lt;book xml:id=&quot;linear-algebra&quot;&gt;
+    &lt;title&gt;线性代数入门&lt;/title&gt;
+    &lt;frontmatter&gt;
+      &lt;titlepage&gt;
+        &lt;author&gt;
+          &lt;personname&gt;张三&lt;/personname&gt;
+        &lt;/author&gt;
+      &lt;/titlepage&gt;
+    &lt;/frontmatter&gt;
+    &lt;chapter&gt;
+      &lt;title&gt;向量空间&lt;/title&gt;
+      &lt;section&gt;
+        &lt;title&gt;定义与示例&lt;/title&gt;
+        &lt;p&gt;
+          向量空间是一个非空集合 &lt;m&gt;V&lt;/m&gt;，
+          配备两种运算：加法和标量乘法。
+        &lt;/p&gt;
+        &lt;definition xml:id=&quot;def-vector-space&quot;&gt;
+          &lt;title&gt;向量空间&lt;/title&gt;
+          &lt;p&gt;
+            一个集合 &lt;m&gt;V&lt;/m&gt; 称为域 &lt;m&gt;F&lt;/m&gt; 上的向量空间，
+            如果满足以下八条公理...
+          &lt;/p&gt;
+        &lt;/definition&gt;
+        &lt;theorem xml:id=&quot;thm-zero-unique&quot;&gt;
+          &lt;statement&gt;
+            &lt;p&gt;
+              向量空间中的零元素是唯一的。
+            &lt;/p&gt;
+          &lt;/statement&gt;
+          &lt;proof&gt;
+            &lt;p&gt;
+              设 &lt;m&gt;0&lt;/m&gt; 和 &lt;m&gt;0'&lt;/m&gt; 都是零元素。
+              则 &lt;m&gt;0 = 0 + 0' = 0'&lt;/m&gt;。因此零元素唯一。
+            &lt;/p&gt;
+          &lt;/proof&gt;
+        &lt;/theorem&gt;
+      &lt;/section&gt;
+    &lt;/chapter&gt;
+  &lt;/book&gt;
+&lt;/pretext&gt;
+</code></pre>
+<h3 id="2-knowl">2. Knowl（知识节点）</h3>
+<ul>
+<li><strong>定义：</strong> Knowl 是 PreTeXt HTML 输出中的核心交互组件。它将交叉引用目标（如定理、定义、证明）呈现为可点击展开的"气泡"，无需离开当前页面即可查看引用内容。</li>
+<li><strong>作用：</strong> 改变学术文档的阅读体验。传统教科书需要翻页查看引用内容，Knowl 允许在当前上下文中展开查看，读完即可收起。</li>
+<li><strong>使用场景：</strong> HTML 在线阅读。自动应用于交叉引用（<code>&lt;xref&gt;</code> 元素）。</li>
+<li><strong>代码示例</strong>（基于官方文档）：</li>
+</ul>
+<pre><code class="language-xml">&lt;!-- 在正文中引用定理 --&gt;
+&lt;p&gt;
+  根据&lt;xref ref=&quot;thm-zero-unique&quot; /&gt;，
+  我们知道零元素是唯一的。
+&lt;/p&gt;
+&lt;!-- HTML 输出中，这个引用会显示为可点击的 knowl，
+     点击后在原位展开显示定理内容和证明 --&gt;
+</code></pre>
+<h3 id="3-webwork">3. WeBWorK 集成</h3>
+<ul>
+<li><strong>定义：</strong> PreTeXt 可以在文档中直接嵌入 WeBWorK（在线作业系统）习题。WeBWorK 习题在 HTML 输出中为可交互的在线练习，在 PDF 输出中为静态打印版本。</li>
+<li><strong>作用：</strong> 将教科书与在线作业系统无缝集成，学生可以在阅读教材的同时完成练习，教师无需手动导入习题。</li>
+<li><strong>使用场景：</strong> 大学数学课程中创建"可交互"的在线教材。</li>
+<li><strong>代码示例</strong>（基于官方文档）：</li>
+</ul>
+<pre><code class="language-xml">&lt;exercise&gt;
+  &lt;webwork xml:id=&quot;ww-derivative&quot;&gt;
+    &lt;statement&gt;
+      &lt;p&gt;
+        求 &lt;m&gt;f(x) = x^3 + 2x&lt;/m&gt; 的导数。
+      &lt;/p&gt;
+      &lt;p&gt;
+        &lt;m&gt;f'(x) =&lt;/m&gt; &lt;var name=&quot;$ans&quot; width=&quot;15&quot; category=&quot;formula&quot; /&gt;
+      &lt;/p&gt;
+    &lt;/statement&gt;
+    &lt;setup&gt;
+      &lt;var name=&quot;$ans&quot;&gt;
+        &lt;static&gt;3x^2 + 2&lt;/static&gt;
+      &lt;/var&gt;
+    &lt;/setup&gt;
+  &lt;/webwork&gt;
+&lt;/exercise&gt;
+</code></pre>
+<h3 id="4-multi-format-build">4. 多格式构建（Multi-Format Build）</h3>
+<ul>
+<li><strong>定义：</strong> PreTeXt-CLI 提供统一的构建命令，将 XML 源文件转换为指定输出格式。</li>
+<li><strong>作用：</strong> 作者通过简单的 CLI 命令即可生成所有格式，无需理解底层 XSLT 转换细节。</li>
+<li><strong>使用场景：</strong> 日常写作和发布流程。</li>
+<li><strong>代码示例</strong>（基于官方文档，PreTeXt-CLI v2.38.2）：</li>
+</ul>
+<pre><code class="language-bash"># 创建新项目
+pretext new my-book
+
+# 构建 HTML 版本
+pretext build html
+
+# 构建 PDF 版本（通过 LaTeX）
+pretext build print
+
+# 构建 EPUB 版本
+pretext build epub
+
+# 本地预览
+pretext view html
+
+# 部署到 GitHub Pages
+pretext deploy
+</code></pre>
+<h3 id="5-schema-schema-validation">5. Schema 验证（Schema Validation）</h3>
+<ul>
+<li><strong>定义：</strong> PreTeXt 使用 RELAX-NG Compact Syntax 定义标记语言的完整语法规则。在构建前，CLI 自动验证 XML 源文件是否符合 Schema。</li>
+<li><strong>作用：</strong> 在构建之前捕获标记错误（如标签拼写错误、嵌套不正确、缺少必需属性），避免在转换过程中产生难以调试的问题。</li>
+<li><strong>使用场景：</strong> 每次构建前的自动验证，也可单独运行验证。</li>
+<li><strong>代码示例</strong>（基于官方文档）：</li>
+</ul>
+<pre><code class="language-bash"># 验证源文件
+pretext validate
+
+# 或使用 xsltproc 直接转换（开发者模式）
+xsltproc xsl/pretext-html.xsl my-book/source/main.ptx
+</code></pre>
+<h2 id="_14">同类技术横向对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>PreTeXt</th>
+<th>LaTeX</th>
+<th>Quarto</th>
+<th>Typst</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>核心理念</strong></td>
+<td>语义化 XML 标记，单一来源多格式发布，无障碍优先</td>
+<td>排版指令式标记，专注于高质量 PDF 输出</td>
+<td>Markdown 基础的科学出版，多语言支持（R/Python/Julia）</td>
+<td>现代标记语言，替代 LaTeX 的排版系统</td>
+</tr>
+<tr>
+<td><strong>标记语言</strong></td>
+<td>XML（语义化，严格 Schema 验证）</td>
+<td>LaTeX（排版指令式）</td>
+<td>Markdown + YAML（轻量级）</td>
+<td>自定义标记语言（类 Markdown 语法）</td>
+</tr>
+<tr>
+<td><strong>数学排版</strong></td>
+<td>优秀（LaTeX 数学语法 + MathJax）</td>
+<td>卓越（原生 LaTeX）</td>
+<td>良好（LaTeX 数学语法 + MathJax/KaTeX）</td>
+<td>良好（内置数学公式语法）</td>
+</tr>
+<tr>
+<td><strong>输出格式</strong></td>
+<td>HTML、PDF、EPUB、Braille、Jupyter、Slides</td>
+<td>主要为 PDF、DVI</td>
+<td>HTML、PDF、Word、EPUB、Slides、Dashboard</td>
+<td>PDF、HTML（实验性）</td>
+</tr>
+<tr>
+<td><strong>无障碍访问</strong></td>
+<td>卓越（屏幕阅读器数学朗读、Braille 盲文、触觉图形）</td>
+<td>差（几乎不支持）</td>
+<td>一般（部分 HTML 无障碍支持）</td>
+<td>差（新兴项目，无障碍支持有限）</td>
+</tr>
+<tr>
+<td><strong>交互性</strong></td>
+<td>优秀（WeBWorK、STACK、Sage Cell、ActiveCode、GeoGebra）</td>
+<td>无</td>
+<td>良好（Jupyter 集成、Observable、Shiny）</td>
+<td>无（纯排版系统）</td>
+</tr>
+<tr>
+<td><strong>GitHub Stars</strong></td>
+<td>436（2026-04-13）</td>
+<td>N/A（非单一仓库）</td>
+<td>5,517（2026-04-13，quarto-dev/quarto-cli）</td>
+<td>52,792（2026-04-13，typst/typst）</td>
+</tr>
+<tr>
+<td><strong>主要语言</strong></td>
+<td>XSLT + Python（CLI）</td>
+<td>TeX</td>
+<td>TypeScript/JavaScript</td>
+<td>Rust</td>
+</tr>
+<tr>
+<td><strong>License</strong></td>
+<td>GPL-3.0-or-later</td>
+<td>LPPL</td>
+<td>MIT</td>
+<td>Apache-2.0</td>
+</tr>
+<tr>
+<td><strong>学习曲线</strong></td>
+<td>陡峭（需学习 XML + PreTeXt 标记 + XSLT 基础）</td>
+<td>陡峭（需学习 LaTeX 语法）</td>
+<td>平缓（Markdown 基础即可上手）</td>
+<td>中等（类 Markdown 语法但概念新颖）</td>
+</tr>
+<tr>
+<td><strong>目标用户</strong></td>
+<td>STEM 教育作者、OER 社区</td>
+<td>学术研究者、出版商</td>
+<td>数据科学家、可重现研究者</td>
+<td>需要高质量排版的技术用户</td>
+</tr>
+<tr>
+<td><strong>生态丰富度</strong></td>
+<td>中等（专注学术教育场景，WeBWorK/STACK/Runestone 集成）</td>
+<td>极高（CTAN 数千宏包、Overleaf）</td>
+<td>高（R/Python/Jupyter 生态、Posit 支持）</td>
+<td>快速增长（315+ 开源项目，Typst Universe 包管理器）</td>
+</tr>
+<tr>
+<td><strong>项目成熟度</strong></td>
+<td>高（12+ 年历史，大量生产使用教材）</td>
+<td>极高（40+ 年历史，学术出版标准）</td>
+<td>中高（4 年历史，Posit 商业支持）</td>
+<td>中（3 年历史，快速增长中）</td>
+</tr>
+<tr>
+<td><strong>创建/首次发布</strong></td>
+<td>2013 年（前身 MathBook XML）</td>
+<td>1984 年</td>
+<td>2022 年</td>
+<td>2023 年</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>注：</strong> GitHub Stars 数据通过 GitHub API 于 2026-04-13 获取。LaTeX 无单一 GitHub 仓库（原始 TeX 由 Donald Knuth 创建，各类发行版由不同组织维护）。</p>
+</blockquote>
+<h2 id="_15">适用场景分析</h2>
+<h3 id="_16">最佳场景</h3>
+<ol>
+<li>
+<p><strong>STEM 教材编写</strong> — 这正是 PreTeXt 的核心设计目标。语义化标记精确对应教材结构（定理、证明、练习），一次编写可同时生成在线版（HTML）、印刷版（PDF）、电子书版（EPUB）和无障碍版（Braille）。典型用户：大学数学教授编写开放教材。</p>
+</li>
+<li>
+<p><strong>开放教育资源（OER）</strong> — PreTeXt 与 OER 运动天然契合。教材以 XML 源文件形式开放，任何人可以 Fork、修改、重新发布。GPL 许可不约束文档版权，作者可自由选择文档许可证（如 CC BY-SA）。</p>
+</li>
+<li>
+<p><strong>需要无障碍访问的学术材料</strong> — PreTeXt 是目前唯一将无障碍访问作为核心设计原则的学术出版工具。如果文档需要服务于视觉障碍者（如大学的 ADA 合规要求），PreTeXt 是最佳选择。</p>
+</li>
+<li>
+<p><strong>交互式在线课程</strong> — 通过 WeBWorK/STACK/Runestone 集成，PreTeXt 可以创建"可交互"的在线教材，学生在阅读时即可完成作业、运行代码、探索可视化。</p>
+</li>
+<li>
+<p><strong>数学研究论文和专著</strong> — PreTeXt 支持文章（<code>&lt;article&gt;</code>）和书籍（<code>&lt;book&gt;</code>）两种文档类型，适用于从短篇论文到多卷本专著的各种场景。</p>
+</li>
+</ol>
+<h3 id="_17">不适用场景</h3>
+<ol>
+<li>
+<p><strong>非学术文档</strong> — PreTeXt 是为 STEM 学术文档设计的。如果需要写博客、商业文档、技术手册，应该使用 Markdown/AsciiDoc/Sphinx 等更通用的工具。</p>
+</li>
+<li>
+<p><strong>需要快速原型的场景</strong> — XML 的冗长性使 PreTeXt 的写作速度低于 Markdown 类工具。如果追求快速起草，应使用 Quarto 或 Typst。</p>
+</li>
+<li>
+<p><strong>非 STEM 领域的文档</strong> — PreTeXt 的标记语言针对数学和计算机科学优化。化学、物理等学科需要扩展 Schema（如 <code>&lt;molecule&gt;</code>、<code>&lt;laboratory&gt;</code>），人文社科领域的支持更弱。</p>
+</li>
+</ol>
+<h2 id="_18">优缺点深度分析</h2>
+<h3 id="_19">优势</h3>
+<ol>
+<li>
+<p><strong>无障碍访问领先</strong> — PreTeXt 是学术出版领域无障碍访问的标杆。屏幕阅读器数学朗读、Braille 盲文输出、触觉图形支持在同类工具中独一无二。这不仅是技术优势，也是法律合规（ADA、Section 508）和社会公平的重要考量。[来源：pretextbook.org/accessibility、Accessing Higher Ground 工作坊]</p>
+</li>
+<li>
+<p><strong>真正的单一来源多格式发布</strong> — 与 Quarto（Markdown → 多格式）或 LaTeX（主要生成 PDF）不同，PreTeXt 的 XML 源文件经过严格 Schema 验证，确保每种输出格式的转换都是完整和正确的。不是"以某一种格式为主，其他格式尽量转换"，而是"每种格式都一等公民"。[来源：Runestone Academy "An Open Letter to Future Authors"]</p>
+</li>
+<li>
+<p><strong>12 年持续维护</strong> — 项目自 2013 年创建以来持续活跃开发（最近推送 2026-04-13），9,548 次提交，75 位贡献者。创始人 Rob Beezer 是大学教授，对项目有长期承诺。大量生产级教材已使用 PreTeXt 编写，项目稳定性有保障。</p>
+</li>
+<li>
+<p><strong>丰富的学术生态集成</strong> — WeBWorK 在线作业、STACK 自动评估、Sage Cell 代码执行、GeoGebra 交互图形、Runestone 在线学习平台——这些集成使 PreTeXt 成为"学术教育一站式解决方案"。</p>
+</li>
+<li>
+<p><strong>严格的结构化验证</strong> — RELAX-NG Schema 确保源文件在构建之前就被验证为正确的 PreTeXt 标记。这比 LaTeX 的"运行时报错"或 Markdown 的"隐式容错"更可靠，特别适合大型教材项目。</p>
+</li>
+</ol>
+<h3 id="_20">劣势</h3>
+<ol>
+<li>
+<p><strong>XML 标记冗长，学习曲线陡峭</strong> — 相比 Markdown 或 Typst 的简洁语法，PreTeXt 的 XML 标记非常冗长。编写 <code>&lt;theorem xml:id="thm-1"&gt;&lt;statement&gt;&lt;p&gt;...&lt;/p&gt;&lt;/statement&gt;&lt;/theorem&gt;</code> 远比 Markdown 的 <code>&gt; **Theorem 1.** ...</code> 复杂。新作者需要同时学习 XML 语法、PreTeXt 词汇表和基本的 XSLT 概念。</p>
+</li>
+<li>
+<p><strong>社区规模较小</strong> — 436 GitHub Stars 对比 Quarto 的 5,517 和 Typst 的 52,792，PreTeXt 的社区规模明显较小。这意味着 Stack Overflow 答案更少、第三方工具更少、新功能开发更依赖核心团队。</p>
+</li>
+<li>
+<p><strong>XSLT 技术栈过时</strong> — XSLT 1.0 是 1999 年的标准，现代开发者很少学习这门技术。这限制了能够为 PreTeXt 贡献代码的开发者群体，也使得扩展和定制比使用现代技术栈的工具更困难。[置信度：高]</p>
+</li>
+<li>
+<p><strong>构建依赖复杂</strong> — 完整使用 PreTeXt 需要安装 xsltproc、LaTeX 发行版（TeX Live 或 MiKTeX）、ImageMagick、Python、以及可选的 Asymptote、Sage 等。与 Quarto 的"安装一个二进制文件即可"或 Typst 的"单文件编译器"相比，环境搭建门槛较高。</p>
+</li>
+</ol>
+<h3 id="_21">风险点</h3>
+<ol>
+<li>
+<p><strong>关键人物风险</strong> — 项目高度依赖创始人 Rob Beezer。虽然已有 75 位贡献者，但核心 XSLT 样式表的维护主要集中在 Beezer 一人身上。如果 Beezer 因任何原因退出，项目的可持续性将面临挑战。[置信度：中]</p>
+</li>
+<li>
+<p><strong>XML/XSLT 生态萎缩</strong> — 随着 JSON/YAML/TOML 等轻量级格式的普及，XML 在新项目中的使用率持续下降。XSLT 开发者群体也在老龄化。长期来看，PreTeXt 的技术基础可能越来越难吸引新贡献者。[置信度：中]</p>
+</li>
+<li>
+<p><strong>竞品压力</strong> — Quarto（Posit 商业支持）和 Typst（52K Stars、快速增长）在功能和易用性上快速进步。PreTeXt 的无障碍优势是其护城河，但在其他维度（易用性、生态、社区）面临被超越的风险。[置信度：高]</p>
+</li>
+</ol>
+<h2 id="_22">生态成熟度评估</h2>
+<ul>
+<li><strong>插件/扩展数量：</strong> 较少。扩展主要通过自定义 XSL 样式表实现，没有标准化的插件市场。PreTeXtBook 组织下有 15 个仓库，涵盖核心转换、CLI、文档等。</li>
+<li><strong>第三方库支持：</strong> 集成 WeBWorK、STACK、Sage Cell、GeoGebra、MyOpenMath、Runestone Academy。这些集成深度且经过生产验证，但仅限于学术教育场景。</li>
+<li><strong>企业采用案例：</strong> 主要在高等教育领域：美国数学学会（MAA）、AIM（American Institute of Mathematics）、数十所大学。Oscar Levin 的《Discrete Mathematics: An Open Introduction》是最知名的 PreTeXt 教材之一。不适用于企业场景。</li>
+<li><strong>文档质量：</strong> 优秀。PreTeXt Guide 是一份超过 50 章、覆盖从入门到高级所有主题的完整指南。schema browser 可交互浏览所有 XML 元素。视频教程（Rob Beezer 的 YouTube 系列）也很丰富。</li>
+</ul>
+<h2 id="_23">生产环境就绪度评估</h2>
+<ul>
+<li><strong>稳定性：</strong> 高。项目已持续开发 12+ 年，大量教材已在生产环境使用。CLI 版本迭代频繁（v2.38.2），Bug 修复响应及时。590 个 Open Issues 中大部分是功能请求而非 Bug。[置信度：高]</li>
+<li><strong>性能表现：</strong> 中等。XSLT 1.0 是单线程的，转换大型文档（如 1000+ 页教材）可能需要数分钟。图像生成（Asymptote、Sage）是性能瓶颈。但构建结果可以缓存，增量构建较快。[置信度：中]</li>
+<li><strong>监控/可观测性：</strong> 不适用。PreTeXt 是文档构建工具，不是运行时服务。构建过程输出详细的日志信息。</li>
+<li><strong>故障恢复：</strong> PreTeXt 的"故障"主要是构建失败。Schema 验证在构建前捕获大部分错误。构建失败时，CLI 提供详细的错误信息和位置提示。源文件通常使用 Git 管理，支持版本回退。</li>
+<li><strong>安全合规：</strong> PreTeXt 不涉及网络服务安全。GPL-3.0-or-later 许可证对使用者友好，不约束文档版权。无已知安全漏洞历史（作为文档构建工具，攻击面很小）。</li>
+</ul>
+<h2 id="_24">学习曲线评估</h2>
+<ul>
+<li><strong>前置知识要求：</strong></li>
+<li>XML 基础语法（必需）</li>
+<li>LaTeX 数学语法（强烈推荐）</li>
+<li>命令行操作（必需，CLI 使用）</li>
+<li>Git 版本控制（推荐，用于源文件管理和部署）</li>
+<li>
+<p>XSLT 基础（仅在需要深度定制时需要）</p>
+</li>
+<li>
+<p><strong>入门时间估计：</strong> 有 XML 和 LaTeX 基础的作者约需 <strong>1-2 周</strong> 可完成基本教材的编写和构建。PreTeXt-CLI 的 <code>pretext new</code> 命令提供模板，降低入门门槛。[置信度：中]</p>
+</li>
+<li>
+<p><strong>精通时间估计：</strong> 掌握完整标记词汇表、自定义 XSL 样式、Publication File 配置、多格式发布流程约需 <strong>2-3 个月</strong>。深度定制（如为特定学科扩展 Schema）需要理解 XSLT 和 RELAX-NG，可能需要 <strong>6 个月以上</strong>。[置信度：低，基于推理]</p>
+</li>
+</ul>
+<h2 id="_25">总结与建议</h2>
+<p><strong>综合评分：7.0/10</strong></p>
+<p>PreTeXt 是一个高度专业化、在特定领域（STEM 教育出版 + 无障碍访问）无可替代的工具。它的核心价值在于：
+- <strong>无障碍访问</strong>是学术出版领域独一无二的优势
+- <strong>语义化 XML 标记</strong>提供了比任何竞品都严格的结构化保障
+- <strong>12 年持续维护</strong>和大量生产级使用证明了项目的可靠性
+- <strong>学术生态集成</strong>（WeBWorK/STACK/Runestone）构建了完整的闭环</p>
+<p>但 PreTeXt 也面临明显的局限：
+- XML/XSLT 技术栈老化，社区规模有限
+- 学习曲线陡峭，新作者入门门槛高
+- 构建依赖复杂，不如 Quarto/Typst 轻便
+- 关键人物风险</p>
+<p><strong>使用建议：</strong>
+- <strong>推荐使用</strong>：如果你是 STEM 教育作者，需要编写同时支持在线阅读、印刷和无障碍访问的教材或课程材料，PreTeXt 是最佳选择，没有之一。
+- <strong>考虑替代</strong>：如果你需要快速原型、数据驱动的可重现研究（Quarto 更好），或者只需要高质量 PDF 排版（Typst 或 LaTeX 更好）。
+- <strong>关注发展</strong>：PreTeXt 的无障碍特性正在被其他工具追赶（Quarto 1.9 已实验性支持 PDF 无障碍），但在数学 Braille 和屏幕阅读器数学朗读方面仍有显著领先优势。</p>
+<h2 id="_26">信息来源与版本说明</h2>
+<ul>
+<li><strong>分析基于版本：</strong> PreTeXt-CLI v2.38.2（核心标记语言无独立版本号）</li>
+<li><strong>信息获取日期：</strong> 2026-04-13</li>
+<li><strong>信息来源列表：</strong></li>
+<li><a href="https://api.github.com/repos/PreTeXtBook/pretext">GitHub API - PreTeXtBook/pretext</a> — Stars、Forks、Issues 等数据</li>
+<li><a href="https://github.com/PreTeXtBook/pretext/blob/master/README.md">GitHub README - PreTeXtBook/pretext</a> — 11 条设计原则</li>
+<li><a href="https://pretextbook.org">PreTeXt 官网</a> — 项目定位和特性介绍</li>
+<li><a href="https://pretextbook.org/doc/guide/html/xsltproc.html">PreTeXt Guide - Processing with xsltproc</a> — XSLT 转换架构详解</li>
+<li><a href="https://blog.runestone.academy/_static/pretext23/prose-workshop.html">Rob Beezer - "The State of PreTeXt" 演讲</a> — 项目历史、动机和路线图</li>
+<li><a href="https://blog.runestone.academy/2022/11/28/future_author.html">Runestone Academy - "An Open Letter to Future Authors"</a> — PreTeXt vs LaTeX 对比</li>
+<li><a href="https://pretextbook.org/doc/guide/html/topic-accessibility.html">PreTeXt Accessibility</a> — 无障碍特性说明</li>
+<li><a href="https://api.github.com/repos/quarto-dev/quarto-cli">GitHub API - quarto-dev/quarto-cli</a> — Quarto 竞品数据</li>
+<li><a href="https://api.github.com/repos/typst/typst">GitHub API - typst/typst</a> — Typst 竞品数据</li>
+<li><a href="https://pypi.org/project/pretext/">PyPI - pretext</a> — CLI 版本信息</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

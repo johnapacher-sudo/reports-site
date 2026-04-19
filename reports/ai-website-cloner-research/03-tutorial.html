@@ -1,0 +1,1534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIWebsiteClonerTemplate - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 4-6 小时 | **前置知识：** 命令行基础（git、npm）、至少一种 AI 编码 Agent 的基本使用、Next.js 和 React 基础概念 | **基于版本：** v0.3.1（2026-03-30 发布）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11" class="toc-h3">1.1 理解项目结构与核心文件</a></li>
+<li><a href="#12" class="toc-h3">1.2 执行第一次网站克隆</a></li>
+<li><a href="#13" class="toc-h3">1.3 理解输出代码结构</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-agent" class="toc-h3">2.1 指令同步机制与多 Agent 支持</a></li>
+<li><a href="#22-component-specs" class="toc-h3">2.2 Component Specs 深入理解</a></li>
+<li><a href="#23-ai-agent" class="toc-h3">2.3 使用不同 AI Agent 执行克隆</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-agentsmd" class="toc-h3">3.1 自定义 AGENTS.md 指令</a></li>
+<li><a href="#32-url" class="toc-h3">3.2 多 URL 克隆与页面路由管理</a></li>
+<li><a href="#33-docker" class="toc-h3">3.3 Docker 容器化部署</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">信息来源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>AIWebsiteClonerTemplate - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 4-6 小时<br>**前置知识：** 命令行基础（git、npm）、至少一种 AI 编码 Agent 的基本使用、Next.js 和 React 基础概念<br>**基于版本：** v0.3.1（2026-03-30 发布）</div>
+                    </header>
+                    <h1 id="aiwebsiteclonertemplate-">AIWebsiteClonerTemplate - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 4-6 小时
+<strong>前置知识：</strong> 命令行基础（git、npm）、至少一种 AI 编码 Agent 的基本使用、Next.js 和 React 基础概念
+<strong>基于版本：</strong> v0.3.1（2026-03-30 发布）</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Linux 或 Windows（WSL2 推荐）</li>
+<li><strong>Node.js：</strong> 24.0 或更高版本</li>
+<li><strong>Git：</strong> 2.20 或更高版本（需支持 Worktree）</li>
+<li><strong>AI 编码 Agent：</strong> 至少安装以下之一：Claude Code（推荐）、Cursor、Windsurf、Gemini CLI、GitHub Copilot 等</li>
+<li><strong>推荐 AI 模型：</strong> Claude Opus 4.6（项目官方推荐，视觉理解和代码生成能力最佳）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 第一步：检查 Node.js 版本（需要 24.0+）
+node --version
+# 预期输出：v24.x.x
+
+# 如果版本低于 24，使用 nvm 安装最新版本
+nvm install 24
+nvm use 24
+
+# 第二步：检查 Git 版本（需要 2.20+）
+git --version
+# 预期输出：git version 2.x.x
+
+# 第三步：克隆模板仓库（使用你自己的项目名称替换 my-clone）
+git clone https://github.com/JCodesMore/ai-website-cloner-template.git my-clone
+
+# 第四步：进入项目目录并安装依赖
+cd my-clone
+npm install
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>v24.0.0
+git version 2.47.1
+Cloning into 'my-clone'...
+remote: Enumerating objects: 234, done.
+remote: Counting objects: 100% (234/234), done.
+remote: Compressing objects: 100% (156/156), done.
+remote: Total 234 (delta 78), reused 198 (delta 62), pack-reused 0
+Receiving objects: 100% (234/234), 1.23 MiB | 2.45 MiB/s, done.
+Resolving deltas: 100% (78/78), done.
+
+added 327 packages in 12s
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 验证项目结构
+ls -la
+
+# 验证关键文件存在
+ls AGENTS.md CLAUDE.md package.json
+
+# 验证脚本可执行
+ls scripts/sync-agent-rules.sh scripts/sync-skills.mjs
+
+# 启动开发服务器验证 Next.js 项目可以运行
+npm run dev
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># ls -la 输出关键文件
+drwxr-xr-x  .claude/
+-rw-r--r--  AGENTS.md
+-rw-r--r--  CLAUDE.md
+-rw-r--r--  package.json
+drwxr-xr-x  scripts/
+drwxr-xr-x  src/
+
+# ls 验证关键文件
+AGENTS.md  CLAUDE.md  package.json
+
+# ls 验证脚本
+scripts/sync-agent-rules.sh  scripts/sync-skills.mjs
+
+# npm run dev 输出
+&gt; next dev
+  ▲ Next.js 16.x.x
+  - Local:        http://localhost:3000
+  - Environments: .env
+ ✓ Starting...
+ ✓ Ready in 1.2s
+</code></pre>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11">1.1 理解项目结构与核心文件</h3>
+<p><strong>概念讲解：</strong></p>
+<p>AIWebsiteClonerTemplate 不是传统的 npm 包或 CLI 工具，而是一个 <strong>Next.js 项目模板</strong>。它通过预配置的指令文件（AGENTS.md、CLAUDE.md 等）告诉 AI 编码 Agent 如何系统化地克隆网站。理解项目结构是使用模板的第一步。</p>
+<p>项目中有两类核心文件：
+- <strong>指令文件</strong>（AGENTS.md、CLAUDE.md 等）：定义了 5 阶段流水线的执行逻辑，AI Agent 读取这些文件来了解如何执行克隆任务
+- <strong>同步脚本</strong>（scripts/ 目录）：将 AGENTS.md 这个唯一指令源转换为各平台特定的配置格式</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看项目目录结构（关键部分）
+# 进入项目根目录
+cd my-clone
+
+# 查看顶层文件和目录
+ls -1
+
+# 查看 AI Agent 指令文件（最重要的文件）
+head -30 AGENTS.md
+
+# 查看同步脚本
+ls -1 scripts/
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># ls -1 输出
+.claude/
+.github/
+AGENTS.md
+CLAUDE.md
+Dockerfile
+GEMINI.md
+LICENSE
+README.md
+docker-compose.yml
+package.json
+public/
+scripts/
+src/
+tailwind.config.ts
+
+# head -30 AGENTS.md 输出（指令文件的前 30 行）
+# 这将显示 5 阶段流水线的定义、质量标准和验收条件
+
+# ls -1 scripts/ 输出
+sync-agent-rules.sh
+sync-skills.mjs
+</code></pre>
+<p><strong>练习题：</strong>
+1. 打开 <code>AGENTS.md</code> 文件，找到 5 阶段流水线的定义部分，列出每个阶段的名称
+2. 查看 <code>CLAUDE.md</code> 文件的内容，对比它与 <code>AGENTS.md</code> 的关系和差异</p>
+<hr />
+<h3 id="12">1.2 执行第一次网站克隆</h3>
+<p><strong>概念讲解：</strong></p>
+<p>网站克隆的核心入口是 <code>/clone-website &lt;target-url&gt;</code> 命令。这个命令是一个"技能（Skill）"，预定义在 <code>.claude/skills/clone-website/SKILL.md</code> 中。当你输入这个命令时，AI Agent 会按照 AGENTS.md 中定义的 5 阶段流水线自动执行克隆任务。</p>
+<p>5 个阶段分别是：
+1. <strong>Reconnaissance（侦察）</strong>：截图、提取设计令牌、分析布局
+2. <strong>Foundation（基础）</strong>：配置字体、颜色、下载资源
+3. <strong>Component Specs（组件规格）</strong>：为每个组件生成详细规格文档
+4. <strong>Parallel Build（并行构建）</strong>：多个 Agent 并行构建各组件
+5. <strong>Assembly &amp; QA（组装质检）</strong>：合并代码、视觉对比、质量检查</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 确保在项目目录中
+cd my-clone
+
+# 启动 Claude Code（推荐使用 --chrome 标志启用浏览器扩展）
+claude --chrome
+
+# 在 Claude Code 交互界面中执行克隆命令
+# 以下是你在 Claude Code 提示符下输入的命令：
+</code></pre>
+<pre><code class="language-text"># 在 Claude Code 中输入：
+/clone-website https://example.com
+
+# 如果需要克隆多个页面（v0.3.0+ 支持）：
+/clone-website https://example.com https://example.com/about https://example.com/contact
+</code></pre>
+<pre><code class="language-bash"># 克隆完成后，启动开发服务器查看结果
+npm run dev
+
+# 在浏览器中打开 http://localhost:3000 查看克隆结果
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># /clone-website 执行过程中 Claude Code 的输出（示意）
+&gt; Phase 1: Reconnaissance
+  - Screenshotting target site (desktop + mobile breakpoints)
+  - Extracting design tokens (colors, fonts, spacing)
+  - Scanning interactions (scroll, hover, click)
+
+&gt; Phase 2: Foundation
+  - Configuring fonts
+  - Setting up color system (oklch)
+  - Downloading images and assets
+
+&gt; Phase 3: Component Specs
+  - Generating spec for: Header
+  - Generating spec for: HeroSection
+  - Generating spec for: Features
+  - Generating spec for: Footer
+
+&gt; Phase 4: Parallel Build
+  - Building Header in worktree
+  - Building HeroSection in worktree
+  - Building Features in worktree
+  - Building Footer in worktree
+
+&gt; Phase 5: Assembly &amp; QA
+  - Merging all worktrees
+  - Running lint + typecheck + build
+  - Visual diff comparison
+
+✓ Clone complete! Run `npm run dev` to preview.
+</code></pre>
+<p><strong>练习题：</strong>
+1. 选择一个简单的静态网站（如 https://example.com），执行克隆并观察每个阶段的输出
+2. 在克隆过程中，检查 <code>docs/research/</code> 目录下生成了哪些文件</p>
+<hr />
+<h3 id="13">1.3 理解输出代码结构</h3>
+<p><strong>概念讲解：</strong></p>
+<p>克隆完成后，AIWebsiteClonerTemplate 会生成一个完整的 Next.js 16 项目。理解输出代码的结构有助于你后续修改和定制克隆结果。输出代码遵循以下约定：
+- TypeScript 严格模式
+- shadcn/ui 组件复用
+- Tailwind CSS v4 样式
+- 响应式断点设计
+- Next.js App Router 架构</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看克隆完成后的项目结构
+ls -1 src/
+
+# 查看组件目录
+ls -1 src/components/
+
+# 查看页面路由
+ls -1 src/app/
+
+# 查看全局样式（包含提取的设计令牌）
+head -40 src/app/globals.css
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># ls -1 src/ 输出
+app/
+components/
+lib/
+
+# ls -1 src/components/ 输出（示意，实际取决于目标网站）
+Header.tsx
+HeroSection.tsx
+Features.tsx
+Footer.tsx
+icons.tsx
+ui/
+
+# ls -1 src/app/ 输出
+favicon.ico
+globals.css
+layout.tsx
+page.tsx
+
+# head -40 src/app/globals.css 输出（示意）
+/* 设计令牌（Design Tokens）- 从目标网站提取 */
+@theme {
+  --color-primary: oklch(0.55 0.2 260);
+  --color-secondary: oklch(0.65 0.15 280);
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
+}
+</code></pre>
+<p><strong>练习题：</strong>
+1. 打开 <code>src/app/page.tsx</code>，分析它是如何引入和组装各组件的
+2. 查看 <code>src/components/ui/</code> 目录，了解 shadcn/ui 组件的使用方式</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-agent">2.1 指令同步机制与多 Agent 支持</h3>
+<p><strong>概念讲解：</strong></p>
+<p>AIWebsiteClonerTemplate 的核心设计之一是"Agent 无关（Agent-Agnostic）"。它通过 <code>AGENTS.md</code> 作为唯一的指令源（Single Source of Truth），使用同步脚本自动生成各平台特定的配置文件。</p>
+<p>这意味着：
+- 维护者只需编辑 <code>AGENTS.md</code> 一个文件
+- 运行 <code>sync-agent-rules.sh</code> 可自动生成 CLAUDE.md、GEMINI.md、.cursor/rules 等 13+ 种平台配置
+- 运行 <code>sync-skills.mjs</code> 可自动生成各平台的技能/命令文件</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看当前支持的所有 Agent 配置文件
+echo &quot;=== Agent 配置文件 ===&quot;
+ls -1 CLAUDE.md GEMINI.md .cursor/rules/ .windsurfrules 2&gt;/dev/null
+
+# 编辑指令源（修改流水线行为时编辑此文件）
+# 例如：vim AGENTS.md
+
+# 将修改后的 AGENTS.md 同步到所有平台配置
+bash scripts/sync-agent-rules.sh
+
+# 同步技能文件（/clone-website 命令定义）
+node scripts/sync-skills.mjs
+
+# 验证同步结果：对比 CLAUDE.md 和 AGENTS.md 的核心内容
+echo &quot;=== CLAUDE.md 前 10 行 ===&quot;
+head -10 CLAUDE.md
+echo &quot;&quot;
+echo &quot;=== GEMINI.md 前 10 行 ===&quot;
+head -10 GEMINI.md
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>=== Agent 配置文件 ===
+CLAUDE.md
+GEMINI.md
+.cursor/rules/:
+ai-website-cloner-template.mdc
+.windsurfrules
+
+# 同步脚本执行输出（示意）
+Syncing AGENTS.md to platform configs...
+  ✓ CLAUDE.md updated
+  ✓ GEMINI.md updated
+  ✓ .cursor/rules/ai-website-cloner-template.mdc updated
+  ✓ .windsurfrules updated
+  ✓ .github/copilot-instructions.md updated
+  ... 8 more platform configs updated
+
+Syncing skills...
+  ✓ .claude/skills/clone-website/SKILL.md updated
+  ✓ .github/copilot-instructions.md updated
+  ... 6 more platform skills updated
+
+=== CLAUDE.md 前 10 行 ===
+# AI Website Cloner Template - Agent Instructions
+This file is auto-generated from AGENTS.md...
+
+=== GEMINI.md 前 10 行 ===
+# AI Website Cloner Template - Agent Instructions
+This file is auto-generated from AGENTS.md...
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>不要直接编辑 CLAUDE.md 或 GEMINI.md</strong>：这些文件由同步脚本自动生成，手动修改会在下次同步时被覆盖。所有修改应该通过编辑 AGENTS.md 然后运行同步脚本来完成。
+- <strong>同步前确保 AGENTS.md 格式正确</strong>：AGENTS.md 的格式变更可能影响所有平台的配置生成。修改前建议备份原文件。</p>
+<p><strong>练习题：</strong>
+1. 在 <code>AGENTS.md</code> 中找到质量标准定义部分，尝试修改某个验收条件，然后运行同步脚本观察变化
+2. 对比同步前后的 <code>CLAUDE.md</code> 文件，验证你的修改是否正确同步</p>
+<hr />
+<h3 id="22-component-specs">2.2 Component Specs 深入理解</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Component Specs（组件规格）是 AIWebsiteClonerTemplate 的核心创新。在构建代码之前，AI Agent 会为每个识别到的 UI 组件生成一份详细的 Markdown 规格文档。这些文档包含：
+- 精确的 CSS 计算值（通过 <code>getComputedStyle()</code> 提取）
+- 所有交互状态（hover、focus、active、disabled）
+- 响应式断点下的行为变化
+- 内容文本和资源路径</p>
+<p>这个阶段相当于"先画建筑蓝图，再施工"，避免了 Agent 在构建时"猜测"样式值。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 克隆完成后，查看生成的组件规格文档
+ls -1 docs/research/components/
+
+# 查看某个组件的规格文档（以 HeroSection 为例）
+cat docs/research/components/HeroSection.md
+</code></pre>
+<pre><code class="language-markdown">&lt;!-- docs/research/components/HeroSection.md 示例内容 --&gt;
+
+# HeroSection 组件规格
+
+## 布局（Layout）
+- 容器宽度：max-width 1280px, margin 0 auto
+- 垂直间距：padding-top 96px, padding-bottom 80px
+- 内容对齐：text-align center
+- 背景：background-color #ffffff
+
+## 排版（Typography）
+- 标题（H1）：
+  - font-size: 60px
+  - font-weight: 700 (bold)
+  - line-height: 1.1
+  - color: #111827
+  - font-family: 'Plus Jakarta Sans', sans-serif
+- 副标题（Paragraph）：
+  - font-size: 20px
+  - font-weight: 400 (regular)
+  - line-height: 1.6
+  - color: #6b7280
+
+## 交互状态（Interactive States）
+- 主按钮（CTA Primary）：
+  - 默认：background #2563eb, color #ffffff, border-radius 8px
+  - hover：background #1d4ed8, transition 150ms ease
+  - focus：outline 2px solid #2563eb, outline-offset 2px
+- 次按钮（CTA Secondary）：
+  - 默认：background transparent, border 1px solid #d1d5db, color #374151
+  - hover：background #f9fafb, border-color #9ca3af
+
+## 响应式断点（Responsive Breakpoints）
+- md (768px)：
+  - 标题 font-size: 48px
+  - 副标题 font-size: 18px
+  - padding-top: 64px, padding-bottom: 56px
+- sm (640px)：
+  - 标题 font-size: 36px
+  - 按钮容器从水平排列改为垂直堆叠
+  - padding-top: 48px, padding-bottom: 40px
+
+## 内容（Content）
+- 标题文本：&quot;Build modern web apps faster&quot;
+- 副标题文本：&quot;The complete platform for...&quot;
+- 主按钮文本：&quot;Get Started&quot;
+- 次按钮文本：&quot;Watch Demo&quot;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># ls -1 docs/research/components/ 输出
+Header.md
+HeroSection.md
+Features.md
+Testimonials.md
+Footer.md
+
+# cat docs/research/components/HeroSection.md 输出如上所示
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>规格文档质量直接影响克隆效果</strong>：如果 Component Specs 阶段的输出不准确，后续构建阶段的代码也会偏离目标。建议在流水线运行后检查关键组件的规格文档。
+- <strong>规格文档是可编辑的</strong>：如果发现自动生成的规格有误，可以手动修正后再重新运行构建阶段，不需要重新开始整个流程。</p>
+<p><strong>练习题：</strong>
+1. 克隆一个网站后，打开某个组件的规格文档，验证其中记录的 CSS 值是否与目标网站一致
+2. 尝试手动修改某个组件规格中的字体大小值，然后重新构建该组件，观察变化</p>
+<hr />
+<h3 id="23-ai-agent">2.3 使用不同 AI Agent 执行克隆</h3>
+<p><strong>概念讲解：</strong></p>
+<p>AIWebsiteClonerTemplate 支持 13+ 种 AI 编码 Agent。切换 Agent 不需要修改项目代码——只需使用对应平台的 Agent 工具即可。不同 Agent 的体验可能有差异，因为各 Agent 的视觉理解能力和代码生成质量不同。</p>
+<p>以下展示如何在几个主流 Agent 中使用模板：</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 方式 1：使用 Claude Code（官方推荐）
+# Claude Code 会自动读取 CLAUDE.md 配置
+cd my-clone
+claude --chrome
+# 在 Claude Code 中输入：/clone-website https://example.com
+
+# 方式 2：使用 Cursor
+# Cursor 会自动读取 .cursor/rules/ 配置
+# 在 Cursor 中打开 my-clone 项目文件夹
+# 在 Cursor 的 Agent/Chat 中输入：clone https://example.com
+
+# 方式 3：使用 Gemini CLI
+# Gemini CLI 会自动读取 GEMINI.md 配置
+cd my-clone
+gemini
+# 在 Gemini CLI 中描述克隆任务
+
+# 方式 4：使用 GitHub Copilot（VS Code）
+# Copilot 会读取 .github/copilot-instructions.md 配置
+# 在 VS Code 中打开 my-clone 项目
+# 使用 Copilot Chat 输入克隆指令
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># 不同 Agent 的执行方式不同，但最终输出结构一致
+# 都会生成 src/components/*.tsx 和 src/app/ 下的页面文件
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>克隆质量因 Agent 而异</strong>：Claude Code + Opus 4.6 的视觉效果最佳。其他 Agent 可能需要额外的手动调整。
+- <strong>部分 Agent 可能不支持浏览器交互</strong>：Reconnaissance 阶段需要截取目标网站截图，某些 Agent（如非 Chrome MCP 配置的 Agent）可能需要手动提供截图。
+- <strong>首次使用新 Agent 时先同步配置</strong>：运行 <code>bash scripts/sync-agent-rules.sh &amp;&amp; node scripts/sync-skills.mjs</code> 确保配置是最新的。</p>
+<p><strong>练习题：</strong>
+1. 如果你有 Cursor 或其他 Agent 环境，尝试用两种不同的 Agent 克隆同一个网站，对比输出质量
+2. 查看同步脚本生成的不同平台配置文件，理解各平台的配置格式差异</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-agentsmd">3.1 自定义 AGENTS.md 指令</h3>
+<p><strong>概念讲解：</strong></p>
+<p>AGENTS.md 是项目的"大脑"，定义了完整的流水线执行逻辑、质量标准和验收条件。通过自定义 AGENTS.md，你可以：
+- 调整流水线的阶段行为（如跳过某些阶段、修改阶段输出要求）
+- 修改代码质量标准（如添加新的 lint 规则、组件规范）
+- 添加自定义的验收条件
+- 调整并行构建的策略</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看当前 AGENTS.md 的结构
+wc -l AGENTS.md
+
+# 备份原始文件
+cp AGENTS.md AGENTS.md.backup
+
+# 编辑 AGENTS.md（以修改质量标准为例）
+# 使用你喜欢的编辑器
+</code></pre>
+<pre><code class="language-bash"># 同步修改到所有平台
+bash scripts/sync-agent-rules.sh
+
+# 同步技能文件
+node scripts/sync-skills.mjs
+
+# 验证修改已同步到各平台配置
+# 对比 CLAUDE.md 和 AGENTS.md 的差异
+diff &lt;(head -20 AGENTS.md) &lt;(head -20 CLAUDE.md)
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># wc -l AGENTS.md 输出（示意）
+487 AGENTS.md
+
+# sync-agent-rules.sh 输出
+Syncing AGENTS.md to platform configs...
+  ✓ CLAUDE.md updated
+  ✓ GEMINI.md updated
+  ... all platforms updated
+
+# diff 输出（通常只有头部注释不同，因为核心内容来自同一源）
+1c1
+&lt; # AI Website Cloner Template - Main Instructions
+---
+&gt; # AI Website Cloner Template - Agent Instructions (auto-generated)
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>修改 AGENTS.md 前务必备份</strong>：错误的修改可能导致所有平台的克隆流程异常。
+- <strong>测试修改后再批量使用</strong>：建议先用一个简单的目标网站测试修改后的效果，确认无误后再用于正式克隆任务。
+- <strong>同步后检查目标平台配置</strong>：不同 Agent 对指令格式的解析可能有差异，修改后建议在目标 Agent 中做一次端到端测试。</p>
+<hr />
+<h3 id="32-url">3.2 多 URL 克隆与页面路由管理</h3>
+<p><strong>概念讲解：</strong></p>
+<p>从 v0.3.0 开始，AIWebsiteClonerTemplate 支持一次性克隆多个 URL。这对于需要克隆完整网站（首页、关于页、产品页等）的场景非常有用。多 URL 克隆时，Agent 会为每个 URL 独立执行流水线，但在 Foundation 阶段共享设计令牌和资源。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 克隆多个 URL（v0.3.0+）
+# 在 Claude Code 中执行：
+</code></pre>
+<pre><code class="language-text"># 克隆一个网站的多页面
+/clone-website https://example.com https://example.com/about https://example.com/pricing https://example.com/contact
+</code></pre>
+<pre><code class="language-bash"># 克隆完成后，查看生成的页面路由
+ls -1 src/app/
+
+# 查看各页面的组件引用关系
+head -20 src/app/about/page.tsx
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># ls -1 src/app/ 输出
+favicon.ico
+globals.css
+layout.tsx
+page.tsx          # 首页
+about/
+  page.tsx        # 关于页
+pricing/
+  page.tsx        # 定价页
+contact/
+  page.tsx        # 联系页
+
+# head -20 src/app/about/page.tsx 输出（示意）
+import { Header } from &quot;@/components/Header&quot;;
+import { Footer } from &quot;@/components/Footer&quot;;
+import { AboutHero } from &quot;@/components/AboutHero&quot;;
+import { TeamSection } from &quot;@/components/TeamSection&quot;;
+// ...
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>多 URL 克隆耗时更长</strong>：每个页面都需独立执行流水线，组件数量线性增加。建议优先克隆最重要的页面。
+- <strong>共享组件自动复用</strong>：多个页面共享的组件（如 Header、Footer）只会生成一次，在 Assembly 阶段自动连接。</p>
+<hr />
+<h3 id="33-docker">3.3 Docker 容器化部署</h3>
+<p><strong>概念讲解：</strong></p>
+<p>项目内置了 Docker Compose 配置，可以将克隆结果一键容器化部署。这对于以下场景有用：
+- 将克隆结果快速部署到测试环境
+- 在 CI/CD 流水线中自动构建和部署
+- 团队成员快速预览克隆结果</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-bash"># 查看 Docker 配置文件
+cat docker-compose.yml
+
+# 使用 Docker 构建和运行
+docker compose up --build
+
+# 后台运行
+docker compose up --build -d
+
+# 查看运行状态
+docker compose ps
+
+# 停止容器
+docker compose down
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># docker compose up --build 输出（示意）
+[+] Building 45.2s
+ =&gt; [internal] load build definition
+ =&gt; =&gt; transferring dockerfile: 523B
+ =&gt; [1/5] FROM node:24-alpine
+ =&gt; [2/5] WORKDIR /app
+ =&gt; [3/5] COPY package*.json ./
+ =&gt; [4/5] RUN npm ci
+ =&gt; [5/5] COPY . .
+ =&gt; exporting to image
+
+[+] Running 1/0
+ ✔ Container my-clone-web  Started  0.3s
+
+# docker compose ps 输出
+NAME              STATUS          PORTS
+my-clone-web      Up 30 seconds   0.0.0.0:3000-&gt;3000/tcp
+
+# 访问 http://localhost:3000 即可查看克隆结果
+</code></pre>
+<p><strong>注意事项：</strong>
+- <strong>确保 Docker 已安装并运行</strong>：Docker Desktop（macOS/Windows）或 Docker Engine（Linux）需要事先安装。
+- <strong>端口冲突</strong>：默认使用 3000 端口，如果已被占用需要修改 docker-compose.yml 中的端口映射。</p>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>克隆 Stripe 官网首页（https://stripe.com），这是一个包含多个复杂组件区域的典型企业官网：
+- 顶部导航栏（含下拉菜单和动画效果）
+- Hero 区域（含渐变文字和动态背景）
+- Features 展示区（卡片网格布局）
+- 支付流程演示区
+- 底部导航和 Footer</p>
+<p><strong>目标：</strong> 使用 AIWebsiteClonerTemplate 完整克隆该页面，生成可运行的 Next.js 项目，并通过 CI Quality Gates 验证。</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>技术选型：
+- AI Agent: Claude Code + Opus 4.6（推荐配置）
+- 目标框架: Next.js 16 + React 19
+- UI 组件库: shadcn/ui
+- 样式系统: Tailwind CSS v4（oklch 色彩空间）
+- 类型系统: TypeScript 严格模式
+
+预期组件拆分：
+1. Header          → 导航栏（Logo + 菜单 + CTA 按钮）
+2. HeroSection     → 主视觉区（渐变标题 + 描述 + 按钮）
+3. Features        → 功能展示（卡片网格 + 图标）
+4. PaymentDemo     → 支付流程演示
+5. Testimonials    → 用户评价（轮播或网格）
+6. CTASection      → 行动号召区域
+7. Footer          → 底部导航（多列链接 + 版权信息）
+
+流水线阶段预估：
+- Phase 1 (侦察):  5-10 分钟
+- Phase 2 (基础):  3-5 分钟
+- Phase 3 (规格):  5-8 分钟
+- Phase 4 (构建):  10-20 分钟（并行）
+- Phase 5 (组装):  3-5 分钟
+总计：约 25-50 分钟
+</code></pre>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-bash"># ===== 第一步：环境准备 =====
+# 确保 Node.js 版本符合要求
+node --version
+# 预期输出：v24.x.x
+
+# 克隆模板（使用项目名 stripe-clone）
+git clone https://github.com/JCodesMore/ai-website-cloner-template.git stripe-clone
+cd stripe-clone
+npm install
+
+# ===== 第二步：启动 Claude Code =====
+# 使用 --chrome 标志启用浏览器交互
+claude --chrome
+
+# ===== 第三步：执行克隆 =====
+# 在 Claude Code 交互界面中输入以下命令：
+</code></pre>
+<pre><code class="language-text">/clone-website https://stripe.com
+</code></pre>
+<pre><code class="language-bash"># ===== 第四步：等待流水线执行完成 =====
+# Agent 会自动执行 5 个阶段，期间可能需要你确认一些权限
+# 例如：允许浏览器导航、确认资源下载等
+
+# ===== 第五步：验证结果 =====
+# 启动开发服务器
+npm run dev
+
+# 在浏览器中打开 http://localhost:3000
+
+# 运行质量检查（与 CI Quality Gates 相同）
+npm run lint
+npx tsc --noEmit
+npm run build
+
+# ===== 第六步：查看生成的文件结构 =====
+echo &quot;=== 页面文件 ===&quot;
+ls -1 src/app/
+
+echo &quot;=== 组件文件 ===&quot;
+ls -1 src/components/
+
+echo &quot;=== 设计令牌 ===&quot;
+head -30 src/app/globals.css
+
+echo &quot;=== 组件规格文档 ===&quot;
+ls -1 docs/research/components/
+
+# ===== 第七步：容器化部署（可选） =====
+docker compose up --build -d
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code># npm run lint 输出
+&gt; next lint
+✔ No ESLint warnings or errors
+
+# npx tsc --noEmit 输出
+（无输出表示类型检查通过）
+
+# npm run build 输出
+&gt; next build
+  ▲ Next.js 16.x.x
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+ ✓ Linting and checking validity of types
+ ✓ Collecting page data
+ ✓ Generating static pages (7/7)
+ ✓ Finalizing page optimization
+
+Route (app)              Size     First Load JS
+┌ ○ /                    12.3 kB      89.2 kB
+├ ○ /_not-found          0 kB        82.1 kB
+└ λ /api/health          0 kB        82.1 kB
+
+# 文件结构输出
+=== 页面文件 ===
+favicon.ico
+globals.css
+layout.tsx
+page.tsx
+
+=== 组件文件 ===
+Header.tsx
+HeroSection.tsx
+Features.tsx
+PaymentDemo.tsx
+Testimonials.tsx
+CTASection.tsx
+Footer.tsx
+icons.tsx
+ui/
+
+=== 设计令牌 ===
+@theme {
+  --color-primary: oklch(0.55 0.22 265);
+  --color-secondary: oklch(0.65 0.18 280);
+  --font-sans: 'Inter', sans-serif;
+  ...
+}
+
+=== 组件规格文档 ===
+Header.md
+HeroSection.md
+Features.md
+PaymentDemo.md
+Testimonials.md
+CTASection.md
+Footer.md
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点 1：5 阶段流水线（Multi-Phase Pipeline）</strong>
+- <code>/clone-website</code> 命令触发了完整的 5 阶段流水线，每个阶段按顺序自动执行
+- 可以在 <code>docs/research/components/</code> 目录中看到 Phase 3 生成的组件规格文档</p>
+<p><strong>知识点 2：Component Specs（组件规格）</strong>
+- Phase 3 为每个组件生成了详细的 Markdown 规格文档
+- 这些规格包含精确的 CSS 值、交互状态和响应式断点
+- 打开 <code>docs/research/components/HeroSection.md</code> 可以看到提取的颜色值（如 oklch 色彩空间）、字体大小、hover 效果等</p>
+<p><strong>知识点 3：Git Worktree 并行构建（Parallel Build）</strong>
+- Phase 4 使用 Git Worktree 为每个组件创建独立的工作目录
+- 多个 Agent 并行构建不同组件，大幅缩短了总构建时间
+- Phase 5 将所有 Worktree 的结果合并为完整的 Next.js 项目</p>
+<p><strong>知识点 4：CI Quality Gates（质量门禁）</strong>
+- <code>npm run lint</code>、<code>npx tsc --noEmit</code>、<code>npm run build</code> 三项检查确保代码质量
+- 这是 Assembly &amp; QA 阶段的自动化验收标准</p>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>多页面克隆</strong>：使用 <code>/clone-website https://stripe.com https://stripe.com/docs https://stripe.com/pricing</code> 克隆 Stripe 的多个页面，观察组件复用情况</li>
+<li><strong>自定义质量标准</strong>：编辑 <code>AGENTS.md</code> 添加自定义的验收条件（如要求所有图片使用 Next.js Image 组件），同步后重新克隆</li>
+<li><strong>跨 Agent 对比</strong>：分别用 Claude Code 和 Cursor 克隆同一个页面，对比两种 Agent 的输出差异</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>error: node --version v20.x.x</code> (低于 v24)</td>
+<td>Node.js 版本不符合最低要求（v24+）</td>
+<td>安装 Node.js 24 或更高版本：<code>nvm install 24 &amp;&amp; nvm use 24</code></td>
+</tr>
+<tr>
+<td><code>Chrome extension isn't connected</code></td>
+<td>Claude Code 的 Chrome MCP 扩展未正确安装或未连接</td>
+<td>重新启动 <code>claude --chrome</code>，在浏览器中确认扩展已安装并启用</td>
+</tr>
+<tr>
+<td><code>git worktree add failed</code></td>
+<td>Git 版本过低或存在未清理的 Worktree</td>
+<td>更新 Git 到 2.20+：<code>git worktree list</code> 检查现有 Worktree，<code>git worktree prune</code> 清理无效条目</td>
+</tr>
+<tr>
+<td><code>Error: Cannot take screenshot</code></td>
+<td>目标网站有反爬虫机制或页面加载超时</td>
+<td>选择无反爬虫的静态网站作为目标，或在 Reconnaissance 阶段手动提供截图</td>
+</tr>
+<tr>
+<td><code>npm run build</code> 类型错误</td>
+<td>生成的组件代码中存在 TypeScript 类型不匹配</td>
+<td>检查 <code>docs/research/components/</code> 中的规格是否准确，手动修正规格后重新构建</td>
+</tr>
+<tr>
+<td><code>Merge conflict in Assembly phase</code></td>
+<td>多个 Worktree 修改了同一文件（如 globals.css）</td>
+<td>手动解决冲突，保留两个分支的必要修改，或修改 AGENTS.md 中的组件拆分策略</td>
+</tr>
+<tr>
+<td><code>Error: Port 3000 already in use</code></td>
+<td>开发服务器端口被其他进程占用</td>
+<td>终止占用端口的进程：<code>lsof -i :3000</code> 找到 PID 后 <code>kill &lt;PID&gt;</code>，或修改启动端口</td>
+</tr>
+<tr>
+<td><code>CRLF line ending errors</code> (Windows)</td>
+<td>Windows 使用 CRLF 行尾导致脚本执行失败</td>
+<td>v0.3.1 已修复此问题。确保使用最新版本，或在 Git 中配置 <code>core.autocrlf</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>分阶段调试</strong>：如果某个阶段失败，可以检查该阶段的输出目录。例如 Reconnaissance 阶段失败时检查 <code>docs/research/</code> 目录是否有截图文件；Component Specs 阶段失败时检查 <code>docs/research/components/</code> 是否有规格文档。根据缺失的文件定位问题发生在哪个具体步骤。</p>
+</li>
+<li>
+<p><strong>查看 Agent 执行日志</strong>：Claude Code 和其他 Agent 通常会输出详细的执行过程日志。如果克隆结果不理想，回溯日志找到偏差发生的阶段（通常是 Component Specs 或 Parallel Build 阶段），针对性修正该阶段的输出。</p>
+</li>
+<li>
+<p><strong>手动提供截图作为输入</strong>：如果 Reconnaissance 阶段因反爬虫机制无法截图，可以手动使用浏览器截取目标网站的全页面截图，保存到 <code>docs/design-references/</code> 目录，然后重新运行后续阶段。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong><a href="https://github.com/JCodesMore/ai-website-cloner-template#readme">GitHub README</a></strong> - 重点关注"Quick Start"和"Pipeline"章节，了解安装和基本使用流程</li>
+<li><strong><a href="https://github.com/JCodesMore/ai-website-cloner-template/blob/main/AGENTS.md">AGENTS.md</a></strong> - 阅读 5 阶段流水线的完整定义，理解每阶段的输入、输出和验收标准</li>
+<li><strong><a href="https://github.com/JCodesMore/ai-website-cloner-template/blob/main/CLAUDE.md">CLAUDE.md</a></strong> - 查看从 AGENTS.md 同步生成的 Claude Code 配置，理解指令同步机制</li>
+<li><strong><a href="https://github.com/JCodesMore/ai-website-cloner-template/tree/main/scripts">scripts/</a></strong> - 阅读 <code>sync-agent-rules.sh</code> 和 <code>sync-skills.mjs</code> 的源码，理解多平台同步的实现细节</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution">Augment Code: Git Worktrees for Parallel AI Agent Execution</a></strong> - 深入理解 Git Worktree 在并行 AI 编码中的应用原理</li>
+<li><strong><a href="https://incrypted.com/en/guide-ai-website-cloner/">Incrypted: How to Clone Any Website With a Single Command</a></strong> - 完整的端到端实战教程，包含截图和故障排查</li>
+<li><strong><a href="https://www.reddit.com/r/ClaudeCode/comments/1pzczjn/git_worktrees_are_a_superpower_for_agentic_dev/">Reddit: Git Worktrees are a SuperPower for Agentic Dev</a></strong> - 社区讨论，了解 Git Worktree 在 AI 编码中的实际应用经验</li>
+</ul>
+<h3 id="_20">信息来源</h3>
+<ul>
+<li><a href="https://github.com/JCodesMore/ai-website-cloner-template">GitHub 仓库 JCodesMore/ai-website-cloner-template</a> - 获取日期：2026-04-12</li>
+<li><a href="https://incrypted.com/en/guide-ai-website-cloner/">Incrypted: How to Clone Any Website With a Single Command</a> - 获取日期：2026-04-12</li>
+<li><a href="https://augmentcode.com/guides/git-worktrees-parallel-ai-agent-execution">Augment Code: Git Worktrees for Parallel AI Agent Execution</a> - 获取日期：2026-04-12</li>
+<li><a href="https://lobehub.com/skills/aradotso-trending-skills-ai-website-cloner-template">LobeHub: AI Website Cloner Template Skill</a> - 获取日期：2026-04-12</li>
+<li><a href="https://www.reddit.com/r/vibecoding/comments/1s3h9od/i_made_this_claude_code_skill_to_clone_any_website/">Reddit: I Made This Claude Code Skill to Clone Any Website</a> - 获取日期：2026-04-12</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenGenerativeUI - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-10 小时 | **前置知识：** React 基础、Next.js 基础、TypeScript 基础、命令行操作 | **技术版本：** 基于 GitHub 主分支（截至 2026-04-07 最后推送）</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-uigenerative-ui" class="toc-h3">1.1 理解生成式 UI（Generative UI）</a></li>
+<li><a href="#12" class="toc-h3">1.2 理解三应用架构</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-skillmd" class="toc-h3">2.1 SKILL.md 技能系统与决策矩阵</a></li>
+<li><a href="#22-iframe" class="toc-h3">2.2 沙箱化 iframe 渲染机制</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-langgraph-deep-agent" class="toc-h3">3.1 集成 LangGraph Deep Agent</a></li>
+<li><a href="#32-mcp" class="toc-h3">3.2 MCP 服务器与工具集成</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>OpenGenerativeUI - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-10 小时<br>**前置知识：** React 基础、Next.js 基础、TypeScript 基础、命令行操作<br>**技术版本：** 基于 GitHub 主分支（截至 2026-04-07 最后推送）</div>
+                    </header>
+                    <h1 id="opengenerativeui-">OpenGenerativeUI - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-10 小时
+<strong>前置知识：</strong> React 基础、Next.js 基础、TypeScript 基础、命令行操作
+<strong>技术版本：</strong> 基于 GitHub 主分支（截至 2026-04-07 最后推送）</p>
+</blockquote>
+<hr />
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Linux 或 Windows（WSL2 推荐）</li>
+<li><strong>Node.js：</strong> &gt;= 20.0.0（推荐使用 LTS 版本）</li>
+<li><strong>包管理器：</strong> pnpm &gt;= 8.0.0（项目使用 Turborepo + pnpm 管理）</li>
+<li><strong>Git：</strong> &gt;= 2.30</li>
+<li><strong>浏览器：</strong> Chrome/Edge/Firefox 最新版</li>
+<li><strong>LLM API Key：</strong> 需要至少一个支持的模型 API Key（OpenAI、Anthropic 或 Google）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 第一步：克隆仓库
+git clone https://github.com/CopilotKit/OpenGenerativeUI.git
+cd OpenGenerativeUI
+
+# 第二步：运行一键设置脚本（安装依赖 + 初始化配置）
+make setup
+
+# 第三步：配置环境变量
+# 编辑 app/.env 文件，填入你的 API Key
+</code></pre>
+<p><strong>app/.env 配置示例：</strong></p>
+<pre><code class="language-bash"># 必填：至少配置一个 LLM API Key
+OPENAI_API_KEY=sk-your-openai-key-here
+# 或
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
+# 或
+GOOGLE_API_KEY=your-google-key-here
+
+# CopilotKit 运行时地址（默认值，通常无需修改）
+NEXT_PUBLIC_COPILOT_RUNTIME_URL=http://localhost:3000/api/copilotkit
+
+# Agent 服务地址（默认值）
+COPILOT_AGENT_URL=http://localhost:8123
+</code></pre>
+<p><strong>agent/.env 配置示例：</strong></p>
+<pre><code class="language-bash"># Agent 使用的 LLM 模型
+MODEL_NAME=openai/gpt-4o
+
+# 对应的 API Key
+OPENAI_API_KEY=sk-your-openai-key-here
+</code></pre>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 启动所有三个应用（前端 + Agent + MCP 服务器）
+make dev
+</code></pre>
+<p><strong>预期输出：</strong></p>
+<pre><code>✓ App (Next.js)   → http://localhost:3000
+✓ Agent (LangGraph) → http://localhost:8123
+✓ MCP Server      → running on configured port
+</code></pre>
+<p>打开浏览器访问 <code>http://localhost:3000</code>，应看到一个带有聊天界面的页面。在聊天框中输入"画一个柱状图"，如果 Agent 正确响应并生成图表可视化，说明环境搭建成功。</p>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-uigenerative-ui">1.1 理解生成式 UI（Generative UI）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>生成式 UI（Generative UI）是一种 UI 模式，用户界面的部分或全部由 AI Agent 在运行时动态生成，而非由开发者预先编写。传统 AI 聊天只能输出文本，而生成式 UI 让 Agent 能直接生成交互式组件（图表、动画、表单等）。</p>
+<p>OpenGenerativeUI 支持三种生成式 UI 模式，控制权从高到低：</p>
+<ol>
+<li><strong>静态生成式 UI（AG-UI）</strong> — 开发者预定义 UI 组件，Agent 只选择显示哪个组件并填充数据。安全性最高。</li>
+<li><strong>声明式生成式 UI（A2UI/Open-JSON-UI）</strong> — Agent 返回结构化的 UI 描述（JSON 格式），前端按规范渲染。灵活性与安全性的平衡。</li>
+<li><strong>开放式生成式 UI（MCP Apps）</strong> — Agent 返回完整的 HTML/代码，前端在沙箱中直接渲染。灵活性最高。</li>
+</ol>
+<p><strong>代码示例：</strong>（静态模式 — 基于 CopilotKit 官方文档）</p>
+<pre><code class="language-typescript">// app/components/WeatherTool.tsx
+// 基于 CopilotKit 官方文档
+// 使用 useFrontendTool 注册一个前端工具，Agent 可调用并触发预定义的天气卡片渲染
+
+&quot;use client&quot;;
+
+import { useFrontendTool } from &quot;@copilotkit/react&quot;;
+import { z } from &quot;zod&quot;;
+
+// 预定义的天气卡片组件
+function WeatherCard({ location, temperature, conditions }: {
+  location: string;
+  temperature: number;
+  conditions: string;
+}) {
+  return (
+    &lt;div className=&quot;rounded-lg border p-4 shadow-sm&quot;&gt;
+      &lt;h3 className=&quot;text-lg font-semibold&quot;&gt;{location}&lt;/h3&gt;
+      &lt;p className=&quot;text-3xl font-bold&quot;&gt;{temperature}°C&lt;/p&gt;
+      &lt;p className=&quot;text-gray-500&quot;&gt;{conditions}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+// 加载状态组件
+function LoadingCard({ location }: { location?: string }) {
+  return (
+    &lt;div className=&quot;rounded-lg border p-4 animate-pulse&quot;&gt;
+      &lt;p&gt;正在获取 {location || &quot;天气数据&quot;}...&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+export function WeatherTool() {
+  // 注册前端工具，Agent 可以调用 get_weather
+  useFrontendTool({
+    name: &quot;get_weather&quot;,
+    description: &quot;获取指定城市的当前天气信息&quot;,
+    parameters: z.object({
+      location: z.string().describe(&quot;城市名称，如'北京'或'Tokyo'&quot;),
+    }),
+    handler: async ({ location }) =&gt; {
+      // 模拟天气 API 调用
+      await new Promise((resolve) =&gt; setTimeout(resolve, 500));
+      return JSON.stringify({
+        location,
+        temperature: 22,
+        conditions: &quot;晴天&quot;,
+      });
+    },
+    render: ({ status, args, result }) =&gt; {
+      // 根据工具执行状态渲染不同的 UI
+      if (status === &quot;inProgress&quot; || status === &quot;executing&quot;) {
+        return &lt;LoadingCard location={args?.location} /&gt;;
+      }
+      if (status === &quot;complete&quot; &amp;&amp; result) {
+        const data = JSON.parse(result);
+        return (
+          &lt;WeatherCard
+            location={data.location}
+            temperature={data.temperature}
+            conditions={data.conditions}
+          /&gt;
+        );
+      }
+      return &lt;&gt;&lt;/&gt;;
+    },
+  });
+
+  return null;
+}
+</code></pre>
+<p><strong>执行结果：</strong>（用户在聊天框输入"北京天气怎么样？"后）</p>
+<pre><code>┌─────────────────────┐
+│ 北京                 │
+│ 22°C                │
+│ 晴天                │
+└─────────────────────┘
+</code></pre>
+<p>Agent 调用了 <code>get_weather</code> 工具，前端自动渲染了预定义的 <code>WeatherCard</code> 组件。</p>
+<p><strong>练习题：</strong>
+1. 修改 <code>WeatherCard</code> 组件，增加湿度和风速显示字段
+2. 尝试注册一个新的 <code>get_time</code> 工具，返回当前时间并用自定义组件渲染</p>
+<hr />
+<h3 id="12">1.2 理解三应用架构</h3>
+<p><strong>概念讲解：</strong></p>
+<p>OpenGenerativeUI 使用 Turborepo monorepo 管理 three 个独立应用，每个应用有明确的职责划分：</p>
+<ul>
+<li><strong>app/（前端应用）</strong> — Next.js 16 应用，负责用户界面和 CopilotKit 集成。端口 3000</li>
+<li><strong>agent/（Agent 后端）</strong> — LangGraph Deep Agent，负责 AI 推理和代码生成。端口 8123</li>
+<li><strong>mcp/（MCP 服务器）</strong> — 提供 MCP 协议工具和资源，支持外部集成</li>
+</ul>
+<p>三个应用通过 <strong>AG-UI 协议</strong>（前端 ↔ Agent）和 <strong>MCP 协议</strong>（Agent ↔ MCP 服务器）协同工作。</p>
+<p><strong>代码示例：</strong>（查看项目目录结构）</p>
+<pre><code class="language-bash"># 查看 OpenGenerativeUI 的目录结构
+cd OpenGenerativeUI
+find . -maxdepth 3 -type f -name &quot;*.ts&quot; -o -name &quot;*.tsx&quot; -o -name &quot;*.py&quot; | head -30
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>./app/page.tsx
+./app/layout.tsx
+./app/components/GenerativeUI.tsx
+./app/api/copilotkit/route.ts
+./agent/main.py
+./agent/skills/advanced-visualization/SKILL.md
+./agent/skills/master-playbook/SKILL.md
+./agent/skills/svg-diagrams/SKILL.md
+./mcp/server.py
+./mcp/tools/assemble_document.py
+</code></pre>
+<p><strong>练习题：</strong>
+1. 打开 <code>agent/skills/advanced-visualization/SKILL.md</code>，阅读其中的决策矩阵内容
+2. 查看 <code>app/api/copilotkit/route.ts</code>，找到 CopilotKit 运行时的配置</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-skillmd">2.1 SKILL.md 技能系统与决策矩阵</h3>
+<p><strong>详细讲解：</strong></p>
+<p>OpenGenerativeUI 的 Agent 通过 SKILL.md 文件定义技能。每个技能是一个 Markdown 文件，包含技能描述、适用场景、决策矩阵和渲染策略。Agent 在推理时读取这些技能文件，根据用户需求选择最优的可视化方案。</p>
+<p><code>advanced-visualization</code> 技能是核心技能，它包含一个将 22 种视觉输出类型映射到最优渲染技术的决策矩阵。</p>
+<p><strong>代码示例：</strong>（创建自定义技能文件）</p>
+<pre><code class="language-markdown">&lt;!-- agent/skills/custom-charts/SKILL.md --&gt;
+&lt;!-- 基于官方 advanced-visualization 技能格式 --&gt;
+
+# Custom Charts 技能
+
+## 描述
+根据用户的数据描述生成交互式图表，支持柱状图、折线图、饼图和散点图。
+
+## 适用场景
+- 用户要求展示数据对比 → 柱状图
+- 用户要求展示趋势变化 → 折线图
+- 用户要求展示占比分布 → 饼图
+- 用户要求展示数据相关性 → 散点图
+
+## 决策矩阵
+| 用户意图关键词 | 推荐图表类型 | 渲染技术 | 理由 |
+|---------------|-------------|---------|------|
+| 对比、比较、排名 | 柱状图 | Recharts BarChart | 直观展示数值差异 |
+| 趋势、变化、增长 | 折线图 | Recharts LineChart | 清晰展示时间序列 |
+| 占比、比例、分布 | 饼图 | Recharts PieChart | 直观展示整体与部分 |
+| 关联、关系、相关 | 散点图 | Recharts ScatterChart | 展示两个变量的关系 |
+
+## 渲染策略
+1. 分析用户意图，提取关键词
+2. 匹配决策矩阵，确定图表类型
+3. 从用户描述中提取数据
+4. 使用 Recharts 生成完整的 React 组件代码
+5. 确保图表支持交互（hover 提示、点击详情）
+
+## 代码模板
+生成图表时使用以下结构：
+- 导入 Recharts 组件
+- 定义数据数组
+- 配置 ResponsiveContainer 包裹
+- 添加 Tooltip 和 Legend
+- 使用项目配色方案（明暗主题自适应）
+</code></pre>
+<p><strong>注意事项：</strong>
+- SKILL.md 文件必须放在 <code>agent/skills/</code> 目录下，目录名即为技能名
+- 技能名称只能使用小写字母、数字和连字符
+- 决策矩阵中的渲染技术必须是项目中已安装的库（Recharts、Three.js、D3.js 等）
+- 技能文件会在 Agent 启动时加载，修改后需重启 Agent 服务</p>
+<p><strong>练习题：</strong>
+1. 在 <code>agent/skills/</code> 目录下创建一个 <code>math-formula</code> 技能，使用 KaTeX 渲染数学公式
+2. 为 <code>custom-charts</code> 技能添加面积图（Area Chart）的决策规则</p>
+<hr />
+<h3 id="22-iframe">2.2 沙箱化 iframe 渲染机制</h3>
+<p><strong>详细讲解：</strong></p>
+<p>当用户请求生成可视化时，Agent 生成的 HTML/SVG/JavaScript 代码会在一个独立的沙箱化 iframe 中渲染。这个机制确保：</p>
+<ol>
+<li><strong>安全隔离</strong> — AI 生成的代码无法访问主应用的 DOM、Cookie 或 localStorage</li>
+<li><strong>样式隔离</strong> — 生成的 CSS 不会污染主应用的样式</li>
+<li><strong>主题适配</strong> — iframe 自动检测主应用的明暗主题并应用对应样式</li>
+<li><strong>响应式尺寸</strong> — iframe 会根据生成内容自动调整大小</li>
+</ol>
+<p><strong>代码示例：</strong>（基于官方沙箱渲染器简化版）</p>
+<pre><code class="language-typescript">// app/components/SandboxRenderer.tsx
+// 基于 OpenGenerativeUI README 描述的渲染机制
+// 简化的沙箱渲染器实现
+
+&quot;use client&quot;;
+
+import { useEffect, useRef, useState } from &quot;react&quot;;
+
+interface SandboxRendererProps {
+  // AI 生成的 HTML 代码
+  htmlContent: string;
+  // 是否启用渐进式揭示动画
+  enableAnimation?: boolean;
+}
+
+export function SandboxRenderer({
+  htmlContent,
+  enableAnimation = true,
+}: SandboxRendererProps) {
+  const iframeRef = useRef&lt;HTMLIFrameElement&gt;(null);
+  const [isVisible, setIsVisible] = useState(!enableAnimation);
+
+  // 渐进式揭示动画：内容加载后渐入显示
+  useEffect(() =&gt; {
+    if (enableAnimation &amp;&amp; htmlContent) {
+      const timer = setTimeout(() =&gt; setIsVisible(true), 100);
+      return () =&gt; clearTimeout(timer);
+    }
+  }, [enableAnimation, htmlContent]);
+
+  // 检测系统主题偏好，传递给 iframe
+  useEffect(() =&gt; {
+    if (!iframeRef.current) return;
+    const darkMode = window.matchMedia(&quot;(prefers-color-scheme: dark)&quot;).matches;
+    const theme = darkMode ? &quot;dark&quot; : &quot;light&quot;;
+
+    // 向 iframe 注入主题变量
+    iframeRef.current.contentWindow?.postMessage(
+      { type: &quot;theme-update&quot;, theme },
+      &quot;*&quot;
+    );
+  }, [htmlContent]);
+
+  return (
+    &lt;div
+      className={`sandbox-container transition-opacity duration-500 ${
+        isVisible ? &quot;opacity-100&quot; : &quot;opacity-0&quot;
+      }`}
+    &gt;
+      &lt;iframe
+        ref={iframeRef}
+        srcDoc={htmlContent}
+        sandbox=&quot;allow-scripts allow-same-origin&quot;
+        className=&quot;w-full border-0 rounded-lg&quot;
+        title=&quot;AI Generated Visualization&quot;
+      /&gt;
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p><strong>执行结果：</strong>（当 Agent 生成一个 SVG 柱状图时）</p>
+<pre><code>┌──────────────────────────────────────┐
+│  (iframe 沙箱)                       │
+│                                      │
+│  ██                                  │
+│  ██  ██                              │
+│  ██  ██      ██                      │
+│  ██  ██  ██  ██                      │
+│  ██  ██  ██  ██  ██                  │
+│  Q1  Q2  Q3  Q4                      │
+│                                      │
+└──────────────────────────────────────┘
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>sandbox</code> 属性必须包含 <code>allow-scripts</code>，否则生成的 JavaScript 无法执行
+- <code>allow-same-origin</code> 允许 iframe 访问主题信息，但要注意安全边界
+- 生成内容的大小不可预测，建议使用 <code>min-height</code> 和 <code>max-height</code> 限制 iframe 尺寸
+- 大量同时渲染的 iframe 会消耗浏览器资源，建议限制同时显示的数量</p>
+<p><strong>练习题：</strong>
+1. 为 <code>SandboxRenderer</code> 添加错误边界处理，当生成内容包含无效 HTML 时显示错误提示
+2. 实现一个 <code>resize</code> 监听器，让 iframe 高度根据内容自动调整</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-langgraph-deep-agent">3.1 集成 LangGraph Deep Agent</h3>
+<p>OpenGenerativeUI 的 Agent 层使用 LangChain Deep Agents + LangGraph 构建。LangGraph 管理多步骤推理流程，根据用户需求自动选择和组合技能。</p>
+<p><strong>代码示例：</strong>（Agent 入口配置 — 基于 OpenGenerativeUI README）</p>
+<pre><code class="language-python"># agent/main.py
+# 基于 OpenGenerativeUI README 中的 Agent 配置
+# LangGraph Deep Agent 入口配置
+
+from langchain_deep_agents import DeepAgent
+from langgraph.graph import StateGraph
+
+# 加载技能定义
+from skills.advanced_visualization import AdvancedVisualizationSkill
+from skills.master_playbook import MasterPlaybookSkill
+from skills.svg_diagrams import SVGRDiagramsSkill
+
+# 创建 Deep Agent 实例
+agent = DeepAgent(
+    model=&quot;openai/gpt-4o&quot;,
+    skills=[
+        AdvancedVisualizationSkill(),
+        MasterPlaybookSkill(),
+        SVGRDiagramsSkill(),
+    ],
+)
+
+# 构建状态图
+graph = StateGraph(agent.get_state_schema())
+
+# 添加节点：意图分析 → 技能选择 → 代码生成 → 质量检查
+graph.add_node(&quot;analyze_intent&quot;, agent.analyze_intent)
+graph.add_node(&quot;select_skill&quot;, agent.select_skill)
+graph.add_node(&quot;generate_code&quot;, agent.generate_code)
+graph.add_node(&quot;quality_check&quot;, agent.quality_check)
+
+# 定义执行边
+graph.add_edge(&quot;analyze_intent&quot;, &quot;select_skill&quot;)
+graph.add_edge(&quot;select_skill&quot;, &quot;generate_code&quot;)
+graph.add_edge(&quot;generate_code&quot;, &quot;quality_check&quot;)
+
+# 编译并运行
+app = graph.compile()
+</code></pre>
+<p><strong>注意事项：</strong>
+- Agent 的模型选择直接影响生成质量。gpt-4o 是最低推荐配置，gpt-5.4 效果最佳
+- 技能加载顺序不影响选择逻辑，Agent 会根据用户意图自动匹配
+- LangGraph 的状态图可以添加条件边，实现更复杂的推理流程
+- Agent 配置修改后需要重启 agent 服务（<code>make dev</code> 会自动重启）</p>
+<hr />
+<h3 id="32-mcp">3.2 MCP 服务器与工具集成</h3>
+<p>MCP（Model Context Protocol）服务器是 OpenGenerativeUI 的第三个应用，提供标准化的工具和资源接口。</p>
+<p><strong>代码示例：</strong>（自定义 MCP 工具）</p>
+<pre><code class="language-python"># mcp/tools/custom_tool.py
+# 基于 MCP 协议规范
+# 自定义 MCP 工具示例：数据聚合工具
+
+from mcp.server import Server
+from mcp.types import Tool, TextContent
+
+server = Server(&quot;custom-tools&quot;)
+
+@server.tool()
+async def aggregate_data(
+    source: str,
+    metric: str,
+    time_range: str,
+) -&gt; list[TextContent]:
+    &quot;&quot;&quot;
+    聚合指定数据源的指标数据。
+
+    参数:
+        source: 数据源名称（如 'sales', 'traffic', 'users'）
+        metric: 聚合指标（如 'sum', 'average', 'count'）
+        time_range: 时间范围（如 '7d', '30d', '90d'）
+
+    返回:
+        聚合后的数据，供 Agent 生成可视化图表
+    &quot;&quot;&quot;
+    # 模拟数据聚合逻辑
+    mock_data = {
+        &quot;sales&quot;: {&quot;7d&quot;: [120, 150, 180, 140, 200, 170, 190]},
+        &quot;traffic&quot;: {&quot;7d&quot;: [5000, 6200, 7100, 5800, 8000, 7500, 6900]},
+        &quot;users&quot;: {&quot;7d&quot;: [50, 62, 71, 58, 80, 75, 69]},
+    }
+
+    data = mock_data.get(source, {}).get(time_range, [])
+
+    return [
+        TextContent(
+            type=&quot;text&quot;,
+            text=f&quot;数据源: {source}, 指标: {metric}, &quot;
+            f&quot;时间范围: {time_range}, 数据: {data}&quot;,
+        )
+    ]
+</code></pre>
+<p><strong>注意事项：</strong>
+- MCP 工具的参数描述会被传递给 LLM，描述越清晰，Agent 调用越准确
+- 工具返回的数据格式建议使用 JSON 字符串，便于 Agent 解析和生成可视化
+- MCP 服务器默认在 <code>make dev</code> 时自动启动，端口可在 <code>mcp/.env</code> 中配置
+- 工具修改后需重启 MCP 服务器</p>
+<hr />
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li><strong>选择合适的生成式 UI 模式</strong> — 安全性要求高用静态 AG-UI（预定义组件），灵活性要求高用开放式 MCP Apps，介于两者之间用声明式 A2UI</li>
+<li><strong>优化 API 成本</strong> — 对重复的查询结果实施缓存，减少 LLM 调用次数；对简单图表使用模板化生成替代完全由 LLM 生成</li>
+<li><strong>限制沙箱权限</strong> — 仅开放必要的 iframe sandbox 权限（<code>allow-scripts</code>），避免开放 <code>allow-top-navigation</code> 等高风险权限</li>
+<li><strong>技能设计原则</strong> — 每个 SKILL.md 技能应聚焦单一领域，决策矩阵要覆盖该领域的主要场景，避免创建过于泛化的技能</li>
+<li><strong>错误处理</strong> — 在 CopilotKit 的 render 函数中始终处理 <code>error</code> 状态，在 Agent 层实现重试机制</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个 <strong>AI 数据分析仪表盘</strong>，用户通过自然语言描述数据需求，系统自动生成对应的可视化图表并展示在仪表盘中。项目综合运用以下知识点：</p>
+<ol>
+<li><strong>CopilotKit 前端工具注册</strong>（useFrontendTool）— 入门篇 1.1</li>
+<li><strong>SKILL.md 技能系统</strong> — 进阶篇 2.1</li>
+<li><strong>沙箱化 iframe 渲染</strong> — 进阶篇 2.2</li>
+</ol>
+<h3 id="_10">项目设计</h3>
+<ul>
+<li><strong>前端：</strong> Next.js 页面，包含聊天界面和可视化展示区域</li>
+<li><strong>Agent：</strong> 使用 advanced-visualization 技能生成图表代码</li>
+<li><strong>渲染：</strong> 通过沙箱化 iframe 安全渲染 AI 生成的图表</li>
+</ul>
+<h3 id="_11">完整实现代码</h3>
+<p><strong>文件一：前端页面组件</strong></p>
+<pre><code class="language-typescript">// app/dashboard/page.tsx
+// 综合运用：知识点1（CopilotKit 前端工具）+ 知识点3（沙箱化渲染）
+
+&quot;use client&quot;;
+
+import { useFrontendTool } from &quot;@copilotkit/react&quot;; &lt;!-- reviewed: 移除未使用的 useCopilotChat 导入 --&gt;
+import { z } from &quot;zod&quot;;
+import { SandboxRenderer } from &quot;../components/SandboxRenderer&quot;;
+import { useState } from &quot;react&quot;;
+
+// 图表展示卡片
+function ChartCard({
+  title,
+  htmlContent,
+}: {
+  title: string;
+  htmlContent: string;
+}) {
+  return (
+    &lt;div className=&quot;rounded-xl border bg-white dark:bg-gray-800 p-4 shadow-sm&quot;&gt;
+      &lt;h3 className=&quot;text-sm font-medium text-gray-500 dark:text-gray-400 mb-2&quot;&gt;
+        {title}
+      &lt;/h3&gt;
+      {/* 知识点3：使用沙箱化 iframe 渲染 AI 生成的图表 */}
+      &lt;SandboxRenderer htmlContent={htmlContent} enableAnimation={true} /&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default function DashboardPage() {
+  // 存储所有生成的图表
+  const [charts, setCharts] = useState&lt;
+    Array&lt;{ id: string; title: string; content: string }&gt;
+  &gt;([]);
+
+  // 知识点1：注册前端工具，Agent 调用时在仪表盘中添加图表
+  useFrontendTool({
+    name: &quot;add_chart&quot;,
+    description:
+      &quot;向仪表盘添加一个可视化图表。提供图表标题和完整的 HTML/SVG 渲染代码。&quot;,
+    parameters: z.object({
+      title: z.string().describe(&quot;图表标题&quot;),
+      html_content: z
+        .string()
+        .describe(&quot;完整的 HTML 渲染代码，包含 SVG 或 Canvas 元素&quot;),
+    }),
+    handler: async ({ title, html_content }) =&gt; {
+      // 将图表添加到仪表盘
+      const id = `chart-${Date.now()}`;
+      setCharts((prev) =&gt; [...prev, { id, title, content: html_content }]);
+      return JSON.stringify({ success: true, chartId: id });
+    },
+    render: ({ status, args }) =&gt; {
+      if (status === &quot;inProgress&quot;) {
+        return (
+          &lt;div className=&quot;animate-pulse rounded-lg border p-4&quot;&gt;
+            正在生成图表: {args?.title}...
+          &lt;/div&gt;
+        );
+      }
+      if (status === &quot;complete&quot;) {
+        return (
+          &lt;div className=&quot;text-sm text-green-600&quot;&gt;
+            图表 &quot;{args?.title}&quot; 已添加到仪表盘
+          &lt;/div&gt;
+        );
+      }
+      return &lt;&gt;&lt;/&gt;;
+    },
+  });
+
+  // 清空仪表盘工具
+  useFrontendTool({
+    name: &quot;clear_dashboard&quot;,
+    description: &quot;清空仪表盘中的所有图表&quot;,
+    parameters: z.object({}),
+    handler: async () =&gt; {
+      setCharts([]);
+      return JSON.stringify({ success: true });
+    },
+    render: ({ status }) =&gt; {
+      if (status === &quot;complete&quot;) {
+        return (
+          &lt;div className=&quot;text-sm text-blue-600&quot;&gt;仪表盘已清空&lt;/div&gt;
+        );
+      }
+      return &lt;&gt;&lt;/&gt;;
+    },
+  });
+
+  return (
+    &lt;div className=&quot;min-h-screen bg-gray-50 dark:bg-gray-900 p-6&quot;&gt;
+      &lt;h1 className=&quot;text-2xl font-bold mb-6 text-gray-900 dark:text-white&quot;&gt;
+        AI 数据分析仪表盘
+      &lt;/h1&gt;
+
+      {/* 图表展示区域 */}
+      {charts.length === 0 ? (
+        &lt;div className=&quot;text-center text-gray-400 py-20&quot;&gt;
+          在右侧聊天框中输入数据需求，例如：
+          &lt;br /&gt;
+          &quot;画一个柱状图展示 Q1-Q4 的销售数据&quot;
+          &lt;br /&gt;
+          &quot;用饼图展示各部门的预算分配&quot;
+        &lt;/div&gt;
+      ) : (
+        &lt;div className=&quot;grid grid-cols-1 md:grid-cols-2 gap-6&quot;&gt;
+          {charts.map((chart) =&gt; (
+            &lt;ChartCard
+              key={chart.id}
+              title={chart.title}
+              htmlContent={chart.content}
+            /&gt;
+          ))}
+        &lt;/div&gt;
+      )}
+    &lt;/div&gt;
+  );
+}
+</code></pre>
+<p><strong>文件二：自定义技能</strong></p>
+<pre><code class="language-markdown">&lt;!-- agent/skills/dashboard-charts/SKILL.md --&gt;
+&lt;!-- 知识点2：SKILL.md 技能系统 --&gt;
+
+# Dashboard Charts 技能
+
+## 描述
+为 AI 数据分析仪表盘生成各种类型的图表。所有图表通过 `add_chart` 工具添加到仪表盘。
+
+## 适用场景
+- 用户要求展示数据 → 图表可视化
+- 用户描述趋势、对比、占比 → 对应图表类型
+- 用户说&quot;画图&quot;、&quot;展示数据&quot;、&quot;可视化&quot; → 触发本技能
+
+## 决策矩阵
+| 用户意图 | 图表类型 | SVG 结构 |
+|---------|---------|---------|
+| 数值对比 | 柱状图 | rect 元素组 |
+| 趋势变化 | 折线图 | polyline/path |
+| 占比分布 | 饼图 | circle + stroke-dasharray |
+| 数据分布 | 直方图 | rect 元素组 |
+
+## 渲染策略
+1. 从用户描述中提取数据点
+2. 匹配决策矩阵确定图表类型
+3. 生成完整的 SVG 代码（包含交互效果）
+4. 调用 add_chart 工具添加到仪表盘
+
+## 代码模板
+生成 SVG 时必须：
+- 使用 viewBox 属性确保响应式
+- 包含 hover 交互效果（CSS :hover）
+- 使用项目配色：主色 #6366f1，辅色 #8b5cf6
+- 支持暗色模式（使用 currentColor 和 CSS 变量）
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<p><strong>知识点1 运用处：</strong> <code>DashboardPage</code> 组件中使用 <code>useFrontendTool</code> 注册了 <code>add_chart</code> 和 <code>clear_dashboard</code> 两个前端工具。Agent 推理后调用这些工具，前端自动渲染对应的 UI 状态（加载中、完成提示）。</p>
+<p><strong>知识点2 运用处：</strong> <code>agent/skills/dashboard-charts/SKILL.md</code> 定义了仪表盘图表生成技能。Agent 根据决策矩阵选择图表类型，按照渲染策略生成 SVG 代码，然后调用 <code>add_chart</code> 工具。</p>
+<p><strong>知识点3 运用处：</strong> <code>ChartCard</code> 组件使用 <code>SandboxRenderer</code> 在沙箱化 iframe 中渲染 AI 生成的 SVG/HTML 代码。每个图表独立隔离，支持渐进式揭示动画和自动主题适配。</p>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加数据持久化</strong> — 将生成的图表保存到 localStorage，刷新页面后自动恢复仪表盘状态</li>
+<li><strong>支持图表导出</strong> — 添加"导出为 PNG"按钮，利用 html2canvas 将 iframe 内容导出为图片</li>
+<li><strong>实现多轮对话编辑</strong> — 允许用户在生成图表后通过对话修改图表（如"把颜色改成红色"、"添加图例"）</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ECONNREFUSED localhost:8123</code></td>
+<td>Agent 服务未启动</td>
+<td>在项目根目录运行 <code>make dev</code> 确保三个应用同时启动</td>
+</tr>
+<tr>
+<td><code>401 Unauthorized</code></td>
+<td>API Key 无效或未配置</td>
+<td>检查 <code>app/.env</code> 和 <code>agent/.env</code> 中的 API Key 是否正确</td>
+</tr>
+<tr>
+<td><code>Module not found: '@copilotkit/react'</code></td>
+<td>依赖未安装</td>
+<td>运行 <code>make setup</code> 或手动执行 <code>pnpm install</code></td>
+</tr>
+<tr>
+<td><code>iframe content not rendering</code></td>
+<td>沙箱权限不足</td>
+<td>检查 iframe 的 <code>sandbox</code> 属性是否包含 <code>allow-scripts</code></td>
+</tr>
+<tr>
+<td><code>Agent response timeout</code></td>
+<td>LLM 响应超时</td>
+<td>检查网络连接，或切换到延迟更低的模型（如 gpt-4o 替代 gpt-5.4）</td>
+</tr>
+<tr>
+<td><code>Skill not found: xxx</code></td>
+<td>技能目录名称不匹配</td>
+<td>确保 SKILL.md 所在的目录名与代码中引用的技能名一致（区分大小写）</td>
+</tr>
+<tr>
+<td><code>Chart not appearing in dashboard</code></td>
+<td>add_chart 工具未被调用</td>
+<td>检查 Agent 的提示是否包含 add_chart 工具的使用说明</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li>
+<p><strong>查看 AG-UI 协议消息</strong> — 打开浏览器开发者工具的 Network 标签页，筛选 WebSocket 连接，可以看到前端与 Agent 之间的实时消息流（工具调用、状态更新等）。这是排查"Agent 是否收到请求"和"工具是否被正确调用"的最佳方式</p>
+</li>
+<li>
+<p><strong>使用 CopilotKit DevConsole</strong> — 在 CopilotKit Provider 配置中设置 <code>showDevConsole={true}</code>，会显示一个开发者控制台，实时展示 Agent 的推理过程、工具调用链和状态变化</p>
+</li>
+<li>
+<p><strong>单独测试 Agent</strong> — 使用 <code>curl</code> 直接向 Agent 服务发送请求，隔离前端排查 Agent 问题：</p>
+</li>
+</ol>
+<pre><code class="language-bash"># 直接向 Agent 发送测试请求
+curl -X POST http://localhost:8123/chat \
+  -H &quot;Content-Type: application/json&quot; \
+  -d '{&quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;画一个柱状图&quot;}]}'
+</code></pre>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong>OpenGenerativeUI README</strong> — 快速入门、架构概览、三应用配置</li>
+<li>重点：<code>make setup</code> 流程、<code>.env</code> 配置、三应用端口映射</li>
+<li><strong>CopilotKit 官方文档（docs.copilotkit.ai）</strong> — Generative UI 章节</li>
+<li>重点：<code>useFrontendTool</code>、<code>useCopilotChat</code> 的 API 参考、三种生成式 UI 模式详解</li>
+<li><strong>CopilotKit Blog: The Developer's Guide to Generative UI in 2026</strong> — 生成式 UI 三种模式的深度对比</li>
+<li>重点：静态 AG-UI vs 声明式 A2UI vs 开放式 MCP Apps 的选择指南</li>
+<li><strong>LangGraph 官方文档</strong> — 状态图构建和多步骤推理</li>
+<li>重点：StateGraph API、条件边、Agent 状态管理</li>
+<li><strong>MCP 协议规范</strong> — Model Context Protocol 工具和资源定义</li>
+<li>重点：工具注册、资源暴露、提示模板</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://github.com/CopilotKit/generative-ui-playground">CopilotKit Generative UI Playground</a></strong> — 官方的生成式 UI 实验场，包含三种模式的完整示例代码，适合对照学习</li>
+<li><strong><a href="https://python.langchain.com/docs/">LangChain Deep Agents 文档</a></strong> — 深入理解 Deep Agent 的推理机制和技能系统</li>
+<li><strong><a href="https://docs.copilotkit.ai/learn/generative-ui/specs/overview">AG-UI 协议规范</a></strong> — 理解 Agent 与前端之间的双向通信协议细节</li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1941 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remotion - 完整学习教程</title>
+    <style>
+        /* CSS 变量 - 主题配置 */
+        :root {
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --bg-sidebar: #f1f3f5;
+            --text-primary: #212529;
+            --text-secondary: #495057;
+            --text-muted: #868e96;
+            --border-color: #dee2e6;
+            --accent-color: #228be6;
+            --accent-hover: #1c7ed6;
+            --code-bg: #f8f9fa;
+            --blockquote-border: #228be6;
+            --table-hover: #f1f3f5;
+            --shadow: rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-sidebar: #0f0f23;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border-color: #3f3f46;
+            --accent-color: #60a5fa;
+            --accent-hover: #3b82f6;
+            --code-bg: #27272a;
+            --blockquote-border: #60a5fa;
+            --table-hover: #27272a;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        /* 布局 */
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-color);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-meta {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* 目录导航 */
+        .toc-container {
+            padding: 16px;
+        }
+
+        .toc-title {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            list-style: none;
+        }
+
+        .toc-list li {
+            margin-bottom: 4px;
+        }
+
+        .toc-list a {
+            display: block;
+            padding: 6px 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .toc-list a:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toc-list a.active {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .toc-list .toc-h3 {
+            padding-left: 24px;
+            font-size: 13px;
+        }
+
+        .toc-list .toc-h4 {
+            padding-left: 36px;
+            font-size: 12px;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+
+        /* 文章标题 */
+        .article-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .article-header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .toolbar-btn {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            color: var(--accent-color);
+        }
+
+        .toolbar-btn svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 搜索框 */
+        .search-container {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* Markdown 内容样式 */
+        .markdown-body h2 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 40px 0 16px 0;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .markdown-body h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 32px 0 12px 0;
+        }
+
+        .markdown-body h4 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 24px 0 8px 0;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body a {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body li {
+            margin-bottom: 8px;
+        }
+
+        .markdown-body blockquote {
+            margin: 16px 0;
+            padding: 12px 20px;
+            border-left: 4px solid var(--blockquote-border);
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+        }
+
+        .markdown-body code {
+            background: var(--code-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 14px;
+        }
+
+        .markdown-body pre {
+            margin: 16px 0;
+            padding: 16px;
+            background: var(--code-bg);
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .markdown-body pre code {
+            padding: 0;
+            background: none;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .markdown-body table {
+            width: 100%;
+            margin: 16px 0;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .markdown-body tr:hover {
+            background: var(--table-hover);
+        }
+
+        .markdown-body td {
+            color: var(--text-secondary);
+        }
+
+        .markdown-body hr {
+            margin: 32px 0;
+            border: none;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* 搜索高亮 */
+        .search-highlight {
+            background: #fff3bf;
+            padding: 1px 2px;
+            border-radius: 2px;
+        }
+
+        [data-theme="dark"] .search-highlight {
+            background: #854d0e;
+        }
+
+        /* Mermaid 图表 */
+        .mermaid {
+            margin: 24px 0;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 300;
+        }
+
+        /* 移动端遮罩 */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .content-wrapper {
+                padding: 30px 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay.open {
+                display: block;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .content-wrapper {
+                padding: 80px 20px 40px;
+            }
+
+            .article-header h1 {
+                font-size: 24px;
+            }
+
+            .toolbar {
+                top: 20px;
+                right: 20px;
+            }
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- 移动端菜单按钮 -->
+    <button class="toolbar-btn mobile-menu-btn" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12h18M3 6h18M3 18h18"/>
+        </svg>
+    </button>
+
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div class="container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">目录导航</div>
+                <div class="sidebar-meta">**教程级别：** 从零到一 | **预计学习时间：** 8-12 小时 | **前置知识：** React 基础（Hooks、组件、props）、CSS 布局、JavaScript/TypeScript 基础、Node.js 环境使用</div>
+            </div>
+
+            <!-- 搜索框 -->
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="搜索文档内容..." id="searchInput" oninput="handleSearch()">
+            </div>
+
+            <!-- 目录 -->
+            <div class="toc-container">
+                <div class="toc-title">本文目录</div>
+                <ul class="toc-list" id="tocList">
+                    <li><a href="#_1" class="toc-h2">环境搭建指南</a></li>
+<li><a href="#_2" class="toc-h3">系统要求</a></li>
+<li><a href="#_3" class="toc-h3">安装步骤</a></li>
+<li><a href="#_4" class="toc-h3">验证安装</a></li>
+<li><a href="#_5" class="toc-h2">第一部分：入门篇</a></li>
+<li><a href="#11-frame-composition" class="toc-h3">1.1 核心概念：帧号（Frame）与 Composition</a></li>
+<li><a href="#12-interpolation" class="toc-h3">1.2 插值动画（Interpolation）</a></li>
+<li><a href="#13-spring" class="toc-h3">1.3 Spring 弹簧动画</a></li>
+<li><a href="#_6" class="toc-h2">第二部分：进阶篇</a></li>
+<li><a href="#21-sequence-series" class="toc-h3">2.1 Sequence 和 Series：时间线编排</a></li>
+<li><a href="#22-props" class="toc-h3">2.2 参数化视频与 Props 传递</a></li>
+<li><a href="#23" class="toc-h3">2.3 音频处理</a></li>
+<li><a href="#_7" class="toc-h2">第三部分：高级篇</a></li>
+<li><a href="#31-ssr" class="toc-h3">3.1 服务端渲染（SSR）</a></li>
+<li><a href="#32" class="toc-h3">3.2 性能优化</a></li>
+<li><a href="#33" class="toc-h3">3.3 最佳实践</a></li>
+<li><a href="#_8" class="toc-h2">第四部分：实战项目</a></li>
+<li><a href="#_9" class="toc-h3">项目需求</a></li>
+<li><a href="#_10" class="toc-h3">项目设计</a></li>
+<li><a href="#_11" class="toc-h3">完整实现代码</a></li>
+<li><a href="#_12" class="toc-h3">代码解析</a></li>
+<li><a href="#_13" class="toc-h3">扩展挑战</a></li>
+<li><a href="#_14" class="toc-h2">第五部分：常见问题与排查指南</a></li>
+<li><a href="#_15" class="toc-h3">常见错误及解决方案</a></li>
+<li><a href="#_16" class="toc-h3">调试技巧</a></li>
+<li><a href="#_17" class="toc-h2">第六部分：学习路线推荐</a></li>
+<li><a href="#_18" class="toc-h3">官方文档推荐阅读顺序</a></li>
+<li><a href="#_19" class="toc-h3">推荐进阶资源</a></li>
+<li><a href="#_20" class="toc-h3">信息来源与版本说明</a></li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <div class="content-wrapper">
+                <article class="markdown-body" id="content">
+                    <header class="article-header">
+                        <h1>Remotion - 完整学习教程</h1>
+                        <div class="article-meta">**教程级别：** 从零到一<br>**预计学习时间：** 8-12 小时<br>**前置知识：** React 基础（Hooks、组件、props）、CSS 布局、JavaScript/TypeScript 基础、Node.js 环境使用</div>
+                    </header>
+                    <h1 id="remotion-">Remotion - 完整学习教程</h1>
+<blockquote>
+<p><strong>教程级别：</strong> 从零到一
+<strong>预计学习时间：</strong> 8-12 小时
+<strong>前置知识：</strong> React 基础（Hooks、组件、props）、CSS 布局、JavaScript/TypeScript 基础、Node.js 环境使用</p>
+</blockquote>
+<h2 id="_1">环境搭建指南</h2>
+<h3 id="_2">系统要求</h3>
+<ul>
+<li><strong>操作系统：</strong> macOS、Windows、Linux 均可</li>
+<li><strong>Node.js：</strong> v18.0+（推荐 v20 LTS）</li>
+<li><strong>包管理器：</strong> npm（Node.js 自带）或 bun</li>
+<li><strong>磁盘空间：</strong> 至少 1GB（用于 Chrome 自动下载和项目依赖）</li>
+<li><strong>浏览器：</strong> Chrome/Chromium（Remotion 自动下载，无需手动安装）</li>
+</ul>
+<h3 id="_3">安装步骤</h3>
+<pre><code class="language-bash"># 确认 Node.js 版本（需要 v18+）
+node -v
+
+# 使用 npx 创建 Remotion 项目（推荐 Hello World 模板）
+npx create-video@latest my-first-video
+
+# 进入项目目录
+cd my-first-video
+
+# 安装依赖
+npm install
+</code></pre>
+<p>创建过程中，CLI 会提示选择模板。推荐首次使用选择 <strong>Hello World</strong> 模板。</p>
+<h3 id="_4">验证安装</h3>
+<pre><code class="language-bash"># 启动 Remotion Studio（开发预览环境）
+npx remotion studio
+
+# 预期：浏览器自动打开 http://localhost:3000
+# 你将看到 Remotion Studio 界面，左侧是 Composition 列表，右侧是视频预览区
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>Remotion Studio started on http://localhost:3000
+You can now view my-first-video in the browser.
+</code></pre>
+<p>如果看到 Remotion Studio 界面并在预览区看到一个带文字的动画视频，说明环境搭建成功。</p>
+<hr />
+<h2 id="_5">第一部分：入门篇</h2>
+<h3 id="11-frame-composition">1.1 核心概念：帧号（Frame）与 Composition</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Remotion 的核心理念非常简洁：<strong>给 React 组件一个帧号（frame number），组件根据帧号渲染出该帧的画面。</strong> 视频就是"随时间变化的图像序列"——当帧号从 0 递增到最后一帧时，每帧渲染的内容连起来就形成了动画。</p>
+<p>Composition（组合）是 React 组件与视频元数据的结合体，它告诉 Remotion：这个组件应该以什么分辨率、什么帧率、渲染多长时间。</p>
+<p>关键 Hooks：
+- <code>useCurrentFrame()</code> — 获取当前帧号
+- <code>useVideoConfig()</code> — 获取视频配置（宽、高、帧率、总帧数）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/HelloFrame.tsx
+import React from &quot;react&quot;;
+import { AbsoluteFill, useCurrentFrame, useVideoConfig } from &quot;remotion&quot;;
+
+export const HelloFrame: React.FC = () =&gt; {
+  // 获取当前帧号（从 0 开始）
+  const frame = useCurrentFrame();
+  // 获取视频配置
+  const { fps, durationInFrames, width, height } = useVideoConfig();
+
+  // 计算当前时间（秒）
+  const currentTime = (frame / fps).toFixed(2);
+  // 计算进度百分比
+  const progress = ((frame / (durationInFrames - 1)) * 100).toFixed(1);
+
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: &quot;#0b0b0b&quot;,
+        color: &quot;white&quot;,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+        fontFamily: &quot;sans-serif&quot;,
+      }}
+    &gt;
+      &lt;div style={{ fontSize: 60, marginBottom: 20 }}&gt;
+        帧号: {frame}
+      &lt;/div&gt;
+      &lt;div style={{ fontSize: 30, color: &quot;#aaa&quot; }}&gt;
+        {width}x{height}px | {currentTime}s / {(durationInFrames / fps).toFixed(2)}s
+      &lt;/div&gt;
+      &lt;div style={{ fontSize: 24, color: &quot;#666&quot;, marginTop: 10 }}&gt;
+        进度: {progress}%
+      &lt;/div&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p>在 <code>src/Root.tsx</code> 中注册这个 Composition：</p>
+<pre><code class="language-tsx">// src/Root.tsx
+import React from &quot;react&quot;;
+import { Composition } from &quot;remotion&quot;;
+import { HelloFrame } from &quot;./HelloFrame&quot;;
+
+export const RemotionRoot: React.FC = () =&gt; {
+  return (
+    &lt;&gt;
+      &lt;Composition
+        id=&quot;HelloFrame&quot;
+        component={HelloFrame}
+        durationInFrames={150}
+        fps={30}
+        width={1920}
+        height={1080}
+      /&gt;
+    &lt;/&gt;
+  );
+};
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>在 Remotion Studio 中预览：
+- 视频显示黑色背景上的白色文字
+- 文字内容随帧号变化：帧号从 0 递增到 149
+- 进度从 0.0% 变化到 100.0%
+- 总时长：150帧 / 30fps = 5秒
+</code></pre>
+<p><strong>练习题：</strong>
+1. 修改 <code>durationInFrames</code> 为 300，观察视频时长变化
+2. 将 <code>fps</code> 改为 60，观察视频播放速度变化（注意：帧数不变但播放速度会加快）</p>
+<hr />
+<h3 id="12-interpolation">1.2 插值动画（Interpolation）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>上一节我们学会了获取帧号，但帧号只是一个线性递增的整数。<code>interpolate()</code> 函数的核心作用是将帧号映射到任意范围的值，从而驱动视觉属性的变化（如位置、透明度、颜色等）。</p>
+<p><code>interpolate(inputValue, inputRange, outputRange, options)</code> 的参数说明：
+- <code>inputValue</code>：输入值（通常是帧号）
+- <code>inputRange</code>：输入值范围，如 <code>[0, 30]</code>
+- <code>outputRange</code>：输出值范围，如 <code>[0, 1]</code>
+- <code>options</code>（可选）：控制超出范围时的行为（<code>extrapolateLeft</code>、<code>extrapolateRight</code>）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/FadeInOut.tsx
+import React from &quot;react&quot;;
+import { AbsoluteFill, interpolate, useCurrentFrame } from &quot;remotion&quot;;
+
+export const FadeInOut: React.FC = () =&gt; {
+  const frame = useCurrentFrame();
+
+  // 在帧 0-30 之间：透明度从 0 渐变到 1（淡入）
+  const fadeIn = interpolate(frame, [0, 30], [0, 1], {
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  // 在帧 90-120 之间：透明度从 1 渐变到 0（淡出）
+  const fadeOut = interpolate(frame, [90, 120], [1, 0], {
+    extrapolateLeft: &quot;clamp&quot;,
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  // 取两者中较小的值，确保淡出生效
+  const opacity = Math.min(fadeIn, fadeOut);
+
+  // 在帧 10-50 之间：从下方滑入（Y 轴偏移从 100 到 0）
+  const translateY = interpolate(frame, [10, 50], [100, 0], {
+    extrapolateLeft: &quot;clamp&quot;,
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  // 在帧 0-60 之间：缩放从 0.8 到 1.0
+  const scale = interpolate(frame, [0, 60], [0.8, 1.0], {
+    extrapolateLeft: &quot;clamp&quot;,
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: &quot;#1a1a2e&quot;,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+      }}
+    &gt;
+      &lt;div
+        style={{
+          opacity,
+          transform: `translateY(${translateY}px) scale(${scale})`,
+          fontSize: 80,
+          color: &quot;white&quot;,
+          fontFamily: &quot;sans-serif&quot;,
+          textShadow: &quot;0 4px 20px rgba(0,0,0,0.5)&quot;,
+        }}
+      &gt;
+        Hello, Remotion!
+      &lt;/div&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p>别忘了在 <code>Root.tsx</code> 中注册：</p>
+<pre><code class="language-tsx">// 在 RemotionRoot 的 &lt;&gt;...&lt;/&gt; 中添加：
+&lt;Composition
+  id=&quot;FadeInOut&quot;
+  component={FadeInOut}
+  durationInFrames={150}
+  fps={30}
+  width={1920}
+  height={1080}
+/&gt;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>在 Remotion Studio 中预览：
+- 0-30帧：文字从完全透明渐变到完全可见（淡入）
+- 10-50帧：文字同时从下方滑入到中央
+- 30-90帧：文字保持完全可见
+- 90-120帧：文字渐变到完全透明（淡出）
+- 0-60帧：文字从 0.8x 缩放到 1.0x
+</code></pre>
+<p><strong>练习题：</strong>
+1. 实现一个从左侧滑入的效果（提示：使用 <code>translateX</code> 代替 <code>translateY</code>）
+2. 让文字颜色在帧 0-90 之间从蓝色渐变为红色（提示：使用 <code>interpolateColors()</code>）</p>
+<hr />
+<h3 id="13-spring">1.3 Spring 弹簧动画</h3>
+<p><strong>概念讲解：</strong></p>
+<p><code>interpolate()</code> 创建的是线性插值动画，运动速度恒定。但自然界的运动通常有加速和减速——<code>spring()</code> 函数模拟物理弹簧运动，创建更自然的弹性效果。</p>
+<p>Spring 的关键参数：
+- <code>fps</code>：视频帧率（必填）
+- <code>frame</code>：弹簧动画的"本地帧号"（通常用 <code>frame - delay</code> 实现延迟启动）
+- <code>config.damping</code>：阻尼系数，越大回弹越小（默认 10）
+- <code>config.stiffness</code>：弹簧刚度，越大弹速越快（默认 100）
+- <code>config.mass</code>：质量，越大运动越迟缓（默认 1）</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/SpringDemo.tsx
+import React from &quot;react&quot;;
+import {
+  AbsoluteFill,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from &quot;remotion&quot;;
+
+export const SpringDemo: React.FC = () =&gt; {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // 第一个弹簧动画：从帧 0 开始
+  const scale1 = spring({
+    fps,
+    frame,
+    config: { damping: 12, stiffness: 200, mass: 0.5 },
+  });
+
+  // 第二个弹簧动画：从帧 15 开始（延迟 15 帧）
+  const scale2 = spring({
+    fps,
+    frame: frame - 15,
+    config: { damping: 8, stiffness: 100, mass: 1 },
+  });
+
+  // 第三个弹簧动画：从帧 30 开始（延迟 30 帧）
+  const scale3 = spring({
+    fps,
+    frame: frame - 30,
+    config: { damping: 15, stiffness: 300, mass: 0.3 },
+  });
+
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: &quot;#16213e&quot;,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+        flexDirection: &quot;row&quot;,
+        gap: 40,
+      }}
+    &gt;
+      {[scale1, scale2, scale3].map((scale, index) =&gt; (
+        &lt;div
+          key={index}
+          style={{
+            width: 150,
+            height: 150,
+            backgroundColor: [&quot;#e94560&quot;, &quot;#0f3460&quot;, &quot;#533483&quot;][index],
+            borderRadius: 20,
+            transform: `scale(${scale})`,
+            display: &quot;flex&quot;,
+            justifyContent: &quot;center&quot;,
+            alignItems: &quot;center&quot;,
+            color: &quot;white&quot;,
+            fontSize: 30,
+            fontFamily: &quot;sans-serif&quot;,
+          }}
+        &gt;
+          {index + 1}
+        &lt;/div&gt;
+      ))}
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>在 Remotion Studio 中预览：
+- 方块 1 从帧 0 开始弹性缩放（快速弹入，轻微回弹后稳定）
+- 方块 2 从帧 15 开始弹性缩放（较慢弹入，更明显的回弹）
+- 方块 3 从帧 30 开始弹性缩放（快速弹入，几乎没有回弹）
+- 三个方块依次弹入，形成错落有致的入场效果
+</code></pre>
+<p><strong>练习题：</strong>
+1. 调整 <code>damping</code> 为 4，观察回弹效果的变化（会更有"弹力"感）
+2. 使用 spring 实现 Y 轴位移，让方块从底部弹入到中央</p>
+<hr />
+<h2 id="_6">第二部分：进阶篇</h2>
+<h3 id="21-sequence-series">2.1 Sequence 和 Series：时间线编排</h3>
+<p><strong>概念讲解：</strong></p>
+<p>真实视频通常由多个场景组成。<code>&lt;Sequence&gt;</code> 用于定义视频中的一个时间片段，<code>&lt;Series&gt;</code> 用于按顺序排列多个片段。它们的区别：
+- <code>&lt;Sequence&gt;</code>：指定绝对起始帧（<code>from</code>）和持续帧数（<code>durationInFrames</code>），支持重叠
+- <code>&lt;Series&gt;</code>：自动按顺序排列，不需要手动计算起始帧</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/MultiScene.tsx
+import React from &quot;react&quot;;
+import {
+  AbsoluteFill,
+  Sequence,
+  Series,
+  interpolate,
+  useCurrentFrame,
+} from &quot;remotion&quot;;
+
+// 场景 1：标题页
+const TitleScene: React.FC&lt;{ title: string; color: string }&gt; = ({
+  title,
+  color,
+}) =&gt; {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(frame, [0, 10], [0, 1], {
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: color,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+      }}
+    &gt;
+      &lt;div style={{ opacity, fontSize: 80, color: &quot;white&quot;, fontFamily: &quot;sans-serif&quot; }}&gt;
+        {title}
+      &lt;/div&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+
+// 场景 2：内容页
+const ContentScene: React.FC&lt;{ items: string[] }&gt; = ({ items }) =&gt; {
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: &quot;#2d3436&quot;,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+        flexDirection: &quot;column&quot;,
+        gap: 20,
+      }}
+    &gt;
+      {items.map((item, index) =&gt; (
+        &lt;Series key={index}&gt;
+          &lt;Series.Sequence durationInFrames={10}&gt;
+            &lt;FadeInItem text={item} delay={0} /&gt;
+          &lt;/Series.Sequence&gt;
+        &lt;/Series&gt;
+      ))}
+    &lt;/AbsoluteFill&gt;
+  );
+};
+
+// 列表项淡入组件
+const FadeInItem: React.FC&lt;{ text: string; delay: number }&gt; = ({
+  text,
+  delay,
+}) =&gt; {
+  const frame = useCurrentFrame();
+  const opacity = interpolate(frame, [0 + delay, 10 + delay], [0, 1], {
+    extrapolateRight: &quot;clamp&quot;,
+  });
+  const translateY = interpolate(frame, [0 + delay, 10 + delay], [20, 0], {
+    extrapolateRight: &quot;clamp&quot;,
+  });
+
+  return (
+    &lt;div
+      style={{
+        opacity,
+        transform: `translateY(${translateY}px)`,
+        fontSize: 40,
+        color: &quot;white&quot;,
+        fontFamily: &quot;sans-serif&quot;,
+        padding: &quot;10px 30px&quot;,
+        backgroundColor: &quot;#636e72&quot;,
+        borderRadius: 10,
+      }}
+    &gt;
+      {text}
+    &lt;/div&gt;
+  );
+};
+
+// 主视频组件：使用 Series 编排多个场景
+export const MultiScene: React.FC = () =&gt; {
+  return (
+    &lt;AbsoluteFill&gt;
+      &lt;Series&gt;
+        {/* 场景 1：标题 - 持续 60 帧（2 秒） */}
+        &lt;Series.Sequence durationInFrames={60}&gt;
+          &lt;TitleScene title=&quot;欢迎观看&quot; color=&quot;#e17055&quot; /&gt;
+        &lt;/Series.Sequence&gt;
+
+        {/* 场景 2：内容 - 持续 90 帧（3 秒） */}
+        &lt;Series.Sequence durationInFrames={90}&gt;
+          &lt;TitleScene title=&quot;功能介绍&quot; color=&quot;#00b894&quot; /&gt;
+        &lt;/Series.Sequence&gt;
+
+        {/* 场景 3：结尾 - 持续 60 帧（2 秒） */}
+        &lt;Series.Sequence durationInFrames={60}&gt;
+          &lt;TitleScene title=&quot;谢谢观看&quot; color=&quot;#6c5ce7&quot; /&gt;
+        &lt;/Series.Sequence&gt;
+      &lt;/Series&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p>在 <code>Root.tsx</code> 中注册（注意总帧数 = 60 + 90 + 60 = 210）：</p>
+<pre><code class="language-tsx">&lt;Composition
+  id=&quot;MultiScene&quot;
+  component={MultiScene}
+  durationInFrames={210}
+  fps={30}
+  width={1920}
+  height={1080}
+/&gt;
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>在 Remotion Studio 中预览：
+- 0-2秒：橙色背景，显示&quot;欢迎观看&quot;
+- 2-5秒：绿色背景，显示&quot;功能介绍&quot;
+- 5-7秒：紫色背景，显示&quot;谢谢观看&quot;
+- 每个场景切换时文字有淡入动画
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>&lt;Series&gt;</code> 自动计算每个片段的起始帧，不要和 <code>from</code> 属性混用
+- 如果需要场景重叠（如转场效果），使用 <code>&lt;Sequence from={...}&gt;</code> 手动控制
+- 总帧数必须 ≥ 所有 Series.Sequence 的 durationInFrames 之和</p>
+<p><strong>练习题：</strong>
+1. 在场景切换之间添加 10 帧的淡入淡出转场（提示：使用 <code>&lt;Sequence&gt;</code> 配合 <code>from</code> 负值）
+2. 添加第四个场景，展示一个列表</p>
+<hr />
+<h3 id="22-props">2.2 参数化视频与 Props 传递</h3>
+<p><strong>概念讲解：</strong></p>
+<p>参数化是 Remotion 的杀手级特性之一。通过向 Composition 传递 <code>defaultProps</code>，可以为不同的数据生成不同的视频。在渲染时，可以通过 <code>inputProps</code> 覆盖默认值，实现批量生成个性化视频。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/PersonalizedVideo.tsx
+import React from &quot;react&quot;;
+import {
+  AbsoluteFill,
+  interpolate,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+} from &quot;remotion&quot;;
+
+// 定义 props 类型
+type PersonalizedVideoProps = {
+  userName: string;
+  score: number;
+  achievements: string[];
+  year: number;
+};
+
+export const PersonalizedVideo: React.FC&lt;PersonalizedVideoProps&gt; = ({
+  userName,
+  score,
+  achievements,
+  year,
+}) =&gt; {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // 用户名弹性入场
+  const nameScale = spring({ fps, frame, config: { damping: 12 } });
+
+  // 分数从 0 动画到目标值
+  const displayedScore = Math.round(
+    interpolate(frame, [30, 90], [0, score], {
+      extrapolateLeft: &quot;clamp&quot;,
+      extrapolateRight: &quot;clamp&quot;,
+    })
+  );
+
+  // 成就列表逐个显示
+  return (
+    &lt;AbsoluteFill
+      style={{
+        backgroundColor: &quot;#0a0a23&quot;,
+        color: &quot;white&quot;,
+        fontFamily: &quot;sans-serif&quot;,
+        justifyContent: &quot;center&quot;,
+        alignItems: &quot;center&quot;,
+        flexDirection: &quot;column&quot;,
+        gap: 30,
+      }}
+    &gt;
+      {/* 年份标签 */}
+      &lt;div style={{ fontSize: 24, color: &quot;#888&quot; }}&gt;{year} 年度回顾&lt;/div&gt;
+
+      {/* 用户名 */}
+      &lt;div style={{ fontSize: 70, transform: `scale(${nameScale})` }}&gt;
+        {userName}
+      &lt;/div&gt;
+
+      {/* 分数 */}
+      &lt;div style={{ fontSize: 50, color: &quot;#ffd700&quot; }}&gt;
+        得分: {displayedScore}
+      &lt;/div&gt;
+
+      {/* 成就列表 */}
+      &lt;div style={{ display: &quot;flex&quot;, gap: 15, flexDirection: &quot;column&quot; }}&gt;
+        {achievements.map((achievement, index) =&gt; {
+          const itemScale = spring({
+            fps,
+            frame: frame - 60 - index * 10,
+            config: { damping: 10 },
+          });
+          return (
+            &lt;div
+              key={index}
+              style={{
+                fontSize: 28,
+                padding: &quot;8px 24px&quot;,
+                backgroundColor: &quot;#1a1a3e&quot;,
+                borderRadius: 8,
+                transform: `scale(${itemScale})`,
+                opacity: itemScale,
+              }}
+            &gt;
+              {achievement}
+            &lt;/div&gt;
+          );
+        })}
+      &lt;/div&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p>在 <code>Root.tsx</code> 中注册并传递默认 props：</p>
+<pre><code class="language-tsx">import { PersonalizedVideo } from &quot;./PersonalizedVideo&quot;;
+
+// 在 RemotionRoot 中添加：
+&lt;Composition
+  id=&quot;PersonalizedVideo&quot;
+  component={PersonalizedVideo}
+  durationInFrames={180}
+  fps={30}
+  width={1920}
+  height={1080}
+  defaultProps={{
+    userName: &quot;张三&quot;,
+    score: 12800,
+    achievements: [&quot;代码大师&quot;, &quot;团队之星&quot;, &quot;创新先锋&quot;],
+    year: 2026,
+  }}
+/&gt;
+</code></pre>
+<p>渲染时覆盖 props：</p>
+<pre><code class="language-bash"># 使用 CLI 渲染，通过 --props 传递自定义数据
+npx remotion render PersonalizedVideo out.mp4 \
+  --props '{&quot;userName&quot;:&quot;李四&quot;,&quot;score&quot;:9500,&quot;achievements&quot;:[&quot;新人奖&quot;,&quot;进步最快&quot;],&quot;year&quot;:2026}'
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>在 Remotion Studio 中预览（使用 defaultProps）：
+- 显示&quot;2026 年度回顾&quot;
+- &quot;张三&quot;弹性入场
+- 分数从 0 动画增长到 12800
+- 成就列表逐个弹入：代码大师、团队之星、创新先锋
+
+使用 --props 渲染时：
+- 显示对应的数据（李四、9500 分等）
+</code></pre>
+<p><strong>注意事项：</strong>
+- <code>defaultProps</code> 中的值必须是 JSON 可序列化的（不能包含函数、Date 对象等）
+- <code>--props</code> 参数必须是有效的 JSON 字符串，注意 shell 引号转义
+- 批量渲染时，建议编写 Node.js 脚本调用 <code>renderMedia()</code> API</p>
+<p><strong>练习题：</strong>
+1. 添加一个 <code>avatarUrl</code> prop，在视频中显示用户头像（提示：使用 <code>&lt;Img&gt;</code> 组件）
+2. 编写一个 Node.js 脚本，循环渲染 10 个不同用户的个性化视频</p>
+<hr />
+<h3 id="23">2.3 音频处理</h3>
+<p><strong>概念讲解：</strong></p>
+<p>Remotion 支持在视频中添加音频轨道。使用 <code>&lt;Audio&gt;</code> 组件可以嵌入音频文件，支持音量控制和淡入淡出效果。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// src/AudioDemo.tsx
+import React from &quot;react&quot;;
+import {
+  AbsoluteFill,
+  Audio,
+  interpolate,
+  Sequence,
+  useCurrentFrame,
+  useVideoConfig,
+  staticFile,
+} from &quot;remotion&quot;;
+
+export const AudioDemo: React.FC = () =&gt; {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  // 背景音乐音量：前 1 秒淡入，最后 1 秒淡出
+  const bgVolume = interpolate(
+    frame,
+    [0, 30, 270, 300],
+    [0, 0.3, 0.3, 0],
+    { extrapolateRight: &quot;clamp&quot; }
+  );
+
+  // 将音频文件放在 public/ 目录下
+  return (
+    &lt;AbsoluteFill style={{ backgroundColor: &quot;#111&quot; }}&gt;
+      {/* 背景音乐：全程播放 */}
+      &lt;Audio src={staticFile(&quot;background.mp3&quot;)} volume={bgVolume} /&gt;
+
+      {/* 音效：在第 30 帧播放 */}
+      &lt;Sequence from={30} durationInFrames={60}&gt;
+        &lt;Audio src={staticFile(&quot;ding.mp3&quot;)} volume={0.5} /&gt;
+      &lt;/Sequence&gt;
+
+      {/* 视觉内容 */}
+      &lt;AbsoluteFill
+        style={{
+          justifyContent: &quot;center&quot;,
+          alignItems: &quot;center&quot;,
+          color: &quot;white&quot;,
+          fontSize: 60,
+          fontFamily: &quot;sans-serif&quot;,
+        }}
+      &gt;
+        &lt;div&gt;音频演示&lt;/div&gt;
+      &lt;/AbsoluteFill&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p><strong>注意事项：</strong>
+- 音频文件必须放在项目的 <code>public/</code> 目录下，通过 <code>staticFile()</code> 引用
+- 也支持远程 URL：<code>src="https://example.com/audio.mp3"</code>
+- <code>&lt;Audio&gt;</code> 不支持波形可视化，如需可视化需要使用 Web Audio API
+- 渲染时确保音频文件可访问，否则会报 "Media playback error"</p>
+<p><strong>练习题：</strong>
+1. 实现一个"打字机"效果，每输入一个字符时播放一次音效</p>
+<hr />
+<h2 id="_7">第三部分：高级篇</h2>
+<h3 id="31-ssr">3.1 服务端渲染（SSR）</h3>
+<p><strong>概念讲解：</strong></p>
+<p>开发时使用 Remotion Studio 预览，生产环境需要将 React 组件渲染为真实的 MP4 文件。Remotion 提供了 <code>@remotion/renderer</code> 包用于 Node.js 环境（`backend）的服务端渲染。</p>
+<p>渲染流程：打包项目 → 启动 Headless Chrome → 逐帧截图 → FFmpeg 合成视频。</p>
+<p><strong>代码示例：</strong></p>
+<pre><code class="language-tsx">// render.ts（放在项目根目录）
+import { bundle } from &quot;@remotion/bundler&quot;;
+import { renderMedia, selectComposition } from &quot;@remotion/renderer&quot;;
+import path from &quot;path&quot;;
+
+async function render() {
+  // 第 1 步：打包 Remotion 项目
+  const bundleLocation = await bundle({
+    entryPoint: path.resolve(&quot;./src/index.ts&quot;),
+    webpackOverride: (config) =&gt; config,
+  });
+
+  // 第 2 步：获取 Composition 配置
+  const composition = await selectComposition({
+    serveUrl: bundleLocation,
+    id: &quot;PersonalizedVideo&quot;,
+    // 可以在这里覆盖 inputProps
+    inputProps: {
+      userName: &quot;王五&quot;,
+      score: 15000,
+      achievements: [&quot;MVP&quot;, &quot;最佳贡献者&quot;],
+      year: 2026,
+    },
+  });
+
+  // 第 3 步：渲染视频
+  await renderMedia({
+    composition,
+    serveUrl: bundleLocation,
+    codec: &quot;h264&quot;,
+    outputLocation: &quot;out/wangwu-2026.mp4&quot;,
+    // 并发数（影响渲染速度）
+    concurrency: 4,
+    // 传入自定义 props
+    inputProps: {
+      userName: &quot;王五&quot;,
+      score: 15000,
+      achievements: [&quot;MVP&quot;, &quot;最佳贡献者&quot;],
+      year: 2026,
+    },
+  });
+
+  console.log(&quot;渲染完成！&quot;);
+}
+
+render().catch(console.error);
+</code></pre>
+<p>运行渲染：</p>
+<pre><code class="language-bash"># 安装渲染依赖
+npm install --save-dev @remotion/bundler @remotion/renderer
+
+# 执行渲染脚本
+npx tsx render.ts
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>Bundling... done in 3.2s
+Rendering frames... ████████████████████████ 100%
+Encoding video... done
+Audio encoding... done
+渲染完成！
+输出文件：out/wangwu-2026.mp4
+</code></pre>
+<p><strong>注意事项：</strong>
+- 首次运行会自动下载 Chrome 和 FFmpeg，可能需要几分钟
+- <code>concurrency</code> 参数控制同时渲染的帧数，过高可能导致内存不足
+- 服务器渲染需要足够的内存（建议 2GB+）</p>
+<hr />
+<h3 id="32">3.2 性能优化</h3>
+<p><strong>优化策略 1：使用 JPEG 格式加速渲染</strong></p>
+<pre><code class="language-bash"># 默认使用 PNG 格式，切换到 JPEG 可以显著加速
+npx remotion render MyComp out.mp4 --image-format=jpeg
+</code></pre>
+<p><strong>优化策略 2：使用 <code>useMemo</code> 缓存昂贵计算</strong></p>
+<pre><code class="language-tsx">import React, { useMemo } from &quot;react&quot;;
+import { useCurrentFrame } from &quot;remotion&quot;;
+
+export const OptimizedComp: React.FC = () =&gt; {
+  const frame = useCurrentFrame();
+
+  // 缓存昂贵计算，避免每帧重新计算
+  const expensiveData = useMemo(() =&gt; {
+    return Array.from({ length: 1000 }, (_, i) =&gt; ({
+      x: Math.sin(i * 0.1 + frame * 0.05) * 100,
+      y: Math.cos(i * 0.1 + frame * 0.05) * 100,
+    }));
+  }, [frame]);
+
+  return (
+    &lt;div&gt;
+      {expensiveData.map((point, i) =&gt; (
+        &lt;div
+          key={i}
+          style={{
+            position: &quot;absolute&quot;,
+            left: point.x + 960,
+            top: point.y + 540,
+            width: 4,
+            height: 4,
+            borderRadius: 2,
+            backgroundColor: &quot;white&quot;,
+          }}
+        /&gt;
+      ))}
+    &lt;/div&gt;
+  );
+};
+</code></pre>
+<p><strong>优化策略 3：使用 <code>npx remotion benchmark</code> 找到最优并发数</strong></p>
+<pre><code class="language-bash"># 自动测试不同并发数，输出最优配置
+npx remotion benchmark
+</code></pre>
+<p><strong>执行结果：</strong></p>
+<pre><code>Concurrency 1: 45.2s
+Concurrency 2: 28.7s
+Concurrency 4: 18.3s  ← 推荐
+Concurrency 8: 22.1s
+Concurrency 16: 35.8s
+
+最优并发数：4（在当前硬件上）
+</code></pre>
+<h3 id="33">3.3 最佳实践</h3>
+<ol>
+<li>
+<p><strong>保持组件纯净</strong>：每帧渲染应该是纯函数——给定相同帧号和 props，输出必须完全一致。不要使用 <code>Date.now()</code>、<code>Math.random()</code> 等不确定值。</p>
+</li>
+<li>
+<p><strong>提前加载数据</strong>：如果必须在组件内获取异步数据，使用 <code>delayRender()</code> + <code>continueRender()</code> 暂停渲染直到数据就绪。最佳实践是在 Composition 外部获取数据，通过 props 传入。 <!-- reviewed: 修正了错误的 API 名称 waitForNoInput() → delayRender()/continueRender()，来源: https://www.remotion.dev/docs/delay-render --></p>
+</li>
+<li>
+<p><strong>避免 GPU 效果</strong>：在云端渲染时（无 GPU），CSS <code>blur()</code>、<code>box-shadow</code>、WebGL 等效果会显著降低性能。考虑用预计算图片替代。</p>
+</li>
+<li>
+<p><strong>使用新的 <code>&lt;Video&gt;</code> 标签</strong>：Remotion v4 引入了新的优化视频标签，比旧的 <code>&lt;OffthreadVideo&gt;</code> 性能更好。</p>
+</li>
+<li>
+<p><strong>合理使用 <code>--scale</code></strong>：如果不需要全分辨率，使用 <code>--scale 0.5</code> 可以将渲染速度提升约 4 倍。</p>
+</li>
+</ol>
+<hr />
+<h2 id="_8">第四部分：实战项目</h2>
+<h3 id="_9">项目需求</h3>
+<p>构建一个<strong>数据驱动的年度报告视频生成器</strong>，输入用户数据（姓名、头像、统计数据），自动生成一段 10 秒的个性化年度回顾视频。</p>
+<p>项目需要综合运用：
+- 插值动画（Interpolation）
+- Spring 弹簧动画
+- Sequence/Series 时间线编排
+- 参数化视频与 Props 传递</p>
+<h3 id="_10">项目设计</h3>
+<pre><code>视频结构（10 秒 / 300 帧 / 30fps）：
+├── 开场（0-90帧 / 0-3秒）：用户名弹入 + 背景动画
+├── 数据展示（90-210帧 / 3-7秒）：三个数据卡片依次出现
+└── 结尾（210-300帧 / 7-10秒）：总结语 + 淡出
+</code></pre>
+<h3 id="_11">完整实现代码</h3>
+<pre><code class="language-tsx">// src/AnnualReport.tsx
+import React from &quot;react&quot;;
+import {
+  AbsoluteFill,
+  interpolate,
+  interpolateColors,
+  spring,
+  useCurrentFrame,
+  useVideoConfig,
+  Sequence,
+} from &quot;remotion&quot;;
+
+// Props 类型定义
+type AnnualReportProps = {
+  userName: string;
+  avatarColor: string;
+  stats: { label: string; value: number; unit: string }[];
+  summary: string;
+};
+
+// 单个数据卡片组件
+const StatCard: React.FC&lt;{
+  label: string;
+  value: number;
+  unit: string;
+  delay: number;
+  color: string;
+}&gt; = ({ label, value, unit, delay, color }) =&gt; {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const scale = spring({
+    fps,
+    frame: frame - delay,
+    config: { damping: 10, stiffness: 150, mass: 0.5 },
+  });
+
+  // 数值从 0 增长到目标值
+  const displayedValue = Math.round(
+    interpolate(frame, [delay, delay + 30], [0, value], {
+      extrapolateLeft: &quot;clamp&quot;,
+      extrapolateRight: &quot;clamp&quot;,
+    })
+  );
+
+  return (
+    &lt;div
+      style={{
+        backgroundColor: color,
+        padding: &quot;20px 30px&quot;,
+        borderRadius: 16,
+        opacity: scale,
+        transform: `scale(${scale})`,
+        display: &quot;flex&quot;,
+        flexDirection: &quot;column&quot;,
+        alignItems: &quot;center&quot;,
+        minWidth: 200,
+      }}
+    &gt;
+      &lt;div style={{ fontSize: 20, color: &quot;rgba(255,255,255,0.8)&quot; }}&gt;{label}&lt;/div&gt;
+      &lt;div style={{ fontSize: 48, color: &quot;white&quot;, fontWeight: &quot;bold&quot; }}&gt;
+        {displayedValue.toLocaleString()}
+      &lt;/div&gt;
+      &lt;div style={{ fontSize: 18, color: &quot;rgba(255,255,255,0.6)&quot; }}&gt;{unit}&lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+// 主组件
+export const AnnualReport: React.FC&lt;AnnualReportProps&gt; = ({
+  userName,
+  avatarColor,
+  stats,
+  summary,
+}) =&gt; {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+
+  // 背景颜色渐变
+  const bgColor = interpolateColors(
+    frame,
+    [0, durationInFrames],
+    [&quot;#0f0c29&quot;, &quot;#302b63&quot;]
+  );
+
+  // 用户名弹性入场
+  const nameScale = spring({
+    fps,
+    frame,
+    config: { damping: 12, stiffness: 200 },
+  });
+
+  // 结尾淡出
+  const outroOpacity = interpolate(
+    frame,
+    [durationInFrames - 30, durationInFrames],
+    [1, 0],
+    { extrapolateLeft: &quot;clamp&quot;, extrapolateRight: &quot;clamp&quot; }
+  );
+
+  return (
+    &lt;AbsoluteFill style={{ backgroundColor: bgColor }}&gt;
+      &lt;div
+        style={{
+          opacity: outroOpacity,
+          width: &quot;100%&quot;,
+          height: &quot;100%&quot;,
+          display: &quot;flex&quot;,
+          flexDirection: &quot;column&quot;,
+          justifyContent: &quot;center&quot;,
+          alignItems: &quot;center&quot;,
+          gap: 50,
+          fontFamily: &quot;sans-serif&quot;,
+          color: &quot;white&quot;,
+        }}
+      &gt;
+        {/* 开场：用户名 + 头像 */}
+        &lt;Sequence from={0} durationInFrames={90}&gt;
+          &lt;div
+            style={{
+              display: &quot;flex&quot;,
+              flexDirection: &quot;column&quot;,
+              alignItems: &quot;center&quot;,
+              gap: 20,
+            }}
+          &gt;
+            {/* 头像 */}
+            &lt;div
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: 60,
+                backgroundColor: avatarColor,
+                transform: `scale(${nameScale})`,
+                display: &quot;flex&quot;,
+                justifyContent: &quot;center&quot;,
+                alignItems: &quot;center&quot;,
+                fontSize: 50,
+                boxShadow: &quot;0 8px 32px rgba(0,0,0,0.3)&quot;,
+              }}
+            &gt;
+              {userName.charAt(0)}
+            &lt;/div&gt;
+            {/* 用户名 */}
+            &lt;div
+              style={{
+                fontSize: 56,
+                fontWeight: &quot;bold&quot;,
+                transform: `scale(${nameScale})`,
+              }}
+            &gt;
+              {userName} 的 2026
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/Sequence&gt;
+
+        {/* 数据展示：三个卡片 */}
+        &lt;Sequence from={60} durationInFrames={150}&gt;
+          &lt;div
+            style={{
+              display: &quot;flex&quot;,
+              gap: 30,
+            }}
+          &gt;
+            {stats.map((stat, index) =&gt; (
+              &lt;StatCard
+                key={index}
+                label={stat.label}
+                value={stat.value}
+                unit={stat.unit}
+                delay={30 + index * 15}
+                color={[&quot;#e17055&quot;, &quot;#00b894&quot;, &quot;#6c5ce7&quot;][index]}
+              /&gt;
+            ))}
+          &lt;/div&gt;
+        &lt;/Sequence&gt;
+
+        {/* 结尾：总结语 */}
+        &lt;Sequence from={210} durationInFrames={90}&gt;
+          &lt;div
+            style={{
+              fontSize: 40,
+              opacity: interpolate(frame, [210, 240], [0, 1], {
+                extrapolateLeft: &quot;clamp&quot;,
+                extrapolateRight: &quot;clamp&quot;,
+              }),
+              textAlign: &quot;center&quot;,
+              maxWidth: 800,
+              lineHeight: 1.6,
+            }}
+          &gt;
+            {summary}
+          &lt;/div&gt;
+        &lt;/Sequence&gt;
+      &lt;/div&gt;
+    &lt;/AbsoluteFill&gt;
+  );
+};
+</code></pre>
+<p>在 <code>Root.tsx</code> 中注册：</p>
+<pre><code class="language-tsx">import { AnnualReport } from &quot;./AnnualReport&quot;;
+
+// 在 RemotionRoot 中添加：
+&lt;Composition
+  id=&quot;AnnualReport&quot;
+  component={AnnualReport}
+  durationInFrames={300}
+  fps={30}
+  width={1920}
+  height={1080}
+  defaultProps={{
+    userName: &quot;张三&quot;,
+    avatarColor: &quot;#e17055&quot;,
+    stats: [
+      { label: &quot;代码提交&quot;, value: 1280, unit: &quot;次&quot; },
+      { label: &quot;PR 合并&quot;, value: 156, unit: &quot;个&quot; },
+      { label: &quot;代码审查&quot;, value: 423, unit: &quot;次&quot; },
+    ],
+    summary: &quot;这一年，你用代码改变了世界。\n继续保持，2027 会更精彩！&quot;,
+  }}
+/&gt;
+</code></pre>
+<p>批量渲染脚本：</p>
+<pre><code class="language-tsx">// batch-render.ts
+import { bundle } from &quot;@remotion/bundler&quot;;
+import { renderMedia, selectComposition } from &quot;@remotion/renderer&quot;;
+import path from &quot;path&quot;;
+
+// 用户数据列表
+const users = [
+  {
+    userName: &quot;张三&quot;,
+    avatarColor: &quot;#e17055&quot;,
+    stats: [
+      { label: &quot;代码提交&quot;, value: 1280, unit: &quot;次&quot; },
+      { label: &quot;PR 合并&quot;, value: 156, unit: &quot;个&quot; },
+      { label: &quot;代码审查&quot;, value: 423, unit: &quot;次&quot; },
+    ],
+    summary: &quot;这一年，你用代码改变了世界。&quot;,
+  },
+  {
+    userName: &quot;李四&quot;,
+    avatarColor: &quot;#00b894&quot;,
+    stats: [
+      { label: &quot;代码提交&quot;, value: 890, unit: &quot;次&quot; },
+      { label: &quot;PR 合并&quot;, value: 98, unit: &quot;个&quot; },
+      { label: &quot;代码审查&quot;, value: 267, unit: &quot;次&quot; },
+    ],
+    summary: &quot;你的每一行代码都在创造价值。&quot;,
+  },
+];
+
+async function batchRender() {
+  const bundleLocation = await bundle({
+    entryPoint: path.resolve(&quot;./src/index.ts&quot;),
+    webpackOverride: (config) =&gt; config,
+  });
+
+  for (const user of users) {
+    const composition = await selectComposition({
+      serveUrl: bundleLocation,
+      id: &quot;AnnualReport&quot;,
+      inputProps: user,
+    });
+
+    const fileName = `out/${user.userName}-2026.mp4`;
+    await renderMedia({
+      composition,
+      serveUrl: bundleLocation,
+      codec: &quot;h264&quot;,
+      outputLocation: fileName,
+      inputProps: user,
+    });
+    console.log(`✅ ${fileName} 渲染完成`);
+  }
+}
+
+batchRender().catch(console.error);
+</code></pre>
+<h3 id="_12">代码解析</h3>
+<table>
+<thead>
+<tr>
+<th>代码片段</th>
+<th>运用的知识点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>spring({ fps, frame, config: {...} })</code></td>
+<td>Spring 弹簧动画</td>
+<td>用户名和头像的入场动画使用 spring 实现自然的弹性效果</td>
+</tr>
+<tr>
+<td><code>interpolate(frame, [delay, delay+30], [0, value])</code></td>
+<td>插值动画</td>
+<td>数据卡片的数值从 0 到目标值的增长动画</td>
+</tr>
+<tr>
+<td><code>&lt;Sequence from={60} durationInFrames={150}&gt;</code></td>
+<td>时间线编排</td>
+<td>使用 Sequence 控制场景的出现时机和持续时间</td>
+</tr>
+<tr>
+<td><code>interpolateColors(frame, [0, N], [color1, color2])</code></td>
+<td>颜色插值</td>
+<td>背景颜色在整个视频中平滑渐变</td>
+</tr>
+<tr>
+<td><code>defaultProps</code> + <code>inputProps</code></td>
+<td>参数化视频</td>
+<td>通过 props 传递用户数据，实现批量个性化渲染</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_13">扩展挑战</h3>
+<ol>
+<li><strong>添加音频支持</strong>：为视频添加背景音乐，实现淡入淡出效果</li>
+<li><strong>添加图表可视化</strong>：使用 SVG 或 Canvas 绘制柱状图/折线图，展示月度数据趋势</li>
+<li><strong>云端渲染</strong>：使用 <code>@remotion/lambda</code> 将渲染部署到 AWS Lambda，实现按需生成</li>
+</ol>
+<hr />
+<h2 id="_14">第五部分：常见问题与排查指南</h2>
+<h3 id="_15">常见错误及解决方案</h3>
+<table>
+<thead>
+<tr>
+<th>错误信息</th>
+<th>原因</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Could not play video/audio</code></td>
+<td>媒体文件不存在或格式不支持</td>
+<td>确保文件在 <code>public/</code> 目录下，格式为 MP4/MP3/WebM</td>
+</tr>
+<tr>
+<td><code>ENAMETOOLONG</code></td>
+<td>渲染输出路径过长</td>
+<td>缩短文件名或使用更短的输出路径</td>
+</tr>
+<tr>
+<td><code>Timeout while rendering frame</code></td>
+<td>组件渲染过慢，超过默认超时时间</td>
+<td>使用 <code>--timeout</code> 增加超时时间，或优化组件性能</td>
+</tr>
+<tr>
+<td><code>Target closed</code></td>
+<td>Headless Chrome 崩溃</td>
+<td>减小并发数（<code>--concurrency</code>），检查内存是否充足</td>
+</tr>
+<tr>
+<td><code>Flickering in output</code></td>
+<td>帧间渲染不一致</td>
+<td>确保组件是纯函数，不要使用 <code>Date.now()</code> 或 <code>Math.random()</code></td>
+</tr>
+<tr>
+<td><code>No audio in output</code></td>
+<td>未正确配置音频编解码器</td>
+<td>使用 <code>--codec h264</code> 并确保 <code>&lt;Audio&gt;</code> 组件正确放置</td>
+</tr>
+<tr>
+<td><code>Could not determine executable</code></td>
+<td>Chrome/FFmpeg 未找到</td>
+<td>运行 <code>npx remotion browser ensure</code> 确保浏览器已下载</td>
+</tr>
+<tr>
+<td><code>Version mismatch</code></td>
+<td>Remotion 包版本不一致</td>
+<td>确保所有 <code>@remotion/*</code> 包版本号一致</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_16">调试技巧</h3>
+<ol>
+<li><strong>使用 <code>--log=verbose</code> 定位慢帧</strong>：渲染时添加此参数，会输出每帧的渲染时间和最慢帧列表，帮助定位性能瓶颈。</li>
+</ol>
+<pre><code class="language-bash">npx remotion render MyComp out.mp4 --log=verbose
+</code></pre>
+<ol>
+<li>
+<p><strong>在 Studio 中逐步调试</strong>：使用 Remotion Studio 的时间线拖拽功能，逐帧检查动画效果。可以打开浏览器开发者工具查看 React 组件的渲染状态。</p>
+</li>
+<li>
+<p><strong>使用 <code>console.time</code> 测量组件性能</strong>：在组件中使用 <code>console.time()</code> 和 <code>console.timeEnd()</code> 测量昂贵操作的耗时，在 Studio 控制台中查看输出。</p>
+</li>
+</ol>
+<pre><code class="language-tsx">export const MyComp = () =&gt; {
+  const frame = useCurrentFrame();
+
+  console.time(&quot;expensive-calc&quot;);
+  const result = someExpensiveCalculation(frame);
+  console.timeEnd(&quot;expensive-calc&quot;);
+
+  return &lt;div&gt;{result}&lt;/div&gt;;
+};
+</code></pre>
+<hr />
+<h2 id="_17">第六部分：学习路线推荐</h2>
+<h3 id="_18">官方文档推荐阅读顺序</h3>
+<ol>
+<li><strong><a href="https://www.remotion.dev/docs/the-fundamentals">The Fundamentals</a></strong> — 核心概念：帧号、Composition、Hooks（入门必读）</li>
+<li><strong><a href="https://www.remotion.dev/docs/sequence">Sequences</a></strong> — 时间线编排：场景切换和片段管理</li>
+<li><strong><a href="https://www.remotion.dev/docs/using-audio">Using audio</a></strong> — 音频处理：背景音乐和音效</li>
+<li><strong><a href="https://www.remotion.dev/docs/parameterized-rendering">Parameterized videos</a></strong> — 参数化渲染：批量生成个性化视频</li>
+<li><strong><a href="https://www.remotion.dev/docs/render">Rendering</a></strong> — 渲染配置：编码格式、分辨率、并发控制</li>
+<li><strong><a href="https://www.remotion.dev/docs/ssr">Server-side rendering</a></strong> — 服务端渲染：Node.js API 和批量渲染</li>
+<li><strong><a href="https://www.remotion.dev/docs/lambda">Lambda</a></strong> — 云端渲染：AWS Lambda 部署和按需生成</li>
+<li><strong><a href="https://www.remotion.dev/docs/performance">Performance</a></strong> — 性能优化：benchmark、并发调优、缓存策略</li>
+<li><strong><a href="https://www.remotion.dev/docs/ai/skills">AI Agent Skills</a></strong> — AI 集成：使用 Claude Code 生成视频代码</li>
+</ol>
+<h3 id="_19">推荐进阶资源</h3>
+<ul>
+<li><strong><a href="https://github.com/remotion-dev/github-unwrapped">GitHub Unwrapped 开源项目</a></strong> — 完整的个性化视频生成项目，使用 Vite 5 + AWS Lambda，是学习 Remotion 生产级用法的最佳参考</li>
+<li><strong><a href="https://www.remotion.dev/showcase">Remotion Showcase</a></strong> — 官方展示页面，包含社区优秀作品，可以学习不同风格和技巧</li>
+<li><strong><a href="https://www.youtube.com/watch?v=degw5Ze_wk8">Fireship: This video was made with code</a></strong> — YouTube 技术博主 Fireship 使用 Remotion 制作视频的过程，展示了 Remotion 的实际使用效果</li>
+</ul>
+<h3 id="_20">信息来源与版本说明</h3>
+<ul>
+<li><strong>教程基于版本：</strong> Remotion v4.0.x</li>
+<li><strong>教程编写日期：</strong> 2026-04-12</li>
+<li><strong>信息来源：</strong></li>
+<li><a href="https://www.remotion.dev/docs">Remotion 官方文档</a></li>
+<li><a href="https://www.remotion.dev/api">Remotion API 参考</a></li>
+<li><a href="https://github.com/remotion-dev/remotion">GitHub 仓库</a></li>
+</ul>
+                </article>
+            </div>
+        </main>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <button class="toolbar-btn" onclick="toggleTheme()" title="切换主题">
+            <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"/>
+                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+            </svg>
+        </button>
+        <button class="toolbar-btn" onclick="window.print()" title="打印">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+                <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+        </button>
+        <a href="../../index.html" class="toolbar-btn" title="返回首页">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+                <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+        </a>
+    </div>
+
+    <!-- Mermaid 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+    <script>
+        // 初始化 Mermaid
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            // 更新 Mermaid 主题
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: newTheme === 'dark' ? 'dark' : 'default'
+            });
+
+            // 更新图标
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+            } else {
+                icon.innerHTML = '<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>';
+            }
+        }
+
+        // 加载保存的主题
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // 侧边栏切换（移动端）
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('open');
+        }
+
+        // 搜索功能
+        function handleSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const content = document.getElementById('content');
+
+            // 清除之前的高亮
+            clearHighlights();
+
+            if (!query) return;
+
+            // 搜索并高亮
+            highlightText(content, query);
+
+            // 更新目录高亮
+            updateTocHighlight(query);
+        }
+
+        function clearHighlights() {
+            const highlights = document.querySelectorAll('.search-highlight');
+            highlights.forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+        }
+
+        function highlightText(element, query) {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null, false);
+            const textNodes = [];
+
+            while (walker.nextNode()) {
+                textNodes.push(walker.currentNode);
+            }
+
+            textNodes.forEach(node => {
+                const text = node.textContent;
+                const lowerText = text.toLowerCase();
+                const index = lowerText.indexOf(query);
+
+                if (index !== -1) {
+                    const before = text.slice(0, index);
+                    const match = text.slice(index, index + query.length);
+                    const after = text.slice(index + query.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'search-highlight';
+                    span.textContent = match;
+
+                    const fragment = document.createDocumentFragment();
+                    if (before) fragment.appendChild(document.createTextNode(before));
+                    fragment.appendChild(span);
+                    if (after) fragment.appendChild(document.createTextNode(after));
+
+                    node.parentNode.replaceChild(fragment, node);
+                }
+            });
+        }
+
+        function updateTocHighlight(query) {
+            const tocLinks = document.querySelectorAll('.toc-list a');
+            tocLinks.forEach(link => {
+                const section = document.getElementById(link.getAttribute('href').slice(1));
+                if (section && section.textContent.toLowerCase().includes(query)) {
+                    link.style.fontWeight = '600';
+                } else {
+                    link.style.fontWeight = '';
+                }
+            });
+        }
+
+        // 目录滚动高亮
+        function updateActiveToc() {
+            const headings = document.querySelectorAll('h2[id], h3[id]');
+            const tocLinks = document.querySelectorAll('.toc-list a');
+
+            let current = '';
+            headings.forEach(heading => {
+                const rect = heading.getBoundingClientRect();
+                if (rect.top <= 100) {
+                    current = heading.id;
+                }
+            });
+
+            tocLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        window.addEventListener('scroll', updateActiveToc);
+        updateActiveToc();
+    </script>
+</body>
+</html>
